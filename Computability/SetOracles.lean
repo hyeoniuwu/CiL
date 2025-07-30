@@ -56,20 +56,20 @@ notation:100 A"⌜" => SetJump A
 @[reducible,simp] scoped[Computability] infix:50 "|ᵀ" => SetTuringDegreeIN
 
 section evalSettheorems
-theorem exists_code_for_evalSet_nat (O:Set ℕ) (f:ℕ→.ℕ) : SetRecursiveIn O f ↔ ∃ c:ℕ, evalSet O c = f := by exact exists_code_nat
-private theorem exists_code_for_evalSet₁ : ∃ c:ℕ, evalSet O c = evalSet₁ O := by apply ((exists_code_for_evalSet_nat O (evalSet₁ O)).mp) rec_eval₁
-noncomputable def evalSet₁_code (O:Set ℕ) : ℕ := choose (@exists_code_for_evalSet₁ O)
-@[simp] theorem evalSet₁_code_prop : evalSet O (evalSet₁_code O) = evalSet₁ O := by exact choose_spec exists_code_for_evalSet₁
-@[simp] theorem evalSet₁_code_prop2 : eval (χ O) (evalSet₁_code O) = evalSet₁ O := by exact choose_spec exists_code_for_evalSet₁
+theorem exists_code_for_evalSet (O:Set ℕ) (f:ℕ→.ℕ) : SetRecursiveIn O f ↔ ∃ c:Nat.RecursiveIn.Code, evalSet O c = f := by exact exists_code
+private theorem exists_code_for_evalSet₁ : ∃ c:Nat.RecursiveIn.Code, evalSet O c = evalSet₁ O := by apply ((exists_code_for_evalSet O (evalSet₁ O)).mp) rec_eval₁
+noncomputable def c_evalSet₁ (O:Set ℕ) := choose (@exists_code_for_evalSet₁ O)
+@[simp] theorem c_evalSet₁_ev : evalSet O (c_evalSet₁ O) = evalSet₁ O := by exact choose_spec exists_code_for_evalSet₁
+@[simp] theorem c_evalSet₁_ev2 : eval (χ O) (c_evalSet₁ O) = evalSet₁ O := by exact choose_spec exists_code_for_evalSet₁
 
-private theorem exists_code_for_evalnSet₁ : ∃ c:ℕ, evalSet O c = evalnSet₁ O := by apply ((exists_code_for_evalSet_nat O (evalnSet₁ O)).mp) (Nat.RecursiveIn.of_primrecIn prim_evaln₁)
-noncomputable def evalnSet₁_code (O:Set ℕ) : ℕ := choose (@exists_code_for_evalnSet₁ O)
-@[simp] theorem evalnSet₁_code_prop : evalSet O (evalnSet₁_code O) = evalnSet₁ O := by exact choose_spec exists_code_for_evalnSet₁
-@[simp] theorem evalnSet₁_code_prop2 : eval (χ O) (evalnSet₁_code O) = evalnSet₁ O := by exact choose_spec exists_code_for_evalnSet₁
+private theorem exists_code_for_evalnSet₁ : ∃ c:Nat.RecursiveIn.Code, evalSet O c = evalnSet₁ O := by apply ((exists_code_for_evalSet O (evalnSet₁ O)).mp) (Nat.RecursiveIn.of_primrecIn prim_evaln₁)
+noncomputable def c_evalnSet₁ (O:Set ℕ) := choose (@exists_code_for_evalnSet₁ O)
+@[simp] theorem c_evalnSet₁_ev : evalSet O (c_evalnSet₁ O) = evalnSet₁ O := by exact choose_spec exists_code_for_evalnSet₁
+@[simp] theorem c_evalnSet₁_ev2 : eval (χ O) (c_evalnSet₁ O) = evalnSet₁ O := by exact choose_spec exists_code_for_evalnSet₁
 
-private theorem exists_code_for_eval₁ : ∃ c:ℕ, eval O c = eval₁ O := by apply (exists_code_nat.mp) rec_eval₁
-noncomputable def eval₁_code (O:ℕ→ℕ) : ℕ := choose (@exists_code_for_eval₁ O)
-@[simp] theorem eval₁_code_prop : eval O (eval₁_code O) = eval₁ O := by exact choose_spec exists_code_for_eval₁
+private theorem exists_code_for_eval₁ : ∃ c:Nat.RecursiveIn.Code, eval O c = eval₁ O := by apply (exists_code.mp) rec_eval₁
+noncomputable def c_eval₁ (O:ℕ→ℕ) := choose (@exists_code_for_eval₁ O)
+@[simp] theorem c_eval₁_ev : eval O (c_eval₁ O) = eval₁ O := by exact choose_spec exists_code_for_eval₁
 -- @[simp] theorem eval₁_code_prop2 : eval (χ O) (eval₁_code O) = eval₁ O := by exact choose_spec exists_code_for_eval₁
 end evalSettheorems
 
@@ -354,9 +354,9 @@ theorem code_ef_dom_iff_code_dom : (eval O (ef c) x).Dom ↔ (eval O c x).Dom :=
     simp [Seq.seq]
     exact h
 /-- Given a code `e`, returns a code whose range is the domain of `e`. -/
-noncomputable def dom_to_ran (O:Set ℕ) : (ℕ→ℕ) := fun e => curry ((comp) (right.comp left) (ef (evalSet₁_code O))) e
--- the internal expression, (comp) (right.comp left) (code_to_code_ef (evalSet₁_code O)), takes a pair ex as input.
--- code_to_code_ef (evalSet₁_code O) ex = (ex, [e](x)).
+noncomputable def dom_to_ran (O:Set ℕ) : (ℕ→ℕ) := fun e => curry ((comp) (right.comp left) (ef (c_evalSet₁ O))) e
+-- the internal expression, (comp) (right.comp left) (code_to_code_ef (c_evalSet₁ O)), takes a pair ex as input.
+-- code_to_code_ef (c_evalSet₁ O) ex = (ex, [e](x)).
 -- piping it into right.comp left returns x.
 -- we curry bc we want eval (dom_to_ran e) x = ~
 
@@ -372,9 +372,8 @@ theorem dom_to_ran_prop : (W O e) = (WR O (dom_to_ran O e)) := by
     have h0 : (eval (χ O) e xs).Dom := by
       apply Part.dom_iff_mem.mpr
       exact Exists.intro y hy
-    have h5234 : (eval (χ O) (decodeCode (evalSet₁_code O)) (Nat.pair e xs)).Dom := by
-      rw [evalSet₁_code_prop2]
-      simp [evalSet₁]
+    have h5234 : (eval (χ O) (decodeCode (c_evalSet₁ O)) (Nat.pair e xs)).Dom := by
+      simp? says simp only [decodeCode_encodeCode, c_evalSet₁_ev2, evalSet₁]
       simp [eval₁]
       exact h0
 
@@ -402,8 +401,7 @@ theorem dom_to_ran_prop : (W O e) = (WR O (dom_to_ran O e)) := by
     have h0 : ¬(eval (χ O) e xs).Dom := by
       refine Part.eq_none_iff'.mp ?_
       exact Part.eq_none_iff.mpr h
-    have h5234 : ¬(eval (χ O) (decodeCode (evalSet₁_code O)) (Nat.pair e xs)).Dom := by
-      rw [evalSet₁_code_prop2]
+    have h5234 : ¬(eval (χ O) (decodeCode (c_evalSet₁ O)) (Nat.pair e xs)).Dom := by
       simp [evalSet₁]
       simp [eval₁]
       exact h0
@@ -415,7 +413,7 @@ theorem dom_to_ran_prop : (W O e) = (WR O (dom_to_ran O e)) := by
     simp only [eval, Part.coe_some, Part.bind_eq_bind]
     rw [eval_code_ef]
 
-    cases Classical.em ((eval (χ O) (decodeCode (evalSet₁_code O)) (Nat.pair e x)).Dom) with
+    cases Classical.em ((eval (χ O) (decodeCode (c_evalSet₁ O)) (Nat.pair e x)).Dom) with
     | inl h' =>
       have h123: ¬ x=xs  := by
         intro hxx
@@ -433,7 +431,7 @@ theorem dom_to_ran_prop : (W O e) = (WR O (dom_to_ran O e)) := by
       simp [Seq.seq]
 
 
-private lemma prim_dom_to_ran_aux : Primrec ((right.comp left).comp (decodeCode (ef (evalSet₁_code O)))).curry := by
+private lemma prim_dom_to_ran_aux : Primrec ((right.comp left).comp (decodeCode (ef (c_evalSet₁ O)))).curry := by
   refine Primrec.projection ?_
   apply PrimrecIn.PrimrecIn₂_iff_Primrec₂.mp
   exact fun O ↦ curry_prim
@@ -475,16 +473,35 @@ theorem code_rfind_prop : eval O (code_rfind c) a = (rfind O c a) := by
 
 section ran_to_dom
 -- helper functions:
-/--`[code_if_eval_eq c](x)=0 if x.1.2=[c](x.1.1, x.2) else 0`-/
-def code_if_eval_eq : ℕ→ℕ := fun x => 0
-theorem code_if_eval_eq_prop : eval O (code_if_eval_eq e) ab = if (Nat.succ ab.l.r=eval O e (Nat.pair ab.l.l ab.r)) then 0 else 1 := by sorry
+/--`[code_if_eval_eq c](x)=0 if x.1.2+1=[c](x.1.1, x.2) else 0`-/
+noncomputable def c_ifevaleq (O:ℕ→ℕ) : ℕ→ℕ := fun c => c_if_eq'.comp (pair (succ.comp $ right.comp left) ((c_eval₁ O).comp $ pair c (pair (left.comp left) right)))
+theorem c_ifevaleq_ev : eval O (c_ifevaleq O c) ab = if (Nat.succ ab.l.r=eval O c (Nat.pair ab.l.l ab.r)) then 0 else 1 := by
+  rw [c_ifevaleq]
+  simp only [decodeCode_encodeCode]
+  simp only [eval]
+
+
+  -- simp [eval]
+  simp [Seq.seq]
+
+  -- simp [c_eval₁_ev]
+  sorry
+
+/--`[code_if_eval_eq c](x)=0 if x.1.2+1=[c:O,](x.1.1, x.2) else 0`-/
+noncomputable def c_ran_to_dom_aux (O:Set ℕ) : ℕ := c_if_eq'.comp (pair (succ.comp $ right.comp left) ((c_evalnSet₁ O).comp (pair (left.comp left) right)))
+theorem c_ran_to_dom_aux_ev (O:Set ℕ) : eval_prim (χ O) (c_ran_to_dom_aux O) ab = if (Nat.succ ab.l.r=evalnSet₁ O (Nat.pair ab.l.l ab.r)) then 0 else 1 := by
+  simp
+  sorry
+
+
 
 /-
 ran_to_dom c = code_for
   fun y =>
   rfind_config (evaln c config=y)
 -/
-noncomputable def ran_to_dom (O:Set ℕ) : (ℕ→ℕ) := fun c => curry (code_rfind (code_if_eval_eq (evalnSet₁_code O))) c
+noncomputable def ran_to_dom (O:Set ℕ) : (ℕ→ℕ) := fun c => curry (code_rfind (c_ifevaleq (χ O) (c_evalnSet₁ O))) c
+-- noncomputable def ran_to_dom (O:Set ℕ) : (ℕ→ℕ) := fun c => curry (code_rfind (c_ran_to_dom_aux O)) c
 theorem code_rfind_imp_ex : (∃ y, y ∈ eval O (code_rfind c) x) → (∃ y, eval O c (Nat.pair x y)=0) := by
   intro h
   rcases h with ⟨y,hy⟩
@@ -534,7 +551,9 @@ We know that [e'](xs)↓, because the search procedure will stop at or before di
     rw [ran_to_dom]
     simp only [decodeCode_encodeCode, eval_curry]
     rw [code_rfind_prop]
-    simp [code_if_eval_eq_prop]
+    simp [c_ifevaleq_ev]
+    -- simp [c_ran_to_dom_aux]
+
     simp [helper1]
     simp [helper2]
     simp [evalSet] at hy
@@ -563,7 +582,7 @@ We know that [e'](xs)↓, because the search procedure will stop at or before di
     rw [ran_to_dom] at hy
     simp only [decodeCode_encodeCode, eval_curry] at hy
     rw [code_rfind_prop] at hy
-    simp [code_if_eval_eq_prop] at hy
+    simp [c_ifevaleq_ev] at hy
     simp [helper1] at hy
     simp [helper2] at hy
     have mainn1 {k:ℕ} : Option.some (Option.some k) = Encodable.decode (k + 1) := by
@@ -730,7 +749,7 @@ def simpleIn (O:Set ℕ) (A:Set ℕ) : Prop := (CEin O A) ∧ immuneIn O Aᶜ
 abbrev simple := simpleIn ∅
 theorem simple_above_empty (h:simple A): ∅<ᵀA := by sorry
 
-def f_simple_ran (O:Set ℕ) : ℕ→ℕ := fun c => curry (code_rfind (code_if_eval_eq (ef $ evalnSet₁_code O))) c
+def f_simple_ran (O:Set ℕ) : ℕ→ℕ := fun c => curry (code_rfind (c_ifevaleq (ef $ c_evalnSet₁ O))) c
 -- rfind (code for function that when given input (e,config), runs (evaln e config; if halt, return configinput+1 else 0), and checks: 1. it is non-zero; 2. it is larger than 2e)
 -- find the smallest input x which halts when dovetailing e, and such that also x≥2e
 
