@@ -1,4 +1,5 @@
 import Computability.RecursiveInTheorems
+import Computability.Basic
 -- import Computability.Encoding
 import Mathlib.Computability.Reduce
 import Mathlib.Computability.Halting
@@ -86,7 +87,7 @@ theorem jump_recIn (f:ℕ→ℕ) : f ≤ᵀᶠ (f⌜) := by
   dite part.Dom (λ proof => Nat.succ $ part.get proof) (λ _ => 0)
 
 theorem OracleNat.RecursiveInK (O:ℕ→ℕ) : Nat.RecursiveIn (K O) O := by
-  let compute := (K O) ∘ calculate_specific ∘ Nat.pair (encodeCode oracle)
+  let compute := (K O) ∘ c_evconst ∘ Nat.pair (encodeCode oracle)
   let h:ℕ→.ℕ := (fun x => if compute x=0 then Part.none else (Nat.pred ∘ compute) x)
 
   have main : O = h := by
@@ -96,7 +97,7 @@ theorem OracleNat.RecursiveInK (O:ℕ→ℕ) : Nat.RecursiveIn (K O) O := by
     cases Classical.em (compute xs = 0) with
     | inl h =>
         simp only [h]
-        simp? [compute] at h says simp only [Function.comp_apply, K, eval_calculate_specific, decodeCode_encodeCode, Nat.succ_eq_add_one, dite_eq_right_iff, Nat.add_eq_zero, one_ne_zero, and_false, imp_false, compute] at h
+        simp? [compute] at h says simp only [Function.comp_apply, K, c_evconst_ev, decodeCode_encodeCode, Nat.succ_eq_add_one, dite_eq_right_iff, Nat.add_eq_zero, one_ne_zero, and_false, imp_false, compute] at h
         exact Part.eq_none_iff'.mpr h
       | inr h =>
         simp only [compute]
@@ -105,7 +106,7 @@ theorem OracleNat.RecursiveInK (O:ℕ→ℕ) : Nat.RecursiveIn (K O) O := by
         simp only [Function.comp_apply, K, Nat.succ_eq_add_one, dite_eq_right_iff, Nat.add_eq_zero, one_ne_zero, and_false, imp_false, Decidable.not_not] at h
 
         simp only [h]
-        simp only [eval_calculate_specific]
+        simp only [c_evconst_ev]
         simp? says simp only [↓reduceIte, ↓reduceDIte, decodeCode_encodeCode, add_tsub_cancel_right, Part.some_get]
         exact rfl
 
@@ -115,7 +116,7 @@ theorem OracleNat.RecursiveInK (O:ℕ→ℕ) : Nat.RecursiveIn (K O) O := by
     apply Nat.RecursiveIn.totalComp
     · exact Nat.RecursiveIn.oracle
     · apply Nat.RecursiveIn.totalComp
-      · exact Nat.RecursiveIn.of_primrecIn prim_calculate_specific
+      · exact Nat.RecursiveIn.of_primrecIn c_evconst_pr
       · rw [Nat.RecursiveIn.pair']
         apply Nat.RecursiveIn.pair
         · simp only [encodeCode]
@@ -143,7 +144,7 @@ theorem K_leq_K0 (O:ℕ→ℕ) :  Nat.RecursiveIn (K0 O) (K O) := by
 
 
 theorem K0_leq_K (O:ℕ→ℕ) : Nat.RecursiveIn (K O) (K0 O) := by
-  let compute := (K O) ∘ calculate_specific
+  let compute := (K O) ∘ c_evconst
   let h:ℕ→.ℕ := (compute)
 
   have main : O⌜ = h := by
@@ -157,7 +158,7 @@ theorem K0_leq_K (O:ℕ→ℕ) : Nat.RecursiveIn (K O) (K0 O) := by
         simp only [compute] at h
         simp only [Function.comp_apply, K, Nat.succ_eq_add_one, dite_eq_right_iff, Nat.add_eq_zero, one_ne_zero, and_false, imp_false] at h
         rw [show xs = Nat.pair (xs.unpair.1) (xs.unpair.2) from Eq.symm (Nat.pair_unpair xs)] at h
-        simp only [eval_calculate_specific] at h
+        simp only [c_evconst_ev] at h
         exact h
     | inr h =>
       simp only [PFun.coe_val, jump, Nat.succ_eq_add_one, Part.some_inj]
@@ -167,18 +168,18 @@ theorem K0_leq_K (O:ℕ→ℕ) : Nat.RecursiveIn (K O) (K0 O) := by
       simp only [Function.comp_apply, K, Nat.succ_eq_add_one]
       simp only [h]
       rw [show xs = Nat.pair (xs.unpair.1) (xs.unpair.2) from Eq.symm (Nat.pair_unpair xs)] at h
-      simp only [eval_calculate_specific] at h
+      simp only [c_evconst_ev] at h
       simp only [h]
-      have temp : calculate_specific xs = calculate_specific (Nat.pair (xs.unpair.1) (xs.unpair.2)) := by simp only [Nat.pair_unpair]
+      have temp : c_evconst xs = c_evconst (Nat.pair (xs.unpair.1) (xs.unpair.2)) := by simp only [Nat.pair_unpair]
       simp only [temp]
-      simp only [eval_calculate_specific]
+      simp only [c_evconst_ev]
 
   have compute_recIn_KO : compute ≤ᵀᶠ (K O) := by
     simp only [compute, TuringReducible]
 
     apply Nat.RecursiveIn.totalComp
     · exact Nat.RecursiveIn.oracle
-    · exact Nat.RecursiveIn.of_primrecIn prim_calculate_specific
+    · exact Nat.RecursiveIn.of_primrecIn c_evconst_pr
 
   rw [main]
   simp only [h]

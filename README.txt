@@ -24,3 +24,5 @@ end Nat.RecursiveIn.Code
 results we want follow:
 theorem Nat.PrimrecIn.sg : Nat.PrimrecIn O Nat.sg := by rw [←code_sg_prop]; apply code_prim_prop code_sg_prim
 theorem Nat.Primrec.sg : Nat.Primrec Nat.sg := by exact PrimrecIn.PrimrecIn_Empty PrimrecIn.sg
+
+

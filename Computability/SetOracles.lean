@@ -191,7 +191,7 @@ theorem χ_leq_χK {O:Set ℕ} : Nat.RecursiveIn (χ (SetK O)) (χ O) := by
   let χK : ℕ→ℕ := fun x ↦ if (eval (χ O) (decodeCode x) x).Dom then 1 else 0
   have h0 : χ (SetK O) = χK := by exact rfl
 
-  -- let compute := (K O) ∘ calculate_specific
+  -- let compute := (K O) ∘ c_evconst
   -- let h:ℕ→.ℕ := (compute)
 
   let g := fun x => if (χ O) x = 0 then Part.none else Part.some 0
@@ -201,12 +201,12 @@ theorem χ_leq_χK {O:Set ℕ} : Nat.RecursiveIn (χ (SetK O)) (χ O) := by
   have exists_index_for_g : ∃ c : ℕ, eval (χ O) c = g := by exact exists_code_nat.mp hg
   rcases exists_index_for_g with ⟨index_g,index_g_is_g⟩
 
-  let f':ℕ→.ℕ := fun x => χK (calculate_specific $ Nat.pair index_g x)
+  let f':ℕ→.ℕ := fun x => χK (c_evconst $ Nat.pair index_g x)
 
   have f_eq_f': (χ O) = f' := by
     simp only [f']
     funext xs
-    simp only [χK, eval_calculate_specific]
+    simp only [χK, c_evconst_ev]
     rw [index_g_is_g]
     simp only [g]
 
@@ -220,11 +220,11 @@ theorem χ_leq_χK {O:Set ℕ} : Nat.RecursiveIn (χ (SetK O)) (χ O) := by
 
   have f'_recIn_χK : Nat.RecursiveIn (χK) f' := by
     simp only [f']
-    refine Nat.RecursiveIn.someTotal (↑χK) (fun x ↦ χK (calculate_specific (Nat.pair index_g x))) ?_
+    refine Nat.RecursiveIn.someTotal (↑χK) (fun x ↦ χK (c_evconst (Nat.pair index_g x))) ?_
     refine Nat.RecursiveIn.totalComp' ?_ ?_
     · exact Nat.RecursiveIn.oracle
     · refine Nat.RecursiveIn.totalComp' ?_ ?_
-      · apply Nat.RecursiveIn.of_primrecIn prim_calculate_specific
+      · apply Nat.RecursiveIn.of_primrecIn c_evconst_pr
       · apply Nat.RecursiveIn.of_primrec Nat.Primrec.pair_proj
 
   rw [h0]
