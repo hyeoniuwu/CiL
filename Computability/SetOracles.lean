@@ -484,7 +484,7 @@ theorem c_ifevaleq_ev : eval O (c_ifevaleq O c) ab = if (Nat.succ ab.l.r=eval O 
   rw [c_ifevaleq]
   simp only [decodeCode_encodeCode]
   -- simp only [eval]
-  simp [eval_prim]
+  -- simp [eval_prim]
 
 
 
@@ -494,11 +494,19 @@ theorem c_ifevaleq_ev : eval O (c_ifevaleq O c) ab = if (Nat.succ ab.l.r=eval O 
   -- simp [c_eval₁_ev]
   sorry
 
-/--`[code_if_eval_eq c](x)=0 if x.1.2+1=[c:O,](x.1.1, x.2) else 0`-/
-noncomputable def c_ran_to_dom_aux (O:Set ℕ) : ℕ := c_if_eq'.comp (pair (succ.comp $ right.comp left) ((c_evalnSet₁ O).comp (pair (left.comp left) right)))
-theorem c_ran_to_dom_aux_ev (O:Set ℕ) : eval_prim (χ O) (c_ran_to_dom_aux O) ab = if (Nat.succ ab.l.r=evalnSet₁ O (Nat.pair ab.l.l ab.r)) then 0 else 1 := by
+/--`[c_ran_to_dom_aux](x)=0 if x.1.2+1=[x.1.1:O,x.2.2](x.2.1) else 0`-/
+noncomputable def c_ran_to_dom_aux (O:Set ℕ) := c_if_eq'.comp (pair (succ.comp $ right.comp left) ((c_evalnSet₁ O).comp (pair (left.comp left) right)))
+@[simp] theorem c_ran_to_dom_aux_evp (O:Set ℕ) : eval_prim (χ O) (c_ran_to_dom_aux O) ab = if (Nat.succ ab.l.r=evalnSet₁ O (Nat.pair ab.l.l ab.r)) then 0 else 1 := by
   simp [c_ran_to_dom_aux, eval_prim]
-  sorry
+@[simp]theorem c_ran_to_dom_aux_ev_pr : code_prim (c_ran_to_dom_aux O) := by
+  simp only [c_ran_to_dom_aux]
+  repeat constructor
+  exact c_evalnSet₁_ev_pr
+  repeat constructor
+theorem c_ran_to_dom_aux_ev : eval (χ O) (c_ran_to_dom_aux O) ab = if (Nat.succ ab.l.r=evalnSet₁ O (Nat.pair ab.l.l ab.r)) then 0 else 1 := by
+  rw [←@eval_prim_eq_eval (c_ran_to_dom_aux O) (χ O) c_ran_to_dom_aux_ev_pr]
+  simp only [PFun.coe_val, c_ran_to_dom_aux_evp]
+  exact apply_ite Part.some (ab.l.r.succ = evalnSet₁ O (Nat.pair ab.l.l ab.r)) 0 1
 
 
 
@@ -507,8 +515,8 @@ ran_to_dom c = code_for
   fun y =>
   rfind_config (evaln c config=y)
 -/
-noncomputable def ran_to_dom (O:Set ℕ) : (ℕ→ℕ) := fun c => curry (code_rfind (c_ifevaleq (χ O) (c_evalnSet₁ O))) c
--- noncomputable def ran_to_dom (O:Set ℕ) : (ℕ→ℕ) := fun c => curry (code_rfind (c_ran_to_dom_aux O)) c
+-- noncomputable def ran_to_dom (O:Set ℕ) : (ℕ→ℕ) := fun c => curry (code_rfind (c_ifevaleq (χ O) (c_evalnSet₁ O))) c
+noncomputable def ran_to_dom (O:Set ℕ) : (ℕ→ℕ) := fun c => curry (code_rfind (c_ran_to_dom_aux O)) c
 theorem code_rfind_imp_ex : (∃ y, y ∈ eval O (code_rfind c) x) → (∃ y, eval O c (Nat.pair x y)=0) := by
   intro h
   rcases h with ⟨y,hy⟩
@@ -558,8 +566,10 @@ We know that [e'](xs)↓, because the search procedure will stop at or before di
     rw [ran_to_dom]
     simp only [decodeCode_encodeCode, eval_curry]
     rw [code_rfind_prop]
-    simp [c_ifevaleq_ev]
+    -- simp [c_ifevaleq_ev]
     -- simp [c_ran_to_dom_aux]
+    simp [rfind]
+    simp [c_ran_to_dom_aux_ev]
 
     simp [helper1]
     simp [helper2]
