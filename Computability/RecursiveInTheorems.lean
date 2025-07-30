@@ -522,6 +522,10 @@ theorem Primrec.projection {f:α → β → σ} {a:α} (h:Primrec₂ f):Primrec 
   refine Primrec₂.comp h ?_ ?_
   · exact const a
   · exact Primrec.id
+theorem PrimrecIn.projection {f:α → β → σ} {a:α} (h:PrimrecIn₂ O f):PrimrecIn O (f a) := by
+  refine PrimrecIn₂.comp h ?_ ?_
+  · exact const a
+  · exact PrimrecIn.id
 lemma Nat.Primrec.pair_proj:Nat.Primrec (Nat.pair x) := by
   refine Primrec.nat_iff.mp ?_
   apply Primrec.projection

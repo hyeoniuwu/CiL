@@ -476,24 +476,6 @@ theorem code_rfind_prop : eval O (code_rfind c) a = (rfind O c a) := by
 
 
 section ran_to_dom
--- helper functions:
-/--`[code_if_eval_eq c](x)=0 if x.1.2+1=[c](x.1.1, x.2) else 0`-/
-noncomputable def c_ifevaleq (O:ℕ→ℕ) : ℕ→ℕ := fun c => c_if_eq'.comp (pair (succ.comp $ right.comp left) ((c_eval₁ O).comp $ pair c (pair (left.comp left) right)))
--- theorem c_ifevaleq_ev (h:code_prim c) : eval_prim O (c_ifevaleq O c) ab = if (Nat.succ ab.l.r=eval_prim O c (Nat.pair ab.l.l ab.r)) then 0 else 1 := by
-theorem c_ifevaleq_ev : eval O (c_ifevaleq O c) ab = if (Nat.succ ab.l.r=eval O c (Nat.pair ab.l.l ab.r)) then 0 else 1 := by
-  rw [c_ifevaleq]
-  simp only [decodeCode_encodeCode]
-  -- simp only [eval]
-  -- simp [eval_prim]
-
-
-
-  -- simp [eval]
-  simp [Seq.seq]
-
-  -- simp [c_eval₁_ev]
-  sorry
-
 /--`[c_ran_to_dom_aux](x)=0 if x.1.2+1=[x.1.1:O,x.2.2](x.2.1) else 0`-/
 noncomputable def c_ran_to_dom_aux (O:Set ℕ) := c_if_eq'.comp (pair (succ.comp $ right.comp left) ((c_evalnSet₁ O).comp (pair (left.comp left) right)))
 @[simp] theorem c_ran_to_dom_aux_evp (O:Set ℕ) : eval_prim (χ O) (c_ran_to_dom_aux O) ab = if (Nat.succ ab.l.r=evalnSet₁ O (Nat.pair ab.l.l ab.r)) then 0 else 1 := by
@@ -507,8 +489,6 @@ theorem c_ran_to_dom_aux_ev : eval (χ O) (c_ran_to_dom_aux O) ab = if (Nat.succ
   rw [←@eval_prim_eq_eval (c_ran_to_dom_aux O) (χ O) c_ran_to_dom_aux_ev_pr]
   simp only [PFun.coe_val, c_ran_to_dom_aux_evp]
   exact apply_ite Part.some (ab.l.r.succ = evalnSet₁ O (Nat.pair ab.l.l ab.r)) 0 1
-
-
 
 /-
 ran_to_dom c = code_for
@@ -599,7 +579,7 @@ We know that [e'](xs)↓, because the search procedure will stop at or before di
     rw [ran_to_dom] at hy
     simp only [decodeCode_encodeCode, eval_curry] at hy
     rw [code_rfind_prop] at hy
-    simp [c_ifevaleq_ev] at hy
+    simp [c_ran_to_dom_aux_ev] at hy
     simp [helper1] at hy
     simp [helper2] at hy
     have mainn1 {k:ℕ} : Option.some (Option.some k) = Encodable.decode (k + 1) := by
@@ -617,8 +597,13 @@ We know that [e'](xs)↓, because the search procedure will stop at or before di
     apply evaln_sound at h3
     exact Exists.intro (Nat.unpair y).1 h3
 
-theorem Nat.Primrec.prim_ran_to_dom : Nat.Primrec (ran_to_dom O) := by
-  sorry
+theorem Nat.PrimrecIn.prim_ran_to_dom : Nat.PrimrecIn (χ O) (ran_to_dom O) := by
+  unfold ran_to_dom
+  have rw1 : (fun c ↦ ((decodeCode (code_rfind (c_ran_to_dom_aux O).encodeCode)).curry c).encodeCode : ℕ → ℕ) = (curry ((code_rfind (c_ran_to_dom_aux O)))) := by exact
+    rfl
+  rw [rw1]
+  refine PrimrecIn.nat_iff.mp ?_
+  apply PrimrecIn.projection curry_prim
 
 end ran_to_dom
 

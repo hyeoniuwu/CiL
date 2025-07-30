@@ -108,3 +108,15 @@ private instance : Preorder (ℕ→ℕ) where
   · exact hf
   · rw [Nat.RecursiveIn.pair']
     apply Nat.RecursiveIn.pair hg hh
+
+@[simp] lemma Nat.PrimrecIn.totalComp {O:ℕ→ℕ} {f g:ℕ→ℕ} (h1: Nat.PrimrecIn O f) (h2: Nat.PrimrecIn O g):(Nat.PrimrecIn O ↑(f∘g)) := by
+  rw [show (f∘g) = fun x => f (g x) from rfl]
+  exact comp h1 h2
+@[simp] lemma Nat.PrimrecIn.comp₂ {O:ℕ→ℕ} {f:ℕ→ℕ→ℕ} {g h:ℕ→ℕ} (hf: Nat.PrimrecIn O fun x => f x.unpair.1 x.unpair.2) (hg: Nat.PrimrecIn O g) (hh: Nat.PrimrecIn O h): (Nat.PrimrecIn O (fun x => (f (g x) (h x)):ℕ→ℕ) ) := by
+  have main:(fun x => (f (g x) (h x)):ℕ→ℕ) = ((fun x => f x.unpair.1 x.unpair.2) ∘ (fun n ↦ Nat.pair (g n) (h n))) := by
+    funext xs
+    simp only [Function.comp_apply, Nat.unpair_pair]
+  rw [main]
+  apply Nat.PrimrecIn.totalComp
+  · exact hf
+  · apply Nat.PrimrecIn.pair hg hh
