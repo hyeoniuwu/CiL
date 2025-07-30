@@ -635,6 +635,8 @@ noncomputable def KP54 : ℕ→ℕ := fun s =>
   else if s%2=0 then
     let n:=DSize (KP54 s-1).r
     -- ask ∅' if there exists a n s.t. a:=BSUnion n (KP54 s-1).l satisfies (eval (D a) i n).Dom.
+    -- for this, define c s.t. [c](n)= if (eval (D $ BSUnion n (KP54 s-1).l) i n).Dom then 0 else 1.
+    -- then ask if (rfind c, n)∈K₀.
     -- if so then return (a, )
     Nat.pair 0 0
   else Nat.pair 0 0
@@ -751,9 +753,27 @@ def simpleIn (O:Set ℕ) (A:Set ℕ) : Prop := (CEin O A) ∧ immuneIn O Aᶜ
 abbrev simple := simpleIn ∅
 theorem simple_above_empty (h:simple A): ∅<ᵀA := by sorry
 
+/--`[c_ran_to_dom_aux](x)=0 if x.1.2+1=[x.1.1:O,x.2.2](x.2.1) else 0`-/
+noncomputable def c_simple_aux (O:Set ℕ) := c_if_eq'.comp (pair (succ.comp $ right.comp left) ((c_evalnSet₁ O).comp (pair (left.comp left) right)))
+@[simp] theorem c_simple_aux_evp (O:Set ℕ) : eval_prim (χ O) (c_simple_aux O) ab = if (Nat.succ ab.l.r=evalnSet₁ O (Nat.pair ab.l.l ab.r)) then 0 else 1 := by
+  simp [c_simple_aux, eval_prim]
+@[simp]theorem c_simple_aux_ev_pr : code_prim (c_simple_aux O) := by
+  simp only [c_simple_aux]
+  repeat constructor
+  exact c_evalnSet₁_ev_pr
+  repeat constructor
+theorem c_simple_aux_ev : eval (χ O) (c_simple_aux O) ab = if (Nat.succ ab.l.r=evalnSet₁ O (Nat.pair ab.l.l ab.r)) then 0 else 1 := by
+  rw [←@eval_prim_eq_eval (c_simple_aux O) (χ O) c_simple_aux_ev_pr]
+  simp only [PFun.coe_val, c_simple_aux_evp]
+  exact apply_ite Part.some (ab.l.r.succ = evalnSet₁ O (Nat.pair ab.l.l ab.r)) 0 1
 def f_simple_ran (O:Set ℕ) : ℕ→ℕ := fun c => curry (code_rfind (c_ifevaleq (ef $ c_evalnSet₁ O))) c
--- rfind (code for function that when given input (e,config), runs (evaln e config; if halt, return configinput+1 else 0), and checks: 1. it is non-zero; 2. it is larger than 2e)
--- find the smallest input x which halts when dovetailing e, and such that also x≥2e
+#check ef
+/-
+rfind $ code for function that when given input (e,config):
+  runs (evaln e config; if halt, return configinput+1 else 0), and checks: 1. it is non-zero; 2. it is larger than 2e)
+  i.e. output >= 2e+1
+find the smallest input x which halts when dovetailing e, and such that also x≥2e
+-/
 
 
 theorem exists_simple_set : ∃ A:Set ℕ, simpleIn O A := by
