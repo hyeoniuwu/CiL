@@ -5,8 +5,40 @@ import Mathlib.Data.Nat.Dist
 
 open Computability
 open Classical
-
 open Nat.RecursiveIn.Code
+
+variable {α : Type*} {β : Type*} {σ : Type*}
+variable [Primcodable α] [Primcodable β] [Primcodable σ]
+
+-- conversions between oracle and non-oracle versions
+lemma PrimrecIn.PrimrecIn_Empty (h : Nat.PrimrecIn (fun _=>0) f) : Nat.Primrec f := by
+  induction' h with g hg g h _ _ ih₁ ih₂ g h _ _ ih₁ ih₂ g h _ _ ih₁ ih₂ g _ ih
+  repeat {constructor}
+  · (expose_names; exact Nat.Primrec.pair a_ih a_ih_1)
+  repeat {constructor; assumption; try assumption}
+  (expose_names; exact Nat.Primrec.prec a_ih a_ih_1)
+lemma PrimrecIn.PrimrecIn₂_Empty {f:α→β→σ} (h : PrimrecIn₂ (fun _=>0) f) : Primrec₂ f := by
+  unfold PrimrecIn₂ at h
+  unfold Primrec₂
+  apply PrimrecIn.PrimrecIn_Empty
+  exact h
+
+theorem Primrec.to_PrimrecIn₂ {f:α→β→σ} (h : Primrec₂ f) : PrimrecIn₂ O f := by
+  unfold Primrec₂ at h
+  unfold PrimrecIn₂
+  apply Primrec.to_PrimrecIn
+  exact h
+
+theorem PrimrecIn.PrimrecIn₂_iff_Primrec₂ {f:α→β→σ} : (∀O,PrimrecIn₂ O f) ↔ Primrec₂ f := by
+  constructor
+  · exact fun a ↦ PrimrecIn₂_Empty (a fun x ↦ 0)
+  · exact fun a O ↦ Primrec.to_PrimrecIn₂ a
+theorem PrimrecIn.PrimrecIn_iff_Primrec : (∀O,Nat.PrimrecIn O f) ↔ Nat.Primrec f := by
+  constructor
+  · exact fun a ↦ PrimrecIn.PrimrecIn_Empty (a fun x ↦ 0)
+  · exact fun a O ↦ Nat.Primrec.to_PrimrecIn a
+
+
 
 @[simp] lemma Nat.RecursiveIn.partCompTotal {O:ℕ→ℕ} {f:ℕ→.ℕ} {g:ℕ→ℕ} (h1: Nat.RecursiveIn O f) (h2: Nat.RecursiveIn O g) : (Nat.RecursiveIn O ↑(f∘g)) := by
   have h3 : (↑(f∘g):ℕ→.ℕ) = fun x => g x >>= (↑f:ℕ→.ℕ) := by
@@ -88,41 +120,6 @@ end Nat.RecursiveIn.Code
 
 
 
-
-
-
-
-
-
-
-/-- The signum function on naturals. Maps non-zero natural numbers to 1 and zero to 0. This is used for boolean-like computations in primitive recursive functions. -/
-@[simp] def Nat.sg := fun x => if x=0 then 0 else 1
-/-- Maps zero to 1 and non-zero natural numbers to 0. This is the inverse of `Nat.sg` for boolean-like computations. -/
-@[simp] def Nat.sg' := fun x => if x=0 then 1 else 0
-theorem Nat.Primrec.sg : Nat.Primrec Nat.sg := by
-  let construction := comp (prec zero (((const 1).comp left).comp left)) (pair zero .id)
-  apply Nat.Primrec.of_eq construction
-  simp only [unpaired, id_eq, unpair_pair, Nat.sg]
-  intro n
-  induction n with
-  | zero => exact rfl
-  | succ n _ => simp only [Nat.add_eq_zero, one_ne_zero, and_false, ↓reduceIte]
-theorem Nat.Primrec.sg' : Nat.Primrec Nat.sg' := by
-  let construction := comp (prec (const 1) (((zero).comp left).comp left)) (pair zero .id)
-  apply Nat.Primrec.of_eq construction
-  simp only [unpaired, id_eq, unpair_pair, Nat.sg']
-  intro n
-  induction n with
-  | zero => exact rfl
-  | succ n _ => simp only [Nat.add_eq_zero, one_ne_zero, and_false, ↓reduceIte]
-
-open Nat.Primrec in private def sg_construction := comp (prec zero (((const 1).comp left).comp left)) (pair zero .id)
--- private theorem sg_construction_prop : sg_construction=Nat.sg :=
-
--- I want to have a single construction, a single proof that that construction is equivalent to some function, and from that
--- show that the function 1. has a code and is 2. primrec/rec.
--- hmm. the reason it doesnt work simply right now is because eval below works on partial values.
--- introduce a eval_prim?
 
 namespace Nat.RecursiveIn.Code
 -- inductive code_prim : ℕ → Prop
@@ -252,16 +249,45 @@ theorem eval_prim_eq_eval (h:code_prim c) : eval_prim O c = eval O c := by
 
 
 
-theorem code_prim_imp_prim (h:code_prim c) : Nat.PrimrecIn O (eval_prim O c) := by
+theorem code_prim_prop (h:code_prim c) : ∀ O, Nat.PrimrecIn O (eval_prim O c) := by
   induction h with
-  | zero => unfold eval_prim; exact PrimrecIn.zero
-  | succ => unfold eval_prim; exact PrimrecIn.succ
-  | left => unfold eval_prim; exact PrimrecIn.left
-  | right => unfold eval_prim; exact PrimrecIn.right
-  | oracle => unfold eval_prim; exact PrimrecIn.oracle
-  | pair ha hb ha_ih hb_ih => unfold eval_prim; exact PrimrecIn.pair ha_ih hb_ih
-  | comp ha hb ha_ih hb_ih => unfold eval_prim; exact PrimrecIn.comp ha_ih hb_ih
-  | prec ha hb ha_ih hb_ih => unfold eval_prim; exact PrimrecIn.prec ha_ih hb_ih
+  | zero => unfold eval_prim; exact fun O ↦ PrimrecIn.zero
+  | succ => unfold eval_prim; exact fun O ↦ PrimrecIn.succ
+  | left => unfold eval_prim; exact fun O ↦ PrimrecIn.left
+  | right => unfold eval_prim; exact fun O ↦ PrimrecIn.right
+  | oracle => unfold eval_prim; exact fun O ↦ PrimrecIn.oracle
+  | pair ha hb ha_ih hb_ih => unfold eval_prim; exact fun O ↦ PrimrecIn.pair (ha_ih O) (hb_ih O)
+  | comp ha hb ha_ih hb_ih => unfold eval_prim; exact fun O ↦ PrimrecIn.comp (ha_ih O) (hb_ih O)
+  | prec ha hb ha_ih hb_ih => unfold eval_prim; exact fun O ↦ PrimrecIn.prec (ha_ih O) (hb_ih O)
+
+end Nat.RecursiveIn.Code
+
+
+
+/-- The signum function on naturals. Maps non-zero natural numbers to 1 and zero to 0. This is used for boolean-like computations in primitive recursive functions. -/
+@[simp] def Nat.sg := fun x => if x=0 then 0 else 1
+/-- Maps zero to 1 and non-zero natural numbers to 0. This is the inverse of `Nat.sg` for boolean-like computations. -/
+@[simp] def Nat.sg' := fun x => if x=0 then 1 else 0
+
+theorem Nat.Primrec.sg' : Nat.Primrec Nat.sg' := by
+  let construction := comp (prec (const 1) (((zero).comp left).comp left)) (pair zero .id)
+  apply Nat.Primrec.of_eq construction
+  simp only [unpaired, id_eq, unpair_pair, Nat.sg']
+  intro n
+  induction n with
+  | zero => exact rfl
+  | succ n _ => simp only [Nat.add_eq_zero, one_ne_zero, and_false, ↓reduceIte]
+
+open Nat.Primrec in private def sg_construction := comp (prec zero (((const 1).comp left).comp left)) (pair zero .id)
+-- private theorem sg_construction_prop : sg_construction=Nat.sg :=
+
+-- I want to have a single construction, a single proof that that construction is equivalent to some function, and from that
+-- show that the function 1. has a code and is 2. primrec/rec.
+-- hmm. the reason it doesnt work simply right now is because eval below works on partial values.
+-- introduce a eval_prim?
+
+
+namespace Nat.RecursiveIn.Code
 
 theorem const_prim2 : ∀ n, code_prim (Code.const n) := by
   intro n
@@ -270,19 +296,16 @@ theorem const_prim2 : ∀ n, code_prim (Code.const n) := by
   · unfold Code.const
     expose_names
     exact code_prim.comp code_prim.succ h
-@[simp]
-theorem const_eval : ∀ n m, eval_prim O (Code.const n) m = n
+
+@[simp] theorem const_eval : ∀ n m, eval_prim O (Code.const n) m = n
   | 0, _ => rfl
   | n + 1, m => by simp! [const_eval n m]
-
-def code_sg := comp (prec zero (((Code.const 1).comp left).comp left)) (pair zero .id)
-theorem code_sg_prim : code_prim code_sg := by
-  unfold code_sg
-  repeat constructor
--- theorem code_sg_prop : eval O code_sg = Nat.sg := by
-
 @[simp] theorem id_eval (n) : eval_prim O Code.id n = n := by simp! [Seq.seq, Code.id]
+end Nat.RecursiveIn.Code
 
+namespace Nat.RecursiveIn.Code
+def code_sg := comp (prec zero (((Code.const 1).comp left).comp left)) (pair zero .id)
+theorem code_sg_prim : code_prim code_sg := by unfold code_sg; repeat constructor
 theorem code_sg_prop : eval_prim O code_sg = Nat.sg := by
   simp [code_sg]
   simp [eval_prim]
@@ -290,8 +313,23 @@ theorem code_sg_prop : eval_prim O code_sg = Nat.sg := by
   induction n with
   | zero => exact rfl
   | succ n _ => simp
-
 end Nat.RecursiveIn.Code
+
+theorem Nat.PrimrecIn.sg : Nat.PrimrecIn O Nat.sg := by rw [←code_sg_prop]; apply code_prim_prop code_sg_prim
+theorem Nat.Primrec.sg : Nat.Primrec Nat.sg := by exact PrimrecIn.PrimrecIn_Empty PrimrecIn.sg
+
+
+  -- let construction := comp (prec zero (((const 1).comp left).comp left)) (pair zero .id)
+  -- apply Nat.Primrec.of_eq construction
+  -- simp only [unpaired, id_eq, unpair_pair, Nat.sg]
+  -- intro n
+  -- induction n with
+  -- | zero => exact rfl
+  -- | succ n _ => simp only [Nat.add_eq_zero, one_ne_zero, and_false, ↓reduceIte]
+
+
+
+
 
 @[simp] lemma Nat.RecursiveIn.pair' (f g : ℕ→ℕ) : ((↑fun x ↦ Nat.pair (f x) (g x)):ℕ→.ℕ)= fun (x:ℕ) => (Nat.pair <$> (f x) <*> (g x)) := by
   simp [Seq.seq]
@@ -350,8 +388,7 @@ theorem Nat.RecursiveIn.ifz1 {O:ℕ→ℕ} {c:ℕ→ℕ} (hc : Nat.RecursiveIn O
 
 
 
-variable {α : Type*} {β : Type*} {σ : Type*}
-variable [Primcodable α] [Primcodable β] [Primcodable σ]
+
 theorem Primrec.projection {f : α → β → σ} {a:α} (h:Primrec₂ f) : Primrec (f a) := by
   refine Primrec₂.comp h ?_ ?_
   · exact const a
@@ -406,32 +443,3 @@ theorem Nat.Primrec.dist : Nat.Primrec (unpaired Nat.dist) := by
 /--`[code_if_eval_eq c](x)=0 if x.1=x.2 else 1`-/
 def code_if_eq : ℕ→ℕ := fun x => 0
 theorem code_if_eq_prop : eval O (code_if_eq e) ab = if (Nat.succ ab.l.r=eval O e (Nat.pair ab.l.l ab.r)) then 0 else 1 := by sorry
-
-
--- conversions
-lemma PrimrecIn.PrimrecIn_Empty (h : Nat.PrimrecIn (fun _=>0) f) : Nat.Primrec f := by
-  induction' h with g hg g h _ _ ih₁ ih₂ g h _ _ ih₁ ih₂ g h _ _ ih₁ ih₂ g _ ih
-  repeat {constructor}
-  · (expose_names; exact Nat.Primrec.pair a_ih a_ih_1)
-  repeat {constructor; assumption; try assumption}
-  (expose_names; exact Nat.Primrec.prec a_ih a_ih_1)
-lemma PrimrecIn.PrimrecIn₂_Empty {f:α→β→σ} (h : PrimrecIn₂ (fun _=>0) f) : Primrec₂ f := by
-  unfold PrimrecIn₂ at h
-  unfold Primrec₂
-  apply PrimrecIn.PrimrecIn_Empty
-  exact h
-
-theorem Primrec.to_PrimrecIn₂ {f:α→β→σ} (h : Primrec₂ f) : PrimrecIn₂ O f := by
-  unfold Primrec₂ at h
-  unfold PrimrecIn₂
-  apply Primrec.to_PrimrecIn
-  exact h
-
-theorem PrimrecIn.PrimrecIn₂_iff_Primrec₂ {f:α→β→σ} : (∀O,PrimrecIn₂ O f) ↔ Primrec₂ f := by
-  constructor
-  · exact fun a ↦ PrimrecIn₂_Empty (a fun x ↦ 0)
-  · exact fun a O ↦ Primrec.to_PrimrecIn₂ a
-theorem PrimrecIn.PrimrecIn_iff_Primrec : (∀O,Nat.PrimrecIn O f) ↔ Nat.Primrec f := by
-  constructor
-  · exact fun a ↦ PrimrecIn.PrimrecIn_Empty (a fun x ↦ 0)
-  · exact fun a O ↦ Nat.Primrec.to_PrimrecIn a
