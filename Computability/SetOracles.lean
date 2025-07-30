@@ -16,6 +16,7 @@ theorem χsimp {O} : χ O = fun x ↦ if x ∈ O then 1 else 0 := by exact rfl
 @[simp] noncomputable def evalSet (O:Set ℕ) : Nat.RecursiveIn.Code → ℕ→.ℕ := eval (χ O)
 @[simp] noncomputable def evalSet₁ (O:Set ℕ) : ℕ→.ℕ := eval₁ (χ O)
 @[simp] noncomputable def evalnSet₁ (O:Set ℕ) : ℕ→ℕ := evaln₁ (χ O)
+theorem prim_evalnSet₁:Nat.PrimrecIn (χ O) (evalnSet₁ O) := by simp only [evalnSet₁]; exact prim_evaln₁
 def SetK0 (A:Set ℕ) := {ex:ℕ | (evalSet A ex.unpair.1 ex.unpair.2).Dom}
 def SetK (A:Set ℕ) := {x:ℕ | (evalSet A x x).Dom}
 abbrev SetJump := SetK
@@ -63,9 +64,12 @@ noncomputable def c_evalSet₁ (O:Set ℕ) := choose (@exists_code_for_evalSet�
 @[simp] theorem c_evalSet₁_ev2 : eval (χ O) (c_evalSet₁ O) = evalSet₁ O := by exact choose_spec exists_code_for_evalSet₁
 
 private theorem exists_code_for_evalnSet₁ : ∃ c:Nat.RecursiveIn.Code, evalSet O c = evalnSet₁ O := by apply ((exists_code_for_evalSet O (evalnSet₁ O)).mp) (Nat.RecursiveIn.of_primrecIn prim_evaln₁)
-noncomputable def c_evalnSet₁ (O:Set ℕ) := choose (@exists_code_for_evalnSet₁ O)
-@[simp] theorem c_evalnSet₁_ev : evalSet O (c_evalnSet₁ O) = evalnSet₁ O := by exact choose_spec exists_code_for_evalnSet₁
-@[simp] theorem c_evalnSet₁_ev2 : eval (χ O) (c_evalnSet₁ O) = evalnSet₁ O := by exact choose_spec exists_code_for_evalnSet₁
+private theorem exists_prim_code_for_evalnSet₁ : ∃ c, c.code_prim ∧ evalnSet₁ O = eval_prim (χ O) c := by exact code_prim_of_primrecIn prim_evalnSet₁
+noncomputable def c_evalnSet₁ (O:Set ℕ) := choose (@exists_prim_code_for_evalnSet₁ O)
+@[simp] theorem c_evalnSet₁_evp : eval_prim (χ O) (c_evalnSet₁ O) = evalnSet₁ O := by exact (choose_spec exists_prim_code_for_evalnSet₁).right.symm
+@[simp] theorem c_evalnSet₁_ev_pr : code_prim (c_evalnSet₁ O) := by exact (choose_spec exists_prim_code_for_evalnSet₁).left
+@[simp] theorem c_evalnSet₁_ev2 : eval (χ O) (c_evalnSet₁ O) = evalnSet₁ O := by rw [←@eval_prim_eq_eval (c_evalnSet₁ O) (χ O) c_evalnSet₁_ev_pr]; simp
+@[simp] theorem c_evalnSet₁_ev : evalSet O (c_evalnSet₁ O) = evalnSet₁ O := by simp
 
 private theorem exists_code_for_eval₁ : ∃ c:Nat.RecursiveIn.Code, eval O c = eval₁ O := by apply (exists_code.mp) rec_eval₁
 noncomputable def c_eval₁ (O:ℕ→ℕ) := choose (@exists_code_for_eval₁ O)
@@ -475,10 +479,13 @@ section ran_to_dom
 -- helper functions:
 /--`[code_if_eval_eq c](x)=0 if x.1.2+1=[c](x.1.1, x.2) else 0`-/
 noncomputable def c_ifevaleq (O:ℕ→ℕ) : ℕ→ℕ := fun c => c_if_eq'.comp (pair (succ.comp $ right.comp left) ((c_eval₁ O).comp $ pair c (pair (left.comp left) right)))
+-- theorem c_ifevaleq_ev (h:code_prim c) : eval_prim O (c_ifevaleq O c) ab = if (Nat.succ ab.l.r=eval_prim O c (Nat.pair ab.l.l ab.r)) then 0 else 1 := by
 theorem c_ifevaleq_ev : eval O (c_ifevaleq O c) ab = if (Nat.succ ab.l.r=eval O c (Nat.pair ab.l.l ab.r)) then 0 else 1 := by
   rw [c_ifevaleq]
   simp only [decodeCode_encodeCode]
-  simp only [eval]
+  -- simp only [eval]
+  simp [eval_prim]
+
 
 
   -- simp [eval]
@@ -490,7 +497,7 @@ theorem c_ifevaleq_ev : eval O (c_ifevaleq O c) ab = if (Nat.succ ab.l.r=eval O 
 /--`[code_if_eval_eq c](x)=0 if x.1.2+1=[c:O,](x.1.1, x.2) else 0`-/
 noncomputable def c_ran_to_dom_aux (O:Set ℕ) : ℕ := c_if_eq'.comp (pair (succ.comp $ right.comp left) ((c_evalnSet₁ O).comp (pair (left.comp left) right)))
 theorem c_ran_to_dom_aux_ev (O:Set ℕ) : eval_prim (χ O) (c_ran_to_dom_aux O) ab = if (Nat.succ ab.l.r=evalnSet₁ O (Nat.pair ab.l.l ab.r)) then 0 else 1 := by
-  simp
+  simp [c_ran_to_dom_aux, eval_prim]
   sorry
 
 

@@ -88,7 +88,6 @@ theorem prim_total (h:code_prim c):∀x,(eval O c x).Dom := by
       expose_names;
       use IH'
       apply hb_ih
-
 def eval_total (O:ℕ→ℕ) (c:Code) {h:∀x,(eval O c x).Dom}:ℕ→ℕ := fun x => (eval O c x).get (h x)
 def eval_prim (O:ℕ→ℕ):Code→ℕ→ℕ
 | zero       => fun x=>0
@@ -156,6 +155,34 @@ theorem code_prim_prop (h:code_prim c):∀ O, Nat.PrimrecIn O (eval_prim O c) :=
   | pair ha hb ha_ih hb_ih => unfold eval_prim; exact fun O ↦ PrimrecIn.pair (ha_ih O) (hb_ih O)
   | comp ha hb ha_ih hb_ih => unfold eval_prim; exact fun O ↦ PrimrecIn.comp (ha_ih O) (hb_ih O)
   | prec ha hb ha_ih hb_ih => unfold eval_prim; exact fun O ↦ PrimrecIn.prec (ha_ih O) (hb_ih O)
+theorem code_prim_of_primrecIn (h:Nat.PrimrecIn O f) : ∃ c, code_prim c ∧ f=eval_prim O c := by
+  induction h with
+  | zero => use Code.zero; exact ⟨code_prim.zero,rfl⟩
+  | succ => use Code.succ; exact ⟨code_prim.succ,rfl⟩
+  | left => use Code.left; exact ⟨code_prim.left,rfl⟩
+  | right => use Code.right; exact ⟨code_prim.right,rfl⟩
+  | oracle => use Code.oracle; exact ⟨code_prim.oracle,rfl⟩
+  | pair pf pg ef eg =>
+    rcases ef with ⟨cf,hcf⟩
+    rcases eg with ⟨cg,hcg⟩
+    use Code.pair cf cg;
+    constructor
+    · exact code_prim.pair hcf.left hcg.left
+    · simp only [eval_prim]; rw [hcf.right, hcg.right]
+  | comp pf pg ef eg =>
+    rcases ef with ⟨cf,hcf⟩
+    rcases eg with ⟨cg,hcg⟩
+    use Code.comp cf cg;
+    constructor
+    · exact code_prim.comp hcf.left hcg.left
+    · simp only [eval_prim]; rw [hcf.right, hcg.right]
+  | prec pf pg ef eg =>
+    rcases ef with ⟨cf,hcf⟩
+    rcases eg with ⟨cg,hcg⟩
+    use Code.prec cf cg;
+    constructor
+    · exact code_prim.prec hcf.left hcg.left
+    · simp only [eval_prim]; rw [hcf.right, hcg.right]
 
 end Nat.RecursiveIn.Code
 
