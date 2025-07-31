@@ -4,7 +4,7 @@ import Mathlib.Order.Basic
 open scoped Computability
 open Classical
 open Nat.RecursiveIn.Code
-namespace Computability
+-- namespace Computability
 
 -- definitions
 noncomputable def χ (O:Set ℕ) : ℕ→ℕ := fun x ↦ if x ∈ O then 1 else 0
@@ -321,44 +321,23 @@ abbrev W (O:Set ℕ) (e : ℕ) := (evalSet O e).Dom
 abbrev WR (O:Set ℕ) (e : ℕ) := (evalSet O e).ran
 
 section dom_to_ran
-def ef:ℕ→ℕ:=fun c=>(pair Nat.RecursiveIn.Code.id c)
--- def code_to_code_ef:ℕ→ℕ:=(pair Nat.RecursiveIn.Code.id : ℕ→ℕ)
-theorem code_ef_left (h:(eval O c x).Dom) : eval O (left.comp $ ef c) x = x := by
-  have h0 : (eval O c x).get h ∈ (eval O c x) := by exact Part.get_mem h
-  have h1 : eval O c x = Part.some ((eval O c x).get h) := by exact Part.get_eq_iff_eq_some.mp rfl
-
-  simp [ef, eval]
-  rw [h1]
-  -- should maybe define some theorem that simplfies the Nat.pair <*> business
-  simp [Seq.seq]
-  exact Part.Dom.bind h fun y ↦ Part.some x
-theorem eval_code_ef : eval O (ef c) x = Nat.pair <$> x <*> (eval O c x) := by
-  simp [ef,eval]
-theorem prim_code_to_code_ef' : Primrec (pair Nat.RecursiveIn.Code.id) := by
-  refine Primrec.projection ?_
-  apply PrimrecIn.PrimrecIn₂_iff_Primrec₂.mp
-  intro O
-  apply pair_prim
-theorem prim_code_to_code_ef : Nat.Primrec ef := by
-  refine Primrec.nat_iff.mp ?_
-  apply prim_code_to_code_ef'
 
 
-theorem code_ef_dom_iff_code_dom : (eval O (ef c) x).Dom ↔ (eval O c x).Dom := by
+theorem code_ef_dom_iff_code_dom : (eval O (c_ef c) x).Dom ↔ (eval O c x).Dom := by
   constructor
   · contrapose
-    simp [ef]
+    simp [c_ef]
     intro h
     simp [eval]
     simp [Seq.seq]
     exact h
-  · simp [ef]
+  · simp [c_ef]
     intro h
     simp [eval]
     simp [Seq.seq]
     exact h
 /-- Given a code `e`, returns a code whose range is the domain of `e`. -/
-noncomputable def dom_to_ran (O:Set ℕ) : (ℕ→ℕ) := fun e => curry ((comp) (right.comp left) (ef (c_evalSet₁ O))) e
+noncomputable def dom_to_ran (O:Set ℕ) : (ℕ→ℕ) := fun e => curry ((comp) (right.comp left) (c_ef (c_evalSet₁ O))) e
 -- the internal expression, (comp) (right.comp left) (code_to_code_ef (c_evalSet₁ O)), takes a pair ex as input.
 -- code_to_code_ef (c_evalSet₁ O) ex = (ex, [e](x)).
 -- piping it into right.comp left returns x.
@@ -386,7 +365,7 @@ theorem dom_to_ran_prop : (W O e) = (WR O (dom_to_ran O e)) := by
     simp only [eval_curry, Set.mem_setOf_eq]
     use xs
     simp only [eval, Part.coe_some, Part.bind_eq_bind]
-    rw [eval_code_ef]
+    rw [c_ef_ev]
 
     apply Part.dom_iff_mem.mp at h5234
     rcases h5234 with ⟨y',hy'⟩
@@ -415,7 +394,7 @@ theorem dom_to_ran_prop : (W O e) = (WR O (dom_to_ran O e)) := by
     simp
     intro x
     simp only [eval, Part.coe_some, Part.bind_eq_bind]
-    rw [eval_code_ef]
+    rw [c_ef_ev]
 
     cases Classical.em ((eval (χ O) (decodeCode (c_evalSet₁ O)) (Nat.pair e x)).Dom) with
     | inl h' =>
@@ -435,7 +414,7 @@ theorem dom_to_ran_prop : (W O e) = (WR O (dom_to_ran O e)) := by
       simp [Seq.seq]
 
 
-private lemma prim_dom_to_ran_aux : Primrec ((right.comp left).comp (decodeCode (ef (c_evalSet₁ O)))).curry := by
+private lemma prim_dom_to_ran_aux : Primrec ((right.comp left).comp (decodeCode (c_ef (c_evalSet₁ O)))).curry := by
   refine Primrec.projection ?_
   apply PrimrecIn.PrimrecIn₂_iff_Primrec₂.mp
   exact fun O ↦ curry_prim
@@ -622,6 +601,63 @@ def DSize : ℕ → ℕ
 | (n+1) => (n+1)&&&1 + DSize ((n+1)/2)
 theorem Nat.Primrec.DSize_prim : Nat.Primrec DSize := by sorry
 
+
+
+section BSMem
+namespace Nat.RecursiveIn.Code
+def c_BSMem := (prec c_id ((succ.comp right).comp right))
+@[simp] theorem c_BSMem_ev_pr:code_prim c_BSMem := by unfold c_BSMem; repeat constructor
+@[simp] theorem c_BSMem_evp:eval_prim O c_BSMem = unpaired Nat.BSMem := by
+  simp [c_BSMem,eval_prim]
+  funext n;
+  simp [unpaired]
+  induction (unpair n).2 with
+  | zero => exact rfl
+  | succ n h => exact Nat.BSMem_left_inj.mpr h
+@[simp] theorem c_BSMem_ev:eval O c_BSMem = unpaired Nat.BSMem := by rw [← eval_prim_eq_eval c_BSMem_ev_pr]; simp only [c_BSMem_evp]
+end Nat.RecursiveIn.Code
+-- theorem Nat.PrimrecIn.BSMem:Nat.PrimrecIn O Nat.BSMem := by ...
+-- theorem Nat.Primrec.BSMem:Nat.Primrec Nat.BSMem := by ...
+end BSMem
+
+
+
+
+
+
+
+#eval (λx↦2*x) 3
+
+namespace Nat.RecursiveIn.Code
+def encodeCode_oraclereplacement (o:ℕ) : Code → ℕ
+| Code.zero        => 0
+| Code.succ        => 1
+| Code.left        => 2
+| Code.right       => 3
+| Code.oracle      => o
+| Code.pair cf cg  => 2*(2*(Nat.pair (encodeCode cf) (encodeCode cg))  )   + 5
+| Code.comp cf cg  => 2*(2*(Nat.pair (encodeCode cf) (encodeCode cg))  )+1 + 5
+| Code.prec cf cg  => 2*(2*(Nat.pair (encodeCode cf) (encodeCode cg))+1)   + 5
+| Code.rfind' cf   => 2*(2*(encodeCode cf                            )+1)+1 + 5
+end Nat.RecursiveIn.Code
+
+def code_total {O c} := ∀x,(eval O c x).Dom
+-- def eval_comp_oracle (h:code_total ∅ oex.l) : ℕ→ℕ := fun oex => eval (eval (Nat.fzero) oex.l) oex.r.l oex.r.r
+
+-- Given a code c, returns a new code which on every oracle query, instead queries the code o.
+namespace Nat.RecursiveIn.Code
+def c_eval_custom_oracle (o:ℕ) : Code→Code := fun c => encodeCode_oraclereplacement o c
+def c_eval_custom_oracle₁ : Code := zero
+def c_eval_custom_oracle₁_aux : Code := zero
+-- theorem c_eval_custom_oracle₁_ev (code_total Nat.fzero oex.l) : eval O c_eval_custom_oracle₁ oex = eval ()
+theorem c_eval_pr_oracle₁_ev (h:code_prim oex.l) : eval O c_eval_custom_oracle₁ oex = eval (eval_prim Nat.fzero oex.l) oex.r.l oex.r.r := by sorry
+theorem c_eval_pr_oracle₁_ev_aux : eval_prim O c_eval_custom_oracle₁_aux oe = encodeCode_oraclereplacement oe.l oe.r := by
+  unfold c_eval_custom_oracle₁_aux
+  sorry
+
+end Nat.RecursiveIn.Code
+theorem asdasd : Primrec c_eval_custom_oracle
+
 -- def D : ℕ→Finset ℕ := fun a => {x | (BSMem (Nat.pair a x))=1}
 -- def D : ℕ→Set ℕ := fun a => {x | (BSMem (Nat.pair a x))=1}
 namespace KP54
@@ -767,7 +803,7 @@ theorem c_simple_aux_ev : eval (χ O) (c_simple_aux O) ab = if (Nat.succ ab.l.r=
   simp only [PFun.coe_val, c_simple_aux_evp]
   exact apply_ite Part.some (ab.l.r.succ = evalnSet₁ O (Nat.pair ab.l.l ab.r)) 0 1
 def f_simple_ran (O:Set ℕ) : ℕ→ℕ := fun c => curry (code_rfind (c_ifevaleq (ef $ c_evalnSet₁ O))) c
-#check ef
+#check c_ef
 /-
 rfind $ code for function that when given input (e,config):
   runs (evaln e config; if halt, return configinput+1 else 0), and checks: 1. it is non-zero; 2. it is larger than 2e)
