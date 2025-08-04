@@ -551,11 +551,46 @@ section div_flip
 namespace Nat.RecursiveIn.Code
 -- def c_div_flip_aux := prec (c_const $ Nat.list_append Nat.list_empty 0) $ c_efl $ c_mul.comp $ pair (c_sg.comp $ c_sub.comp $ pair (right.comp left) left) (succ.comp (c_l_get_lastn.curry left))
 -- def c_div_flip_aux := c_efl $ prec (c_const 0) $ c_mul.comp $ pair (c_sg.comp $ c_sub.comp $ pair (right.comp left) left) (succ.comp (c_l_get_lastn.comp $ pair c_id left))
-def c_div_flip_aux := c_cov_rec (c_const 0) $ c_mul.comp $ pair (c_sg.comp $ c_sub.comp $ pair (right.comp left) left) (succ.comp (c_l_get_lastn.comp $ pair c_id left))
+-- def c_div_flip_aux := c_cov_rec (c_const 0) $ c_mul.comp $ pair (c_sg.comp $ c_sub.comp $ pair (right.comp left) left) (succ.comp (c_l_get_lastn.comp $ pair c_id left))
+def c_div_flip_aux := c_mul.comp $ pair (c_sg.comp left) $ c_cov_rec (c_const 0) $ c_mul.comp $ pair (c_sg.comp $ c_sub.comp $ pair (right.comp left) left) (succ.comp (c_l_get_lastn.comp $ pair (right.comp right) left))
 def c_div_flip := c_l_get_last.comp c_div_flip_aux
 -- @[simp] theorem c_div_flip_ev_pr:code_prim c_div_flip := by unfold c_div_flip; repeat constructor
 def div_flip_aux : ℕ→ℕ→ℕ := fun d n => if d=0 then 0 else (if n<d then 0 else (div_flip_aux d (n-d))+1)
-theorem c_div_flip_evp_aux:eval_prim O c_div_flip = unpaired (flip ((· / ·) : ℕ → ℕ → ℕ)) := by
+
+theorem div_flip_aux_eq_div_flip : div_flip_aux = (flip ((· / ·) : ℕ → ℕ → ℕ)) := by
+  funext d n
+  simp [flip]
+  cases d
+  · unfold div_flip_aux
+    simp
+  · expose_names
+    induction' n using Nat.strong_induction_on with n h
+    unfold div_flip_aux
+    simp
+    cases Nat.lt_or_ge (n) (n_1+1) with
+    | inl h2 =>
+      simp [h2]
+      exact Eq.symm (div_eq_of_lt h2)
+    | inr h2 =>
+      rw [h]
+      simp [Nat.not_lt.mpr h2]
+      have h3 : (n-(n_1+1)*1)/(n_1+1) = n/(n_1+1)-1 := by exact sub_mul_div n (n_1 + 1) 1
+      have h4 : 0 < n/(n_1+1)  := by
+        apply Nat.div_pos_iff.mpr
+        constructor
+        · exact zero_lt_succ n_1
+        · exact h2
+      have h5 : (n-(n_1+1)*1)/(n_1+1) +1 = n/(n_1+1) := by exact Eq.symm ((fun {b a c} h ↦ (Nat.sub_eq_iff_eq_add h).mp) h4 (_root_.id (Eq.symm h3)))
+      simp at h5
+      exact h5
+      simp
+      exact zero_lt_of_lt h2
+
+
+
+
+
+theorem c_div_flip_evp_aux:eval_prim O c_div_flip = unpaired div_flip_aux := by
   sorry
 @[simp] theorem c_div_flip_evp:eval_prim O c_div_flip = unpaired (flip ((· / ·) : ℕ → ℕ → ℕ)) := by
   unfold c_div_flip
