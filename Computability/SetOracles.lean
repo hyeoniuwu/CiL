@@ -588,45 +588,9 @@ end ran_to_dom
 
 
 
--- We define interpretations of naturals as finite strings on the alphabet {0,1}.
--- (b,l) is interpreted as the string of length l, whose sequence matches with the binary representation of b.
-/-- `BSMem (a,x) = [x∈Dₐ]` (iversion brackets) -/
-def BSMem : ℕ→ℕ := fun xa => if Nat.testBit xa.r xa.l.l then 1 else 0
-#eval BSMem (Nat.pair 3 0b01000)
-theorem Nat.Primrec.BSMem_prim : Nat.Primrec BSMem := by sorry
-def BSUnion : ℕ→ℕ := fun bl1bl2 => Nat.pair (Nat.lor bl1bl2.l.l bl1bl2.r.l) (Nat.max bl1bl2.l.r bl1bl2.r.r)
-theorem Nat.Primrec.BSUnion_prim : Nat.Primrec BSUnion := by sorry
-def DSize : ℕ → ℕ
-| 0     => 0
-| (n+1) => (n+1)&&&1 + DSize ((n+1)/2)
-theorem Nat.Primrec.DSize_prim : Nat.Primrec DSize := by sorry
 
 
 
-section BSMem
-namespace Nat.RecursiveIn.Code
-def c_BSMem := (prec c_id ((succ.comp right).comp right))
-@[simp] theorem c_BSMem_ev_pr:code_prim c_BSMem := by unfold c_BSMem; repeat constructor
-@[simp] theorem c_BSMem_evp:eval_prim O c_BSMem = unpaired Nat.BSMem := by
-  simp [c_BSMem,eval_prim]
-  funext n;
-  simp [unpaired]
-  induction (unpair n).2 with
-  | zero => exact rfl
-  | succ n h => exact Nat.BSMem_left_inj.mpr h
-@[simp] theorem c_BSMem_ev:eval O c_BSMem = unpaired Nat.BSMem := by rw [← eval_prim_eq_eval c_BSMem_ev_pr]; simp only [c_BSMem_evp]
-end Nat.RecursiveIn.Code
--- theorem Nat.PrimrecIn.BSMem:Nat.PrimrecIn O Nat.BSMem := by ...
--- theorem Nat.Primrec.BSMem:Nat.Primrec Nat.BSMem := by ...
-end BSMem
-
-
-
-
-
-
-
-#eval (λx↦2*x) 3
 
 namespace Nat.RecursiveIn.Code
 def encodeCode_oraclereplacement (o:ℕ) : Code → ℕ
@@ -672,10 +636,14 @@ noncomputable def KP54 : ℕ→ℕ := fun s =>
     let n:=DSize (KP54 s-1).r
     -- ask ∅' if there exists a n s.t. a:=BSUnion n (KP54 s-1).l satisfies (eval (D a) i n).Dom.
     -- for this, define c s.t. [c](n)= if (eval (D $ BSUnion n (KP54 s-1).l) i n).Dom then 0 else 1.
+    -- NOTE. the computation should diverge if queries are made beyond the size of the binary string.
     -- then ask if (rfind c, n)∈K₀.
     -- if so then return (a, )
     Nat.pair 0 0
   else Nat.pair 0 0
+-- how will we prove that extending A_s maintains the halting status?
+-- need to show that extending strings
+
 /-
 `KP54(s)=(a,b)` where `D a, D b` correspond to sets `A` and `B` at stage `s`.
 We note that:
@@ -685,8 +653,8 @@ We note that:
 
 -- private def A := {x | x ∈ D (KP54 (2*x+1)).l}
 -- private def B := {x | x ∈ D (KP54 (2*x)).r}
-private def A := {x | BSMem (Nat.pair x (KP54 (2*x+1)).l) = 1}
-private def B := {x | BSMem (Nat.pair x (KP54 (2*x)).r)   = 1}
+private def A := {x | Nat.BSMem (Nat.pair x (KP54 (2*x+1)).l) = 1}
+private def B := {x | Nat.BSMem (Nat.pair x (KP54 (2*x)).r)   = 1}
 private theorem R (i:ℕ) : evalSet A i ≠ χ B := by sorry
 private theorem S (i:ℕ) : evalSet B i ≠ χ A := by sorry
 

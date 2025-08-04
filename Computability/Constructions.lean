@@ -745,28 +745,91 @@ end mod
 
 
 
+-- We define interpretations of naturals as finite strings on the alphabet {0,1}.
+-- (l,b) is interpreted as the string of length l, whose sequence matches with the binary representation of b.
+
+section BSMem
+/-- `BSMem (x,(l,b)) = [x∈Dₐ]` (iversion brackets) -/
+def Nat.BSMem : ℕ→ℕ := fun xa => if Nat.testBit xa.r.r xa.l then 1 else 0
+theorem BSMem_eq_BSMem_aux : Nat.BSMem = fun xa => xa.r.r % (2^xa.l) := by sorry
+namespace Nat.RecursiveIn.Code
+
+#eval BSMem (Nat.pair 1 (Nat.pair 5 0b01000))
+#eval BSMem (Nat.pair 2 (Nat.pair 5 0b01000))
+#eval BSMem (Nat.pair 3 (Nat.pair 5 0b01000))
+
+def c_BSMem := c_mod.comp₂ (right.comp right) (c_pow.comp₂ (c_const 2) left)
+@[simp] theorem c_BSMem_ev_pr:code_prim c_BSMem := by unfold c_BSMem; repeat (constructor; try simp)
+@[simp] theorem c_BSMem_evp:eval_prim O c_BSMem = Nat.BSMem := by
+  simp [c_BSMem,eval_prim]
+  rw [BSMem_eq_BSMem_aux]
+@[simp] theorem c_BSMem_ev:eval O c_BSMem = Nat.BSMem := by rw [← eval_prim_eq_eval c_BSMem_ev_pr]; simp only [c_BSMem_evp]
+end Nat.RecursiveIn.Code
+theorem Nat.PrimrecIn.BSMem:Nat.PrimrecIn O Nat.BSMem := by rw [← c_BSMem_evp]; apply code_prim_prop c_BSMem_ev_pr
+theorem Nat.Primrec.BSMem:Nat.Primrec Nat.BSMem := by exact PrimrecIn.PrimrecIn_Empty PrimrecIn.BSMem
+end BSMem
+
+section BSUnion
+def Nat.BSUnion : ℕ→ℕ := fun bl1bl2 => Nat.pair (Nat.max bl1bl2.l.l bl1bl2.r.l) (Nat.lor bl1bl2.l.r bl1bl2.r.r)
+theorem BSUnion_eq_BSUnion_aux : Nat.BSUnion = fun xa => xa.r.r % (2^xa.l) := by sorry
+namespace Nat.RecursiveIn.Code
+def c_BSUnion := c_mod.comp₂ (right.comp right) (c_pow.comp₂ (c_const 2) left)
+@[simp] theorem c_BSUnion_ev_pr:code_prim c_BSUnion := by unfold c_BSUnion; repeat (constructor; try simp)
+@[simp] theorem c_BSUnion_evp:eval_prim O c_BSUnion = Nat.BSUnion := by
+  simp [c_BSUnion,eval_prim]
+  rw [BSUnion_eq_BSUnion_aux]
+@[simp] theorem c_BSUnion_ev:eval O c_BSUnion = Nat.BSUnion := by rw [← eval_prim_eq_eval c_BSUnion_ev_pr]; simp only [c_BSUnion_evp]
+end Nat.RecursiveIn.Code
+theorem Nat.PrimrecIn.BSUnion:Nat.PrimrecIn O Nat.BSUnion := by rw [← c_BSUnion_evp]; apply code_prim_prop c_BSUnion_ev_pr
+theorem Nat.Primrec.BSUnion:Nat.Primrec Nat.BSUnion := by exact PrimrecIn.PrimrecIn_Empty PrimrecIn.BSUnion
+end BSUnion
+
+section BSSize
+def Nat.BSSize : ℕ → ℕ
+| 0     => 0
+| (n+1) => (n+1)&&&1 + BSSize ((n+1)/2)
+theorem BSSize_eq_BSSize_aux : Nat.BSSize = fun xa => xa.r.r % (2^xa.l) := by sorry
+namespace Nat.RecursiveIn.Code
 
 
 
--- section BSMem
--- /-- `BSMem (a,x) = [x∈Dₐ]` (iversion brackets) -/
--- def Nat.BSMem : ℕ→ℕ := fun xa => if Nat.testBit xa.r xa.l.l then 1 else 0
--- namespace Nat.RecursiveIn.Code
+def c_BSSize := c_mod.comp₂ (right.comp right) (c_pow.comp₂ (c_const 2) left)
+@[simp] theorem c_BSSize_ev_pr:code_prim c_BSSize := by unfold c_BSSize; repeat (constructor; try simp)
+@[simp] theorem c_BSSize_evp:eval_prim O c_BSSize = Nat.BSSize := by
+  simp [c_BSSize,eval_prim]
+  rw [BSSize_eq_BSSize_aux]
+@[simp] theorem c_BSSize_ev:eval O c_BSSize = Nat.BSSize := by rw [← eval_prim_eq_eval c_BSSize_ev_pr]; simp only [c_BSSize_evp]
+end Nat.RecursiveIn.Code
+theorem Nat.PrimrecIn.BSSize:Nat.PrimrecIn O Nat.BSSize := by rw [← c_BSSize_evp]; apply code_prim_prop c_BSSize_ev_pr
+theorem Nat.Primrec.BSSize:Nat.Primrec Nat.BSSize := by exact PrimrecIn.PrimrecIn_Empty PrimrecIn.BSSize
+end BSSize
 
--- def c_BSMem := (prec c_id ((succ.comp right).comp right))
--- @[simp] theorem c_BSMem_ev_pr:code_prim c_BSMem := by unfold c_BSMem; repeat constructor
--- @[simp] theorem c_BSMem_evp:eval_prim O c_BSMem = Nat.BSMem := by
---   simp [c_BSMem,eval_prim]
+
+
+
+section evaln
+namespace Nat.RecursiveIn.Code
+
+/-
+
+
+
+-/
+-- def c_evaln := c_mod.comp₂ (right.comp right) (c_pow.comp₂ (c_const 2) left)
+-- @[simp] theorem c_evaln_ev_pr:code_prim c_evaln := by unfold c_evaln; repeat (constructor; try simp)
+-- @[simp] theorem c_evaln_evp:evaln_prim O c_evaln = Nat.evaln := by
+--   simp [c_evaln,evaln_prim]
 --   funext n;
+--   sorry
 --   simp [unpaired]
 --   induction (unpair n).2 with
 --   | zero => exact rfl
---   | succ n h => exact Nat.BSMem_left_inj.mpr h
--- @[simp] theorem c_BSMem_ev:eval O c_BSMem = unpaired Nat.BSMem := by rw [← eval_prim_eq_eval c_BSMem_ev_pr]; simp only [c_BSMem_evp]
+--   | succ n h => exact Nat.evaln_left_inj.mpr h
+-- @[simp] theorem c_evaln_ev:evaln O c_evaln = unpaired Nat.evaln := by rw [← evaln_prim_eq_evaln c_evaln_ev_pr]; simp only [c_evaln_evp]
 -- end Nat.RecursiveIn.Code
--- -- theorem Nat.PrimrecIn.BSMem:Nat.PrimrecIn O Nat.BSMem := by ...
--- -- theorem Nat.Primrec.BSMem:Nat.Primrec Nat.BSMem := by ...
--- end BSMem
+-- -- theorem Nat.PrimrecIn.evaln:Nat.PrimrecIn O Nat.evaln := by ...
+-- -- theorem Nat.Primrec.evaln:Nat.Primrec Nat.evaln := by ...
+-- end evaln
 
 
 
