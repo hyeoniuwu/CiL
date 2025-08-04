@@ -285,7 +285,12 @@ def Nat.list_get_last_aux (list index:ℕ):ℕ:=
 def Nat.list_get_lastn (list index:ℕ):ℕ:=(Nat.list_get_last_aux list index).r
 def Nat.list_get_last (list:ℕ) :=list.r.r
 def Nat.list_size (list:ℕ) := list.l
-def Nat.list_get (list index:ℕ) := Nat.list_get_lastn list ((Nat.list_size list-1)-index)
+def Nat.list_get (list index:ℕ) := Nat.list_get_lastn list (list.list_size-1-index)
+
+#check (Nat.pair 2 (Nat.pair (Nat.pair 0 132) 42))
+#eval Nat.list_get_last (Nat.pair 2 (Nat.pair (Nat.pair 0 132) 42))
+#eval Nat.list_get_lastn (Nat.pair 2 (Nat.pair (Nat.pair 0 132) 42)) 0
+#eval Nat.list_get_lastn (Nat.pair 2 (Nat.pair (Nat.pair 0 132) 42)) 1
 
 namespace Nat.RecursiveIn.Code
 def c_l_get_lastn_aux := prec right (left.comp $ right.comp right)
@@ -397,32 +402,48 @@ open Nat in
   unfold list_size
   simp
   sorry
+
+
 open Nat in
-@[simp] theorem append_get {l:ℕ} (hi:i<l.l): (l.list_get i = y) → (l.list_append x).list_get i = y := by
-  unfold list_append
-  unfold list_get
+@[simp] theorem append_get_last_aux {l:ℕ}: l.list_get_last_aux i =  (l.list_append x).list_get_last_aux (i+1) := by
+  induction i
+  ·
+    unfold list_get_last_aux
+    unfold list_get_last_aux
+    unfold list_append
+    simp
+  · expose_names
+    unfold list_append
+    unfold list_get_last_aux
+    rw [h]
+    unfold list_append
+    simp
+
+open Nat in
+@[simp] theorem append_getlastn {l:ℕ}: l.list_get_lastn i = (l.list_append x).list_get_lastn (i+1) := by
   unfold list_get_lastn
-  unfold list_get_last_aux
+  rw [append_get_last_aux]
+
+open Nat in
+@[simp] theorem append_size {l:ℕ} : (l.list_append x).list_size = l.list_size +1 := by
+  unfold list_append
   unfold list_size
   simp
-  have asd : (unpair l).1-i>0 := by exact zero_lt_sub_of_lt hi
-  have asd2 : ∃ n, (unpair l).1 - i = n+1 := by exact exists_eq_add_one.mpr asd
-  rcases asd2 with ⟨n,hn⟩
-  rw [hn]
-  simp
-  intro h
 
-  -- let n := (unpair l).1 - 1 - i
-  -- rw [show (unpair l).1 - 1 - i = n from rfl] at h
-  induction i with
-  | zero =>
-    simp
-  | succ n _ => sorry
-  -- induction (unpair l).1-i with
-  -- | zero =>
-  --   sorry
-  -- | succ asd h3 =>
-  --   simp
+open Nat in
+@[simp] theorem append_get {l:ℕ} (hi:i<l.list_size): l.list_get i = (l.list_append x).list_get i := by
+  unfold list_get
+  simp only [append_size]
+  simp
+  have hi5 : l.list_size - i - 1 = l.list_size - 1 - i := by exact Simproc.sub_add_eq_comm l.list_size i 1
+  have hi6 : l.list_size - i > 0 := by exact zero_lt_sub_of_lt hi
+  have main_rewrite : (l.list_size - 1 - i)+1 = l.list_size - i := by
+    rw [←hi5]
+    exact Nat.sub_add_cancel hi6
+
+  rw [←main_rewrite]
+  exact append_getlastn
+
 
 
 
@@ -432,8 +453,12 @@ def c_cov_rec (cf cg:Code):= prec (c_l_append.comp $ pair (c_const Nat.list_empt
 -- @[simp] theorem c_div_flip_ev_pr:code_prim c_div_flip := by unfold c_div_flip; repeat constructor
 theorem asd : eval_prim O (c_cov_rec cf cg) (Nat.pair x (i+1)) = eval_prim O (c_cov_rec cf cg) (Nat.pair x i) := by sorry
 @[simp] theorem c_cov_rec_evp_0 : Nat.list_get (eval_prim O (c_cov_rec cf cg) (Nat.pair x i)) 0 = eval_prim O cf x.l := by
+  unfold c_cov_rec
+  simp [eval_prim]
+
   induction i with
   | zero =>
+
     unfold c_cov_rec
     simp [eval_prim]
   | succ i h =>
