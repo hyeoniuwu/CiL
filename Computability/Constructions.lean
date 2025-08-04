@@ -522,57 +522,15 @@ theorem asd : eval_prim O (c_cov_rec cf cg) (Nat.pair x (i+1)) = eval_prim O (c_
 
   -- exact?
 @[simp] theorem c_cov_rec_evp_1 : Nat.list_get (eval_prim O (c_cov_rec cf cg) (Nat.pair x i)) 0 = eval_prim O cf x.l := by
-  -- unfold c_cov_rec
-  -- simp [eval_prim]
-
   induction i with
   | zero =>
     unfold c_cov_rec
     simp [eval_prim]
   | succ i h =>
-    have h0 := @c_cov_rec_evp_size O cf cg x (i+1)
-    have h1 : eval_prim O (cf.c_cov_rec cg) (Nat.pair x (i + 1)) = list_append (eval_prim O (cf.c_cov_rec cg) (Nat.pair x i)) (eval_prim O cg (eval_prim O (cf.c_cov_rec cg) (Nat.pair x (i)))) := by
-      rw (config := {occs := .pos [1]}) [c_cov_rec]
-      simp only [eval_prim]
-
-
-
-
-    -- unfold c_cov_rec
-    -- simp only [eval_prim, unpaired, unpair_pair, c_const_evp, l, c_l_append_evp, r, c_efl_evp, append_size, lt_add_iff_pos_left, add_pos_iff, zero_lt_one, or_true]
-
-    simp only [eval_prim, unpaired, unpair_pair, c_const_evp, l, c_l_append_evp, r, c_efl_evp]
-
-    unfold c_cov_rec at h0
-    -- simp [eval_prim] at h0
-    -- simp only [append_size, lt_add_iff_pos_left, add_pos_iff, zero_lt_one, or_true]
-
-    #check append_get h0
-    rw [←(append_get h0)]
-    simp only []
-    -- exact?
-    -- apply append_get c_cov_rec_evp_size
-    -- apply append_get
-    -- rw [append_get]
-    -- simp only [eval_prim]
-
-    unfold list_empty
-    unfold list_append
-    unfold list_get
-    unfold list_get_lastn
-    unfold list_get_last_aux
-    unfold list_size
-
-    -- unfold list_empty at h
-    -- unfold list_append at h
-    unfold list_get at h
-    unfold list_get_lastn at h
-    unfold list_get_last_aux at h
-    unfold list_size at h
-
-    simp_all
-
-
+    rw [(@c_cov_rec_evp_0 O cf cg x i)]
+    have h0 := @c_cov_rec_evp_size O cf cg x i
+    rw [←append_get h0]
+    exact h
 
 
 @[simp] theorem c_cov_rec_evp_1 (h:n≤x): Nat.list_get (eval_prim O (c_cov_rec cf cg) x) n = y → Nat.list_get (eval_prim O (c_cov_rec cf cg) x+1) n = y := by
