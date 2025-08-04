@@ -533,31 +533,10 @@ theorem asd : eval_prim O (c_cov_rec cf cg) (Nat.pair x (i+1)) = eval_prim O (c_
     exact h
 
 
-@[simp] theorem c_cov_rec_evp_1 (h:n≤x): Nat.list_get (eval_prim O (c_cov_rec cf cg) x) n = y → Nat.list_get (eval_prim O (c_cov_rec cf cg) x+1) n = y := by
-  unfold c_cov_rec
-  simp [eval_prim]
-  intro h
-  cases n
-  · sorry
-  · sorry
-  simp [h]
-  unfold c_div_flip
-  unfold c_div_flip_aux
-  simp [c_div_flip,eval_prim, c_div_flip_aux]
-  funext n;
-  simp [unpaired]
-  induction (unpair n).2 using Nat.strong_induction_on with
-  | h =>
-    expose_names
+@[simp] theorem c_cov_rec_evp_2 (h:j≤i): Nat.list_get (eval_prim O (c_cov_rec cf cg) (Nat.pair x i)) j =  Nat.list_get_last (eval_prim O (c_cov_rec cf cg) (Nat.pair x j)):= by
+  sorry
 
-
-  -- induction (unpair n).2 using Nat.strong_induction_on with
-  -- | zero => simp [flip]
-  -- | succ n h =>
-  --   simp
-  --   simp [list_append]
-
-@[simp] theorem c_div_ev:eval O c_div = unpaired Nat.div := by rw [← eval_prim_eq_eval c_div_ev_pr]; simp only [c_div_evp]
+-- @[simp] theorem c_div_ev:eval O c_div = unpaired Nat.div := by rw [← eval_prim_eq_eval c_div_ev_pr]; simp only [c_div_evp]
 end Nat.RecursiveIn.Code
 -- theorem Nat.PrimrecIn.div:Nat.PrimrecIn O Nat.div := by ...
 -- theorem Nat.Primrec.div:Nat.Primrec Nat.div := by ...
@@ -568,13 +547,16 @@ end cov_rec
 
 
 
-
 section div_flip
 namespace Nat.RecursiveIn.Code
 -- def c_div_flip_aux := prec (c_const $ Nat.list_append Nat.list_empty 0) $ c_efl $ c_mul.comp $ pair (c_sg.comp $ c_sub.comp $ pair (right.comp left) left) (succ.comp (c_l_get_lastn.curry left))
-def c_div_flip_aux := c_efl $ prec (c_const 0) $ c_mul.comp $ pair (c_sg.comp $ c_sub.comp $ pair (right.comp left) left) (succ.comp (c_l_get_lastn.comp $ pair c_id left))
+-- def c_div_flip_aux := c_efl $ prec (c_const 0) $ c_mul.comp $ pair (c_sg.comp $ c_sub.comp $ pair (right.comp left) left) (succ.comp (c_l_get_lastn.comp $ pair c_id left))
+def c_div_flip_aux := c_cov_rec (c_const 0) $ c_mul.comp $ pair (c_sg.comp $ c_sub.comp $ pair (right.comp left) left) (succ.comp (c_l_get_lastn.comp $ pair c_id left))
 def c_div_flip := c_l_get_last.comp c_div_flip_aux
 -- @[simp] theorem c_div_flip_ev_pr:code_prim c_div_flip := by unfold c_div_flip; repeat constructor
+def div_flip_aux : ℕ→ℕ→ℕ := fun d n => if d=0 then 0 else (if n<d then 0 else (div_flip_aux d (n-d))+1)
+theorem c_div_flip_evp_aux:eval_prim O c_div_flip = unpaired (flip ((· / ·) : ℕ → ℕ → ℕ)) := by
+  sorry
 @[simp] theorem c_div_flip_evp:eval_prim O c_div_flip = unpaired (flip ((· / ·) : ℕ → ℕ → ℕ)) := by
   unfold c_div_flip
   unfold c_div_flip_aux
