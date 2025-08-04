@@ -332,10 +332,11 @@ end l_get_last
 
 section efl
 namespace Nat.RecursiveIn.Code
-def c_efl:ℕ→ℕ:=fun c=>c_l_append.comp (pair c_id c)
+-- def c_efl:ℕ→ℕ:=fun c=>c_l_append.comp (pair c_id c)
+def c_efl:=fun c=>c_l_append.comp (pair c_id c)
 @[simp] theorem c_efl_ev_pr (h:code_prim c):code_prim $ c_efl c := by
   unfold c_efl;
-  simp
+  -- simp
   repeat constructor
   exact h
 -- @[simp] theorem c_efl_pr_aux:Primrec (pair c_id) := by
@@ -357,7 +358,8 @@ def c_efl:ℕ→ℕ:=fun c=>c_l_append.comp (pair c_id c)
   unfold Nat.list_append
   simp [c_efl,eval]
   simp [Seq.seq]
-  exact Part.bind_some_eq_map x.list_append (eval O (decodeCode c) x)
+  exact Part.bind_some_eq_map x.list_append (eval O c x)
+  -- exact Part.bind_some_eq_map x.list_append (eval O (decodeCode c) x)
 end Nat.RecursiveIn.Code
 -- theorem Nat.PrimrecIn.efl:Nat.PrimrecIn O Nat.efl := by ...
 -- theorem Nat.Primrec.efl:Nat.Primrec Nat.efl := by ...
@@ -373,6 +375,54 @@ end Nat.RecursiveIn.Code
 end efl
 
 @[simp] theorem last_efl : eval_prim O (c_l_get_last.comp (c_efl c)) = eval_prim O c := by
+  simp only [eval_prim]
+  simp
+
+
+section efl_prec
+namespace Nat.RecursiveIn.Code
+-- def c_efl_prec:ℕ→ℕ:=fun c=>c_l_append.comp (pair c_id c)
+def c_efl_prec:=fun c=>c_l_append.comp (pair (c_id.comp (right.comp right)) c)
+@[simp] theorem c_efl_prec_ev_pr (h:code_prim c):code_prim $ c_efl_prec c := by
+  unfold c_efl_prec;
+  -- simp
+  repeat constructor
+  exact h
+-- @[simp] theorem c_efl_prec_pr_aux:Primrec (pair c_id) := by
+--   refine Primrec.projection ?_
+--   apply PrimrecIn.PrimrecIn₂_iff_Primrec₂.mp
+--   intro O
+--   apply pair_prim
+-- @[simp] theorem c_efl_prec_pr: Nat.Primrec c_efl_prec := by
+--   refine Primrec.nat_iff.mp ?_
+--   apply c_efl_prec_pr_aux
+
+-- huh interesting, it doesn't care about c being code_prim or not.
+@[simp] theorem c_efl_prec_evp:eval_prim O (c_efl_prec c) x= Nat.list_append x.r.r (eval_prim O c x) := by
+  unfold list_append
+  simp [c_efl_prec,eval_prim];
+  unfold list_append
+  simp
+@[simp] theorem c_efl_prec_ev : eval O (c_efl_prec c) x = Nat.list_append <$> x.r.r <*> (eval O c x) := by
+  unfold Nat.list_append
+  simp [c_efl_prec,eval]
+  simp [Seq.seq]
+  exact Part.bind_some_eq_map (unpair (unpair x).2).2.list_append (eval O c x)
+end Nat.RecursiveIn.Code
+-- theorem Nat.PrimrecIn.efl_prec:Nat.PrimrecIn O Nat.efl_prec := by ...
+-- theorem Nat.Primrec.efl_prec:Nat.Primrec Nat.efl_prec := by ...
+-- theorem c_efl_prec_ev_left (h:(eval O c x).Dom) : eval O (left.comp $ c_efl_prec c) x = x := by
+--   have h0 : (eval O c x).get h ∈ (eval O c x) := by exact Part.get_mem h
+--   have h1 : eval O c x = Part.some ((eval O c x).get h) := by exact Part.get_eq_iff_eq_some.mp rfl
+
+--   simp [c_efl_prec, eval]
+--   rw [h1]
+--   -- should maybe define some theorem that simplfies the Nat.pair <*> business
+--   simp [Seq.seq]
+--   exact Part.Dom.bind h fun y ↦ Part.some x
+end efl_prec
+
+@[simp] theorem last_efl_prec : eval_prim O (c_l_get_last.comp (c_efl c)) = eval_prim O c := by
   simp only [eval_prim]
   simp
 
@@ -449,21 +499,61 @@ open Nat in
 
 section cov_rec
 namespace Nat.RecursiveIn.Code
-def c_cov_rec (cf cg:Code):= prec (c_l_append.comp $ pair (c_const Nat.list_empty) (cf.comp left)) $ c_efl cg
+/-
+eval_prim O (c_cov_rec cf cg) (Nat.pair x i)
+should be the list of all values of
+eval_prim O (c_cov_rec cf cg) (Nat.pair x j)
+for j=0 to i-1.
+-/
+-- def c_cov_rec (cf cg:Code):= prec (c_l_append.comp $ pair (c_const Nat.list_empty) (cf.comp left)) $ (c_efl cg).comp (right.comp right)
+def c_cov_rec (cf cg:Code):= prec (c_l_append.comp $ pair (c_const Nat.list_empty) (cf.comp left)) $ c_efl_prec cg
 -- @[simp] theorem c_div_flip_ev_pr:code_prim c_div_flip := by unfold c_div_flip; repeat constructor
 theorem asd : eval_prim O (c_cov_rec cf cg) (Nat.pair x (i+1)) = eval_prim O (c_cov_rec cf cg) (Nat.pair x i) := by sorry
-@[simp] theorem c_cov_rec_evp_0 : Nat.list_get (eval_prim O (c_cov_rec cf cg) (Nat.pair x i)) 0 = eval_prim O cf x.l := by
+@[simp] theorem c_cov_rec_evp_size : 0<(eval_prim O (c_cov_rec cf cg) (Nat.pair x i)).list_size := by
   unfold c_cov_rec
   simp [eval_prim]
+  induction i
+  · simp
+  · simp
+@[simp] theorem c_cov_rec_evp_0 : eval_prim O (c_cov_rec cf cg) (Nat.pair x (i+1)) = list_append (eval_prim O (c_cov_rec cf cg) (Nat.pair x i)) (  eval_prim O cg $ Nat.pair x $ Nat.pair i $ eval_prim O (c_cov_rec cf cg) (Nat.pair x i)    ) := by
+  rw  [c_cov_rec]
+  rw  [eval_prim]
+  simp
+
+  -- exact?
+@[simp] theorem c_cov_rec_evp_1 : Nat.list_get (eval_prim O (c_cov_rec cf cg) (Nat.pair x i)) 0 = eval_prim O cf x.l := by
+  -- unfold c_cov_rec
+  -- simp [eval_prim]
 
   induction i with
   | zero =>
-
     unfold c_cov_rec
     simp [eval_prim]
   | succ i h =>
-    unfold c_cov_rec
-    simp [eval_prim]
+    have h0 := @c_cov_rec_evp_size O cf cg x (i+1)
+    have h1 : eval_prim O (cf.c_cov_rec cg) (Nat.pair x (i + 1)) = list_append (eval_prim O (cf.c_cov_rec cg) (Nat.pair x i)) (eval_prim O cg (eval_prim O (cf.c_cov_rec cg) (Nat.pair x (i)))) := by
+      rw (config := {occs := .pos [1]}) [c_cov_rec]
+      simp only [eval_prim]
+
+
+
+
+    -- unfold c_cov_rec
+    -- simp only [eval_prim, unpaired, unpair_pair, c_const_evp, l, c_l_append_evp, r, c_efl_evp, append_size, lt_add_iff_pos_left, add_pos_iff, zero_lt_one, or_true]
+
+    simp only [eval_prim, unpaired, unpair_pair, c_const_evp, l, c_l_append_evp, r, c_efl_evp]
+
+    unfold c_cov_rec at h0
+    -- simp [eval_prim] at h0
+    -- simp only [append_size, lt_add_iff_pos_left, add_pos_iff, zero_lt_one, or_true]
+
+    #check append_get h0
+    rw [←(append_get h0)]
+    simp only []
+    -- exact?
+    -- apply append_get c_cov_rec_evp_size
+    -- apply append_get
+    -- rw [append_get]
     -- simp only [eval_prim]
 
     unfold list_empty
