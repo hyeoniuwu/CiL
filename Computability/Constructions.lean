@@ -284,6 +284,8 @@ def Nat.list_get_last_aux (list index:ℕ):ℕ:=
   | Nat.succ prev_index => (Nat.list_get_last_aux list prev_index).l
 def Nat.list_get_lastn (list index:ℕ):ℕ:=(Nat.list_get_last_aux list index).r
 def Nat.list_get_last (list:ℕ) :=list.r.r
+def Nat.list_size (list:ℕ) := list.l
+def Nat.list_get (list index:ℕ) := Nat.list_get_lastn list ((Nat.list_size list-1)-index)
 
 namespace Nat.RecursiveIn.Code
 def c_l_get_lastn_aux := prec right (left.comp $ right.comp right)
@@ -372,6 +374,127 @@ end efl
 
 
 def Nat.list_empty := Nat.pair 0 0
+def Nat.list_singleton (ele:ℕ) := Nat.list_append Nat.list_empty ele
+namespace Nat.RecursiveIn.Code
+def c_list_singleton (ele:Code): Code := c_l_append.comp $ pair Nat.list_empty ele
+end Nat.RecursiveIn.Code
+
+open Nat in
+@[simp] theorem append_empty : (list_empty.list_append x).list_get 0 = x := by
+  unfold list_empty
+  unfold list_append
+  unfold list_get
+  unfold list_get_lastn
+  unfold list_get_last_aux
+  unfold list_size
+  simp
+open Nat in
+@[simp] theorem append_get_0 {l:ℕ} (hi:0<l.l) : (l.list_get 0 = y) → (l.list_append x).list_get 0 = y := by
+  unfold list_append
+  unfold list_get
+  unfold list_get_lastn
+  unfold list_get_last_aux
+  unfold list_size
+  simp
+  sorry
+open Nat in
+@[simp] theorem append_get {l:ℕ} (hi:i<l.l): (l.list_get i = y) → (l.list_append x).list_get i = y := by
+  unfold list_append
+  unfold list_get
+  unfold list_get_lastn
+  unfold list_get_last_aux
+  unfold list_size
+  simp
+  have asd : (unpair l).1-i>0 := by exact zero_lt_sub_of_lt hi
+  have asd2 : ∃ n, (unpair l).1 - i = n+1 := by exact exists_eq_add_one.mpr asd
+  rcases asd2 with ⟨n,hn⟩
+  rw [hn]
+  simp
+  intro h
+
+  -- let n := (unpair l).1 - 1 - i
+  -- rw [show (unpair l).1 - 1 - i = n from rfl] at h
+  induction i with
+  | zero =>
+    simp
+  | succ n _ => sorry
+  -- induction (unpair l).1-i with
+  -- | zero =>
+  --   sorry
+  -- | succ asd h3 =>
+  --   simp
+
+
+
+section cov_rec
+namespace Nat.RecursiveIn.Code
+def c_cov_rec (cf cg:Code):= prec (c_l_append.comp $ pair (c_const Nat.list_empty) (cf.comp left)) $ c_efl cg
+-- @[simp] theorem c_div_flip_ev_pr:code_prim c_div_flip := by unfold c_div_flip; repeat constructor
+theorem asd : eval_prim O (c_cov_rec cf cg) (Nat.pair x (i+1)) = eval_prim O (c_cov_rec cf cg) (Nat.pair x i) := by sorry
+@[simp] theorem c_cov_rec_evp_0 : Nat.list_get (eval_prim O (c_cov_rec cf cg) (Nat.pair x i)) 0 = eval_prim O cf x.l := by
+  induction i with
+  | zero =>
+    unfold c_cov_rec
+    simp [eval_prim]
+  | succ i h =>
+    unfold c_cov_rec
+    simp [eval_prim]
+    -- simp only [eval_prim]
+
+    unfold list_empty
+    unfold list_append
+    unfold list_get
+    unfold list_get_lastn
+    unfold list_get_last_aux
+    unfold list_size
+
+    -- unfold list_empty at h
+    -- unfold list_append at h
+    unfold list_get at h
+    unfold list_get_lastn at h
+    unfold list_get_last_aux at h
+    unfold list_size at h
+
+    simp_all
+
+
+
+
+@[simp] theorem c_cov_rec_evp_1 (h:n≤x): Nat.list_get (eval_prim O (c_cov_rec cf cg) x) n = y → Nat.list_get (eval_prim O (c_cov_rec cf cg) x+1) n = y := by
+  unfold c_cov_rec
+  simp [eval_prim]
+  intro h
+  cases n
+  · sorry
+  · sorry
+  simp [h]
+  unfold c_div_flip
+  unfold c_div_flip_aux
+  simp [c_div_flip,eval_prim, c_div_flip_aux]
+  funext n;
+  simp [unpaired]
+  induction (unpair n).2 using Nat.strong_induction_on with
+  | h =>
+    expose_names
+
+
+  -- induction (unpair n).2 using Nat.strong_induction_on with
+  -- | zero => simp [flip]
+  -- | succ n h =>
+  --   simp
+  --   simp [list_append]
+
+@[simp] theorem c_div_ev:eval O c_div = unpaired Nat.div := by rw [← eval_prim_eq_eval c_div_ev_pr]; simp only [c_div_evp]
+end Nat.RecursiveIn.Code
+-- theorem Nat.PrimrecIn.div:Nat.PrimrecIn O Nat.div := by ...
+-- theorem Nat.Primrec.div:Nat.Primrec Nat.div := by ...
+end cov_rec
+
+
+
+
+
+
 
 section div_flip
 namespace Nat.RecursiveIn.Code
@@ -400,7 +523,7 @@ def c_div_flip := c_l_get_last.comp c_div_flip_aux
 end Nat.RecursiveIn.Code
 -- theorem Nat.PrimrecIn.div:Nat.PrimrecIn O Nat.div := by ...
 -- theorem Nat.Primrec.div:Nat.Primrec Nat.div := by ...
-end div
+end div_flip
 
 #eval Nat.div 6 3
 #eval eval_prim Nat.fzero c_add $ Nat.pair 2 6
