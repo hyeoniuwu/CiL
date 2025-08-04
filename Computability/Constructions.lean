@@ -589,11 +589,14 @@ end cov_rec
 
 section div
 namespace Nat.RecursiveIn.Code
--- def c_div_flip_aux := c_ifz.comp $ pair left $ pair (c_const (Nat.list_append Nat.list_empty 0)) $ c_cov_rec (c_const (Nat.list_empty)) $ c_mul.comp $ pair (c_sg.comp $ c_sub.comp $ pair (left.comp right) left) (succ.comp (c_l_get.comp $ pair (right.comp right) (c_sub.comp $ pair (left.comp right) left)))
-def c_div_flip_aux := c_ifz.comp $ pair left $ pair (c_const (Nat.list_append Nat.list_empty 0)) $ c_cov_rec (c_const 0) $ c_mul.comp $ pair (c_sg.comp $ c_sub.comp $ pair (succ.comp $ left.comp right) (c_pred.comp left)) (succ.comp (c_l_get.comp $ pair (right.comp right) (c_sub.comp $ pair (left.comp right) (c_pred.comp left))))
+def c_div_flip_aux := c_ifz.comp $ pair left $ -- if the divisor is zero
+  pair (c_const (Nat.list_append Nat.list_empty 0)) $ -- return singleton list 0
+  c_cov_rec -- else do recursion on the dividend
+    (c_const 0) $ -- base case: if dividend is 0, return 0
+    c_mul.comp $ pair (c_sg.comp $ c_sub.comp $ pair (succ.comp $ left.comp right) (c_pred.comp left)) -- if dividend < divisor, return 0
+    (succ.comp (c_l_get.comp $ pair (right.comp right) (c_sub.comp $ pair (left.comp right) (c_pred.comp left)))) -- else return (dividend-divisor)/divisor+1
 def c_div_flip := c_l_get_last.comp c_div_flip_aux
 def c_div := c_div_flip.comp (pair right left)
--- @[simp] theorem c_div_flip_ev_pr:code_prim c_div_flip := by unfold c_div_flip; repeat (constructor; try simp)
 def div_flip_aux : ℕ→ℕ→ℕ := fun d n => if d=0 then 0 else (if n<d then 0 else (div_flip_aux d (n-d))+1)
 
 theorem div_flip_aux_eq_div_flip : div_flip_aux = (flip ((· / ·) : ℕ → ℕ → ℕ)) := by
