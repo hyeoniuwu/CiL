@@ -628,12 +628,13 @@ namespace KP54
 
 #check Finset
 -- χ (SetJump ∅)
+open Nat in
 noncomputable def KP54 : ℕ→ℕ := fun s =>
   let i:=s.div2
 
   if s=0 then Nat.pair 0 0
   else if s%2=0 then
-    let n:=DSize (KP54 s-1).r
+    let n:=BSSize (KP54 s-1).r
     -- ask ∅' if there exists a n s.t. a:=BSUnion n (KP54 s-1).l satisfies (eval (D a) i n).Dom.
     -- for this, define c s.t. [c](n)= if (eval (D $ BSUnion n (KP54 s-1).l) i n).Dom then 0 else 1.
     -- NOTE. the computation should diverge if queries are made beyond the size of the binary string.
@@ -642,7 +643,7 @@ noncomputable def KP54 : ℕ→ℕ := fun s =>
     Nat.pair 0 0
   else Nat.pair 0 0
 -- how will we prove that extending A_s maintains the halting status?
--- need to show that extending strings
+-- need to show that extending string oracles will not change already halting computations.
 
 /-
 `KP54(s)=(a,b)` where `D a, D b` correspond to sets `A` and `B` at stage `s`.
