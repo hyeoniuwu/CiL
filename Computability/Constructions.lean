@@ -785,23 +785,30 @@ def c_div := c_div_flip.comp (pair right left)
 -- not sure how to do it automatically. in the meanwhile, i can explicitly define it, like below:
 
 
-theorem c_div_flip_aux_evp :
-  Nat.list_get_last (eval_prim O c_div_flip_aux (Nat.pair (d+1) (n+1)))
+theorem c_div_flip_evp_aux_aux :
+  eval_prim O c_div_flip (Nat.pair (d+1) (n+1))
     =
-  if n<d then 0 else Nat.list_get_last (eval_prim O c_div_flip_aux (Nat.pair (d+1) (n-d))) + 1
+  if n<d then 0 else eval_prim O c_div_flip (Nat.pair (d+1) (n-d)) + 1
     := by
+  
+  unfold c_div_flip; simp only [eval_prim, c_l_get_last_evp] -- unwrap the list_get_last wrapper
+  
+  -- now we rewrite the expr just until it contains the expression for the list of previous calculations
   rw (config := {occs := .pos [1]}) [c_div_flip_aux]
   simp only [c_cov_rec_evp_3]
 
+  -- we then "refold" the list of previous calculations in terms of the function
   rw [←c_div_flip_aux]
 
+  -- now we can simplify the expression, without meddling with the internals of the list of previous calculations
   simp [eval_prim]
+
+  -- to each call of a previous value, we rewrite to its eval_prim O c (previous value) by using c_cov_rec_evp_2
   have h0: n-d≤n := by exact sub_le n d
   unfold c_div_flip_aux
   rw [c_cov_rec_evp_2 h0]
 
-  -- rw [c_div_flip]
-  -- simp [eval_prim]
+
 
 theorem c_div_flip_evp_aux:eval_prim O c_div_flip = unpaired div_flip_aux := by
   funext dn
@@ -810,27 +817,24 @@ theorem c_div_flip_evp_aux:eval_prim O c_div_flip = unpaired div_flip_aux := by
   have dn_eq : dn = Nat.pair d n := by exact Eq.symm (pair_unpair dn)
   rw [dn_eq]
 
-  simp only [unpaired, unpair_pair]
-  unfold c_div_flip; simp only [eval_prim, c_l_get_last_evp]
-
   induction' n using Nat.strong_induction_on with n ih
 
   cases n with
   | zero =>
     simp [div_flip_aux_eq_div_flip,flip]
-    simp [c_div_flip_aux, eval_prim]
+    simp [c_div_flip, c_div_flip_aux, eval_prim]
   | succ n' =>
     cases hd:d with
     | zero =>
       simp [div_flip_aux_eq_div_flip,flip]
-      simp [c_div_flip_aux, eval_prim]
+      simp [c_div_flip, c_div_flip_aux, eval_prim]
     | succ d' =>
-      rw [c_div_flip_aux_evp]
-      rw [div_flip_aux]
-      simp
+      rw [c_div_flip_evp_aux_aux]
+      unfold div_flip_aux; simp
       rw [hd] at ih
       have h7 : (n'-d') < n'+1 := by exact sub_lt_succ n' d'
       rw [ih (n'-d') h7]
+      unfold div_flip_aux; simp
 
 
 @[simp] theorem c_div_flip_evp:eval_prim O c_div_flip = unpaired (flip ((· / ·) : ℕ → ℕ → ℕ)) := by
