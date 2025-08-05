@@ -585,15 +585,6 @@ open Nat in
   unfold list_get_last_aux
   unfold list_size
   simp
-open Nat in
-@[simp] theorem append_get_0 {l:ℕ} (hi:0<l.l) : (l.list_get 0 = y) → (l.list_append x).list_get 0 = y := by
-  unfold list_append
-  unfold list_get
-  unfold list_get_lastn
-  unfold list_get_last_aux
-  unfold list_size
-  simp
-  sorry
 
 
 open Nat in
@@ -791,6 +782,8 @@ theorem c_div_flip_evp_aux_aux :
     := by
   rw [c_div_flip]
   simp [eval_prim]
+
+-- set_option trace.Meta.Tactic.simp true in
 theorem c_div_flip_evp_aux_aux_test :
   eval_prim O c_div_flip (Nat.pair (d+1) (n+1))
     =
@@ -811,7 +804,45 @@ theorem c_div_flip_evp_aux_aux_test :
     
     
 
-    simp? [eval_prim]
+    simp [eval_prim]
+    -- simp only [comp₂_evp]
+    -- simp only [eval_prim]
+    -- simp only [l]
+    -- simp only [unpair_pair]
+    -- simp only [c_const_evp]
+    -- simp only [comp₄_evp]
+
+    -- -- simp only [comp₂_evp]
+    -- simp only [eval_prim]
+    -- simp only [l]
+    -- simp only [unpair_pair]
+    -- simp only [c_const_evp]
+    -- -- simp only [comp₄_evp]
+
+    
+    -- simp only [r]
+    -- simp only [succ_eq_add_one]
+    -- simp only [c_sub_evp]
+    -- simp only [unpaired]
+    -- simp only [sub_eq]
+    -- simp only [reduceSubDiff]
+    -- simp only [c_l_get_evp]
+    -- simp only [tsub_le_iff_right]
+    -- simp only [le_add_iff_nonneg_right]
+    -- simp only [_root_.zero_le]
+    -- simp only [c_cov_rec_evp_2]
+    -- simp only [c_if_lt_te_evp]
+    -- simp only [add_lt_add_iff_right]
+    -- simp only [c_ifz_evp]
+    -- simp only [Nat.add_eq_zero]
+    -- simp only [one_ne_zero]
+    -- simp only [and_false]
+    -- simp only [↓reduceIte]
+
+
+
+
+    
     have rwh : (eval_prim O
           ((c_const 0).c_cov_rec
             (c_ifz.comp₂ left
