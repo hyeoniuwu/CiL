@@ -1007,7 +1007,6 @@ def c_replace_oracle_aux :=
   let prec_code       := c_add.comp₂ (            c_mul2.comp $ succ.comp $ c_mul2.comp (pair ml mr)) (c_const 5)
   let rfind'_code     := c_add.comp₂ (succ.comp $ c_mul2.comp $ succ.comp $ c_mul2.comp ml          ) (c_const 5)
 
-  -- c_l_get_last.comp $
   c_cov_rec
 
   (c_const 0) $
@@ -1020,16 +1019,16 @@ def c_replace_oracle_aux :=
   c_if_eq_te.comp₄ nMod4           (c_const 1) (comp_code) $
   c_if_eq_te.comp₄ nMod4           (c_const 2) (prec_code) $
                                                 rfind'_code
-
+def c_replace_oracle := c_l_get_last.comp c_replace_oracle_aux
 -- @[simp] theorem c_replace_oracle_ev_pr:code_prim (c_replace_oracle) := by unfold c_replace_oracle; repeat (constructor; try simp)
 
 @[simp] theorem c_replace_oracle_evp_aux_aux (h:n%4=0):
-Nat.list_get_last (eval_prim O (c_replace_oracle_aux) (Nat.pair o ((n+4)+1)))
+eval_prim O (c_replace_oracle) (Nat.pair o ((n+4)+1))
   =
   -- let m:=n.div2.div2
   let m:=(n/2)/2
-  let ml := Nat.list_get_last (eval_prim O (c_replace_oracle_aux) (Nat.pair o m.l))
-  let mr := Nat.list_get_last (eval_prim O (c_replace_oracle_aux) (Nat.pair o m.r))
+  let ml := eval_prim O (c_replace_oracle) (Nat.pair o m.l)
+  let mr := eval_prim O (c_replace_oracle) (Nat.pair o m.r)
 
   2*(2*(Nat.pair (ml) (mr))  )   + 5
   -- if n%4=0 then 2*(2*(Nat.pair (ml) (mr))  )   + 5 else
@@ -1040,6 +1039,8 @@ Nat.list_get_last (eval_prim O (c_replace_oracle_aux) (Nat.pair o ((n+4)+1)))
 
 
  := by
+  unfold c_replace_oracle; simp only [eval_prim, c_l_get_last_evp]
+ 
 
   rw (config := {occs := .pos [1]}) [c_replace_oracle_aux]
   simp only [c_cov_rec_evp_3]
@@ -1110,9 +1111,9 @@ set_option maxHeartbeats 3 in
 --   simp [eval_prim]
 
 -- set_option maxHeartbeats 1000000 in
-set_option maxHeartbeats 3 in
+-- set_option maxHeartbeats 3 in
 @[simp] theorem c_replace_oracle_evp_1: eval_prim O (c_replace_oracle) = unpaired replace_oracle := by
-  sorry
+  -- sorry
   funext oc
   let o:=oc.l
   let c:=oc.r
