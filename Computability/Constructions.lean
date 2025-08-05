@@ -277,7 +277,63 @@ end Nat.RecursiveIn.Code
 -- theorem Nat.PrimrecIn.if_eq_te:Nat.PrimrecIn O Nat.if_eq_te := by ...
 -- theorem Nat.Primrec.if_eq_te:Nat.Primrec Nat.if_eq_te := by ...
 end if_eq_te
+section if_lt_te
+namespace Nat.RecursiveIn.Code
+/-- eval c_if_lt_te (x,y) = [x=y] -/
+def c_if_lt_te :=
+  let lt := c_sg.comp $ c_sub.comp₂ (succ.comp $ left.comp left) (right.comp left);
 
+  c_add.comp₂
+  (c_mul.comp₂ lt (right.comp right))
+  (c_mul.comp₂ (c_not.comp lt) (left.comp right))
+@[simp] theorem c_if_lt_te_ev_pr:code_prim c_if_lt_te := by unfold c_if_lt_te; repeat (constructor; try simp)
+@[simp] theorem c_if_lt_te_evp:eval_prim O c_if_lt_te = fun x => if x.l.l<x.l.r then x.r.l else x.r.r := by
+  simp [c_if_lt_te,eval_prim];
+  funext xs
+  cases Classical.em (xs.l.l<xs.l.r) with
+  | inl h => simp [h, Nat.sub_eq_zero_of_le h]
+  | inr h =>
+    have h1: xs.l.l+1-xs.l.r>0 := by exact tsub_pos_iff_not_le.mpr h
+    have h0: ¬(xs.l.l+1-xs.l.r=0) := by exact Nat.ne_zero_of_lt h1
+    simp [h, h0]
+@[simp] theorem c_if_lt_te_ev:eval O c_if_lt_te = fun x => if x.l.l<x.l.r then x.r.l else x.r.r := by
+  rw [← eval_prim_eq_eval c_if_lt_te_ev_pr]; simp only [c_if_lt_te_evp]; funext xs;
+  cases Classical.em (xs.l.l<xs.l.r) with
+  | inl h => simp [h, Nat.sub_eq_zero_of_le h]
+  | inr h =>
+    have h1: xs.l.l+1-xs.l.r>0 := by exact tsub_pos_iff_not_le.mpr h
+    have h0: ¬(xs.l.l+1-xs.l.r=0) := by exact Nat.ne_zero_of_lt h1
+    simp [h, h0]
+end Nat.RecursiveIn.Code
+-- theorem Nat.PrimrecIn.if_lt_te:Nat.PrimrecIn O Nat.if_lt_te := by ...
+-- theorem Nat.Primrec.if_lt_te:Nat.Primrec Nat.if_lt_te := by ...
+end if_lt_te
+section comp₄
+namespace Nat.RecursiveIn.Code
+def comp₄ : Code→Code→Code→Code→Code→Code := fun c1 c2 c3 c4 c5 => c1.comp₂ (pair c2 c3) (pair c4 c5)
+@[simp] theorem comp₄_ev_pr (hc1:code_prim c1) (hc2:code_prim c2) (hc3:code_prim c3) (hc4:code_prim c4) (hc5:code_prim c5):code_prim (comp₄ c1 c2 c3 c4 c5) := by
+  unfold comp₄;
+  constructor
+  exact hc1
+  constructor
+  constructor
+  exact hc2
+  exact hc3
+  constructor
+  exact hc4
+  exact hc5
+-- @[simp] theorem comp₄_evp:eval_prim O (comp₄ c1 c2 c3) x = eval_prim O c1 (Nat.pair (eval_prim O (c2) x) (eval_prim O (c3) x))  := by simp [comp₄,eval_prim];
+@[simp] theorem comp₄_evp:eval_prim O (comp₄ c1 c2 c3 c4 c5) =
+  fun x => eval_prim O c1 (Nat.pair (Nat.pair (eval_prim O (c2) x) (eval_prim O (c3) x)) ((Nat.pair (eval_prim O (c4) x) (eval_prim O (c5) x)))) := by
+  simp [comp₄,eval_prim];
+-- <$> x <*>
+-- @[simp] theorem comp₄_ev(hc1:code_prim c1) (hc2:code_prim c2) (hc3:code_prim c3):eval O (comp₄ c1 c2 c3) = fun x => (Nat.pair <$> (eval O (c2) x) <*> (eval O (c3) x)) >>= (eval O c1) := by
+  -- rw [← eval_prim_eq_eval (comp₄_ev_pr hc1 hc2 hc3)]; simp only [comp₄_evp]
+
+end Nat.RecursiveIn.Code
+-- theorem Nat.PrimrecIn.comp₄:Nat.PrimrecIn O Nat.comp₄ := by ...
+-- theorem Nat.Primrec.comp₄:Nat.Primrec Nat.comp₄ := by ...
+end comp₄
 
 
 section ifz
@@ -594,9 +650,11 @@ for j=0 to i-1.
 -/
 /--
 Code for course-of-values recursion.
-base case:      eval (c_cov_rec cf cg) (x 0) = list with one element, eval cf x
-inductive case: Let l be the list of previous values, from j=0 to i
-                Then eval (c_cov_rec cf cg) (x i+1) = l.append (eval cg (x (i l)))
+
+base case:      `eval (c_cov_rec cf cg) (x 0)` = list with one element, eval cf x
+
+inductive case: Let `l` be the list of previous values, from `j=0` to `i`
+                Then `eval (c_cov_rec cf cg) (x i+1) = l.append (eval cg (x (i l)))`
 -/
 def c_cov_rec (cf cg:Code):= prec (c_l_append.comp₂ (c_const Nat.list_empty) (cf.comp left)) $ c_efl_prec cg
 @[simp] theorem c_cov_rec_evp_size : 0<(eval_prim O (c_cov_rec cf cg) (Nat.pair x i)).list_size := by
@@ -641,25 +699,8 @@ end cov_rec
 
 
 section div
-namespace Nat.RecursiveIn.Code
-def c_div_flip :=
-  let dividend := left.comp right
-  let divisor := c_pred.comp left
-  let list_of_prev_values := right.comp right
-  let zero_singleton := c_const (Nat.list_append Nat.list_empty 0)
-
-  c_l_get_last.comp $
-
-  c_ifz.comp₂ left $ -- if the divisor is zero
-  pair zero_singleton $ -- return singleton list 0
-  c_cov_rec -- else do recursion on the dividend
-    (c_const 0) $ -- base case: if dividend is 0, return 0
-    c_mul.comp₂ (c_sg.comp $ c_sub.comp₂ (succ.comp dividend) divisor) -- if dividend < divisor, return 0
-    (succ.comp (c_l_get.comp₂ list_of_prev_values (c_sub.comp₂ dividend divisor))) -- else return (dividend-divisor)/divisor+1
-
-def c_div := c_div_flip.comp (pair right left)
 def div_flip_aux : ℕ→ℕ→ℕ := fun d n => if d=0 then 0 else (if n<d then 0 else (div_flip_aux d (n-d))+1)
-
+open Nat in
 theorem div_flip_aux_eq_div_flip : div_flip_aux = (flip ((· / ·) : ℕ → ℕ → ℕ)) := by
   funext d n
   simp [flip]
@@ -690,6 +731,30 @@ theorem div_flip_aux_eq_div_flip : div_flip_aux = (flip ((· / ·) : ℕ → ℕ
       exact zero_lt_of_lt h2
 
 
+namespace Nat.RecursiveIn.Code
+def c_div_flip :=
+  let dividend := left.comp right
+  let divisor := c_pred.comp left
+  let list_of_prev_values := right.comp right
+
+  c_l_get_last.comp $
+  c_cov_rec
+
+  (c_const 0) $       -- base case: if dividend is 0, return 0
+
+  c_ifz.comp₂ left $    -- in general, test if the divisor is zero
+  pair (c_const 0) $    -- if so, return 0
+  c_if_lt_te.comp₄ dividend divisor (c_const 0) $ -- if dividend < divisor, return 0
+  (succ.comp (c_l_get.comp₂ list_of_prev_values (c_sub.comp₂ dividend divisor))) -- else return (dividend-divisor)/divisor+1
+def c_div := c_div_flip.comp (pair right left)
+-- i want the inductive case to be simplified to an expression involving c_div_flip2.
+-- this cannot be done after unfolding c_div_flip2, as that will destroy all 'c_div_flip2' 's.
+-- not sure how to do it automatically. in the meanwhile, i can explicitly define it, like below:
+theorem c_div_flip_evp_aux_aux : eval_prim O c_div_flip (Nat.pair (d+1) (n+1)) =
+  if n<d then 0 else eval_prim O c_div_flip (Nat.pair (d+1) (n-d)) +1
+    := by
+    rw [c_div_flip]
+    simp [eval_prim]
 theorem c_div_flip_evp_aux:eval_prim O c_div_flip = unpaired div_flip_aux := by
   funext dn
   let d:=dn.l
@@ -697,41 +762,27 @@ theorem c_div_flip_evp_aux:eval_prim O c_div_flip = unpaired div_flip_aux := by
   have dn_eq : dn = Nat.pair d n := by exact Eq.symm (pair_unpair dn)
   rw [dn_eq]
 
-  simp [c_div_flip]
-  simp [eval_prim]
-  cases d with
+  simp only [unpaired, unpair_pair]
+
+  induction' n using Nat.strong_induction_on with n ih
+
+  cases n with
   | zero =>
-    simp
-    rw [div_flip_aux_eq_div_flip]
-    simp [flip]
-  | succ d' =>
-    expose_names
-    simp
-    induction' n using Nat.strong_induction_on with n h
-    unfold div_flip_aux
+    simp [div_flip_aux_eq_div_flip,flip]
+    simp [c_div_flip, eval_prim]
+  | succ n' =>
+    cases hd:d with
+    | zero =>
+      simp [div_flip_aux_eq_div_flip,flip]
+      simp [c_div_flip, eval_prim]
+    | succ d' =>
+      rw [c_div_flip_evp_aux_aux]
+      rw [div_flip_aux]
+      simp
+      rw [hd] at ih
+      have h7 : (n'-d') < n'+1 := by exact sub_lt_succ n' d'
+      rw [ih (n'-d') h7]
 
-
-    cases n with
-    | zero => simp
-    | succ n' =>
-      expose_names
-      rw [c_cov_rec_evp_3]
-      simp [eval_prim]
-      cases Nat.lt_or_ge (n') (d') with
-      | inl h2 =>
-        simp [h2]
-        exact Nat.sub_eq_zero_of_le h2
-      | inr h2 =>
-        simp [Nat.not_lt.mpr h2]
-        have h4 : n' + 1 > d' := by exact lt_add_one_of_le h2
-        have h3 : n' + 1 - d' > 0 := by exact zero_lt_sub_of_lt h4
-        have h5 : ¬ (n' + 1 - d'=0) := by exact Nat.sub_ne_zero_iff_lt.mpr h4
-        simp only [h5, ↓reduceIte]
-        simp only [Nat.add_right_cancel_iff]
-        -- have h6 : (n' - (d' + 1)) < n'+1 := by exact sub_lt_succ n' (d' + 1)
-        have h8 : (d' + 1) > 0 := by exact zero_lt_succ d'
-        have h7 : (n'-d') < n'+1 := by exact sub_lt_succ n' d'
-        rw [h (n'-d') h7]
 
 @[simp] theorem c_div_flip_evp:eval_prim O c_div_flip = unpaired (flip ((· / ·) : ℕ → ℕ → ℕ)) := by
   rw [c_div_flip_evp_aux]
@@ -842,32 +893,7 @@ end BSSize
 
 
 
-section comp₄
-namespace Nat.RecursiveIn.Code
-def comp₄ : Code→Code→Code→Code→Code→Code := fun c1 c2 c3 c4 c5 => c1.comp₂ (pair c2 c3) (pair c4 c5)
-@[simp] theorem comp₄_ev_pr (hc1:code_prim c1) (hc2:code_prim c2) (hc3:code_prim c3) (hc4:code_prim c4) (hc5:code_prim c5):code_prim (comp₄ c1 c2 c3 c4 c5) := by
-  unfold comp₄;
-  constructor
-  exact hc1
-  constructor
-  constructor
-  exact hc2
-  exact hc3
-  constructor
-  exact hc4
-  exact hc5
--- @[simp] theorem comp₄_evp:eval_prim O (comp₄ c1 c2 c3) x = eval_prim O c1 (Nat.pair (eval_prim O (c2) x) (eval_prim O (c3) x))  := by simp [comp₄,eval_prim];
-@[simp] theorem comp₄_evp:eval_prim O (comp₄ c1 c2 c3 c4 c5) =
-  fun x => eval_prim O c1 (Nat.pair (Nat.pair (eval_prim O (c2) x) (eval_prim O (c3) x)) ((Nat.pair (eval_prim O (c4) x) (eval_prim O (c5) x)))) := by
-  simp [comp₄,eval_prim];
--- <$> x <*>
--- @[simp] theorem comp₄_ev(hc1:code_prim c1) (hc2:code_prim c2) (hc3:code_prim c3):eval O (comp₄ c1 c2 c3) = fun x => (Nat.pair <$> (eval O (c2) x) <*> (eval O (c3) x)) >>= (eval O c1) := by
-  -- rw [← eval_prim_eq_eval (comp₄_ev_pr hc1 hc2 hc3)]; simp only [comp₄_evp]
 
-end Nat.RecursiveIn.Code
--- theorem Nat.PrimrecIn.comp₄:Nat.PrimrecIn O Nat.comp₄ := by ...
--- theorem Nat.Primrec.comp₄:Nat.Primrec Nat.comp₄ := by ...
-end comp₄
 
 section mul2
 namespace Nat.RecursiveIn.Code
@@ -913,7 +939,7 @@ def c_replace_oracle :=
   let m := c_div2.comp (c_div2.comp input_to_decode)
   let ml := c_l_get.comp₂ comp_hist (left.comp m)
   let mr := c_l_get.comp₂ comp_hist (right.comp m)
-  let mMod4 := c_mod.comp₂ m (c_const 4)
+  let nMod4 := c_mod.comp₂ input_to_decode (c_const 4)
   let pair_code   := c_add.comp₂ (            c_mul2.comp $             c_mul2.comp (pair ml mr)) (c_const 5)
   let comp_code   := c_add.comp₂ (succ.comp $ c_mul2.comp $             c_mul2.comp (pair ml mr)) (c_const 5)
   let prec_code   := c_add.comp₂ (            c_mul2.comp $ succ.comp $ c_mul2.comp (pair ml mr)) (c_const 5)
@@ -929,12 +955,13 @@ def c_replace_oracle :=
   c_if_eq_te.comp₄ input_to_decode (c_const 2) (c_const 2) $
   c_if_eq_te.comp₄ input_to_decode (c_const 3) (c_const 3) $
   c_if_eq_te.comp₄ input_to_decode (c_const 4) o           $
-  c_if_eq_te.comp₄ mMod4           (c_const 0) (pair_code) $
-  c_if_eq_te.comp₄ mMod4           (c_const 1) (comp_code) $
-  c_if_eq_te.comp₄ mMod4           (c_const 2) (prec_code) $
+  c_if_eq_te.comp₄ nMod4           (c_const 0) (pair_code) $
+  c_if_eq_te.comp₄ nMod4           (c_const 1) (comp_code) $
+  c_if_eq_te.comp₄ nMod4           (c_const 2) (prec_code) $
                                                 rfind'_code
 
 -- @[simp] theorem c_replace_oracle_ev_pr:code_prim (c_replace_oracle) := by unfold c_replace_oracle; repeat (constructor; try simp)
+set_option maxHeartbeats 1000000 in
 @[simp] theorem c_replace_oracle_evp_1: eval_prim O (c_replace_oracle) = unpaired replace_oracle := by
   funext oc
   let o:=oc.l
@@ -947,40 +974,75 @@ def c_replace_oracle :=
   induction c using Nat.strong_induction_on with
   | _ c ih =>
     match c with
-    | 0 => 
+    | 0 =>
+      sorry
       unfold c_replace_oracle
       unfold replace_oracle
       simp [encodeCode_replace_oracle, decodeCode]
       simp [eval_prim]
     | 1 =>
+      sorry
       unfold c_replace_oracle
       unfold replace_oracle
       simp [encodeCode_replace_oracle, decodeCode]
       simp [eval_prim]
-    | 2 => 
+    | 2 =>
+      sorry
       unfold c_replace_oracle
       unfold replace_oracle
       simp [encodeCode_replace_oracle, decodeCode]
       simp [eval_prim]
-    | 3 => 
+    | 3 =>
+      sorry
       unfold c_replace_oracle
       unfold replace_oracle
       simp [encodeCode_replace_oracle, decodeCode]
       simp [eval_prim]
-    | 4 => 
+    | 4 =>
+      sorry
       unfold c_replace_oracle
       unfold replace_oracle
       simp [encodeCode_replace_oracle, decodeCode]
       simp [eval_prim]
-    | n + 5 => 
-      -- general case
+    | n + 5 =>
       let m := n.div2.div2
       have hm : m < n + 5 := by
-        -- your proof of this inequality
-        sorry
-      -- continue using `ih m`
+        simp only [m, Nat.div2_val]
+        exact lt_of_le_of_lt (le_trans (Nat.div_le_self _ _) (Nat.div_le_self _ _)) (Nat.succ_le_succ (Nat.le_add_right _ _))
+      have _m1 : m.unpair.1 < n + 5 := lt_of_le_of_lt m.unpair_left_le hm
+      have _m2 : m.unpair.2 < n + 5 := lt_of_le_of_lt m.unpair_right_le hm
+      -- have IH := encodeCode_decodeCode m
+      -- have IH1 := encodeCode_decodeCode m.unpair.1
+      -- have IH2 := encodeCode_decodeCode m.unpair.2
+      -- conv_rhs => rw [← Nat.bit_decomp n, ← Nat.bit_decomp n.div2]
+      -- simp only [decodeCode.eq_6]
+      -- cases n.bodd <;> cases n.div2.bodd <;> simp [m, encodeCode, IH, IH1, IH2, Nat.bit_val]
+
+
+      unfold c_replace_oracle
+      unfold replace_oracle
+      -- simp [encodeCode_replace_oracle, decodeCode]
+      -- simp [eval_prim]
+
+      cases n.bodd with
+      | false => cases n.div2.bodd with
+        | true =>
+          have h0: (n+4+1)%4=2 := by sorry
+          -- simp only [h0, ↓reduceIte]
+          simp only []
+
+        | false => sorry
+      | true => sorry
+
+
+      -- -- general case
+      -- let m := n.div2.div2
+      -- have hm : m < n + 5 := by
+      --   -- your proof of this inequality
+      --   sorry
+      -- -- continue using `ih m`
       sorry
-      
+
 @[simp] theorem c_replace_oracle_ev:eval O (c_replace_oracle o) = (replace_oracle o) := by rw [← eval_prim_eq_eval c_replace_oracle_ev_pr]; simp only [c_replace_oracle_evp]
 end Nat.RecursiveIn.Code
 theorem Nat.PrimrecIn.replace_oracle:Nat.PrimrecIn O (replace_oracle o) := by rw [← c_replace_oracle_evp]; apply code_prim_prop c_replace_oracle_ev_pr
