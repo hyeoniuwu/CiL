@@ -657,12 +657,18 @@ inductive case: Let `l` be the list of previous values, from `j=0` to `i`
                 Then `eval (c_cov_rec cf cg) (x i+1) = l.append (eval cg (x (i l)))`
 -/
 def c_cov_rec (cf cg:Code):= prec (c_l_append.comp₂ (c_const Nat.list_empty) (cf.comp left)) $ c_efl_prec cg
-@[simp] theorem c_cov_rec_evp_size : 0<(eval_prim O (c_cov_rec cf cg) (Nat.pair x i)).list_size := by
+@[simp] theorem c_cov_rec_evp_size_positive : 0<(eval_prim O (c_cov_rec cf cg) (Nat.pair x i)).list_size := by
   unfold c_cov_rec
   simp [eval_prim]
   induction i
   · simp
   · simp
+@[simp] theorem c_cov_rec_evp_size : (eval_prim O (c_cov_rec cf cg) (Nat.pair x i)).list_size = i+1 := by
+  unfold c_cov_rec
+  simp [eval_prim]
+  induction i
+  · simp; exact rfl
+  · simp; (expose_names; exact h)
 @[simp] theorem c_cov_rec_evp_0 : eval_prim O (c_cov_rec cf cg) (Nat.pair x (i+1)) = list_append (eval_prim O (c_cov_rec cf cg) (Nat.pair x i)) (  eval_prim O cg $ Nat.pair x $ Nat.pair i $ eval_prim O (c_cov_rec cf cg) (Nat.pair x i)    ) := by
   rw  [c_cov_rec]
   rw  [eval_prim]
@@ -677,20 +683,47 @@ def c_cov_rec (cf cg:Code):= prec (c_l_append.comp₂ (c_const Nat.list_empty) (
     simp [eval_prim]
   | succ i h =>
     rw [(@c_cov_rec_evp_0 O cf cg x i)]
-    have h0 := @c_cov_rec_evp_size O cf cg x i
+    have h0 := @c_cov_rec_evp_size_positive O cf cg x i
     rw [←append_get h0]
     exact h
-@[simp] theorem c_cov_rec_evp_2 (h:j≤i): Nat.list_get (eval_prim O (c_cov_rec cf cg) (Nat.pair x i)) j =  Nat.list_get_last (eval_prim O (c_cov_rec cf cg) (Nat.pair x j)):= by
-  sorry
 
 @[simp] theorem c_cov_rec_evp_3 : Nat.list_get_last (eval_prim O (c_cov_rec cf cg) (Nat.pair x (i+1))) = (  eval_prim O cg $ Nat.pair x $ Nat.pair i $ eval_prim O (c_cov_rec cf cg) (Nat.pair x i)    ) := by
   rw [c_cov_rec_evp_0]
   simp only [list_get_last_append]
 
+theorem c_cov_rec_evp_2_aux1 :
+  Nat.list_get_last (eval_prim O (c_cov_rec cf cg) (Nat.pair x i))
+    =
+  Nat.list_get (eval_prim O (c_cov_rec cf cg) (Nat.pair x i)) i := by
+  simp [list_get_last]
+  simp [list_get]
+  simp [list_get_lastn]
+  simp [list_get_last_aux]
+theorem c_cov_rec_evp_2_aux2 (h:j≤i) :
+  Nat.list_get (eval_prim O (c_cov_rec cf cg) (Nat.pair x i)) j
+    =
+  Nat.list_get (eval_prim O (c_cov_rec cf cg) (Nat.pair x (i+1))) j
+  := by
+  simp
+  apply append_get
+  simp
+  exact lt_add_one_of_le h
+
+@[simp] theorem c_cov_rec_evp_2 (h:j≤i): Nat.list_get (eval_prim O (c_cov_rec cf cg) (Nat.pair x i)) j =  Nat.list_get_last (eval_prim O (c_cov_rec cf cg) (Nat.pair x j)):= by
+  rw [c_cov_rec_evp_2_aux1]
+  induction i with
+  | zero => rw [show j=0 from eq_zero_of_le_zero h]
+  | succ n ih =>
+    have h0: j=n+1 ∨ j≤n := by exact Or.symm (le_or_eq_of_le_succ h)
+    cases h0 with
+    | inl h1 => rw [h1]
+    | inr h1 =>
+      have h2 := ih h1
+      rw [←h2]
+      rw [←c_cov_rec_evp_2_aux2]
+      exact h1
 
 end Nat.RecursiveIn.Code
--- theorem Nat.PrimrecIn.div:Nat.PrimrecIn O Nat.div := by ...
--- theorem Nat.Primrec.div:Nat.Primrec Nat.div := by ...
 end cov_rec
 
 
@@ -739,7 +772,7 @@ def c_div_flip :=
   c_l_get_last.comp $
   c_cov_rec
 
-  (c_const 0) $       -- base case: if dividend is 0, return 0
+  (c_const 0) $            -- base case: if dividend is 0, return 0
 
   c_ifz.comp₂ divisor $    -- in general, test if the divisor is zero
   pair (c_const 0) $       -- if so, return 0
@@ -751,11 +784,29 @@ def c_div := c_div_flip.comp (pair right left)
 -- this cannot be done after unfolding c_div_flip2, as that will destroy all 'c_div_flip2' 's.
 -- not sure how to do it automatically. in the meanwhile, i can explicitly define it, like below:
 
-theorem c_div_flip_evp_aux_aux : eval_prim O c_div_flip (Nat.pair (d+1) (n+1)) =
+theorem c_div_flip_evp_aux_aux :
+  eval_prim O c_div_flip (Nat.pair (d+1) (n+1))
+    =
   if n<d then 0 else eval_prim O c_div_flip (Nat.pair (d+1) (n-d)) +1
     := by
-    rw [c_div_flip]
+    rw (config := {occs := .pos [1]}) [c_div_flip]
     simp [eval_prim]
+    rw (config := {occs := .pos [1]}) [c_div_flip]
+    simp [eval_prim]
+
+
+
+    -- rw [c_div_flip]
+
+    -- simp only [eval_prim]
+    -- simp [c_cov_rec_evp_0]
+    -- simp [eval_prim]
+
+    -- simp? [eval_prim] says simp only [eval_prim, c_cov_rec_evp_0, comp₂_evp, l, unpair_pair, c_const_evp, comp₄_evp, r,
+    --   succ_eq_add_one, c_sub_evp, unpaired, sub_eq, reduceSubDiff, c_l_get_evp, tsub_le_iff_right,
+    --   le_add_iff_nonneg_right, _root_.zero_le, c_cov_rec_evp_2, c_if_lt_te_evp,
+    --   add_lt_add_iff_right, c_ifz_evp, Nat.add_eq_zero, one_ne_zero, and_false, ↓reduceIte,
+    --   c_l_get_last_evp, list_get_last_append]
 theorem c_div_flip_evp_aux:eval_prim O c_div_flip = unpaired div_flip_aux := by
   funext dn
   let d:=dn.l
@@ -963,28 +1014,45 @@ def c_replace_oracle :=
 
 -- @[simp] theorem c_replace_oracle_ev_pr:code_prim (c_replace_oracle) := by unfold c_replace_oracle; repeat (constructor; try simp)
 
--- set_option maxHeartbeats 1 in
-@[simp] theorem c_replace_oracle_evp_aux_aux (h:n%4=0): eval_prim O (c_replace_oracle) (Nat.pair o n+5) =
+-- set_option maxHeartbeats 1000000 in
+set_option maxHeartbeats 100 in
+@[simp] theorem c_replace_oracle_evp_aux_aux (h:n%4=0): eval_prim O (c_replace_oracle) (Nat.pair o ((n+4)+1)) =
   -- let m:=n.div2.div2
   let m:=(n/2)/2
   let ml := eval_prim O (c_replace_oracle) (Nat.pair o m.l)
   let mr := eval_prim O (c_replace_oracle) (Nat.pair o m.r)
-  
+
   2*(2*(Nat.pair (ml) (mr))  )   + 5
   -- if n%4=0 then 2*(2*(Nat.pair (ml) (mr))  )   + 5 else
   -- if n%4=1 then 2*(2*(Nat.pair (ml) (mr))  )+1 + 5 else
   -- if n%4=2 then 2*(2*(Nat.pair (ml) (mr))+1)   + 5 else
   --               2*(2*(ml                )+1)+1 + 5
-  
-  
+
+
 
  := by
+  simp only []
   rw (config := {occs := .pos [1]}) [c_replace_oracle]
-  simp [eval_prim]
-    
+  -- rw [c_replace_oracle]
+
+
+  -- rw [eval_prim]
+  -- simp only [c_cov_rec_evp_0]
+  simp only [eval_prim, c_cov_rec_evp_0, comp₄_evp, l, r, unpair_pair, succ_eq_add_one, c_const_evp, comp₂_evp,
+  c_sub_evp, unpaired, sub_eq, reduceSubDiff, c_mod_evp, c_div2_evp, c_l_get_evp, c_mul2_evp, c_add_evp, add_eq,
+  c_if_eq_te_evp, reduceEqDiff, Nat.add_eq_right, Nat.add_eq_zero, one_ne_zero, and_false, ↓reduceIte, OfNat.ofNat_ne_zero, h]
+
+
+
+  -- simp? [eval_prim, h]
+  rw (config := {occs := .pos [1]}) [c_replace_oracle]
+  -- simp [eval_prim, h]
+
+  -- simp?
+  -- rw [c_cov_rec_evp_0]
+
   -- sorry
   -- simp only [div2]
-  -- rw [c_replace_oracle]
   -- simp [eval_prim, h]
   -- simp [eval_prim]
 
@@ -993,7 +1061,7 @@ set_option maxHeartbeats 3 in
   let m:=n.div2.div2
   let ml := eval_prim O (c_replace_oracle) (Nat.pair o m.l)
   let mr := eval_prim O (c_replace_oracle) (Nat.pair o m.r)
-  
+
   if n=0 then 0 else
   if n=1 then 1 else
   if n=2 then 2 else
@@ -1003,8 +1071,8 @@ set_option maxHeartbeats 3 in
   if n%4=1 then 2*(2*(Nat.pair (ml) (mr))  )+1 + 5 else
   if n%4=2 then 2*(2*(Nat.pair (ml) (mr))+1)   + 5 else
                 2*(2*(ml                )+1)+1 + 5
-  
-  
+
+
 
  :=
  match n with
@@ -1033,7 +1101,7 @@ set_option maxHeartbeats 3 in
 --   simp [eval_prim]
 --   rw (config := {occs := .pos [1]}) [c_replace_oracle]
 --   simp [eval_prim]
-  
+
 -- set_option maxHeartbeats 1000000 in
 set_option maxHeartbeats 3 in
 @[simp] theorem c_replace_oracle_evp_1: eval_prim O (c_replace_oracle) = unpaired replace_oracle := by
