@@ -790,9 +790,9 @@ theorem c_div_flip_evp_aux_aux :
     =
   if n<d then 0 else eval_prim O c_div_flip (Nat.pair (d+1) (n-d)) + 1
     := by
-  
+
   unfold c_div_flip; simp only [eval_prim, c_l_get_last_evp] -- unwrap the list_get_last wrapper
-  
+
   -- now we rewrite the expr just until it contains the expression for the list of previous calculations
   rw (config := {occs := .pos [1]}) [c_div_flip_aux]
   simp only [c_cov_rec_evp_3]
@@ -983,10 +983,10 @@ def encodeCode_replace_oracle (o:ℕ) : Code → ℕ
 | Code.left        => 2
 | Code.right       => 3
 | Code.oracle      => o
-| Code.pair cf cg  => 2*(2*(Nat.pair (encodeCode cf) (encodeCode cg))  )   + 5
-| Code.comp cf cg  => 2*(2*(Nat.pair (encodeCode cf) (encodeCode cg))  )+1 + 5
-| Code.prec cf cg  => 2*(2*(Nat.pair (encodeCode cf) (encodeCode cg))+1)   + 5
-| Code.rfind' cf   => 2*(2*(encodeCode cf                            )+1)+1 + 5
+| Code.pair cf cg  => 2*(2*(Nat.pair (encodeCode_replace_oracle o cf) (encodeCode_replace_oracle o cg))  )   + 5
+| Code.comp cf cg  => 2*(2*(Nat.pair (encodeCode_replace_oracle o cf) (encodeCode_replace_oracle o cg))  )+1 + 5
+| Code.prec cf cg  => 2*(2*(Nat.pair (encodeCode_replace_oracle o cf) (encodeCode_replace_oracle o cg))+1)   + 5
+| Code.rfind' cf   => 2*(2*(encodeCode_replace_oracle o cf                            )+1)+1 + 5
 def replace_oracle (o:ℕ) := fun n => (encodeCode_replace_oracle o (decodeCode n))
 
 
@@ -1001,11 +1001,12 @@ def c_replace_oracle_aux :=
   let m               := c_div2.comp $ c_div2.comp n
   let ml              := c_l_get.comp₂ comp_hist (left.comp m)
   let mr              := c_l_get.comp₂ comp_hist (right.comp m)
+  let mp              := c_l_get.comp₂ comp_hist m
   let nMod4           := c_mod.comp₂ n (c_const 4)
   let pair_code       := c_add.comp₂ (            c_mul2.comp $             c_mul2.comp (pair ml mr)) (c_const 5)
   let comp_code       := c_add.comp₂ (succ.comp $ c_mul2.comp $             c_mul2.comp (pair ml mr)) (c_const 5)
   let prec_code       := c_add.comp₂ (            c_mul2.comp $ succ.comp $ c_mul2.comp (pair ml mr)) (c_const 5)
-  let rfind'_code     := c_add.comp₂ (succ.comp $ c_mul2.comp $ succ.comp $ c_mul2.comp ml          ) (c_const 5)
+  let rfind'_code     := c_add.comp₂ (succ.comp $ c_mul2.comp $ succ.comp $ c_mul2.comp mp          ) (c_const 5)
 
   c_cov_rec
 
@@ -1020,141 +1021,172 @@ def c_replace_oracle_aux :=
   c_if_eq_te.comp₄ nMod4           (c_const 2) (prec_code) $
                                                 rfind'_code
 def c_replace_oracle := c_l_get_last.comp c_replace_oracle_aux
--- @[simp] theorem c_replace_oracle_ev_pr:code_prim (c_replace_oracle) := by unfold c_replace_oracle; repeat (constructor; try simp)
+set_option maxRecDepth 5000 in
+@[simp] theorem c_replace_oracle_ev_pr:code_prim (c_replace_oracle) := by
+  unfold c_replace_oracle;
+  repeat (constructor; try simp)
 
-@[simp] theorem c_replace_oracle_evp_aux_aux (h:n%4=0):
-eval_prim O (c_replace_oracle) (Nat.pair o ((n+4)+1))
-  =
-  -- let m:=n.div2.div2
-  let m:=(n/2)/2
-  let ml := eval_prim O (c_replace_oracle) (Nat.pair o m.l)
-  let mr := eval_prim O (c_replace_oracle) (Nat.pair o m.r)
-
-  2*(2*(Nat.pair (ml) (mr))  )   + 5
-  -- if n%4=0 then 2*(2*(Nat.pair (ml) (mr))  )   + 5 else
-  -- if n%4=1 then 2*(2*(Nat.pair (ml) (mr))  )+1 + 5 else
-  -- if n%4=2 then 2*(2*(Nat.pair (ml) (mr))+1)   + 5 else
-  --               2*(2*(ml                )+1)+1 + 5
-
-
-
- := by
+theorem c_replace_oracle_evp_aux_0 : eval_prim O (c_replace_oracle) (Nat.pair o 0) = replace_oracle o 0 := by
   unfold c_replace_oracle; simp only [eval_prim, c_l_get_last_evp]
- 
-
   rw (config := {occs := .pos [1]}) [c_replace_oracle_aux]
-  simp only [c_cov_rec_evp_3]
-
-  rw [←c_replace_oracle_aux] -- the key step to simplification. otherwise expression blows up
-
-  simp [eval_prim, h]
-
-  have h3 : (n/2/2).l≤n+4 := by exact le_add_right_of_le (Nat.le_trans (unpair_left_le (n/2/2)) (le_trans (Nat.div_le_self _ _) (Nat.div_le_self _ _)))
-  have h4 : (n/2/2).r≤n+4 := by exact le_add_right_of_le (Nat.le_trans (unpair_right_le (n/2/2)) (le_trans (Nat.div_le_self _ _) (Nat.div_le_self _ _)))
-    
-  unfold c_replace_oracle_aux
-  rw [c_cov_rec_evp_2 h3]
-  rw [c_cov_rec_evp_2 h4]
-
-  simp only [] -- remove local defns
-  simp only [l, r]
-
-  rw [mul_comm]
-  simp? says simp only [mul_eq_mul_left_iff, OfNat.ofNat_ne_zero, or_false]
-  rw [mul_comm]
-
-
-set_option maxHeartbeats 3 in
-@[simp] theorem c_replace_oracle_evp_aux: eval_prim O (c_replace_oracle) (Nat.pair o n) =
+  simp only [c_cov_rec_evp_4, l, c_const_evp]
+  simp only [replace_oracle, encodeCode_replace_oracle, decodeCode]
+theorem c_replace_oracle_evp_aux_1 : eval_prim O (c_replace_oracle) (Nat.pair o 1) = replace_oracle o 1 := by
+  sorry
+  -- unfold c_replace_oracle; simp only [eval_prim, c_l_get_last_evp]
+  -- rw (config := {occs := .pos [1]}) [c_replace_oracle_aux]
+  -- simp only [c_cov_rec_evp_0, comp₄_evp, eval_prim, l, r, unpair_pair, succ_eq_add_one, zero_add,
+  --   c_const_evp, comp₂_evp, c_sub_evp, unpaired, sub_eq, reduceLeDiff, Nat.sub_eq_zero_of_le,
+  --   c_mod_evp, zero_mod, c_div2_evp, Nat.zero_div, unpair_zero, Prod.fst_zero, c_l_get_evp,
+  --   c_cov_rec_evp_size, zero_lt_one, le_refl, c_cov_rec_evp_2, c_cov_rec_evp_4, Prod.snd_zero,
+  --   c_mul2_evp, c_add_evp, add_eq, zero_mul, one_mul, reduceAdd, c_if_eq_te_evp,
+  --   OfNat.zero_ne_ofNat, ↓reduceIte, zero_ne_one, OfNat.one_ne_ofNat, list_get_last_append]
+  -- simp only [replace_oracle, encodeCode_replace_oracle, decodeCode]
+theorem c_replace_oracle_evp_aux_2 : eval_prim O (c_replace_oracle) (Nat.pair o 2) = replace_oracle o 2 := by
+  sorry
+  -- unfold c_replace_oracle; simp only [eval_prim, c_l_get_last_evp]
+  -- rw (config := {occs := .pos [1]}) [c_replace_oracle_aux]
+  -- simp [eval_prim]
+  -- simp only [replace_oracle, encodeCode_replace_oracle, decodeCode]
+theorem c_replace_oracle_evp_aux_3 : eval_prim O (c_replace_oracle) (Nat.pair o 3) = replace_oracle o 3 := by
+  sorry
+  -- unfold c_replace_oracle; simp only [eval_prim, c_l_get_last_evp]
+  -- rw (config := {occs := .pos [1]}) [c_replace_oracle_aux]
+  -- simp [eval_prim]
+  -- simp only [replace_oracle, encodeCode_replace_oracle, decodeCode]
+theorem c_replace_oracle_evp_aux_4 : eval_prim O (c_replace_oracle) (Nat.pair o 4) = replace_oracle o 4 := by
+  sorry
+  -- unfold c_replace_oracle
+  -- unfold c_replace_oracle_aux
+  -- unfold replace_oracle
+  -- simp [encodeCode_replace_oracle, decodeCode]
+  -- simp [eval_prim]
+theorem c_replace_oracle_evp_aux_nMod4_0 (h:n%4=0):
+  eval_prim O (c_replace_oracle) (Nat.pair o ((n+4)+1))
+    =
   let m:=n.div2.div2
   let ml := eval_prim O (c_replace_oracle) (Nat.pair o m.l)
   let mr := eval_prim O (c_replace_oracle) (Nat.pair o m.r)
 
-  if n=0 then 0 else
-  if n=1 then 1 else
-  if n=2 then 2 else
-  if n=3 then 3 else
-  if n=4 then o else
-  if n%4=0 then 2*(2*(Nat.pair (ml) (mr))  )   + 5 else
-  if n%4=1 then 2*(2*(Nat.pair (ml) (mr))  )+1 + 5 else
-  if n%4=2 then 2*(2*(Nat.pair (ml) (mr))+1)   + 5 else
-                2*(2*(ml                )+1)+1 + 5
+  2*(2*(Nat.pair (ml) (mr))  )   + 5 := by
+
+  unfold c_replace_oracle; simp only [eval_prim, c_l_get_last_evp]
+  rw (config := {occs := .pos [1]}) [c_replace_oracle_aux]
+  simp only [c_cov_rec_evp_3]
+  rw [←c_replace_oracle_aux] -- the key step to simplification. otherwise expression blows up
+  simp [eval_prim, h]
+  have h3 : (n/2/2).l≤n+4 := by exact le_add_right_of_le (Nat.le_trans (unpair_left_le (n/2/2)) (le_trans (Nat.div_le_self _ _) (Nat.div_le_self _ _)))
+  have h4 : (n/2/2).r≤n+4 := by exact le_add_right_of_le (Nat.le_trans (unpair_right_le (n/2/2)) (le_trans (Nat.div_le_self _ _) (Nat.div_le_self _ _)))
+  unfold c_replace_oracle_aux
+  rw [c_cov_rec_evp_2 h3]
+  rw [c_cov_rec_evp_2 h4]
+  simp only [l, r, Nat.div2_val] -- removes local defns as well
+  rw [mul_comm]
+  simp? says simp only [mul_eq_mul_left_iff, OfNat.ofNat_ne_zero, or_false]
+  rw [mul_comm]
+theorem c_replace_oracle_evp_aux_nMod4_1 (h:n%4=1):
+  eval_prim O (c_replace_oracle) (Nat.pair o ((n+4)+1))
+    =
+  let m:=n.div2.div2
+  let ml := eval_prim O (c_replace_oracle) (Nat.pair o m.l)
+  let mr := eval_prim O (c_replace_oracle) (Nat.pair o m.r)
+
+  2*(2*(Nat.pair (ml) (mr))  ) +1  + 5 := by
+
+  unfold c_replace_oracle; simp only [eval_prim, c_l_get_last_evp]
+  rw (config := {occs := .pos [1]}) [c_replace_oracle_aux]
+  simp only [c_cov_rec_evp_3]
+  rw [←c_replace_oracle_aux] -- the key step to simplification. otherwise expression blows up
+  simp [eval_prim, h]
+  have h3 : (n/2/2).l≤n+4 := by exact le_add_right_of_le (Nat.le_trans (unpair_left_le (n/2/2)) (le_trans (Nat.div_le_self _ _) (Nat.div_le_self _ _)))
+  have h4 : (n/2/2).r≤n+4 := by exact le_add_right_of_le (Nat.le_trans (unpair_right_le (n/2/2)) (le_trans (Nat.div_le_self _ _) (Nat.div_le_self _ _)))
+  unfold c_replace_oracle_aux
+  rw [c_cov_rec_evp_2 h3]
+  rw [c_cov_rec_evp_2 h4]
+  simp only [l, r, Nat.div2_val] -- removes local defns as well
+  rw [mul_comm]
+  simp? says simp only [mul_eq_mul_left_iff, OfNat.ofNat_ne_zero, or_false]
+  rw [mul_comm]
+theorem c_replace_oracle_evp_aux_nMod4_2 (h:n%4=2):
+  eval_prim O (c_replace_oracle) (Nat.pair o ((n+4)+1))
+    =
+  let m:=n.div2.div2
+  let ml := eval_prim O (c_replace_oracle) (Nat.pair o m.l)
+  let mr := eval_prim O (c_replace_oracle) (Nat.pair o m.r)
+
+  2*(2*(Nat.pair (ml) (mr)) +1 )   + 5 := by
+
+  unfold c_replace_oracle; simp only [eval_prim, c_l_get_last_evp]
+  rw (config := {occs := .pos [1]}) [c_replace_oracle_aux]
+  simp only [c_cov_rec_evp_3]
+  rw [←c_replace_oracle_aux] -- the key step to simplification. otherwise expression blows up
+  simp [eval_prim, h]
+  have h3 : (n/2/2).l≤n+4 := by exact le_add_right_of_le (Nat.le_trans (unpair_left_le (n/2/2)) (le_trans (Nat.div_le_self _ _) (Nat.div_le_self _ _)))
+  have h4 : (n/2/2).r≤n+4 := by exact le_add_right_of_le (Nat.le_trans (unpair_right_le (n/2/2)) (le_trans (Nat.div_le_self _ _) (Nat.div_le_self _ _)))
+  unfold c_replace_oracle_aux
+  rw [c_cov_rec_evp_2 h3]
+  rw [c_cov_rec_evp_2 h4]
+  simp only [l, r, Nat.div2_val] -- removes local defns as well
+  rw [mul_comm]
+  simp? says simp only [mul_eq_mul_left_iff, OfNat.ofNat_ne_zero, or_false]
+  rw [mul_comm]
+theorem c_replace_oracle_evp_aux_nMod4_3 (h:n%4=3):
+  eval_prim O (c_replace_oracle) (Nat.pair o ((n+4)+1))
+    =
+  let m:=n.div2.div2
+  -- let ml := eval_prim O (c_replace_oracle) (Nat.pair o m.l)
+  -- let mr := eval_prim O (c_replace_oracle) (Nat.pair o m.r)
+  let mprev := eval_prim O (c_replace_oracle) (Nat.pair o m)
+  -- 2*(2*(Nat.pair (ml) (mr))  +1)+1   + 5 := by
+  2*(2*(mprev)  +1)+1   + 5 := by
+
+  unfold c_replace_oracle; simp only [eval_prim, c_l_get_last_evp]
+  rw (config := {occs := .pos [1]}) [c_replace_oracle_aux]
+  simp only [c_cov_rec_evp_3]
+  rw [←c_replace_oracle_aux] -- the key step to simplification. otherwise expression blows up
+  simp [eval_prim, h]
+  
+  -- have h3 : (n/2/2).l≤n+4 := by exact le_add_right_of_le (Nat.le_trans (unpair_left_le (n/2/2)) (le_trans (Nat.div_le_self _ _) (Nat.div_le_self _ _)))
+  have hmp : (n/2/2)≤n+4 := by exact le_add_right_of_le (le_trans (Nat.div_le_self _ _) (Nat.div_le_self _ _))
+  -- have h4 : (n/2/2).r≤n+4 := by exact le_add_right_of_le (Nat.le_trans (unpair_right_le (n/2/2)) (le_trans (Nat.div_le_self _ _) (Nat.div_le_self _ _)))
+  unfold c_replace_oracle_aux
+  rw [c_cov_rec_evp_2 hmp]
+  -- rw [c_cov_rec_evp_2 h4]
+  simp only [l, r, Nat.div2_val] -- removes local defns as well
+
+  
+  rw [mul_comm]
+  simp? says simp only [mul_eq_mul_left_iff, Nat.add_right_cancel_iff, OfNat.ofNat_ne_zero, or_false]
+  rw [mul_comm]
 
 
 
- :=
- match n with
-  | 0 => by
-    rw [c_replace_oracle]
-    simp [eval_prim]
-  | 1 => by
-    rw [c_replace_oracle]
-    simp [eval_prim]
-  | 2 => by
-    rw [c_replace_oracle]
-    simp [eval_prim]
-  | 3 => by
-    rw [c_replace_oracle]
-    simp [eval_prim]
-  | 4 => by
-    rw [c_replace_oracle]
-    simp [eval_prim]
-  | n + 5 => by
-    sorry
-    -- rw [c_replace_oracle]
-    -- simp [eval_prim]
---  by
 
---   rw (config := {occs := .pos [1]}) [c_replace_oracle]
---   simp [eval_prim]
---   rw (config := {occs := .pos [1]}) [c_replace_oracle]
---   simp [eval_prim]
+theorem nMod4_eq_0 (h0:n.bodd=false) (h1:n.div2.bodd=false) : n%4=0 := by sorry
+theorem nMod4_eq_1 (h0:n.bodd=true ) (h1:n.div2.bodd=false) : n%4=1 := by sorry
+theorem nMod4_eq_2 (h0:n.bodd=false) (h1:n.div2.bodd=true ) : n%4=2 := by sorry
+theorem nMod4_eq_3 (h0:n.bodd=true ) (h1:n.div2.bodd=true ) : n%4=3 := by sorry
 
 -- set_option maxHeartbeats 1000000 in
 -- set_option maxHeartbeats 3 in
-@[simp] theorem c_replace_oracle_evp_1: eval_prim O (c_replace_oracle) = unpaired replace_oracle := by
-  -- sorry
+@[simp] theorem c_replace_oracle_evp: eval_prim O (c_replace_oracle) = unpaired replace_oracle := by
   funext oc
   let o:=oc.l
   let c:=oc.r
   have oc_eq : oc = Nat.pair o c := by exact Eq.symm (pair_unpair oc)
   rw [oc_eq]
 
-
+  simp only [unpaired, unpair_pair] -- simplify the rhs
+  
 
   induction c using Nat.strong_induction_on with
   | _ c ih =>
     match c with
-    | 0 =>
-      sorry
-      unfold c_replace_oracle
-      unfold replace_oracle
-      simp [encodeCode_replace_oracle, decodeCode]
-      simp [eval_prim]
-    | 1 =>
-      sorry
-      unfold c_replace_oracle
-      unfold replace_oracle
-      simp [encodeCode_replace_oracle, decodeCode]
-      simp [eval_prim]
-    | 2 =>
-      sorry
-      unfold c_replace_oracle
-      unfold replace_oracle
-      simp [encodeCode_replace_oracle, decodeCode]
-      simp [eval_prim]
-    | 3 =>
-      sorry
-      unfold c_replace_oracle
-      unfold replace_oracle
-      simp [encodeCode_replace_oracle, decodeCode]
-      simp [eval_prim]
-    | 4 =>
-      sorry
-      unfold c_replace_oracle
-      unfold replace_oracle
-      simp [encodeCode_replace_oracle, decodeCode]
-      simp [eval_prim]
+    | 0 => exact c_replace_oracle_evp_aux_0
+    | 1 => exact c_replace_oracle_evp_aux_1
+    | 2 => exact c_replace_oracle_evp_aux_2
+    | 3 => exact c_replace_oracle_evp_aux_3
+    | 4 => exact c_replace_oracle_evp_aux_4
     | n + 5 =>
       let m := n.div2.div2
       have hm : m < n + 5 := by
@@ -1162,42 +1194,59 @@ set_option maxHeartbeats 3 in
         exact lt_of_le_of_lt (le_trans (Nat.div_le_self _ _) (Nat.div_le_self _ _)) (Nat.succ_le_succ (Nat.le_add_right _ _))
       have _m1 : m.unpair.1 < n + 5 := lt_of_le_of_lt m.unpair_left_le hm
       have _m2 : m.unpair.2 < n + 5 := lt_of_le_of_lt m.unpair_right_le hm
-      -- have IH := encodeCode_decodeCode m
-      -- have IH1 := encodeCode_decodeCode m.unpair.1
-      -- have IH2 := encodeCode_decodeCode m.unpair.2
-      -- conv_rhs => rw [← Nat.bit_decomp n, ← Nat.bit_decomp n.div2]
-      -- simp only [decodeCode.eq_6]
-      -- cases n.bodd <;> cases n.div2.bodd <;> simp [m, encodeCode, IH, IH1, IH2, Nat.bit_val]
 
 
-      unfold c_replace_oracle
-      unfold replace_oracle
-      -- simp [encodeCode_replace_oracle, decodeCode]
-      -- simp [eval_prim]
+      rw [show n+5=(n+4)+1 from rfl]
 
-      cases n.bodd with
-      | false => cases n.div2.bodd with
+
+      cases hno:n.bodd with
+      | false => cases hn2o:n.div2.bodd with
+        | false =>
+          have h0: n%4=0 := nMod4_eq_0 hno hn2o
+          simp [replace_oracle, encodeCode_replace_oracle, decodeCode, hno, hn2o] -- simplify the rhs
+          rw [c_replace_oracle_evp_aux_nMod4_0 h0]
+          simp
+          constructor
+          · rw [ih m.l _m1]; simp [replace_oracle, m]
+          · rw [ih m.r _m2]; simp [replace_oracle, m]
+
         | true =>
-          have h0: (n+4+1)%4=2 := by sorry
-          -- simp only [h0, ↓reduceIte]
-          simp only []
+          have h0: n%4=2 := nMod4_eq_2 hno hn2o
+          simp [replace_oracle, encodeCode_replace_oracle, decodeCode, hno, hn2o] -- simplify the rhs
+          rw [c_replace_oracle_evp_aux_nMod4_2 h0]
+          simp
+          constructor
+          · rw [ih m.l _m1]; simp [replace_oracle, m]
+          · rw [ih m.r _m2]; simp [replace_oracle, m]
 
-        | false => sorry
-      | true => sorry
+      | true => cases hn2o:n.div2.bodd with
+        | false =>
+          have h0: n%4=1 := nMod4_eq_1 hno hn2o
+          simp [replace_oracle, encodeCode_replace_oracle, decodeCode, hno, hn2o] -- simplify the rhs
+          rw [c_replace_oracle_evp_aux_nMod4_1 h0]
+          simp
+          constructor
+          · rw [ih m.l _m1]; simp [replace_oracle, m]
+          · rw [ih m.r _m2]; simp [replace_oracle, m]
+
+        | true =>
+          have h0: n%4=3 := nMod4_eq_3 hno hn2o
+          simp [replace_oracle, encodeCode_replace_oracle, decodeCode, hno, hn2o] -- simplify the rhs
+          rw [c_replace_oracle_evp_aux_nMod4_3 h0]
+          simp
+          rw [ih m hm]; simp [replace_oracle, m]
+          -- constructor
+          -- · rw [ih m.l _m1]; simp [replace_oracle, m]
+          -- · rw [ih m.r _m2]; simp [replace_oracle, m]
+
+-- theorem test : n+5=(n+4)+1 := by exact?
 
 
-      -- -- general case
-      -- let m := n.div2.div2
-      -- have hm : m < n + 5 := by
-      --   -- your proof of this inequality
-      --   sorry
-      -- -- continue using `ih m`
-      sorry
 
-@[simp] theorem c_replace_oracle_ev:eval O (c_replace_oracle o) = (replace_oracle o) := by rw [← eval_prim_eq_eval c_replace_oracle_ev_pr]; simp only [c_replace_oracle_evp]
+@[simp] theorem c_replace_oracle_ev:eval O (c_replace_oracle) = unpaired replace_oracle := by rw [← eval_prim_eq_eval c_replace_oracle_ev_pr]; simp only [c_replace_oracle_evp];
 end Nat.RecursiveIn.Code
-theorem Nat.PrimrecIn.replace_oracle:Nat.PrimrecIn O (replace_oracle o) := by rw [← c_replace_oracle_evp]; apply code_prim_prop c_replace_oracle_ev_pr
-theorem Nat.Primrec.replace_oracle:Nat.Primrec (replace_oracle o) := by exact PrimrecIn.PrimrecIn_Empty PrimrecIn.replace_oracle
+theorem Nat.PrimrecIn.replace_oracle:Nat.PrimrecIn O (unpaired replace_oracle) := by rw [← c_replace_oracle_evp]; apply code_prim_prop c_replace_oracle_ev_pr
+theorem Nat.Primrec.replace_oracle:Nat.Primrec (unpaired replace_oracle) := by exact PrimrecIn.PrimrecIn_Empty PrimrecIn.replace_oracle
 end replace_oracle
 
 
