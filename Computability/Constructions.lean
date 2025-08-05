@@ -730,11 +730,10 @@ theorem div_flip_aux_eq_div_flip : div_flip_aux = (flip ((· / ·) : ℕ → ℕ
       simp
       exact zero_lt_of_lt h2
 
-
 namespace Nat.RecursiveIn.Code
 def c_div_flip :=
-  let dividend := left.comp right
-  let divisor := c_pred.comp left
+  let dividend := succ.comp $ left.comp right
+  let divisor := left
   let list_of_prev_values := right.comp right
 
   c_l_get_last.comp $
@@ -742,14 +741,16 @@ def c_div_flip :=
 
   (c_const 0) $       -- base case: if dividend is 0, return 0
 
-  c_ifz.comp₂ left $    -- in general, test if the divisor is zero
-  pair (c_const 0) $    -- if so, return 0
+  c_ifz.comp₂ divisor $    -- in general, test if the divisor is zero
+  pair (c_const 0) $       -- if so, return 0
   c_if_lt_te.comp₄ dividend divisor (c_const 0) $ -- if dividend < divisor, return 0
   (succ.comp (c_l_get.comp₂ list_of_prev_values (c_sub.comp₂ dividend divisor))) -- else return (dividend-divisor)/divisor+1
+
 def c_div := c_div_flip.comp (pair right left)
 -- i want the inductive case to be simplified to an expression involving c_div_flip2.
 -- this cannot be done after unfolding c_div_flip2, as that will destroy all 'c_div_flip2' 's.
 -- not sure how to do it automatically. in the meanwhile, i can explicitly define it, like below:
+
 theorem c_div_flip_evp_aux_aux : eval_prim O c_div_flip (Nat.pair (d+1) (n+1)) =
   if n<d then 0 else eval_prim O c_div_flip (Nat.pair (d+1) (n-d)) +1
     := by
@@ -933,20 +934,20 @@ def replace_oracle (o:ℕ) := fun n => (encodeCode_replace_oracle o (decodeCode 
 
 /-- `eval c_replace_oracle (o,code)` = `code` but with calls to oracle replaced with calls to code `o` -/
 def c_replace_oracle :=
-  let o := left
+  let o               := left
   let input_to_decode := succ.comp (left.comp right)
-  let comp_hist := right.comp right
-  let m := c_div2.comp (c_div2.comp input_to_decode)
-  let ml := c_l_get.comp₂ comp_hist (left.comp m)
-  let mr := c_l_get.comp₂ comp_hist (right.comp m)
-  let nMod4 := c_mod.comp₂ input_to_decode (c_const 4)
-  let pair_code   := c_add.comp₂ (            c_mul2.comp $             c_mul2.comp (pair ml mr)) (c_const 5)
-  let comp_code   := c_add.comp₂ (succ.comp $ c_mul2.comp $             c_mul2.comp (pair ml mr)) (c_const 5)
-  let prec_code   := c_add.comp₂ (            c_mul2.comp $ succ.comp $ c_mul2.comp (pair ml mr)) (c_const 5)
-  let rfind'_code := c_add.comp₂ (succ.comp $ c_mul2.comp $ succ.comp $ c_mul2.comp ml          ) (c_const 5)
+  let comp_hist       := right.comp right
+  let n               := c_sub.comp₂ input_to_decode (c_const 5)
+  let m               := c_div2.comp $ c_div2.comp n
+  let ml              := c_l_get.comp₂ comp_hist (left.comp m)
+  let mr              := c_l_get.comp₂ comp_hist (right.comp m)
+  let nMod4           := c_mod.comp₂ n (c_const 4)
+  let pair_code       := c_add.comp₂ (            c_mul2.comp $             c_mul2.comp (pair ml mr)) (c_const 5)
+  let comp_code       := c_add.comp₂ (succ.comp $ c_mul2.comp $             c_mul2.comp (pair ml mr)) (c_const 5)
+  let prec_code       := c_add.comp₂ (            c_mul2.comp $ succ.comp $ c_mul2.comp (pair ml mr)) (c_const 5)
+  let rfind'_code     := c_add.comp₂ (succ.comp $ c_mul2.comp $ succ.comp $ c_mul2.comp ml          ) (c_const 5)
 
   c_l_get_last.comp $
-
   c_cov_rec
 
   (c_const 0) $
@@ -961,8 +962,82 @@ def c_replace_oracle :=
                                                 rfind'_code
 
 -- @[simp] theorem c_replace_oracle_ev_pr:code_prim (c_replace_oracle) := by unfold c_replace_oracle; repeat (constructor; try simp)
-set_option maxHeartbeats 1000000 in
+
+-- set_option maxHeartbeats 1 in
+@[simp] theorem c_replace_oracle_evp_aux_aux (h:n%4=0): eval_prim O (c_replace_oracle) (Nat.pair o n+5) =
+  -- let m:=n.div2.div2
+  let m:=(n/2)/2
+  let ml := eval_prim O (c_replace_oracle) (Nat.pair o m.l)
+  let mr := eval_prim O (c_replace_oracle) (Nat.pair o m.r)
+  
+  2*(2*(Nat.pair (ml) (mr))  )   + 5
+  -- if n%4=0 then 2*(2*(Nat.pair (ml) (mr))  )   + 5 else
+  -- if n%4=1 then 2*(2*(Nat.pair (ml) (mr))  )+1 + 5 else
+  -- if n%4=2 then 2*(2*(Nat.pair (ml) (mr))+1)   + 5 else
+  --               2*(2*(ml                )+1)+1 + 5
+  
+  
+
+ := by
+  rw (config := {occs := .pos [1]}) [c_replace_oracle]
+  simp [eval_prim]
+    
+  -- sorry
+  -- simp only [div2]
+  -- rw [c_replace_oracle]
+  -- simp [eval_prim, h]
+  -- simp [eval_prim]
+
+set_option maxHeartbeats 3 in
+@[simp] theorem c_replace_oracle_evp_aux: eval_prim O (c_replace_oracle) (Nat.pair o n) =
+  let m:=n.div2.div2
+  let ml := eval_prim O (c_replace_oracle) (Nat.pair o m.l)
+  let mr := eval_prim O (c_replace_oracle) (Nat.pair o m.r)
+  
+  if n=0 then 0 else
+  if n=1 then 1 else
+  if n=2 then 2 else
+  if n=3 then 3 else
+  if n=4 then o else
+  if n%4=0 then 2*(2*(Nat.pair (ml) (mr))  )   + 5 else
+  if n%4=1 then 2*(2*(Nat.pair (ml) (mr))  )+1 + 5 else
+  if n%4=2 then 2*(2*(Nat.pair (ml) (mr))+1)   + 5 else
+                2*(2*(ml                )+1)+1 + 5
+  
+  
+
+ :=
+ match n with
+  | 0 => by
+    rw [c_replace_oracle]
+    simp [eval_prim]
+  | 1 => by
+    rw [c_replace_oracle]
+    simp [eval_prim]
+  | 2 => by
+    rw [c_replace_oracle]
+    simp [eval_prim]
+  | 3 => by
+    rw [c_replace_oracle]
+    simp [eval_prim]
+  | 4 => by
+    rw [c_replace_oracle]
+    simp [eval_prim]
+  | n + 5 => by
+    sorry
+    -- rw [c_replace_oracle]
+    -- simp [eval_prim]
+--  by
+
+--   rw (config := {occs := .pos [1]}) [c_replace_oracle]
+--   simp [eval_prim]
+--   rw (config := {occs := .pos [1]}) [c_replace_oracle]
+--   simp [eval_prim]
+  
+-- set_option maxHeartbeats 1000000 in
+set_option maxHeartbeats 3 in
 @[simp] theorem c_replace_oracle_evp_1: eval_prim O (c_replace_oracle) = unpaired replace_oracle := by
+  sorry
   funext oc
   let o:=oc.l
   let c:=oc.r
