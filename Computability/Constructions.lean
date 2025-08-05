@@ -755,12 +755,21 @@ theorem div_flip_aux_eq_div_flip : div_flip_aux = (flip ((· / ·) : ℕ → ℕ
       exact zero_lt_of_lt h2
 
 namespace Nat.RecursiveIn.Code
-def c_div_flip :=
+/-
+This example serves as a blueprint for using `c_cov_rec` in proofs.
+
+For this specific example, one can bypass defining the auxiliary function `c_div_flip_aux` and write a shorter proof; see https://github.com/hyeoniuwu/CiL/blob/99fd356e7835d1856fb73306df7828f96b42a85c/Computability/Constructions.lean#L758.
+
+However, I've written the "longer" way, which is more efficient. For more complex constructions, this longer way becomes necessary.
+
+The reason for explicitly defining the auxiliary function (the function without c_l_get_last.comp attached) is to be able to rewrite the
+"unfolded" definitions in the recursive case with the shorter function name.
+-/
+def c_div_flip_aux :=
   let dividend := succ.comp $ left.comp right
   let divisor := left
   let list_of_prev_values := right.comp right
 
-  c_l_get_last.comp $
   c_cov_rec
 
   (c_const 0) $            -- base case: if dividend is 0, return 0
@@ -769,108 +778,31 @@ def c_div_flip :=
   pair (c_const 0) $       -- if so, return 0
   c_if_lt_te.comp₄ dividend divisor (c_const 0) $ -- if dividend < divisor, return 0
   (succ.comp (c_l_get.comp₂ list_of_prev_values (c_sub.comp₂ dividend divisor))) -- else return (dividend-divisor)/divisor+1
-
+def c_div_flip := c_l_get_last.comp c_div_flip_aux
 def c_div := c_div_flip.comp (pair right left)
 -- i want the inductive case to be simplified to an expression involving c_div_flip2.
 -- this cannot be done after unfolding c_div_flip2, as that will destroy all 'c_div_flip2' 's.
 -- not sure how to do it automatically. in the meanwhile, i can explicitly define it, like below:
 
-theorem c_div_flip_evp_aux_aux :
-  eval_prim O c_div_flip (Nat.pair (d+1) (n+1))
+
+theorem c_div_flip_aux_evp :
+  Nat.list_get_last (eval_prim O c_div_flip_aux (Nat.pair (d+1) (n+1)))
     =
-  if n<d then 0 else eval_prim O c_div_flip (Nat.pair (d+1) (n-d)) +1
+  if n<d then 0 else Nat.list_get_last (eval_prim O c_div_flip_aux (Nat.pair (d+1) (n-d))) + 1
     := by
-  rw [c_div_flip]
+  rw (config := {occs := .pos [1]}) [c_div_flip_aux]
+  simp only [c_cov_rec_evp_3]
+
+  rw [←c_div_flip_aux]
+
   simp [eval_prim]
+  have h0: n-d≤n := by exact sub_le n d
+  unfold c_div_flip_aux
+  rw [c_cov_rec_evp_2 h0]
 
--- set_option trace.Meta.Tactic.simp true in
-theorem c_div_flip_evp_aux_aux_test :
-  eval_prim O c_div_flip (Nat.pair (d+1) (n+1))
-    =
-  if n<d then 0 else eval_prim O c_div_flip (Nat.pair (d+1) (n-d)) +1
-    := by
-    rw (config := {occs := .pos [1]}) [c_div_flip]
+  -- rw [c_div_flip]
+  -- simp [eval_prim]
 
-    simp [eval_prim,
-      -c_cov_rec_evp_0,
-      -c_cov_rec_evp_1,
-      -c_cov_rec_evp_2,
-      -c_cov_rec_evp_3,
-      -c_cov_rec_evp_4,
-    ]
-
-    -- simp only [eval_prim]
-    simp only [c_cov_rec_evp_3]
-    
-    
-
-    simp [eval_prim]
-    -- simp only [comp₂_evp]
-    -- simp only [eval_prim]
-    -- simp only [l]
-    -- simp only [unpair_pair]
-    -- simp only [c_const_evp]
-    -- simp only [comp₄_evp]
-
-    -- -- simp only [comp₂_evp]
-    -- simp only [eval_prim]
-    -- simp only [l]
-    -- simp only [unpair_pair]
-    -- simp only [c_const_evp]
-    -- -- simp only [comp₄_evp]
-
-    
-    -- simp only [r]
-    -- simp only [succ_eq_add_one]
-    -- simp only [c_sub_evp]
-    -- simp only [unpaired]
-    -- simp only [sub_eq]
-    -- simp only [reduceSubDiff]
-    -- simp only [c_l_get_evp]
-    -- simp only [tsub_le_iff_right]
-    -- simp only [le_add_iff_nonneg_right]
-    -- simp only [_root_.zero_le]
-    -- simp only [c_cov_rec_evp_2]
-    -- simp only [c_if_lt_te_evp]
-    -- simp only [add_lt_add_iff_right]
-    -- simp only [c_ifz_evp]
-    -- simp only [Nat.add_eq_zero]
-    -- simp only [one_ne_zero]
-    -- simp only [and_false]
-    -- simp only [↓reduceIte]
-
-
-
-
-    
-    have rwh : (eval_prim O
-          ((c_const 0).c_cov_rec
-            (c_ifz.comp₂ left
-              ((c_const 0).pair
-                (c_if_lt_te.comp₄ (succ.comp (left.comp right)) left (c_const 0)
-                  (succ.comp (c_l_get.comp₂ (right.comp right) (c_sub.comp₂ (succ.comp (left.comp right)) left)))))))
-          (Nat.pair (d + 1) (n - d))).list_get_last = eval_prim O c_div_flip (Nat.pair (d + 1) (n - d)) := by
-            rw [c_div_flip]
-            simp [eval_prim]
-    rw [rwh]
-    -- calc
-
-    -- rw (config := {occs := .pos [1]}) [c_div_flip]
-    -- simp [eval_prim]
-
-
-
-    -- rw [c_div_flip]
-
-    -- simp only [eval_prim]
-    -- simp [c_cov_rec_evp_0]
-    -- simp [eval_prim]
-
-    -- simp? [eval_prim] says simp only [eval_prim, c_cov_rec_evp_0, comp₂_evp, l, unpair_pair, c_const_evp, comp₄_evp, r,
-    --   succ_eq_add_one, c_sub_evp, unpaired, sub_eq, reduceSubDiff, c_l_get_evp, tsub_le_iff_right,
-    --   le_add_iff_nonneg_right, _root_.zero_le, c_cov_rec_evp_2, c_if_lt_te_evp,
-    --   add_lt_add_iff_right, c_ifz_evp, Nat.add_eq_zero, one_ne_zero, and_false, ↓reduceIte,
-    --   c_l_get_last_evp, list_get_last_append]
 theorem c_div_flip_evp_aux:eval_prim O c_div_flip = unpaired div_flip_aux := by
   funext dn
   let d:=dn.l
@@ -879,20 +811,21 @@ theorem c_div_flip_evp_aux:eval_prim O c_div_flip = unpaired div_flip_aux := by
   rw [dn_eq]
 
   simp only [unpaired, unpair_pair]
+  unfold c_div_flip; simp only [eval_prim, c_l_get_last_evp]
 
   induction' n using Nat.strong_induction_on with n ih
 
   cases n with
   | zero =>
     simp [div_flip_aux_eq_div_flip,flip]
-    simp [c_div_flip, eval_prim]
+    simp [c_div_flip_aux, eval_prim]
   | succ n' =>
     cases hd:d with
     | zero =>
       simp [div_flip_aux_eq_div_flip,flip]
-      simp [c_div_flip, eval_prim]
+      simp [c_div_flip_aux, eval_prim]
     | succ d' =>
-      rw [c_div_flip_evp_aux_aux]
+      rw [c_div_flip_aux_evp]
       rw [div_flip_aux]
       simp
       rw [hd] at ih
@@ -1103,9 +1036,8 @@ Nat.list_get_last (eval_prim O (c_replace_oracle_aux) (Nat.pair o ((n+4)+1)))
 
 
  := by
-  -- rw [ml]
+
   rw (config := {occs := .pos [1]}) [c_replace_oracle_aux]
-  -- rw [c_replace_oracle_aux]
   simp only [c_cov_rec_evp_3]
 
   rw [←c_replace_oracle_aux] -- the key step to simplification. otherwise expression blows up
