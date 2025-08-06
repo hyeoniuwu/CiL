@@ -279,7 +279,7 @@ end Nat.RecursiveIn.Code
 end if_eq_te
 section if_lt_te
 namespace Nat.RecursiveIn.Code
-/-- eval c_if_lt_te (x,y) = [x=y] -/
+/-- eval c_if_lt_te (x,y) = [x<y] -/
 def c_if_lt_te :=
   let lt := c_sg.comp $ c_sub.comp₂ (succ.comp $ left.comp left) (right.comp left);
 
@@ -308,6 +308,7 @@ end Nat.RecursiveIn.Code
 -- theorem Nat.PrimrecIn.if_lt_te:Nat.PrimrecIn O Nat.if_lt_te := by ...
 -- theorem Nat.Primrec.if_lt_te:Nat.Primrec Nat.if_lt_te := by ...
 end if_lt_te
+
 section comp₄
 namespace Nat.RecursiveIn.Code
 def comp₄ : Code→Code→Code→Code→Code→Code := fun c1 c2 c3 c4 c5 => c1.comp₂ (pair c2 c3) (pair c4 c5)
@@ -335,6 +336,27 @@ end Nat.RecursiveIn.Code
 -- theorem Nat.Primrec.comp₄:Nat.Primrec Nat.comp₄ := by ...
 end comp₄
 
+section if_le_te
+namespace Nat.RecursiveIn.Code
+-- we use the fact that `a<b+1 ↔ a≤b`.
+/-- eval c_if_le_te (x,y) = [x≤y] -/
+def c_if_le_te := c_if_lt_te.comp (pair (pair (left.comp left) (succ.comp $ right.comp left)) right)
+@[simp] theorem c_if_le_te_ev_pr:code_prim c_if_le_te := by unfold c_if_le_te; repeat (first|assumption|simp|constructor)
+@[simp] theorem c_if_le_te_evp:eval_prim O c_if_le_te = fun x => if x.l.l≤x.l.r then x.r.l else x.r.r := by
+  simp [c_if_le_te,eval_prim];
+  funext xs
+  cases Classical.em (xs.l.l<xs.l.r+1) with
+  | inl h => simp [h, Nat.lt_add_one_iff.mp h]
+  | inr h => simp [h, Nat.lt_add_one_iff.not.mp h]
+@[simp] theorem c_if_le_te_ev:eval O c_if_le_te = fun x => if x.l.l≤x.l.r then x.r.l else x.r.r := by
+  rw [← eval_prim_eq_eval c_if_le_te_ev_pr]; simp only [c_if_le_te_evp]; funext xs;
+  cases Classical.em (xs.l.l<xs.l.r+1) with
+  | inl h => simp [h, Nat.lt_add_one_iff.mp h]
+  | inr h => simp [h, Nat.lt_add_one_iff.not.mp h]
+end Nat.RecursiveIn.Code
+-- theorem Nat.PrimrecIn.if_le_te:Nat.PrimrecIn O Nat.if_le_te := by ...
+-- theorem Nat.Primrec.if_le_te:Nat.Primrec Nat.if_le_te := by ...
+end if_le_te
 
 section ifz
 namespace Nat.RecursiveIn.Code

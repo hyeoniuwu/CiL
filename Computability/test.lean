@@ -79,7 +79,7 @@ namespace Nat.RecursiveIn.Code
 def c_bind_opt : Code→Code := fun c => c_ifz.comp₂ (c_id) (pair (c_const 0) (succ.comp (c.comp c_pred)))
 @[simp] theorem c_bind_opt_ev_pr (hc:code_prim c):code_prim (c_bind_opt c) := by unfold c_bind_opt; repeat (first|assumption|simp|constructor)
   
-@[simp] theorem c_bind_opt_evp:eval_prim O c_bind_opt = unpaired Nat.bind_opt := by
+@[simp] theorem c_bind_opt_evp : eval_prim O c_bind_opt = unpaired Nat.bind_opt := by
   simp [c_bind_opt,eval_prim]
   funext n;
   simp [unpaired]
@@ -161,7 +161,7 @@ def c_evaln := c_l_get_last.comp c_evaln_aux
 set_option maxHeartbeats 3 in
 @[simp] theorem c_evaln_ev_pr:code_prim (c_evaln) := by
   unfold c_evaln;
-  repeat (constructor; try simp)
+  repeat (first|assumption|simp|constructor)
 
 
 
