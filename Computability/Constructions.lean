@@ -1061,6 +1061,7 @@ theorem c_replace_oracle_evp_aux_4 : eval_prim O (c_replace_oracle) (Nat.pair o 
   -- unfold replace_oracle
   -- simp [encodeCode_replace_oracle, decodeCode]
   -- simp [eval_prim]
+-- set_option maxHeartbeats 3000 in
 theorem c_replace_oracle_evp_aux_nMod4_0 (h:n%4=0):
   eval_prim O (c_replace_oracle) (Nat.pair o ((n+4)+1))
     =
