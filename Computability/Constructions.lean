@@ -1084,23 +1084,16 @@ theorem c_replace_oracle_evp_aux_2 : eval_prim O (c_replace_oracle) (Nat.pair o 
   simp only [succ_eq_add_one]
   rw [show 1+1=2 from rfl]
   
-  rw (config := {occs := .pos [1]}) [c_if_eq_te_evp]; simp only []
-  unfold l
-  simp only [unpair_pair]
-  unfold r
-  rw [unpair_pair]
-  simp only [reduceEqDiff]
-  simp only [↓reduceIte]
-  simp only [unpair_pair]
-
-  rw (config := {occs := .pos [1]}) [c_if_eq_te_evp]; simp only []
-  unfold l
-  simp only [unpair_pair]
-  unfold r
-  rw [unpair_pair]
-  simp only [reduceEqDiff]
-  simp only [↓reduceIte]
-  simp only [unpair_pair]
+  -- the block here removes one instance of a "c_if_eq_te" stack. so we iterate until the condition is true.
+  iterate 2
+    rw (config := {occs := .pos [1]}) [c_if_eq_te_evp]; simp only []
+    unfold l
+    simp only [unpair_pair]
+    unfold r
+    rw [unpair_pair]
+    simp only [reduceEqDiff]
+    simp only [↓reduceIte]
+    simp only [unpair_pair]
 theorem c_replace_oracle_evp_aux_3 : eval_prim O (c_replace_oracle) (Nat.pair o 3) = replace_oracle o 3 := by
   simp only [replace_oracle, encodeCode_replace_oracle, decodeCode] -- simp rhs
 
@@ -1116,32 +1109,16 @@ theorem c_replace_oracle_evp_aux_3 : eval_prim O (c_replace_oracle) (Nat.pair o 
   simp only [succ_eq_add_one]
   rw [show 2+1=3 from rfl]
   
-  rw (config := {occs := .pos [1]}) [c_if_eq_te_evp]; simp only []
-  unfold l
-  simp only [unpair_pair]
-  unfold r
-  rw [unpair_pair]
-  simp only [reduceEqDiff]
-  simp only [↓reduceIte]
-  simp only [unpair_pair]
-
-  rw (config := {occs := .pos [1]}) [c_if_eq_te_evp]; simp only []
-  unfold l
-  simp only [unpair_pair]
-  unfold r
-  rw [unpair_pair]
-  simp only [reduceEqDiff]
-  simp only [↓reduceIte]
-  simp only [unpair_pair]
-
-  rw (config := {occs := .pos [1]}) [c_if_eq_te_evp]; simp only []
-  unfold l
-  simp only [unpair_pair]
-  unfold r
-  rw [unpair_pair]
-  simp only [reduceEqDiff]
-  simp only [↓reduceIte]
-  simp only [unpair_pair]
+  -- the block here removes one instance of a "c_if_eq_te" stack. so we iterate until the condition is true.
+  iterate 3
+    rw (config := {occs := .pos [1]}) [c_if_eq_te_evp]; simp only []
+    unfold l
+    simp only [unpair_pair]
+    unfold r
+    rw [unpair_pair]
+    simp only [reduceEqDiff]
+    simp only [↓reduceIte]
+    simp only [unpair_pair]
 theorem c_replace_oracle_evp_aux_4 : eval_prim O (c_replace_oracle) (Nat.pair o 4) = replace_oracle o 4 := by
   simp only [replace_oracle, encodeCode_replace_oracle, decodeCode] -- simp rhs
 
@@ -1157,41 +1134,17 @@ theorem c_replace_oracle_evp_aux_4 : eval_prim O (c_replace_oracle) (Nat.pair o 
   simp only [succ_eq_add_one]
   rw [show 3+1=4 from rfl]
   
-  rw (config := {occs := .pos [1]}) [c_if_eq_te_evp]; simp only []
-  unfold l
-  simp only [unpair_pair]
-  unfold r
-  rw [unpair_pair]
-  simp only [reduceEqDiff]
-  simp only [↓reduceIte]
-  simp only [unpair_pair]
+  -- the block here removes one instance of a "c_if_eq_te" stack. so we iterate until the condition is true.
+  iterate 4
+    rw (config := {occs := .pos [1]}) [c_if_eq_te_evp]; simp only []
+    unfold l
+    simp only [unpair_pair]
+    unfold r
+    rw [unpair_pair]
+    simp only [reduceEqDiff]
+    simp only [↓reduceIte]
+    simp only [unpair_pair]
 
-  rw (config := {occs := .pos [1]}) [c_if_eq_te_evp]; simp only []
-  unfold l
-  simp only [unpair_pair]
-  unfold r
-  rw [unpair_pair]
-  simp only [reduceEqDiff]
-  simp only [↓reduceIte]
-  simp only [unpair_pair]
-
-  rw (config := {occs := .pos [1]}) [c_if_eq_te_evp]; simp only []
-  unfold l
-  simp only [unpair_pair]
-  unfold r
-  rw [unpair_pair]
-  simp only [reduceEqDiff]
-  simp only [↓reduceIte]
-  simp only [unpair_pair]
-
-  rw (config := {occs := .pos [1]}) [c_if_eq_te_evp]; simp only []
-  unfold l
-  simp only [unpair_pair]
-  unfold r
-  rw [unpair_pair]
-  simp only [reduceEqDiff]
-  simp only [↓reduceIte]
-  simp only [unpair_pair]
 theorem c_replace_oracle_evp_aux_nMod4_0 (h:n%4=0):
   eval_prim O (c_replace_oracle) (Nat.pair o ((n+4)+1))
     =

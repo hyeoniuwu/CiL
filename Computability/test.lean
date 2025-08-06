@@ -286,23 +286,16 @@ theorem c_evaln_evp_aux_0 : eval_prim O (c_evaln) (Nat.pair x (Nat.pair 0 (s+1))
   rw [h0]
   simp only [unpair_pair]
 
-  rw (config := {occs := .pos [1]}) [c_if_eq_te_evp]
-  simp only [l]
-  simp only [unpair_pair]
-  unfold r
-  rw [unpair_pair]
-  simp only [add_one_ne_zero]
-  simp only [↓reduceIte]
-  simp only [unpair_pair]
-
-  rw (config := {occs := .pos [1]}) [c_if_eq_te_evp]
-  simp only [l]
-  simp only [unpair_pair]
-  unfold r
-  rw [unpair_pair]
-  simp only [add_one_ne_zero]
-  simp only [↓reduceIte]
-  simp only [unpair_pair]
+  -- the block here removes one instance of a "c_if_eq_te" stack. so we iterate until the condition is true.
+  iterate 2
+    rw (config := {occs := .pos [1]}) [c_if_eq_te_evp]
+    simp only [l]
+    simp only [unpair_pair]
+    unfold r
+    rw [unpair_pair]
+    simp only [add_one_ne_zero]
+    simp only [↓reduceIte]
+    simp only [unpair_pair]
 
   simp [eval_prim]
   simp [Nat.sub_add_cancel pair_nonzero_right_pos]
