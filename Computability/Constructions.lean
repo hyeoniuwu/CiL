@@ -26,7 +26,7 @@ end comp₂
 section id
 namespace Nat.RecursiveIn.Code
 def c_id := left.pair right
-@[simp] theorem c_id_ev_pr:code_prim c_id := by unfold c_id; repeat (constructor; try simp)
+@[simp] theorem c_id_ev_pr:code_prim c_id := by unfold c_id; repeat (first|assumption|simp|constructor)
 @[simp] theorem c_id_evp:eval_prim O c_id n= n := by simp [c_id,eval_prim]
 @[simp] theorem c_id_ev:eval O c_id n = n := by simp [c_id,eval,Seq.seq]
   -- #check @eval_prim_eq_eval c_id O c_id_ev_pr
@@ -89,7 +89,7 @@ section sgsg'
 @[simp] def Nat.sg' := fun x => if x=0 then 1 else 0
 namespace Nat.RecursiveIn.Code
 def c_sg := comp (prec zero (((c_const 1).comp left).comp left)) (pair zero c_id)
-@[simp] theorem c_sg_ev_pr:code_prim c_sg := by unfold c_sg; repeat (constructor; try simp)
+@[simp] theorem c_sg_ev_pr:code_prim c_sg := by unfold c_sg; repeat (first|assumption|simp|constructor)
 @[simp] theorem c_sg_evp:eval_prim O c_sg = Nat.sg := by
   simp [c_sg,eval_prim]
   funext n; induction n with
@@ -97,7 +97,7 @@ def c_sg := comp (prec zero (((c_const 1).comp left).comp left)) (pair zero c_id
   | succ n _ => simp
 @[simp] theorem c_sg_ev : eval O c_sg = Nat.sg := by rw [← eval_prim_eq_eval c_sg_ev_pr]; simp only [c_sg_evp]
 def c_sg' := comp (prec (c_const 1) (((zero).comp left).comp left)) (pair zero c_id)
-@[simp] theorem c_sg'_ev_pr:code_prim c_sg' := by unfold c_sg'; repeat (constructor; try simp)
+@[simp] theorem c_sg'_ev_pr:code_prim c_sg' := by unfold c_sg'; repeat (first|assumption|simp|constructor)
 @[simp] theorem c_sg'_evp:eval_prim O c_sg' = Nat.sg' := by
   simp [c_sg',eval_prim]
   funext n; induction n with
@@ -118,7 +118,7 @@ end sgsg'
 section add
 namespace Nat.RecursiveIn.Code
 def c_add := (prec c_id ((succ.comp right).comp right))
-@[simp] theorem c_add_ev_pr:code_prim c_add := by unfold c_add; repeat (constructor; try simp)
+@[simp] theorem c_add_ev_pr:code_prim c_add := by unfold c_add; repeat (first|assumption|simp|constructor)
 @[simp] theorem c_add_evp:eval_prim O c_add = unpaired Nat.add := by
   simp [c_add,eval_prim]
   funext n;
@@ -134,7 +134,7 @@ end add
 section mul
 namespace Nat.RecursiveIn.Code
 def c_mul := prec zero (c_add.comp (pair left (right.comp right)))
-@[simp] theorem c_mul_ev_pr:code_prim c_mul := by unfold c_mul; repeat (constructor; try simp)
+@[simp] theorem c_mul_ev_pr:code_prim c_mul := by unfold c_mul; repeat (first|assumption|simp|constructor)
 @[simp] theorem c_mul_evp:eval_prim O c_mul = unpaired Nat.mul := by
   simp [c_mul,eval_prim]
   funext n;
@@ -152,7 +152,7 @@ end mul
 section pow
 namespace Nat.RecursiveIn.Code
 def c_pow := prec (c_const 1) (c_mul.comp (pair (right.comp right) left))
-@[simp] theorem c_pow_ev_pr:code_prim c_pow := by unfold c_pow; repeat (constructor; try simp)
+@[simp] theorem c_pow_ev_pr:code_prim c_pow := by unfold c_pow; repeat (first|assumption|simp|constructor)
 @[simp] theorem c_pow_evp:eval_prim O c_pow = unpaired Nat.pow := by
   simp [c_pow,eval_prim]
   funext n;
@@ -195,7 +195,7 @@ end casesOn1
 section pred
 namespace Nat.RecursiveIn.Code
 def c_pred := (c_casesOn1 0 c_id)
-@[simp] theorem c_pred_ev_pr:code_prim c_pred := by unfold c_pred; repeat (constructor; try simp)
+@[simp] theorem c_pred_ev_pr:code_prim c_pred := by unfold c_pred; repeat (first|assumption|simp|constructor)
 @[simp] theorem c_pred_evp:eval_prim O c_pred = Nat.pred := by
   simp [c_pred,eval_prim]
   funext n;
@@ -208,7 +208,7 @@ end pred
 section sub
 namespace Nat.RecursiveIn.Code
 def c_sub := prec c_id ((c_pred.comp right).comp right)
-@[simp] theorem c_sub_ev_pr:code_prim c_sub := by unfold c_sub; repeat (constructor; try simp)
+@[simp] theorem c_sub_ev_pr:code_prim c_sub := by unfold c_sub; repeat (first|assumption|simp|constructor)
 @[simp] theorem c_sub_evp:eval_prim O c_sub = unpaired Nat.sub := by
   simp [c_sub,eval_prim]
   funext n;
@@ -225,7 +225,7 @@ end sub
 section dist
 namespace Nat.RecursiveIn.Code
 def c_dist := c_add.comp (pair c_sub (c_sub.comp (pair right left)))
-@[simp] theorem c_dist_ev_pr:code_prim c_dist := by unfold c_dist; repeat (constructor; try simp)
+@[simp] theorem c_dist_ev_pr:code_prim c_dist := by unfold c_dist; repeat (first|assumption|simp|constructor)
 @[simp] theorem c_dist_evp:eval_prim O c_dist = unpaired Nat.dist := by simp [c_dist,eval_prim]; exact rfl
 @[simp] theorem c_dist_ev:eval O c_dist = unpaired Nat.dist := by rw [← eval_prim_eq_eval c_dist_ev_pr]; simp only [c_dist_evp]
 end Nat.RecursiveIn.Code
@@ -243,7 +243,7 @@ section if_eq'
 namespace Nat.RecursiveIn.Code
 /-- eval c_if_eq' (x,y) = [x=y] -/
 def c_if_eq' := c_sg.comp c_dist
-@[simp] theorem c_if_eq'_ev_pr:code_prim c_if_eq' := by unfold c_if_eq'; repeat (constructor; try simp)
+@[simp] theorem c_if_eq'_ev_pr:code_prim c_if_eq' := by unfold c_if_eq'; repeat (first|assumption|simp|constructor)
 @[simp] theorem c_if_eq'_evp:eval_prim O c_if_eq' = fun ab => if ab.l=ab.r then 0 else 1 := by simp [c_if_eq',eval_prim];
 @[simp] theorem c_if_eq'_ev:eval O c_if_eq' = fun ab => if ab.l=ab.r then 0 else 1 := by rw [← eval_prim_eq_eval c_if_eq'_ev_pr]; simp only [c_if_eq'_evp]; simp; funext xs; exact apply_ite Part.some ((unpair xs).1 = (unpair xs).2) 0 1
 end Nat.RecursiveIn.Code
@@ -261,7 +261,7 @@ def c_if_eq_te :=
   c_add.comp₂
   (c_mul.comp₂ eq (right.comp right))
   (c_mul.comp₂ (c_not.comp eq) (left.comp right))
-@[simp] theorem c_if_eq_te_ev_pr:code_prim c_if_eq_te := by unfold c_if_eq_te; repeat (constructor; try simp)
+@[simp] theorem c_if_eq_te_ev_pr:code_prim c_if_eq_te := by unfold c_if_eq_te; repeat (first|assumption|simp|constructor)
 @[simp] theorem c_if_eq_te_evp:eval_prim O c_if_eq_te = fun x => if x.l.l=x.l.r then x.r.l else x.r.r := by
   simp [c_if_eq_te,eval_prim];
   funext xs
@@ -286,7 +286,7 @@ def c_if_lt_te :=
   c_add.comp₂
   (c_mul.comp₂ lt (right.comp right))
   (c_mul.comp₂ (c_not.comp lt) (left.comp right))
-@[simp] theorem c_if_lt_te_ev_pr:code_prim c_if_lt_te := by unfold c_if_lt_te; repeat (constructor; try simp)
+@[simp] theorem c_if_lt_te_ev_pr:code_prim c_if_lt_te := by unfold c_if_lt_te; repeat (first|assumption|simp|constructor)
 @[simp] theorem c_if_lt_te_evp:eval_prim O c_if_lt_te = fun x => if x.l.l<x.l.r then x.r.l else x.r.r := by
   simp [c_if_lt_te,eval_prim];
   funext xs
@@ -339,7 +339,7 @@ end comp₄
 section ifz
 namespace Nat.RecursiveIn.Code
 def c_ifz := c_add.comp $ pair (c_mul.comp $ pair (c_sg'.comp left) (left.comp right)) (c_mul.comp $ pair (c_sg.comp left) (right.comp right))
-@[simp] theorem c_ifz_ev_pr:code_prim c_ifz := by unfold c_ifz; repeat (constructor; try simp)
+@[simp] theorem c_ifz_ev_pr:code_prim c_ifz := by unfold c_ifz; repeat (first|assumption|simp|constructor)
 @[simp] theorem c_ifz_evp:eval_prim O c_ifz = fun (cab:ℕ) => if cab.l=0 then cab.r.l else cab.r.r := by
   simp [c_ifz,eval_prim];
   funext xs
@@ -359,7 +359,7 @@ end ifz
 section ef
 namespace Nat.RecursiveIn.Code
 def c_ef:ℕ→ℕ:=fun c=>(pair Nat.RecursiveIn.Code.id c)
--- @[simp] theorem c_ef_ev_pr:code_prim $ c_ef c := by unfold c_ef; repeat (constructor; try simp)
+-- @[simp] theorem c_ef_ev_pr:code_prim $ c_ef c := by unfold c_ef; repeat (first|assumption|simp|constructor)
 @[simp] theorem c_ef_pr_aux:Primrec (pair Nat.RecursiveIn.Code.id) := by
   refine Primrec.projection ?_
   apply PrimrecIn.PrimrecIn₂_iff_Primrec₂.mp
@@ -390,7 +390,7 @@ section l_append
 def Nat.list_append (list index:ℕ):ℕ:=Nat.pair (list.l+1) $ Nat.pair list.r index
 namespace Nat.RecursiveIn.Code
 def c_l_append := pair (succ.comp $ left.comp left) (pair (right.comp left) right)
-@[simp] theorem c_l_append_ev_pr:code_prim c_l_append := by unfold c_l_append; repeat (constructor; try simp)
+@[simp] theorem c_l_append_ev_pr:code_prim c_l_append := by unfold c_l_append; repeat (first|assumption|simp|constructor)
 @[simp] theorem c_l_append_evp:eval_prim O c_l_append = unpaired Nat.list_append := by unfold Nat.list_append; simp [c_l_append,eval_prim];
 @[simp] theorem c_l_append_ev:eval O c_l_append = unpaired Nat.list_append := by rw [← eval_prim_eq_eval c_l_append_ev_pr]; simp only [c_l_append_evp]
 end Nat.RecursiveIn.Code
@@ -419,7 +419,7 @@ def Nat.list_get (list index:ℕ) := Nat.list_get_lastn list (list.list_size-1-i
 
 namespace Nat.RecursiveIn.Code
 def c_l_get_lastn_aux := prec right (left.comp $ right.comp right)
-@[simp] theorem c_l_get_lastn_aux_ev_pr:code_prim c_l_get_lastn_aux := by unfold c_l_get_lastn_aux; repeat (constructor; try simp)
+@[simp] theorem c_l_get_lastn_aux_ev_pr:code_prim c_l_get_lastn_aux := by unfold c_l_get_lastn_aux; repeat (first|assumption|simp|constructor)
 @[simp] theorem c_l_get_lastn_aux_evp:eval_prim O c_l_get_lastn_aux = unpaired Nat.list_get_last_aux := by
   simp [c_l_get_lastn_aux,eval_prim];
   funext n;
@@ -430,14 +430,14 @@ def c_l_get_lastn_aux := prec right (left.comp $ right.comp right)
 @[simp] theorem c_l_get_lastn_aux_ev:eval O c_l_get_lastn_aux = unpaired Nat.list_get_last_aux := by rw [← eval_prim_eq_eval c_l_get_lastn_aux_ev_pr]; simp only [c_l_get_lastn_aux_evp];
 
 def c_l_get_lastn := right.comp c_l_get_lastn_aux
-@[simp] theorem c_l_get_lastn_ev_pr:code_prim c_l_get_lastn := by unfold c_l_get_lastn; repeat (constructor; try simp)
+@[simp] theorem c_l_get_lastn_ev_pr:code_prim c_l_get_lastn := by unfold c_l_get_lastn; repeat (first|assumption|simp|constructor)
 @[simp] theorem c_l_get_lastn_evp:eval_prim O c_l_get_lastn = unpaired Nat.list_get_lastn := by
   unfold list_get_lastn
   simp [c_l_get_lastn,eval_prim];
 @[simp] theorem c_l_get_lastn_ev:eval O c_l_get_lastn = unpaired Nat.list_get_lastn := by rw [← eval_prim_eq_eval c_l_get_lastn_ev_pr]; simp only [c_l_get_lastn_evp];
 
 def c_l_get_last := c_l_get_lastn.comp₂ c_id (c_const 0)
-@[simp] theorem c_l_get_last_ev_pr:code_prim c_l_get_last := by unfold c_l_get_last; repeat (constructor; try simp);
+@[simp] theorem c_l_get_last_ev_pr:code_prim c_l_get_last := by unfold c_l_get_last; repeat (first|assumption|simp|constructor);
 @[simp] theorem c_l_get_last_evp:eval_prim O c_l_get_last = Nat.list_get_last := by
   unfold list_get_last
   simp [c_l_get_last,eval_prim];
@@ -452,7 +452,7 @@ end l_get_last
 section l_get
 namespace Nat.RecursiveIn.Code
 def c_l_get := c_l_get_lastn.comp₂ left (c_sub.comp₂ (c_pred.comp (left.comp left)) (right))
-@[simp] theorem c_l_get_ev_pr:code_prim c_l_get := by unfold c_l_get; repeat (constructor; try simp)
+@[simp] theorem c_l_get_ev_pr:code_prim c_l_get := by unfold c_l_get; repeat (first|assumption|simp|constructor)
 @[simp] theorem c_l_get_evp:eval_prim O c_l_get = unpaired Nat.list_get := by
   unfold Nat.list_get;
   simp [c_l_get,eval_prim];
@@ -479,12 +479,7 @@ section efl
 namespace Nat.RecursiveIn.Code
 def c_efl:ℕ→ℕ:=fun c=>c_l_append.comp (pair c_id c)
 -- def c_efl:=fun c=>c_l_append.comp₂ c_id c
-@[simp] theorem c_efl_ev_pr (h:code_prim c):code_prim $ c_efl c := by
-  unfold c_efl;
-  simp
-  repeat (constructor; try simp)
-  exact h
-  -- exact h
+@[simp] theorem c_efl_ev_pr (h:code_prim c):code_prim $ c_efl c := by unfold c_efl; repeat (first|assumption|simp|constructor)
 
 -- @[simp] theorem c_efl_pr_aux:Primrec (pair c_id) := by
 --   refine Primrec.projection ?_
@@ -536,10 +531,7 @@ Given an input of the form (x, (i, list)), the code (c_efl_prec c) computes list
 -/
 def c_efl_prec:=fun c=>c_l_append.comp (pair (c_id.comp (right.comp right)) c)
 -- def c_efl_prec:=fun c=>c_l_append.comp₂ (c_id.comp (right.comp right)) c
-@[simp] theorem c_efl_prec_ev_pr (h:code_prim c):code_prim $ c_efl_prec c := by
-  unfold c_efl_prec;
-  repeat (constructor; try simp)
-  exact h
+@[simp] theorem c_efl_prec_ev_pr (h:code_prim c):code_prim $ c_efl_prec c := by unfold c_efl_prec; repeat (first|assumption|simp|constructor)
 @[simp] theorem c_efl_prec_evp:eval_prim O (c_efl_prec c) x= Nat.list_append x.r.r (eval_prim O c x) := by
   unfold list_append
   simp [c_efl_prec,eval_prim];
@@ -848,7 +840,7 @@ theorem c_div_flip_evp_aux:eval_prim O c_div_flip = unpaired div_flip_aux := by
 
 @[simp] theorem c_div_ev_pr :code_prim c_div := by
   unfold c_div;
-  repeat (constructor; try simp)
+  repeat (first|assumption|simp|constructor)
 
 @[simp] theorem c_div_ev:eval O c_div = unpaired Nat.div := by rw [← eval_prim_eq_eval c_div_ev_pr]; simp only [c_div_evp]; exact rfl
 end Nat.RecursiveIn.Code
@@ -863,7 +855,7 @@ end div
 section mod
 namespace Nat.RecursiveIn.Code
 def c_mod := c_sub.comp₂ left (c_mul.comp₂ right c_div)
-@[simp] theorem c_mod_ev_pr:code_prim c_mod := by unfold c_mod; repeat (constructor; try simp)
+@[simp] theorem c_mod_ev_pr:code_prim c_mod := by unfold c_mod; repeat (first|assumption|simp|constructor)
 @[simp] theorem c_mod_evp:eval_prim O c_mod = unpaired ((· % ·) : ℕ → ℕ → ℕ) := by
   simp [c_mod,eval_prim];
 
@@ -899,7 +891,7 @@ namespace Nat.RecursiveIn.Code
 #eval BSMem (Nat.pair 3 (Nat.pair 5 0b01000))
 
 def c_BSMem := c_mod.comp₂ (right.comp right) (c_pow.comp₂ (c_const 2) left)
-@[simp] theorem c_BSMem_ev_pr:code_prim c_BSMem := by unfold c_BSMem; repeat (constructor; try simp)
+@[simp] theorem c_BSMem_ev_pr:code_prim c_BSMem := by unfold c_BSMem; repeat (first|assumption|simp|constructor)
 @[simp] theorem c_BSMem_evp:eval_prim O c_BSMem = Nat.BSMem := by
   simp [c_BSMem,eval_prim]
   rw [BSMem_eq_BSMem_aux]
@@ -914,7 +906,7 @@ def Nat.BSUnion : ℕ→ℕ := fun bl1bl2 => Nat.pair (Nat.max bl1bl2.l.l bl1bl2
 theorem BSUnion_eq_BSUnion_aux : Nat.BSUnion = fun xa => xa.r.r % (2^xa.l) := by sorry
 namespace Nat.RecursiveIn.Code
 def c_BSUnion := c_mod.comp₂ (right.comp right) (c_pow.comp₂ (c_const 2) left)
-@[simp] theorem c_BSUnion_ev_pr:code_prim c_BSUnion := by unfold c_BSUnion; repeat (constructor; try simp)
+@[simp] theorem c_BSUnion_ev_pr:code_prim c_BSUnion := by unfold c_BSUnion; repeat (first|assumption|simp|constructor)
 @[simp] theorem c_BSUnion_evp:eval_prim O c_BSUnion = Nat.BSUnion := by
   simp [c_BSUnion,eval_prim]
   rw [BSUnion_eq_BSUnion_aux]
@@ -934,7 +926,7 @@ namespace Nat.RecursiveIn.Code
 
 
 def c_BSSize := c_mod.comp₂ (right.comp right) (c_pow.comp₂ (c_const 2) left)
-@[simp] theorem c_BSSize_ev_pr:code_prim c_BSSize := by unfold c_BSSize; repeat (constructor; try simp)
+@[simp] theorem c_BSSize_ev_pr:code_prim c_BSSize := by unfold c_BSSize; repeat (first|assumption|simp|constructor)
 @[simp] theorem c_BSSize_evp:eval_prim O c_BSSize = Nat.BSSize := by
   simp [c_BSSize,eval_prim]
   rw [BSSize_eq_BSSize_aux]
@@ -951,7 +943,7 @@ end BSSize
 section mul2
 namespace Nat.RecursiveIn.Code
 def c_mul2 := c_mul.comp₂ c_id (c_const 2)
-@[simp] theorem c_mul2_ev_pr:code_prim c_mul2 := by unfold c_mul2; repeat (constructor; try simp)
+@[simp] theorem c_mul2_ev_pr:code_prim c_mul2 := by unfold c_mul2; repeat (first|assumption|simp|constructor)
 @[simp] theorem c_mul2_evp:eval_prim O c_mul2 = fun x => x*2 := by simp [c_mul2]
 @[simp] theorem c_mul2_ev:eval O c_mul2 = (fun x => x*(2:ℕ)) := by rw [← eval_prim_eq_eval c_mul2_ev_pr]; simp only [c_mul2_evp];
 end Nat.RecursiveIn.Code
@@ -961,7 +953,7 @@ end mul2
 section div2
 namespace Nat.RecursiveIn.Code
 def c_div2 := c_div.comp₂ c_id (c_const 2)
-@[simp] theorem c_div2_ev_pr:code_prim c_div2 := by unfold c_div2; repeat (constructor; try simp)
+@[simp] theorem c_div2_ev_pr:code_prim c_div2 := by unfold c_div2; repeat (first|assumption|simp|constructor)
 @[simp] theorem c_div2_evp:eval_prim O c_div2 = fun x => x/2 := by simp [c_div2]
 @[simp] theorem c_div2_ev:eval O c_div2 = (fun x => x/(2:ℕ)) := by rw [← eval_prim_eq_eval c_div2_ev_pr]; simp only [c_div2_evp];
 end Nat.RecursiveIn.Code
@@ -1024,7 +1016,7 @@ def c_replace_oracle := c_l_get_last.comp c_replace_oracle_aux
 set_option maxRecDepth 5000 in
 @[simp] theorem c_replace_oracle_ev_pr:code_prim (c_replace_oracle) := by
   unfold c_replace_oracle;
-  repeat (constructor; try simp)
+  repeat (first|assumption|simp|constructor)
 
 theorem c_replace_oracle_evp_aux_0 : eval_prim O (c_replace_oracle) (Nat.pair o 0) = replace_oracle o 0 := by
   simp only [replace_oracle, encodeCode_replace_oracle, decodeCode] -- simp rhs
@@ -1055,7 +1047,6 @@ theorem c_replace_oracle_evp_aux_1 : eval_prim O (c_replace_oracle) (Nat.pair o 
   simp only [reduceEqDiff]
   simp only [↓reduceIte]
   simp only [unpair_pair]
-
 theorem c_replace_oracle_evp_aux_2 : eval_prim O (c_replace_oracle) (Nat.pair o 2) = replace_oracle o 2 := by
   simp only [replace_oracle, encodeCode_replace_oracle, decodeCode] -- simp rhs
 
@@ -1088,8 +1079,6 @@ theorem c_replace_oracle_evp_aux_2 : eval_prim O (c_replace_oracle) (Nat.pair o 
   simp only [reduceEqDiff]
   simp only [↓reduceIte]
   simp only [unpair_pair]
-
-
 theorem c_replace_oracle_evp_aux_3 : eval_prim O (c_replace_oracle) (Nat.pair o 3) = replace_oracle o 3 := by
   simp only [replace_oracle, encodeCode_replace_oracle, decodeCode] -- simp rhs
 
@@ -1181,9 +1170,6 @@ theorem c_replace_oracle_evp_aux_4 : eval_prim O (c_replace_oracle) (Nat.pair o 
   simp only [reduceEqDiff]
   simp only [↓reduceIte]
   simp only [unpair_pair]
-
-
--- set_option maxHeartbeats 3000 in
 theorem c_replace_oracle_evp_aux_nMod4_0 (h:n%4=0):
   eval_prim O (c_replace_oracle) (Nat.pair o ((n+4)+1))
     =
@@ -1281,8 +1267,6 @@ theorem c_replace_oracle_evp_aux_nMod4_3 (h:n%4=3):
   rw [mul_comm]
   simp? says simp only [mul_eq_mul_left_iff, Nat.add_right_cancel_iff, OfNat.ofNat_ne_zero, or_false]
   rw [mul_comm]
-
-
 
 
 theorem nMod4_eq_0 (h0:n.bodd=false) (h1:n.div2.bodd=false) : n%4=0 := by sorry
@@ -1406,7 +1390,7 @@ section evaln
 
 -/
 -- def c_evaln := c_mod.comp₂ (right.comp right) (c_pow.comp₂ (c_const 2) left)
--- @[simp] theorem c_evaln_ev_pr:code_prim c_evaln := by unfold c_evaln; repeat (constructor; try simp)
+-- @[simp] theorem c_evaln_ev_pr:code_prim c_evaln := by unfold c_evaln; repeat (first|assumption|simp|constructor)
 -- @[simp] theorem c_evaln_evp:evaln_prim O c_evaln = Nat.evaln := by
 --   simp [c_evaln,evaln_prim]
 --   funext n;
