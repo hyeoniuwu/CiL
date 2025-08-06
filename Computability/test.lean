@@ -1,5 +1,93 @@
 import Computability.Constructions
 
+section bind_opt
+namespace Nat.RecursiveIn.Code
+def c_bind_opt : Code→Code := fun c => c_ifz.comp₂ (c_id) (pair (c_const 0) (succ.comp (c.comp c_pred)))
+@[simp] theorem c_bind_opt_ev_pr (hc:code_prim c):code_prim (c_bind_opt c) := by unfold c_bind_opt; repeat (first|assumption|simp|constructor)
+-- @[simp] theorem c_bind_opt_evp : eval_prim O (c_bind_opt c) = 
+-- @[simp] theorem c_bind_opt_ev:eval O c_bind_opt = unpaired Nat.bind_opt := by rw [← eval_prim_eq_eval c_bind_opt_ev_pr]; simp only [c_bind_opt_evp]
+end Nat.RecursiveIn.Code
+-- theorem Nat.PrimrecIn.bind_opt:Nat.PrimrecIn O Nat.bind_opt := by ...
+-- theorem Nat.Primrec.bind_opt:Nat.Primrec Nat.bind_opt := by ...
+end bind_opt
+
+
+section le_guard_aux
+namespace Nat.RecursiveIn.Code
+/-- `eval (c_le_guard_aux k) x = x if x≤k else 0` -/
+def c_le_guard_aux (k:Code) := c_if_le_te.comp₄ c_id k succ (c_const 0)
+@[simp] theorem c_le_guard_aux_ev_pr (h:code_prim k):code_prim (c_le_guard_aux k) := by unfold c_le_guard_aux; repeat (first|assumption|simp|constructor)
+-- @[simp] theorem c_le_guard_aux_evp : eval_prim O (c_le_guard_aux k) = 
+-- @[simp] theorem c_le_guard_aux_ev:eval O c_le_guard_aux = unpaired Nat.le_guard_aux := by rw [← eval_prim_eq_eval c_le_guard_aux_ev_pr]; simp only [c_le_guard_aux_evp]
+end Nat.RecursiveIn.Code
+-- theorem Nat.PrimrecIn.le_guard_aux:Nat.PrimrecIn O Nat.le_guard_aux := by ...
+-- theorem Nat.Primrec.le_guard_aux:Nat.Primrec Nat.le_guard_aux := by ...
+end le_guard_aux
+
+
+section le_guard
+namespace Nat.RecursiveIn.Code
+def c_le_guard (k:Code) (c:Code) := (c_bind_opt c).comp (c_le_guard_aux (k))
+@[simp] theorem c_le_guard_ev_pr (hc:code_prim c) (hk:code_prim k):code_prim (c_le_guard k c) := by unfold c_le_guard; repeat (first|assumption|simp|constructor)
+@[simp] theorem c_le_guard_evp:eval_prim O (c_le_guard k c) = fun n => Encodable.encode (do guard (n≤(eval_prim O k n)); return (eval_prim O c n) :Option ℕ) := by
+  simp only [Option.bind_eq_bind]
+  simp [Encodable.encode]
+  unfold c_le_guard
+  unfold c_bind_opt
+  unfold c_le_guard_aux
+  simp [eval_prim]
+  funext n;
+  cases Classical.em (n≤(eval_prim O k n)) with
+  | inl h => simp [h]
+  | inr h => simp [h, gt_of_not_le h, Option.bind]
+
+@[simp] theorem c_le_guard_ev (hc:code_prim c) (hk:code_prim k):eval O (c_le_guard k c) = fun n => Encodable.encode (do guard (n≤(eval_prim O k n)); return (eval_prim O c n) : Option ℕ) := by
+  rw [← eval_prim_eq_eval (c_le_guard_ev_pr hc hk)];
+  simp only [c_le_guard_evp]
+end Nat.RecursiveIn.Code
+-- theorem Nat.PrimrecIn.le_guard:Nat.PrimrecIn O Nat.le_guard := by ...
+-- theorem Nat.Primrec.le_guard:Nat.Primrec Nat.le_guard := by ...
+end le_guard
+
+section succ_g
+namespace Nat.RecursiveIn.Code
+def c_succ_g (k:Code) := c_le_guard k succ
+@[simp] theorem c_succ_g_ev_pr (hk:code_prim k):code_prim (c_succ_g k) := by exact c_le_guard_ev_pr code_prim.succ hk
+@[simp] theorem c_succ_g_evp:eval_prim O (c_succ_g k) = fun n => Encodable.encode (do guard (n≤(eval_prim O k n)); return (n+1) :Option ℕ) := by exact c_le_guard_evp
+@[simp] theorem c_succ_g_ev (hk:code_prim k):eval O (c_succ_g k) = fun n => Encodable.encode (do guard (n≤(eval_prim O k n)); return (n+1) : Option ℕ) := by rw [← eval_prim_eq_eval (c_succ_g_ev_pr hk)]; simp only [c_succ_g_evp]
+end Nat.RecursiveIn.Code
+end succ_g
+section left_g
+namespace Nat.RecursiveIn.Code
+def c_left_g (k:Code) := c_le_guard k left
+@[simp] theorem c_left_g_ev_pr (hk:code_prim k):code_prim (c_left_g k) := by exact c_le_guard_ev_pr code_prim.left hk
+@[simp] theorem c_left_g_evp:eval_prim O (c_left_g k) = fun n => Encodable.encode (do guard (n≤(eval_prim O k n)); return (n.l) :Option ℕ) := by exact c_le_guard_evp
+@[simp] theorem c_left_g_ev (hk:code_prim k):eval O (c_left_g k) = fun n => Encodable.encode (do guard (n≤(eval_prim O k n)); return (n.l) : Option ℕ) := by rw [← eval_prim_eq_eval (c_left_g_ev_pr hk)]; simp only [c_left_g_evp]
+end Nat.RecursiveIn.Code
+end left_g
+section right_g
+namespace Nat.RecursiveIn.Code
+def c_right_g (k:Code) := c_le_guard k right
+@[simp] theorem c_right_g_ev_pr (hk:code_prim k):code_prim (c_right_g k) := by exact c_le_guard_ev_pr code_prim.right hk
+@[simp] theorem c_right_g_evp:eval_prim O (c_right_g k) = fun n => Encodable.encode (do guard (n≤(eval_prim O k n)); return (n.r) :Option ℕ) := by exact c_le_guard_evp
+@[simp] theorem c_right_g_ev (hk:code_prim k):eval O (c_right_g k) = fun n => Encodable.encode (do guard (n≤(eval_prim O k n)); return (n.r) : Option ℕ) := by rw [← eval_prim_eq_eval (c_right_g_ev_pr hk)]; simp only [c_right_g_evp]
+end Nat.RecursiveIn.Code
+end right_g
+section oracle_g
+namespace Nat.RecursiveIn.Code
+def c_oracle_g (k:Code) := c_le_guard k oracle
+@[simp] theorem c_oracle_g_ev_pr (hk:code_prim k):code_prim (c_oracle_g k) := by exact c_le_guard_ev_pr code_prim.oracle hk
+@[simp] theorem c_oracle_g_evp:eval_prim O (c_oracle_g k) = fun n => Encodable.encode (do guard (n≤(eval_prim O k n)); return (O n) :Option ℕ) := by exact c_le_guard_evp
+@[simp] theorem c_oracle_g_ev (hk:code_prim k):eval O (c_oracle_g k) = fun n => Encodable.encode (do guard (n≤(eval_prim O k n)); return (O n) : Option ℕ) := by rw [← eval_prim_eq_eval (c_oracle_g_ev_pr hk)]; simp only [c_oracle_g_evp]
+end Nat.RecursiveIn.Code
+end oracle_g
+
+
+
+
+
+
+
 section evaln
 namespace Nat.RecursiveIn.Code
 
@@ -74,48 +162,6 @@ def evaln_clamped (O:ℕ→ℕ) (use:ℕ) : ℕ→Code→ℕ→Option ℕ
 
 
 
-section bind_opt
-namespace Nat.RecursiveIn.Code
-def c_bind_opt : Code→Code := fun c => c_ifz.comp₂ (c_id) (pair (c_const 0) (succ.comp (c.comp c_pred)))
-@[simp] theorem c_bind_opt_ev_pr (hc:code_prim c):code_prim (c_bind_opt c) := by unfold c_bind_opt; repeat (first|assumption|simp|constructor)
-  
-@[simp] theorem c_bind_opt_evp : eval_prim O c_bind_opt = unpaired Nat.bind_opt := by
-  simp [c_bind_opt,eval_prim]
-  funext n;
-  simp [unpaired]
-  induction (unpair n).2 with
-  | zero => exact rfl
-  | succ n h =>
-    simp [*, bind_opt_succ];
-    (expose_names; exact Nat.add_comm (unpair n_1).1 ((unpair n_1).1 * n))
-@[simp] theorem c_bind_opt_ev:eval O c_bind_opt = unpaired Nat.bind_opt := by rw [← eval_prim_eq_eval c_bind_opt_ev_pr]; simp only [c_bind_opt_evp]
-end Nat.RecursiveIn.Code
--- theorem Nat.PrimrecIn.bind_opt:Nat.PrimrecIn O Nat.bind_opt := by ...
--- theorem Nat.Primrec.bind_opt:Nat.Primrec Nat.bind_opt := by ...
-end bind_opt
-
-section left_g
-namespace Nat.RecursiveIn.Code
-def c_left_g := c_ifz.comp₂ (c_id) (Nat.pair (c_const 0) (succ.comp (left.comp c_pred)))
-@[simp] theorem c_left_g_ev_pr:code_prim c_left_g := by unfold c_left_g; repeat (constructor; try simp)
-@[simp] theorem c_left_g_evp:eval_prim O c_left_g = unpaired Nat.left_g := by
-  simp [c_left_g,eval_prim]
-  funext n;
-  simp [unpaired]
-  induction (unpair n).2 with
-  | zero => exact rfl
-  | succ n h =>
-    simp [*, left_g_succ];
-    (expose_names; exact Nat.add_comm (unpair n_1).1 ((unpair n_1).1 * n))
-@[simp] theorem c_left_g_ev:eval O c_left_g = unpaired Nat.left_g := by rw [← eval_prim_eq_eval c_left_g_ev_pr]; simp only [c_left_g_evp]
-end Nat.RecursiveIn.Code
--- theorem Nat.PrimrecIn.left_g:Nat.PrimrecIn O Nat.left_g := by ...
--- theorem Nat.Primrec.left_g:Nat.Primrec Nat.left_g := by ...
-end left_g
-
-
-
-
 
 
 
@@ -147,10 +193,10 @@ def c_evaln_aux :=
 
   c_if_eq_te.comp₄ s     (c_const 0) (c_const 0)     $ -- if s=0, then diverge
 
-  c_if_eq_te.comp₄ code  (c_const 1) (succ.comp x)   $
-  c_if_eq_te.comp₄ code  (c_const 2) (left.comp x)   $
-  c_if_eq_te.comp₄ code  (c_const 3) (right.comp x)  $
-  c_if_eq_te.comp₄ code  (c_const 4) (oracle.comp x) $
+  c_if_eq_te.comp₄ code  (c_const 1) ((c_succ_g s).comp x)   $
+  c_if_eq_te.comp₄ code  (c_const 2) ((c_left_g s).comp x)   $
+  c_if_eq_te.comp₄ code  (c_const 3) ((c_right_g s).comp x)  $
+  c_if_eq_te.comp₄ code  (c_const 4) ((c_oracle_g s).comp x) $
   c_if_eq_te.comp₄ nMod4 (c_const 0) (pair pcl pcr)    $
   c_if_eq_te.comp₄ nMod4 (c_const 1) (comp pcl pcr)    $
   c_if_eq_te.comp₄ nMod4 (c_const 2) (prec pcl pcr)    $
