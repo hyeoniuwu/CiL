@@ -49,6 +49,14 @@ end Nat.RecursiveIn.Code
 -- theorem Nat.Primrec.le_guard:Nat.Primrec Nat.le_guard := by ...
 end le_guard
 
+section zero_g
+namespace Nat.RecursiveIn.Code
+def c_zero_g (k:Code) := c_le_guard k zero
+@[simp] theorem c_zero_g_ev_pr (hk:code_prim k):code_prim (c_zero_g k) := by exact c_le_guard_ev_pr code_prim.zero hk
+@[simp] theorem c_zero_g_evp:eval_prim O (c_zero_g k) = fun n => Encodable.encode (do guard (n≤(eval_prim O k n)); return 0 :Option ℕ) := by exact c_le_guard_evp
+@[simp] theorem c_zero_g_ev (hk:code_prim k):eval O (c_zero_g k) = fun n => Encodable.encode (do guard (n≤(eval_prim O k n)); return 0 : Option ℕ) := by rw [← eval_prim_eq_eval (c_zero_g_ev_pr hk)]; simp only [c_zero_g_evp]
+end Nat.RecursiveIn.Code
+end zero_g
 section succ_g
 namespace Nat.RecursiveIn.Code
 def c_succ_g (k:Code) := c_le_guard k succ
@@ -164,7 +172,14 @@ def evaln_clamped (O:ℕ→ℕ) (use:ℕ) : ℕ→Code→ℕ→Option ℕ
 
 
 
-
+theorem pair_nonzero_right_pos_aux : ¬ (Nat.pair x (s+1)=0) := by
+  rw  [show 0=Nat.pair 0 0 from rfl]
+  rw [pair_eq_pair]
+  intro h
+  have hr := h.right
+  contradiction 
+theorem pair_nonzero_right_pos : (Nat.pair x (s+1))>0 := by
+  exact zero_lt_of_ne_zero pair_nonzero_right_pos_aux
 
 
 
@@ -193,13 +208,14 @@ def c_evaln_aux :=
 
   c_if_eq_te.comp₄ s     (c_const 0) (c_const 0)     $ -- if s=0, then diverge
 
+  c_if_eq_te.comp₄ code  (c_const 0) ((c_zero_g s).comp x)   $
   c_if_eq_te.comp₄ code  (c_const 1) ((c_succ_g s).comp x)   $
   c_if_eq_te.comp₄ code  (c_const 2) ((c_left_g s).comp x)   $
   c_if_eq_te.comp₄ code  (c_const 3) ((c_right_g s).comp x)  $
   c_if_eq_te.comp₄ code  (c_const 4) ((c_oracle_g s).comp x) $
-  c_if_eq_te.comp₄ nMod4 (c_const 0) (pair pcl pcr)    $
-  c_if_eq_te.comp₄ nMod4 (c_const 1) (comp pcl pcr)    $
-  c_if_eq_te.comp₄ nMod4 (c_const 2) (prec pcl pcr)    $
+  c_if_eq_te.comp₄ nMod4 (c_const 0) (pair pcl pcr)          $
+  c_if_eq_te.comp₄ nMod4 (c_const 1) (comp pcl pcr)          $
+  c_if_eq_te.comp₄ nMod4 (c_const 2) (prec pcl pcr)          $
                                       rfind' pc
 def c_evaln := c_l_get_last.comp c_evaln_aux
 
@@ -220,21 +236,17 @@ theorem c_evaln_evp_aux_0_0 : eval_prim O (c_evaln) (Nat.pair x (Nat.pair 0 0)) 
 theorem c_evaln_evp_aux_0_np1 : eval_prim O (c_evaln) (Nat.pair x (Nat.pair (n+1) 0)) = Encodable.encode (evaln O 0 (n+1:ℕ) x) := by
   simp [decodeCode, evaln] -- simp rhs
 
-  have h0' : (Nat.pair (n + 1) 0) >0 := by exact zero_lt_succ (((n + 1) * (n + 1)).add n)
+  have h0' : (Nat.pair (n + 1) 0)>0 := by exact zero_lt_succ (((n + 1) * (n + 1)).add n)
   let k:=(Nat.pair (n + 1) 0)-1
   have h0: k+1=(Nat.pair (n + 1) 0) := by exact Nat.sub_add_cancel h0'
-
   rw [←h0]
 
   unfold c_evaln; simp only [eval_prim, c_l_get_last_evp]
   rw [c_evaln_aux]
   simp only [c_cov_rec_evp_3]
   unfold k
-  -- simp
-  -- simp [eval_prim]
-  -- simp only [c_cov_rec_evp_4, l, c_const_evp]
-  -- simp [decodeCode, evaln]
   rw [←c_evaln_aux]
+
   simp only [comp₄_evp]
   simp only [eval_prim]
   simp only [c_const_evp]
@@ -242,18 +254,57 @@ theorem c_evaln_evp_aux_0_np1 : eval_prim O (c_evaln) (Nat.pair x (Nat.pair (n+1
   simp only [succ_eq_add_one]
   rw [h0]
   simp only [unpair_pair]
+
   rw (config := {occs := .pos [1]}) [c_if_eq_te_evp]
   simp only [l]
   simp only [unpair_pair]
-  -- simp only [r]
   unfold r
   rw [unpair_pair]
   simp only []
   simp only [↓reduceIte]
   rw [unpair_pair]
   rw [unpair_pair]
-theorem c_evaln_evp_aux_0 : eval_prim O (c_evaln) (Nat.pair x (Nat.pair (0) (s+1))) = Encodable.encode (evaln O (s+1) (0:ℕ) x) := by
-  simp [decodeCode, evaln, Encodable.encode] -- simp rhs
+theorem c_evaln_evp_aux_0 : eval_prim O (c_evaln) (Nat.pair x (Nat.pair 0 (s+1))) = Encodable.encode (evaln O (s+1) (0:ℕ) x) := by
+  simp [decodeCode, evaln] -- simp rhs
+
+  let k:=(Nat.pair 0 (s+1))-1
+  have h0: k+1=(Nat.pair 0 (s+1)) := by exact Nat.sub_add_cancel pair_nonzero_right_pos
+  rw [←h0]
+
+  unfold c_evaln; simp only [eval_prim, c_l_get_last_evp]
+  rw [c_evaln_aux]
+  simp only [c_cov_rec_evp_3]
+  unfold k
+  rw [←c_evaln_aux]
+
+  simp only [comp₄_evp]
+  simp only [eval_prim]
+  simp only [c_const_evp]
+  simp only [l,r,unpair_pair]
+  simp only [succ_eq_add_one]
+  rw [h0]
+  simp only [unpair_pair]
+
+  rw (config := {occs := .pos [1]}) [c_if_eq_te_evp]
+  simp only [l]
+  simp only [unpair_pair]
+  unfold r
+  rw [unpair_pair]
+  simp only [add_one_ne_zero]
+  simp only [↓reduceIte]
+  simp only [unpair_pair]
+
+  rw (config := {occs := .pos [1]}) [c_if_eq_te_evp]
+  simp only [l]
+  simp only [unpair_pair]
+  unfold r
+  rw [unpair_pair]
+  simp only [add_one_ne_zero]
+  simp only [↓reduceIte]
+  simp only [unpair_pair]
+
+  simp
+
   sorry
   -- have h0' : (Nat.pair (n + 1) 0) >0 := by exact zero_lt_succ (((n + 1) * (n + 1)).add n)
   -- let k:=(Nat.pair (n + 1) 0)-1
