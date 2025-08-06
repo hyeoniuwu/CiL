@@ -562,15 +562,23 @@ theorem c_evaln_evp_aux_nMod4_0 (h:n%4=0):
   simp only [pair_l, pair_r]
   simp only [comp₂_evp]
   simp only [c_mod_evp]
-  simp only [unpaired]
-  simp only [unpair_pair]
+  simp only [unpaired2]
+  simp only [pair_l, pair_r]
 
-  simp only [up2,up3]
-  simp only [h]
+  simp only [c_sub_evp]
+  simp only [unpaired2]
+  simp only [pair_l, pair_r]
+  simp only [c_const_evp]
+
+  rw [eval_prim.eq_7]
+  simp only []
+  -- rw [eval_prim]
+
+  -- simp only [h]
   -- simp only [eval_prim]
-  simp only [reduceEqDiff]
-  simp only [↓reduceIte]
-  simp only [unpair_pair]
+  -- simp only [reduceEqDiff]
+  -- simp only [↓reduceIte]
+  -- simp only [unpair_pair]
 
 
   stop
