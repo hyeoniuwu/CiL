@@ -163,21 +163,21 @@ def c_pair_g : Code→Code→Code := fun cf cg =>
   cases Classical.em (n.r≤n.l) with
   | inl h =>
     simp [h]
-    cases Classical.em ((eval_prim O cf (unpair n).2)=0) with
+    cases Classical.em ((eval_prim O cf n.r)=0) with
     | inl h => simp [h, h0]
     | inr h =>
       simp [h, h2 h]
-      cases Classical.em ((eval_prim O cg (unpair n).2)=0) with
+      cases Classical.em ((eval_prim O cg n.r)=0) with
       | inl h3 => simp [h3, h0]
       | inr h3 => simp [h3, h2 h3]
 
   | inr h =>
     simp [h]
-    cases Classical.em ((eval_prim O cf (unpair n).2)=0) with
+    cases Classical.em ((eval_prim O cf n.r)=0) with
     | inl h => simp [h, h0]
     | inr h =>
       simp [h, h2 h]
-      cases Classical.em ((eval_prim O cg (unpair n).2)=0) with
+      cases Classical.em ((eval_prim O cg n.r)=0) with
       | inl h3 => simp [h3, h0]
       | inr h3 =>
         simp [h3, h2 h3]
@@ -349,11 +349,10 @@ theorem c_evaln_evp_aux_0_np1 : eval_prim O (c_evaln) (Nat.pair x (Nat.pair (n+1
   simp only [comp₄_evp]
   simp only [eval_prim]
   simp only [c_const_evp]
-  simp only [pairpair_rup3]
-  -- simp only [l,r,unpair_pair]
+  simp only [pair_l, pair_r]
+  -- simp only [pair_l, pair_r]
   simp only [succ_eq_add_one]
   rw [h0]
-  simp only [pairpair_rup3]
   -- simp only [unpair_pair]
 
   rw (config := {occs := .pos [1]}) [c_if_eq_te_evp]
@@ -381,21 +380,16 @@ theorem c_evaln_evp_aux_0 : eval_prim O (c_evaln) (Nat.pair x (Nat.pair 0 (s+1))
   simp only [comp₄_evp]
   simp only [eval_prim]
   simp only [c_const_evp]
-  simp only [l,r,unpair_pair]
+  simp only [pair_l, pair_r]
   simp only [succ_eq_add_one]
   rw [h0]
-  simp only [unpair_pair]
 
   -- the block here removes one instance of a "c_if_eq_te" stack. so we iterate until the condition is true.
   iterate 2
     rw (config := {occs := .pos [1]}) [c_if_eq_te_evp]
-    simp only [l]
-    simp only [unpair_pair]
-    unfold r
-    rw [unpair_pair]
-    simp only [reduceEqDiff]
+    simp only [pair_l, pair_r]
+    try simp only [reduceEqDiff]
     simp only [↓reduceIte]
-    simp only [unpair_pair]
 
   simp [eval_prim]
   simp [Nat.sub_add_cancel pair_nonzero_right_pos]
@@ -415,21 +409,16 @@ theorem c_evaln_evp_aux_1 : eval_prim O (c_evaln) (Nat.pair x (Nat.pair 1 (s+1))
   simp only [comp₄_evp]
   simp only [eval_prim]
   simp only [c_const_evp]
-  simp only [l,r,unpair_pair]
+  simp only [pair_l, pair_r]
   simp only [succ_eq_add_one]
   rw [h0]
-  simp only [unpair_pair]
 
   -- the block here removes one instance of a "c_if_eq_te" stack. so we iterate until the condition is true.
   iterate 3
     rw (config := {occs := .pos [1]}) [c_if_eq_te_evp]
-    simp only [l]
-    simp only [unpair_pair]
-    unfold r
-    rw [unpair_pair]
-    simp only [reduceEqDiff]
+    simp only [pair_l, pair_r]
+    try simp only [reduceEqDiff]
     simp only [↓reduceIte]
-    simp only [unpair_pair]
 
   simp [eval_prim]
   simp [Nat.sub_add_cancel pair_nonzero_right_pos]
@@ -449,21 +438,16 @@ theorem c_evaln_evp_aux_2 : eval_prim O (c_evaln) (Nat.pair x (Nat.pair 2 (s+1))
   simp only [comp₄_evp]
   simp only [eval_prim]
   simp only [c_const_evp]
-  simp only [l,r,unpair_pair]
+  simp only [pair_l, pair_r]
   simp only [succ_eq_add_one]
   rw [h0]
-  simp only [unpair_pair]
 
   -- the block here removes one instance of a "c_if_eq_te" stack. so we iterate until the condition is true.
   iterate 4
     rw (config := {occs := .pos [1]}) [c_if_eq_te_evp]
-    simp only [l]
-    simp only [unpair_pair]
-    unfold r
-    rw [unpair_pair]
-    simp only [reduceEqDiff]
+    simp only [pair_l, pair_r]
+    try simp only [reduceEqDiff]
     simp only [↓reduceIte]
-    simp only [unpair_pair]
 
   simp [eval_prim]
   simp [Nat.sub_add_cancel pair_nonzero_right_pos]
@@ -483,21 +467,16 @@ theorem c_evaln_evp_aux_3 : eval_prim O (c_evaln) (Nat.pair x (Nat.pair 3 (s+1))
   simp only [comp₄_evp]
   simp only [eval_prim]
   simp only [c_const_evp]
-  simp only [l,r,unpair_pair]
+  simp only [pair_l, pair_r]
   simp only [succ_eq_add_one]
   rw [h0]
-  simp only [unpair_pair]
 
   -- the block here removes one instance of a "c_if_eq_te" stack. so we iterate until the condition is true.
   iterate 5
     rw (config := {occs := .pos [1]}) [c_if_eq_te_evp]
-    simp only [l]
-    simp only [unpair_pair]
-    unfold r
-    rw [unpair_pair]
-    simp only [reduceEqDiff]
+    simp only [pair_l, pair_r]
+    try simp only [reduceEqDiff]
     simp only [↓reduceIte]
-    simp only [unpair_pair]
 
   simp [eval_prim]
   simp [Nat.sub_add_cancel pair_nonzero_right_pos]
@@ -517,21 +496,16 @@ theorem c_evaln_evp_aux_4 : eval_prim O (c_evaln) (Nat.pair x (Nat.pair 4 (s+1))
   simp only [comp₄_evp]
   simp only [eval_prim]
   simp only [c_const_evp]
-  simp only [l,r,unpair_pair]
+  simp only [pair_l, pair_r]
   simp only [succ_eq_add_one]
   rw [h0]
-  simp only [unpair_pair]
 
   -- the block here removes one instance of a "c_if_eq_te" stack. so we iterate until the condition is true.
   iterate 6
     rw (config := {occs := .pos [1]}) [c_if_eq_te_evp]
-    simp only [l]
-    simp only [unpair_pair]
-    unfold r
-    rw [unpair_pair]
-    simp only [reduceEqDiff]
+    simp only [pair_l, pair_r]
+    try simp only [reduceEqDiff]
     simp only [↓reduceIte]
-    simp only [unpair_pair]
 
   simp [eval_prim]
   simp [Nat.sub_add_cancel pair_nonzero_right_pos]
@@ -570,27 +544,22 @@ theorem c_evaln_evp_aux_nMod4_0 (h:n%4=0):
   simp only [comp₄_evp]
   simp only [eval_prim]
   simp only [c_const_evp]
-  simp only [l,r,unpair_pair]
+  simp only [pair_l, pair_r]
   simp only [succ_eq_add_one]
   rw [h0]
-  simp only [unpair_pair]
 
   -- the block here removes one instance of a "c_if_eq_te" stack. so we iterate until the condition is true.
   iterate 6
     rw (config := {occs := .pos [1]}) [c_if_eq_te_evp]
-    simp only [l]
-    simp only [unpair_pair]
-    unfold r
-    rw [unpair_pair]
-    simp only [reduceEqDiff]
+    simp only [pair_l, pair_r]
+    try simp only [reduceEqDiff]
     simp only [↓reduceIte]
-    simp only [unpair_pair]
 
   rw (config := {occs := .pos [1]}) [c_if_eq_te_evp]
   -- simp only [l]
   -- unfold r
   -- rw [unpair_pair]
-  simp only [pairpair_rup3]
+  simp only [pair_l, pair_r]
   simp only [comp₂_evp]
   simp only [c_mod_evp]
   simp only [unpaired]
