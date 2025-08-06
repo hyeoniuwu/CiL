@@ -1027,24 +1027,38 @@ set_option maxRecDepth 5000 in
   repeat (constructor; try simp)
 
 theorem c_replace_oracle_evp_aux_0 : eval_prim O (c_replace_oracle) (Nat.pair o 0) = replace_oracle o 0 := by
+  simp only [replace_oracle, encodeCode_replace_oracle, decodeCode] -- simp rhs
+
   unfold c_replace_oracle; simp only [eval_prim, c_l_get_last_evp]
   rw (config := {occs := .pos [1]}) [c_replace_oracle_aux]
   simp only [c_cov_rec_evp_4, l, c_const_evp]
-  simp only [replace_oracle, encodeCode_replace_oracle, decodeCode]
 theorem c_replace_oracle_evp_aux_1 : eval_prim O (c_replace_oracle) (Nat.pair o 1) = replace_oracle o 1 := by
-  sorry
-  -- unfold c_replace_oracle; simp only [eval_prim, c_l_get_last_evp]
-  -- rw (config := {occs := .pos [1]}) [c_replace_oracle_aux]
-  -- simp only [c_cov_rec_evp_0, comp₄_evp, eval_prim, l, r, unpair_pair, succ_eq_add_one, zero_add,
-  --   c_const_evp, comp₂_evp, c_sub_evp, unpaired, sub_eq, reduceLeDiff, Nat.sub_eq_zero_of_le,
-  --   c_mod_evp, zero_mod, c_div2_evp, Nat.zero_div, unpair_zero, Prod.fst_zero, c_l_get_evp,
-  --   c_cov_rec_evp_size, zero_lt_one, le_refl, c_cov_rec_evp_2, c_cov_rec_evp_4, Prod.snd_zero,
-  --   c_mul2_evp, c_add_evp, add_eq, zero_mul, one_mul, reduceAdd, c_if_eq_te_evp,
-  --   OfNat.zero_ne_ofNat, ↓reduceIte, zero_ne_one, OfNat.one_ne_ofNat, list_get_last_append]
-  -- simp only [replace_oracle, encodeCode_replace_oracle, decodeCode]
+  simp only [replace_oracle, encodeCode_replace_oracle, decodeCode] -- simp rhs
 
--- set_option maxHeartbeats 2000 in
+  unfold c_replace_oracle; simp only [eval_prim, c_l_get_last_evp]
+  rw (config := {occs := .pos [1]}) [c_replace_oracle_aux]
+  simp only [c_cov_rec_evp_3]
+  rw [←c_replace_oracle_aux]
+
+  simp only [comp₄_evp]
+  simp only [eval_prim]
+  simp only [c_const_evp]
+  simp only [l,r,unpair_pair]
+  simp only [succ_eq_add_one]
+  rw [show 0+1=1 from rfl]
+
+  rw (config := {occs := .pos [1]}) [c_if_eq_te_evp]; simp only []
+  unfold l
+  simp only [unpair_pair]
+  unfold r
+  rw [unpair_pair]
+  simp only [reduceEqDiff]
+  simp only [↓reduceIte]
+  simp only [unpair_pair]
+
 theorem c_replace_oracle_evp_aux_2 : eval_prim O (c_replace_oracle) (Nat.pair o 2) = replace_oracle o 2 := by
+  simp only [replace_oracle, encodeCode_replace_oracle, decodeCode] -- simp rhs
+
   unfold c_replace_oracle; simp only [eval_prim, c_l_get_last_evp]
   rw (config := {occs := .pos [1]}) [c_replace_oracle_aux]
   simp only [c_cov_rec_evp_3]
@@ -1062,7 +1076,7 @@ theorem c_replace_oracle_evp_aux_2 : eval_prim O (c_replace_oracle) (Nat.pair o 
   simp only [unpair_pair]
   unfold r
   rw [unpair_pair]
-  simp only [OfNat.ofNat_ne_one]
+  simp only [reduceEqDiff]
   simp only [↓reduceIte]
   simp only [unpair_pair]
 
@@ -1071,26 +1085,104 @@ theorem c_replace_oracle_evp_aux_2 : eval_prim O (c_replace_oracle) (Nat.pair o 
   simp only [unpair_pair]
   unfold r
   rw [unpair_pair]
-  simp only []
+  simp only [reduceEqDiff]
   simp only [↓reduceIte]
   simp only [unpair_pair]
 
-  simp only [replace_oracle, encodeCode_replace_oracle, decodeCode]
 
-  
 theorem c_replace_oracle_evp_aux_3 : eval_prim O (c_replace_oracle) (Nat.pair o 3) = replace_oracle o 3 := by
-  sorry
-  -- unfold c_replace_oracle; simp only [eval_prim, c_l_get_last_evp]
-  -- rw (config := {occs := .pos [1]}) [c_replace_oracle_aux]
-  -- simp [eval_prim]
-  -- simp only [replace_oracle, encodeCode_replace_oracle, decodeCode]
+  simp only [replace_oracle, encodeCode_replace_oracle, decodeCode] -- simp rhs
+
+  unfold c_replace_oracle; simp only [eval_prim, c_l_get_last_evp]
+  rw (config := {occs := .pos [1]}) [c_replace_oracle_aux]
+  simp only [c_cov_rec_evp_3]
+  rw [←c_replace_oracle_aux]
+
+  simp only [comp₄_evp]
+  simp only [eval_prim]
+  simp only [c_const_evp]
+  simp only [l,r,unpair_pair]
+  simp only [succ_eq_add_one]
+  rw [show 2+1=3 from rfl]
+  
+  rw (config := {occs := .pos [1]}) [c_if_eq_te_evp]; simp only []
+  unfold l
+  simp only [unpair_pair]
+  unfold r
+  rw [unpair_pair]
+  simp only [reduceEqDiff]
+  simp only [↓reduceIte]
+  simp only [unpair_pair]
+
+  rw (config := {occs := .pos [1]}) [c_if_eq_te_evp]; simp only []
+  unfold l
+  simp only [unpair_pair]
+  unfold r
+  rw [unpair_pair]
+  simp only [reduceEqDiff]
+  simp only [↓reduceIte]
+  simp only [unpair_pair]
+
+  rw (config := {occs := .pos [1]}) [c_if_eq_te_evp]; simp only []
+  unfold l
+  simp only [unpair_pair]
+  unfold r
+  rw [unpair_pair]
+  simp only [reduceEqDiff]
+  simp only [↓reduceIte]
+  simp only [unpair_pair]
 theorem c_replace_oracle_evp_aux_4 : eval_prim O (c_replace_oracle) (Nat.pair o 4) = replace_oracle o 4 := by
-  sorry
-  -- unfold c_replace_oracle
-  -- unfold c_replace_oracle_aux
-  -- unfold replace_oracle
-  -- simp [encodeCode_replace_oracle, decodeCode]
-  -- simp [eval_prim]
+  simp only [replace_oracle, encodeCode_replace_oracle, decodeCode] -- simp rhs
+
+  unfold c_replace_oracle; simp only [eval_prim, c_l_get_last_evp]
+  rw (config := {occs := .pos [1]}) [c_replace_oracle_aux]
+  simp only [c_cov_rec_evp_3]
+  rw [←c_replace_oracle_aux]
+
+  simp only [comp₄_evp]
+  simp only [eval_prim]
+  simp only [c_const_evp]
+  simp only [l,r,unpair_pair]
+  simp only [succ_eq_add_one]
+  rw [show 3+1=4 from rfl]
+  
+  rw (config := {occs := .pos [1]}) [c_if_eq_te_evp]; simp only []
+  unfold l
+  simp only [unpair_pair]
+  unfold r
+  rw [unpair_pair]
+  simp only [reduceEqDiff]
+  simp only [↓reduceIte]
+  simp only [unpair_pair]
+
+  rw (config := {occs := .pos [1]}) [c_if_eq_te_evp]; simp only []
+  unfold l
+  simp only [unpair_pair]
+  unfold r
+  rw [unpair_pair]
+  simp only [reduceEqDiff]
+  simp only [↓reduceIte]
+  simp only [unpair_pair]
+
+  rw (config := {occs := .pos [1]}) [c_if_eq_te_evp]; simp only []
+  unfold l
+  simp only [unpair_pair]
+  unfold r
+  rw [unpair_pair]
+  simp only [reduceEqDiff]
+  simp only [↓reduceIte]
+  simp only [unpair_pair]
+
+  rw (config := {occs := .pos [1]}) [c_if_eq_te_evp]; simp only []
+  unfold l
+  simp only [unpair_pair]
+  unfold r
+  rw [unpair_pair]
+  simp only [reduceEqDiff]
+  simp only [↓reduceIte]
+  simp only [unpair_pair]
+
+
 -- set_option maxHeartbeats 3000 in
 theorem c_replace_oracle_evp_aux_nMod4_0 (h:n%4=0):
   eval_prim O (c_replace_oracle) (Nat.pair o ((n+4)+1))
