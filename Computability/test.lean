@@ -315,6 +315,8 @@ def c_evaln_aux :=
                                       rfind' pc
 def c_evaln := c_l_get_last.comp c_evaln_aux
 
+
+
 -- set_option maxRecDepth 5000 in
 set_option maxHeartbeats 3 in
 @[simp] theorem c_evaln_ev_pr:code_prim (c_evaln) := by
@@ -322,6 +324,7 @@ set_option maxHeartbeats 3 in
   repeat (first|assumption|simp|constructor)
 
 
+--asd
 
 theorem c_evaln_evp_aux_0_0 : eval_prim O (c_evaln) (Nat.pair x (Nat.pair 0 0)) = Encodable.encode (evaln O 0 (0:ℕ) x) := by
   simp [decodeCode, evaln] -- simp rhs
@@ -346,10 +349,12 @@ theorem c_evaln_evp_aux_0_np1 : eval_prim O (c_evaln) (Nat.pair x (Nat.pair (n+1
   simp only [comp₄_evp]
   simp only [eval_prim]
   simp only [c_const_evp]
-  simp only [l,r,unpair_pair]
+  simp only [pairpair_rup3]
+  -- simp only [l,r,unpair_pair]
   simp only [succ_eq_add_one]
   rw [h0]
-  simp only [unpair_pair]
+  simp only [pairpair_rup3]
+  -- simp only [unpair_pair]
 
   rw (config := {occs := .pos [1]}) [c_if_eq_te_evp]
   simp only [l]
@@ -582,10 +587,18 @@ theorem c_evaln_evp_aux_nMod4_0 (h:n%4=0):
     simp only [unpair_pair]
 
   rw (config := {occs := .pos [1]}) [c_if_eq_te_evp]
-  simp only [l]
-  -- simp only [unpair_pair]
-  unfold r
-  rw [unpair_pair]
+  -- simp only [l]
+  -- unfold r
+  -- rw [unpair_pair]
+  simp only [pairpair_rup3]
+  simp only [comp₂_evp]
+  simp only [c_mod_evp]
+  simp only [unpaired]
+  simp only [unpair_pair]
+
+  simp only [up2,up3]
+  simp only [h]
+  -- simp only [eval_prim]
   simp only [reduceEqDiff]
   simp only [↓reduceIte]
   simp only [unpair_pair]

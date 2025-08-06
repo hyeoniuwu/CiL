@@ -9,8 +9,19 @@ open Nat.RecursiveIn.Code
 variable {α:Type*} {β:Type*} {σ:Type*}
 variable [Primcodable α] [Primcodable β] [Primcodable σ]
 
-@[simp] abbrev Nat.l (n:ℕ) := n.unpair.1
-@[simp] abbrev Nat.r (n:ℕ) := n.unpair.2
+-- @[simp] abbrev Nat.l (n:ℕ) := n.unpair.1
+-- @[simp] abbrev Nat.r (n:ℕ) := n.unpair.2
+def Nat.l (n:ℕ) := n.unpair.1
+def Nat.r (n:ℕ) := n.unpair.2
+@[simp] theorem pair_l : (Nat.pair x y).l = x := by simp [Nat.l]
+@[simp] theorem pair_r : (Nat.pair x y).r = y := by simp [Nat.r]
+@[simp] theorem pair_lr : (Nat.pair x.l x.r) = x := by simp [Nat.r, Nat.l]
+@[simp] theorem unpair1_to_l {n:ℕ} : (n.unpair.1) = n.l := by simp [Nat.l]
+@[simp] theorem unpair2_to_r {n:ℕ} : (n.unpair.2) = n.r := by simp [Nat.r]
+@[simp, reducible]
+def Nat.unpaired2 {α} (f : ℕ → ℕ → α) (n : ℕ) : α := f n.l n.r
+-- @[simp, reducible]
+-- def unpaired {α} (f : ℕ → ℕ → α) (n : ℕ) : α := f n.unpair.1 n.unpair.2
 @[simp] abbrev Nat.fzero:ℕ→ℕ:=λ_↦0
 
 namespace Nat.RecursiveIn.Code.nc_to_nn
@@ -80,8 +91,8 @@ theorem prim_total (h:code_prim c):∀x,(eval O c x).Dom := by
     expose_names
     simp [eval]
     intro x
-    induction (unpair x).2 with
-    | zero => exact ha_ih (unpair x).1
+    induction x.r with
+    | zero => exact ha_ih x.l
     | succ y' IH' =>
 
       simp
@@ -131,19 +142,19 @@ theorem eval_prim_eq_eval (h:code_prim c):eval_prim O c = eval O c := by
     funext xs
     simp
     expose_names
-    induction (unpair xs).2 with
+    induction xs.r with
     | zero =>
       simp
-      simp only [show eval O a (unpair xs).1 = Part.some (eval_prim O a (unpair xs).1) from by exact congrFun (_root_.id (Eq.symm ha_ih)) (unpair xs).1]
+      simp only [show eval O a xs.l = Part.some (eval_prim O a xs.l) from by exact congrFun (_root_.id (Eq.symm ha_ih)) xs.l]
     | succ y' IH' =>
-      have h0:@Nat.rec (fun x ↦ Part ℕ) (eval O a (unpair xs).1) (fun y IH ↦ IH.bind fun i ↦ eval O b (Nat.pair (unpair xs).1 (Nat.pair y i))) (y'+1) = ((@Nat.rec (fun x ↦ Part ℕ) (eval O a (unpair xs).1)
-  (fun y IH ↦ IH.bind fun i ↦ eval O b (Nat.pair (unpair xs).1 (Nat.pair y i))) y').bind fun i ↦ eval O b (Nat.pair (unpair xs).1 (Nat.pair y' i))) := by
+      have h0:@Nat.rec (fun x ↦ Part ℕ) (eval O a xs.l) (fun y IH ↦ IH.bind fun i ↦ eval O b (Nat.pair xs.l (Nat.pair y i))) (y'+1) = ((@Nat.rec (fun x ↦ Part ℕ) (eval O a xs.l)
+  (fun y IH ↦ IH.bind fun i ↦ eval O b (Nat.pair xs.l (Nat.pair y i))) y').bind fun i ↦ eval O b (Nat.pair xs.l (Nat.pair y' i))) := by
         exact rfl
       rw [h0]
       rw [←IH']
       rw [Part.bind_some]
       simp
-      rw [show eval O b ((Nat.pair (unpair xs).1 (Nat.pair y' (Nat.rec (eval_prim O a (unpair xs).1) (fun y IH ↦ eval_prim O b (Nat.pair (unpair xs).1 (Nat.pair y IH))) y')))) = Part.some (eval_prim O b ((Nat.pair (unpair xs).1 (Nat.pair y' (Nat.rec (eval_prim O a (unpair xs).1) (fun y IH ↦ eval_prim O b (Nat.pair (unpair xs).1 (Nat.pair y IH))) y'))))) from by exact congrFun (_root_.id (Eq.symm hb_ih)) ((Nat.pair (unpair xs).1 (Nat.pair y' (Nat.rec (eval_prim O a (unpair xs).1) (fun y IH ↦ eval_prim O b (Nat.pair (unpair xs).1 (Nat.pair y IH))) y'))))]
+      rw [show eval O b ((Nat.pair xs.l (Nat.pair y' (Nat.rec (eval_prim O a xs.l) (fun y IH ↦ eval_prim O b (Nat.pair xs.l (Nat.pair y IH))) y')))) = Part.some (eval_prim O b ((Nat.pair xs.l (Nat.pair y' (Nat.rec (eval_prim O a xs.l) (fun y IH ↦ eval_prim O b (Nat.pair xs.l (Nat.pair y IH))) y'))))) from by exact congrFun (_root_.id (Eq.symm hb_ih)) ((Nat.pair xs.l (Nat.pair y' (Nat.rec (eval_prim O a xs.l) (fun y IH ↦ eval_prim O b (Nat.pair xs.l (Nat.pair y IH))) y'))))]
 
 theorem code_prim_prop (h:code_prim c):∀ O, Nat.PrimrecIn O (eval_prim O c) := by
   induction h with
