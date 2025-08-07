@@ -100,7 +100,7 @@ theorem prim_total (h:code_prim c):∀x,(eval O c x).Dom := by
       use IH'
       apply hb_ih
 def eval_total (O:ℕ→ℕ) (c:Code) {h:∀x,(eval O c x).Dom}:ℕ→ℕ := fun x => (eval O c x).get (h x)
-def eval_prim (O:ℕ→ℕ):Code→ℕ→ℕ
+@[simp] def eval_prim (O:ℕ→ℕ):Code→ℕ→ℕ
 | zero       => fun x=>0
 | succ       => Nat.succ
 | left       => Nat.l

@@ -350,20 +350,13 @@ theorem c_evaln_evp_aux_0_np1 : eval_prim O (c_evaln) (Nat.pair x (Nat.pair (n+1
   simp only [eval_prim]
   simp only [c_const_evp]
   simp only [pair_l, pair_r]
-  -- simp only [pair_l, pair_r]
   simp only [succ_eq_add_one]
   rw [h0]
-  -- simp only [unpair_pair]
 
   rw (config := {occs := .pos [1]}) [c_if_eq_te_evp]
-  simp only [l]
-  simp only [unpair_pair]
-  unfold r
-  rw [unpair_pair]
-  simp only []
+  simp only [pair_l, pair_r]
   simp only [↓reduceIte]
-  rw [unpair_pair]
-  rw [unpair_pair]
+
 theorem c_evaln_evp_aux_0 : eval_prim O (c_evaln) (Nat.pair x (Nat.pair 0 (s+1))) = Encodable.encode (evaln O (s+1) (0:ℕ) x) := by
   simp [decodeCode, evaln] -- simp rhs
 
