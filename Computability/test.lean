@@ -132,11 +132,16 @@ if everything goes well we want to return
 --
 -- def c_pair_g : Code→Code→Code := fun cf cg => (c_bind_opt2 pair).comp (pair cf cg)
 def c_pair_g : Code→Code→Code := fun cf cg =>
-  let x         := left
-  let code_s    := succ.comp (left.comp right)
-  let code      := left.comp code_s
-  let s         := right.comp code_s
-  let sM1         := c_pred.comp s
+  -- let x         := left
+  -- let code_s    := succ.comp (left.comp right)
+  -- let code      := left.comp code_s
+  -- let s         := right.comp code_s
+  -- let sM1         := c_pred.comp s
+  let x_code_s  := (succ.comp (left.comp right))
+  let x         := left.comp x_code_s
+  let code      := left.comp (right.comp x_code_s)
+  let s         := right.comp (right.comp x_code_s)
+  let sM1       := c_pred.comp s
 
   c_if_le_te.comp₄ x sM1
 
@@ -157,9 +162,9 @@ def c_pair_g : Code→Code→Code := fun cf cg =>
 inp = (x, ((code,s)-1, hist))
 -/
 @[simp] theorem c_pair_g_evp:eval_prim O (c_pair_g cf cg) inp =
-  let x:=inp.l
-  let succ_code_s := inp.r.l+1
-  let s:=succ_code_s.r
+  let succ_x_code_s := inp.r.l+1
+  let x:=succ_x_code_s.l
+  let s:=succ_x_code_s.r.r
   let sM1:=s-1
   Encodable.encode (do guard (x≤sM1); Nat.pair <$> ((@Denumerable.ofNat (Option ℕ)) (eval_prim O cf inp)) <*> ((@Denumerable.ofNat (Option ℕ)) (eval_prim O cg inp)) :Option ℕ) := by
   -- simp
@@ -186,12 +191,13 @@ inp = (x, ((code,s)-1, hist))
   have h2 {x} (h3:¬x=0) : (Denumerable.ofNat (Option ℕ) x) = Option.some (x-1) := by
     rw (config := {occs := .pos [1]}) [h1 h3]
     exact rfl
-  have hx : eval_prim O x_1 inp = x := by simp [x_1, x]
+  have hx : eval_prim O x_1 inp = x := by
+    simp [x_1, x_code_s, x, succ_x_code_s]
   have hs : eval_prim O s_1 inp = s := by
     simp [s_1]
-    simp [code_s]
+    simp [x_code_s]
     simp [s]
-    simp [succ_code_s]
+    simp [succ_x_code_s]
   have hsM1 : eval_prim O sM1_1 inp = sM1 := by
     simp [sM1_1, sM1]
     simp [hs]
@@ -330,7 +336,6 @@ theorem pair_nonzero_right_pos_aux : ¬ (Nat.pair x (s+1)=0) := by
 def c_evaln_aux :=
   let x_code_s  := (succ.comp (left.comp right))
   let x         := left.comp x_code_s
-  -- let code_s    := right.comp right
   let code      := left.comp (right.comp x_code_s)
   let s         := right.comp (right.comp x_code_s)
   let sM1       := c_pred.comp s
@@ -338,9 +343,9 @@ def c_evaln_aux :=
   let n         := c_sub.comp₂ code (c_const 5)
   let m         := c_div2.comp $ c_div2.comp n
 
-  let pcl := c_l_get.comp₂ comp_hist (pair (left.comp m)  s) -- the previous computation corresponding to evaluating code m.l for s-1 steps.
-  let pcr := c_l_get.comp₂ comp_hist (pair (right.comp m) s)
-  let pc  := c_l_get.comp₂ comp_hist (pair m              s)
+  let pcl := c_l_get.comp₂ comp_hist (pair x (pair (left.comp m)  s)) -- the previous computation corresponding to evaluating code m.l for s steps.
+  let pcr := c_l_get.comp₂ comp_hist (pair x (pair (right.comp m) s))
+  let pc  := c_l_get.comp₂ comp_hist (pair x (pair m              s))
   let nMod4     := c_mod.comp₂ n (c_const 4)
 
   c_cov_rec
@@ -517,9 +522,14 @@ theorem c_evaln_evp_aux_nMod4_0 :
 
   -- simp [decodeCode, evaln] -- simp rhs
 
-  let k:=(Nat.pair ((n+4)+1) (s+1))-1
-  have hk: k+1=(Nat.pair ((n+4)+1) (s+1)) := by exact Nat.sub_add_cancel pair_nonzero_right_pos
-  rw [←hk]
+  let k:=(Nat.pair x (Nat.pair ((n+4)+1) (s+1)))-1
+  have kP1_gt_0 : Nat.pair x (Nat.pair ((n+4)+1) (s+1))>0 := by
+    apply pair_r_gt0
+    apply pair_r_gt0
+    exact zero_lt_succ s
+  have hkP1: k+1=(Nat.pair x (Nat.pair ((n+4)+1) (s+1))) := by
+    exact Nat.sub_add_cancel kP1_gt_0
+  rw [←hkP1]
 
   lift_lets
   extract_lets
@@ -539,28 +549,30 @@ theorem c_evaln_evp_aux_nMod4_0 :
   -- rw [h0]
   -- simp
 
-  have hx : eval_prim O x_1 (Nat.pair x (Nat.pair k (eval_prim O c_evaln_aux (Nat.pair x k)))) = x := by
+  have hx : eval_prim O x_1 (Nat.pair 0 (Nat.pair k (eval_prim O c_evaln_aux (Nat.pair 0 k)))) = x := by
     simp [x_1]
-  have hs : eval_prim O s_1 (Nat.pair x (Nat.pair k (eval_prim O c_evaln_aux (Nat.pair x k)))) = s+1 := by
+    simp [x_code_s]
+    simp [hkP1]
+  have hs : eval_prim O s_1 (Nat.pair 0 (Nat.pair k (eval_prim O c_evaln_aux (Nat.pair 0 k)))) = s+1 := by
     simp [s_1]
-    simp [code_s]
-    simp [hk]
-  have hsM1 : eval_prim O sM1 (Nat.pair x (Nat.pair k (eval_prim O c_evaln_aux (Nat.pair x k)))) = s := by
+    simp [x_code_s]
+    simp [hkP1]
+  have hsM1 : eval_prim O sM1 (Nat.pair 0 (Nat.pair k (eval_prim O c_evaln_aux (Nat.pair 0 k)))) = s := by
     simp [sM1]
     simp [hs]
-  have hcode : eval_prim O code (Nat.pair x (Nat.pair k (eval_prim O c_evaln_aux (Nat.pair x k)))) = (n+4)+1 := by
+  have hcode : eval_prim O code (Nat.pair 0 (Nat.pair k (eval_prim O c_evaln_aux (Nat.pair 0 k)))) = (n+4)+1 := by
     simp [code]
-    simp [code_s]
-    simp [hk]
-  have hn : eval_prim O n_1 (Nat.pair x (Nat.pair k (eval_prim O c_evaln_aux (Nat.pair x k)))) = n := by
+    simp [x_code_s]
+    simp [hkP1]
+  have hn : eval_prim O n_1 (Nat.pair 0 (Nat.pair k (eval_prim O c_evaln_aux (Nat.pair 0 k)))) = n := by
     simp [n_1]
     simp [hcode]
-  have hm : eval_prim O m_1 (Nat.pair x (Nat.pair k (eval_prim O c_evaln_aux (Nat.pair x k)))) = m := by
+  have hm : eval_prim O m_1 (Nat.pair 0 (Nat.pair k (eval_prim O c_evaln_aux (Nat.pair 0 k)))) = m := by
     simp [m_1]
     simp [hn]
     simp [m]
     simp [div2_val]
-  have hnMod4 : eval_prim O nMod4 (Nat.pair x (Nat.pair k (eval_prim O c_evaln_aux (Nat.pair x k)))) = n%4 := by
+  have hnMod4 : eval_prim O nMod4 (Nat.pair 0 (Nat.pair k (eval_prim O c_evaln_aux (Nat.pair 0 k)))) = n%4 := by
     simp [nMod4]
     simp [hn]
 
@@ -570,14 +582,16 @@ theorem c_evaln_evp_aux_nMod4_0 :
     unfold m
     simp [div2_val]
     exact le_add_right_of_le (Nat.le_trans (unpair_left_le (n/2/2)) (le_trans (Nat.div_le_self _ _) (Nat.div_le_self _ _)))
-  have bounds_aux : Nat.pair (n + 4 + 1) (s + 1) ≥ 1 := by
-    rw [←hk]
-    exact le_add_left 1 k
-  have bounds_left_aux_2 : Nat.pair m.l (s + 1) < k+1 := by
+  have bounds_aux : Nat.pair x (Nat.pair (n + 4 + 1) (s + 1)) ≥ 1 := by
+    apply pair_r_gt0
+    apply pair_l_gt0
+    exact zero_lt_succ (n + 4)
+  have bounds_left_aux_2 : Nat.pair x (Nat.pair m.l (s + 1)) < k+1 := by
     unfold k
     simp [Nat.sub_add_cancel bounds_aux]
+    apply pair_lt_pair_right
     exact pair_lt_pair_left (s+1) bounds_left_aux_1
-  have bounds_left : Nat.pair m.l (s + 1) ≤ k := by
+  have bounds_left : Nat.pair x (Nat.pair m.l (s + 1)) ≤ k := by
     apply le_of_lt_succ bounds_left_aux_2
 
   have bounds_right_aux_1 : m.r<n+4+1 := by
@@ -585,29 +599,30 @@ theorem c_evaln_evp_aux_nMod4_0 :
     unfold m
     simp [div2_val]
     exact le_add_right_of_le (Nat.le_trans (unpair_right_le (n/2/2)) (le_trans (Nat.div_le_self _ _) (Nat.div_le_self _ _)))
-  have bounds_right_aux_2 : Nat.pair m.r (s + 1) < k+1 := by
+  have bounds_right_aux_2 : Nat.pair x (Nat.pair m.r (s + 1)) < k+1 := by
     unfold k
     simp [Nat.sub_add_cancel bounds_aux]
+    apply pair_lt_pair_right
     exact pair_lt_pair_left (s+1) bounds_right_aux_1
-  have bounds_right : Nat.pair m.r (s + 1) ≤ k := by
+  have bounds_right : Nat.pair x (Nat.pair m.r (s + 1)) ≤ k := by
     apply le_of_lt_succ bounds_right_aux_2
       
-  have hpcl : eval_prim O pcl_1 (Nat.pair x (Nat.pair k (eval_prim O c_evaln_aux (Nat.pair x k)))) = pcl := by
+  have hpcl : eval_prim O pcl_1 (Nat.pair 0 (Nat.pair k (eval_prim O c_evaln_aux (Nat.pair 0 k)))) = pcl := by
     simp [pcl_1]
     simp [comp_hist]
     unfold pcl
-    simp [hm, hs]
+    simp [hm, hs, hx]
 
     unfold c_evaln
     unfold c_evaln_aux
     lift_lets
     rw [c_cov_rec_evp_2 bounds_left]
     simp
-  have hpcr : eval_prim O pcr_1 (Nat.pair x (Nat.pair k (eval_prim O c_evaln_aux (Nat.pair x k)))) = pcr := by
+  have hpcr : eval_prim O pcr_1 (Nat.pair 0 (Nat.pair k (eval_prim O c_evaln_aux (Nat.pair 0 k)))) = pcr := by
     simp [pcr_1]
     simp [comp_hist]
     unfold pcr
-    simp [hm, hs]
+    simp [hm, hs, hx]
 
     unfold c_evaln
     unfold c_evaln_aux
@@ -647,14 +662,14 @@ theorem c_evaln_evp_aux_nMod4_0 :
                                                                     ((nMod4.pair (c_const 2)).pair
                                                                       ((pcl_1.prec pcr_1).pair
                                                                         pc.rfind'))))))))))))))))))))))))))))
-                (Nat.pair x k))
-                =eval_prim O c_evaln_aux (Nat.pair x k) := rfl
+                (Nat.pair 0 k))
+                =eval_prim O c_evaln_aux (Nat.pair 0 k) := rfl
 
 
   simp [hs, hcode, hnMod4, hx, hsM1, stupidrewrite]
 
   match h:n%4 with
-  | 0 => simp [hpcl, hpcr, hk]
+  | 0 => simp [hpcl, hpcr, hkP1]
   | 1 => sorry
   | 2 => sorry
   | 3 => sorry
