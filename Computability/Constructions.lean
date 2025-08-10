@@ -1,6 +1,7 @@
 import Computability.RecursiveInTheorems
 
 set_option profiler true
+-- set_option profiler.threshold 30
 
 open Nat.RecursiveIn.Code
 
@@ -316,13 +317,9 @@ theorem c_if_eq_te_ev':eval O c_if_eq_te = fun x => if x.l.l=x.l.r then x.r.l el
   | inr h => simp [h]
 
 -- the simp normal form.
--- @[simp] theorem c_if_eq_te_evp_simp:eval_prim O (c_if_eq_te.comp₄ c1 c2 c3 c4) (Nat.pair (Nat.pair a b) (Nat.pair c d))
+-- @[simp] theorem c_if_eq_te_evp_simp:eval_prim O (c_if_eq_te.comp₄ c1 c2 c3 c4) x
 --   =
--- if (eval_prim O c1 a)=(eval_prim O c2 b) then (eval_prim O c3 c) else (eval_prim O c4 d) := by
---   simp [comp₄_evp]
---   simp [c_if_eq_te_evp]
---   simp [eval_prim]
-  -- simp [eval_prim]
+-- if (eval_prim O c1 x)=(eval_prim O c2 x) then (eval_prim O c3 x) else (eval_prim O c4 x) := by simp
 
 
 end Nat.RecursiveIn.Code
@@ -1035,6 +1032,7 @@ def replace_oracle (o:ℕ) := fun n => (encodeCode_replace_oracle o (decodeCode 
 
 /-- `eval c_replace_oracle (o,code)` = `code` but with calls to oracle replaced with calls to code `o` -/
 def c_replace_oracle_aux :=
+-- def c_replace_oracle :=
   let o               := left
   let input_to_decode := succ.comp (left.comp right)
   let comp_hist       := right.comp right
@@ -1048,6 +1046,8 @@ def c_replace_oracle_aux :=
   let comp_code       := c_add.comp₂ (succ.comp $ c_mul2.comp $             c_mul2.comp (pair ml mr)) (c_const 5)
   let prec_code       := c_add.comp₂ (            c_mul2.comp $ succ.comp $ c_mul2.comp (pair ml mr)) (c_const 5)
   let rfind'_code     := c_add.comp₂ (succ.comp $ c_mul2.comp $ succ.comp $ c_mul2.comp mp          ) (c_const 5)
+
+  -- c_l_get_last.comp $
 
   c_cov_rec
 
@@ -1067,6 +1067,34 @@ set_option maxRecDepth 5000 in
   unfold c_replace_oracle;
   repeat (first|assumption|simp|constructor)
 
+
+
+theorem c_replace_oracle_evp_aux_3_buivbue : eval_prim O (c_replace_oracle) (Nat.pair o 3) = replace_oracle o 3 := by
+  -- sorry
+  -- unfold c_replace_oracle; simp only [eval_prim, c_l_get_last_evp]
+  -- rw (config := {occs := .pos [1]}) [c_replace_oracle_aux]
+  -- simp [eval_prim]
+  -- simp only [replace_oracle, encodeCode_replace_oracle, decodeCode]
+  unfold c_replace_oracle
+  unfold c_replace_oracle_aux
+  simp
+  simp only [replace_oracle, encodeCode_replace_oracle, decodeCode]
+-- set_option trace.profiler true in
+theorem c_replace_oracle_evp_aux_3 : eval_prim O (c_replace_oracle) (Nat.pair o 3) = replace_oracle o 3 := by
+  unfold c_replace_oracle
+  -- unfold c_replace_oracle_aux
+  lift_lets
+  extract_lets
+  expose_names
+
+  simp (config:={zeta:=false})
+  
+  unfold input_to_decode
+  simp
+  simp only [replace_oracle, encodeCode_replace_oracle, decodeCode]
+
+
+
 lemma c_replace_oracle_evp_aux_nMod4_bounds1 : (n/2/2).l≤n+4 := by exact le_add_right_of_le (Nat.le_trans (unpair_left_le (n/2/2)) (le_trans (Nat.div_le_self _ _) (Nat.div_le_self _ _)))
 lemma c_replace_oracle_evp_aux_nMod4_bounds2 : (n/2/2).r≤n+4 := by exact le_add_right_of_le (Nat.le_trans (unpair_right_le (n/2/2)) (le_trans (Nat.div_le_self _ _) (Nat.div_le_self _ _)))
 theorem c_replace_oracle_evp_aux_nMod4_0 (h:n%4=0):
@@ -1077,19 +1105,96 @@ theorem c_replace_oracle_evp_aux_nMod4_0 (h:n%4=0):
   let mr := eval_prim O (c_replace_oracle) (Nat.pair o m.r)
 
   2*(2*(Nat.pair (ml) (mr))  )   + 5 := by
+  lift_lets
+  extract_lets
+  expose_names
 
   unfold c_replace_oracle;
   unfold c_replace_oracle_aux
-  simp [eval_prim, h]
+
+  lift_lets
+  extract_lets
+  expose_names
+  
+
+  have hinput_to_decode : eval_prim O input_to_decode (Nat.pair o (Nat.pair (n+4) (eval_prim O c_replace_oracle_aux (Nat.pair o (n+4))))) = n+5 := by simp [input_to_decode]
+  have hn : eval_prim O n_1 (Nat.pair o (Nat.pair (n+4) (eval_prim O c_replace_oracle_aux (Nat.pair o (n+4))))) = n := by simp [n_1, hinput_to_decode]
+  have hnMod4 : eval_prim O nMod4 (Nat.pair o (Nat.pair (n+4) (eval_prim O c_replace_oracle_aux (Nat.pair o (n+4))))) = n%4 := by simp [nMod4, hn]
+  have hm : eval_prim O m_1 (Nat.pair o (Nat.pair (n+4) (eval_prim O c_replace_oracle_aux (Nat.pair o (n+4))))) = m := by
+    simp [m_1]
+    simp [hn]
+    simp [m]
+    simp [Nat.div2_val]
+
+  have hml : eval_prim O ml_1 (Nat.pair o (Nat.pair (n+4) (eval_prim O c_replace_oracle_aux (Nat.pair o (n+4))))) = ml := by
+    simp [ml_1]
+    simp [comp_hist]
+    simp [hm]
+    simp [ml]
+
+    unfold c_replace_oracle
+    unfold c_replace_oracle_aux
+    lift_lets
+    unfold m
+    simp only [div2_val]
+    rw [c_cov_rec_evp_2 c_replace_oracle_evp_aux_nMod4_bounds1]
+    simp
+  have hmr : eval_prim O mr_1 (Nat.pair o (Nat.pair (n+4) (eval_prim O c_replace_oracle_aux (Nat.pair o (n+4))))) = mr := by
+    simp [mr_1]
+    simp [comp_hist]
+    simp [hm]
+    simp [mr]
+
+    unfold c_replace_oracle
+    unfold c_replace_oracle_aux
+    lift_lets
+    unfold m
+    simp only [div2_val]
+    rw [c_cov_rec_evp_2 c_replace_oracle_evp_aux_nMod4_bounds2]
+    simp
+  have hpair_code : eval_prim O pair_code (Nat.pair o (Nat.pair (n+4) (eval_prim O c_replace_oracle_aux (Nat.pair o (n+4))))) = 2 * (2 * Nat.pair ml mr) + 5 := by
+    simp [pair_code]
+    simp [hml]
+    simp [hmr]
+    simp [mul_comm]
+  
+
+-- how can i avoid writing this out in full?
+  have stupidrewrite : (eval_prim O
+          ((c_const 0).c_cov_rec
+            (c_if_eq_te.comp
+              ((input_to_decode.pair (c_const 1)).pair
+                ((c_const 1).pair
+                  (c_if_eq_te.comp
+                    ((input_to_decode.pair (c_const 2)).pair
+                      ((c_const 2).pair
+                        (c_if_eq_te.comp
+                          ((input_to_decode.pair (c_const 3)).pair
+                            ((c_const 3).pair
+                              (c_if_eq_te.comp
+                                ((input_to_decode.pair (c_const 4)).pair
+                                  (o_1.pair
+                                    (c_if_eq_te.comp
+                                      ((nMod4.pair (c_const 0)).pair
+                                        (pair_code.pair
+                                          (c_if_eq_te.comp
+                                            ((nMod4.pair (c_const 1)).pair
+                                              (comp_code.pair
+                                                (c_if_eq_te.comp
+                                                  ((nMod4.pair (c_const 2)).pair
+                                                    (prec_code.pair rfind'_code))))))))))))))))))))))
+          (Nat.pair o (n + 4))) = eval_prim O c_replace_oracle_aux (Nat.pair o (n+4)) := by exact rfl
+
+  simp [stupidrewrite]
 
 
-  rw [c_cov_rec_evp_2 c_replace_oracle_evp_aux_nMod4_bounds1]
-  rw [c_cov_rec_evp_2 c_replace_oracle_evp_aux_nMod4_bounds2]
 
-  simp only [div2_val]
-  rw [mul_comm]
-  simp? says simp only [mul_eq_mul_left_iff, OfNat.ofNat_ne_zero, or_false]
-  rw [mul_comm]
+  simp only [hinput_to_decode]
+  simp
+  simp only [hnMod4]
+  simp [h]
+  simp [hpair_code]
+
 theorem c_replace_oracle_evp_aux_nMod4_1 (h:n%4=1):
   eval_prim O (c_replace_oracle) (Nat.pair o ((n+4)+1))
     =
@@ -1100,7 +1205,7 @@ theorem c_replace_oracle_evp_aux_nMod4_1 (h:n%4=1):
   2*(2*(Nat.pair (ml) (mr))  ) +1  + 5 := by
 
   unfold c_replace_oracle;
-  unfold c_replace_oracle_aux
+  -- unfold c_replace_oracle_aux
   simp [eval_prim, h]
 
   rw [c_cov_rec_evp_2 c_replace_oracle_evp_aux_nMod4_bounds1]
@@ -1119,7 +1224,7 @@ theorem c_replace_oracle_evp_aux_nMod4_2 (h:n%4=2):
   2*(2*(Nat.pair (ml) (mr)) +1 )   + 5 := by
 
   unfold c_replace_oracle;
-  unfold c_replace_oracle_aux
+  -- unfold c_replace_oracle_aux
   simp [eval_prim, h]
 
   rw [c_cov_rec_evp_2 c_replace_oracle_evp_aux_nMod4_bounds1]

@@ -364,28 +364,10 @@ theorem c_evaln_evp_aux_0 : eval_prim O (c_evaln) (Nat.pair x (Nat.pair 0 (s+1))
   have h0: k+1=(Nat.pair 0 (s+1)) := by exact Nat.sub_add_cancel pair_nonzero_right_pos
   rw [←h0]
 
-  unfold c_evaln; simp only [eval_prim, c_l_get_last_evp]
-  rw [c_evaln_aux]
-  simp only [c_cov_rec_evp_3]
-  unfold k
-  rw [←c_evaln_aux]
-
-  simp only [comp₄_evp]
-  simp only [eval_prim]
-  simp only [c_const_evp]
-  simp only [pair_l, pair_r]
-  simp only [succ_eq_add_one]
+  unfold c_evaln; unfold c_evaln_aux
+  simp
   rw [h0]
-
-  -- the block here removes one instance of a "c_if_eq_te" stack. so we iterate until the condition is true.
-  iterate 2
-    rw (config := {occs := .pos [1]}) [c_if_eq_te_evp]
-    simp only [pair_l, pair_r]
-    try simp only [reduceEqDiff]
-    simp only [↓reduceIte]
-
-  simp [eval_prim]
-  simp [Nat.sub_add_cancel pair_nonzero_right_pos]
+  simp
 theorem c_evaln_evp_aux_1 : eval_prim O (c_evaln) (Nat.pair x (Nat.pair 1 (s+1))) = Encodable.encode (evaln O (s+1) (1:ℕ) x) := by
   simp [decodeCode, evaln] -- simp rhs
 
@@ -393,28 +375,10 @@ theorem c_evaln_evp_aux_1 : eval_prim O (c_evaln) (Nat.pair x (Nat.pair 1 (s+1))
   have h0: k+1=(Nat.pair 1 (s+1)) := by exact Nat.sub_add_cancel pair_nonzero_right_pos
   rw [←h0]
 
-  unfold c_evaln; simp only [eval_prim, c_l_get_last_evp]
-  rw [c_evaln_aux]
-  simp only [c_cov_rec_evp_3]
-  unfold k
-  rw [←c_evaln_aux]
-
-  simp only [comp₄_evp]
-  simp only [eval_prim]
-  simp only [c_const_evp]
-  simp only [pair_l, pair_r]
-  simp only [succ_eq_add_one]
+  unfold c_evaln; unfold c_evaln_aux
+  simp
   rw [h0]
-
-  -- the block here removes one instance of a "c_if_eq_te" stack. so we iterate until the condition is true.
-  iterate 3
-    rw (config := {occs := .pos [1]}) [c_if_eq_te_evp]
-    simp only [pair_l, pair_r]
-    try simp only [reduceEqDiff]
-    simp only [↓reduceIte]
-
-  simp [eval_prim]
-  simp [Nat.sub_add_cancel pair_nonzero_right_pos]
+  simp
 theorem c_evaln_evp_aux_2 : eval_prim O (c_evaln) (Nat.pair x (Nat.pair 2 (s+1))) = Encodable.encode (evaln O (s+1) (2:ℕ) x) := by
   simp [decodeCode, evaln] -- simp rhs
 
@@ -422,28 +386,10 @@ theorem c_evaln_evp_aux_2 : eval_prim O (c_evaln) (Nat.pair x (Nat.pair 2 (s+1))
   have h0: k+1=(Nat.pair 2 (s+1)) := by exact Nat.sub_add_cancel pair_nonzero_right_pos
   rw [←h0]
 
-  unfold c_evaln; simp only [eval_prim, c_l_get_last_evp]
-  rw [c_evaln_aux]
-  simp only [c_cov_rec_evp_3]
-  unfold k
-  rw [←c_evaln_aux]
-
-  simp only [comp₄_evp]
-  simp only [eval_prim]
-  simp only [c_const_evp]
-  simp only [pair_l, pair_r]
-  simp only [succ_eq_add_one]
+  unfold c_evaln; unfold c_evaln_aux
+  simp
   rw [h0]
-
-  -- the block here removes one instance of a "c_if_eq_te" stack. so we iterate until the condition is true.
-  iterate 4
-    rw (config := {occs := .pos [1]}) [c_if_eq_te_evp]
-    simp only [pair_l, pair_r]
-    try simp only [reduceEqDiff]
-    simp only [↓reduceIte]
-
-  simp [eval_prim]
-  simp [Nat.sub_add_cancel pair_nonzero_right_pos]
+  simp
 theorem c_evaln_evp_aux_3 : eval_prim O (c_evaln) (Nat.pair x (Nat.pair 3 (s+1))) = Encodable.encode (evaln O (s+1) (3:ℕ) x) := by
   simp [decodeCode, evaln] -- simp rhs
 
@@ -451,28 +397,10 @@ theorem c_evaln_evp_aux_3 : eval_prim O (c_evaln) (Nat.pair x (Nat.pair 3 (s+1))
   have h0: k+1=(Nat.pair 3 (s+1)) := by exact Nat.sub_add_cancel pair_nonzero_right_pos
   rw [←h0]
 
-  unfold c_evaln; simp only [eval_prim, c_l_get_last_evp]
-  rw [c_evaln_aux]
-  simp only [c_cov_rec_evp_3]
-  unfold k
-  rw [←c_evaln_aux]
-
-  simp only [comp₄_evp]
-  simp only [eval_prim]
-  simp only [c_const_evp]
-  simp only [pair_l, pair_r]
-  simp only [succ_eq_add_one]
+  unfold c_evaln; unfold c_evaln_aux
+  simp
   rw [h0]
-
-  -- the block here removes one instance of a "c_if_eq_te" stack. so we iterate until the condition is true.
-  iterate 5
-    rw (config := {occs := .pos [1]}) [c_if_eq_te_evp]
-    simp only [pair_l, pair_r]
-    try simp only [reduceEqDiff]
-    simp only [↓reduceIte]
-
-  simp [eval_prim]
-  simp [Nat.sub_add_cancel pair_nonzero_right_pos]
+  simp
 theorem c_evaln_evp_aux_4 : eval_prim O (c_evaln) (Nat.pair x (Nat.pair 4 (s+1))) = Encodable.encode (evaln O (s+1) (4:ℕ) x) := by
   simp [decodeCode, evaln] -- simp rhs
 
@@ -486,22 +414,10 @@ theorem c_evaln_evp_aux_4 : eval_prim O (c_evaln) (Nat.pair x (Nat.pair 4 (s+1))
   unfold k
   rw [←c_evaln_aux]
 
-  simp only [comp₄_evp]
-  simp only [eval_prim]
-  simp only [c_const_evp]
-  simp only [pair_l, pair_r]
-  simp only [succ_eq_add_one]
+  unfold c_evaln; unfold c_evaln_aux
+  simp
   rw [h0]
-
-  -- the block here removes one instance of a "c_if_eq_te" stack. so we iterate until the condition is true.
-  iterate 6
-    rw (config := {occs := .pos [1]}) [c_if_eq_te_evp]
-    simp only [pair_l, pair_r]
-    try simp only [reduceEqDiff]
-    simp only [↓reduceIte]
-
-  simp [eval_prim]
-  simp [Nat.sub_add_cancel pair_nonzero_right_pos]
+  simp
 -- set_option maxHeartbeats 3000 in
 theorem c_evaln_evp_aux_nMod4_0 (h:n%4=0):
   -- eval_prim O (c_evaln) (Nat.pair o ((n+4)+1))
@@ -528,6 +444,12 @@ theorem c_evaln_evp_aux_nMod4_0 (h:n%4=0):
   have h0: k+1=(Nat.pair ((n+4)+1) (s+1)) := by exact Nat.sub_add_cancel pair_nonzero_right_pos
   rw [←h0]
 
+  -- unfold c_evaln; unfold c_evaln_aux
+  -- simp
+  -- rw [h0]
+  -- simp
+
+
   unfold c_evaln; simp only [eval_prim, c_l_get_last_evp]
   rw [c_evaln_aux]
   simp only [c_cov_rec_evp_3]
@@ -544,7 +466,7 @@ theorem c_evaln_evp_aux_nMod4_0 (h:n%4=0):
   -- the block here removes one instance of a "c_if_eq_te" stack. so we iterate until the condition is true.
   iterate 6
     rw (config := {occs := .pos [1]}) [c_if_eq_te_evp]
-    simp only [pair_l, pair_r]
+    try simp only [pair_l, pair_r]
     try simp only [reduceEqDiff]
     simp only [↓reduceIte]
 
@@ -552,7 +474,7 @@ theorem c_evaln_evp_aux_nMod4_0 (h:n%4=0):
   -- simp only [l]
   -- unfold r
   -- rw [unpair_pair]
-  simp only [pair_l, pair_r]
+  -- simp only [pair_l, pair_r]
   simp only [comp₂_evp]
   simp only [c_mod_evp]
   simp only [unpaired2]
@@ -565,6 +487,7 @@ theorem c_evaln_evp_aux_nMod4_0 (h:n%4=0):
 
   rw [eval_prim.eq_7]
   simp only []
+
   -- rw [eval_prim]
 
   -- simp only [h]
