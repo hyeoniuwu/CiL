@@ -433,24 +433,22 @@ theorem c_evaln_evp_aux (hcode_val:code≤4) : eval_prim O (c_evaln) (Nat.pair x
   | n+5 => simp at hcode_val
 
 
-theorem c_evaln_evp_aux_nMod4_0 (h:n%4=0):
+theorem c_evaln_evp_aux_nMod4_0 :
   -- eval_prim O (c_evaln) (Nat.pair o ((n+4)+1))
   eval_prim O (c_evaln) (Nat.pair x (Nat.pair ((n+4)+1) (s+1)))
     =
-  let m:=n.div2.div2
+  let m := n.div2.div2
   let pcl := eval_prim O (c_evaln) (Nat.pair x (Nat.pair m.l (s+1)))
   let pcr := eval_prim O (c_evaln) (Nat.pair x (Nat.pair m.r (s+1)))
 
-  -- 2*(2*(Nat.pair (ml) (mr))  )   + 5 := by
-  -- Encodable.encode
-  --   ((guard (x ≤ sM1):Option Unit).bind fun x_1 ↦
-  --     Option.map Nat.pair (evaln O (sM1 + 1) (decodeCode (unpair n.div2.div2).1) x) <*>
-  --       evaln O (sM1 + 1) (decodeCode (unpair n.div2.div2).2) x)
-  Encodable.encode
-    ((guard (x ≤ s):Option Unit).bind fun (x_1) ↦
-      Option.map Nat.pair ((@Denumerable.ofNat  (Option ℕ)) pcl) <*> ((@Denumerable.ofNat  (Option ℕ)) pcr))
+       if n%4=0 then Encodable.encode (do guard (x ≤ s); Nat.pair<$>(@Denumerable.ofNat (Option ℕ)) pcl<*>(@Denumerable.ofNat (Option ℕ)) pcr)
+  else if n%4=1 then Encodable.encode (do guard (x ≤ s); let intermediate ← ((@Denumerable.ofNat (Option ℕ)) pcr); evaln O (s + 1) cf intermediate)
+  else if n%4=2 then Encodable.encode (do guard (x ≤ s); Nat.pair<$>(@Denumerable.ofNat (Option ℕ)) pcl<*>(@Denumerable.ofNat (Option ℕ)) pcr)
+  else if n%4=3 then Encodable.encode (do guard (x ≤ s); Nat.pair<$>(@Denumerable.ofNat (Option ℕ)) pcl<*>(@Denumerable.ofNat (Option ℕ)) pcr)
+  else 0
+
+  
     := by
-  -- sorry
 
   -- simp [decodeCode, evaln] -- simp rhs
 
@@ -590,159 +588,26 @@ theorem c_evaln_evp_aux_nMod4_0 (h:n%4=0):
 
   simp [hs, hcode, hnMod4, hx, hsM1, stupidrewrite]
 
+  match h:n%4 with
+  | 0 => simp [hpcl, hpcr, hk]
+  | 1 => sorry
+  | 2 => sorry
+  | 3 => sorry
+  | x+4 =>
+    have contrad : n%4<4 := by
+      apply Nat.mod_lt
+      decide
+    rw [h] at contrad
+    rw [show x.succ.succ.succ.succ=x+4 from rfl] at contrad
+    simp at contrad
+
+
   simp [h]
   simp [hpcl, hpcr]
   simp [hk]
 
-set_option maxHeartbeats 3 in
-theorem c_evaln_evp_aux_nMod4_0 (h:n%4=0):
-  eval_prim O (c_evaln) (Nat.pair o ((n+4)+1))
-    =
-  let m:=n.div2.div2
-  let ml := eval_prim O (c_evaln) (Nat.pair o m.l)
-  let mr := eval_prim O (c_evaln) (Nat.pair o m.r)
-
-  2*(2*(Nat.pair (ml) (mr))  )   + 5 := by
-
-  unfold c_evaln; simp only [eval_prim, c_l_get_last_evp]
-  rw (config := {occs := .pos [1]}) [c_evaln_aux]
-  simp only [c_cov_rec_evp_3]
-  rw [←c_evaln_aux] -- the key step to simplification. otherwise expression blows up
-  simp [eval_prim, h]
-  have h3 : (n/2/2).l≤n+4 := by exact le_add_right_of_le (Nat.le_trans (unpair_left_le (n/2/2)) (le_trans (Nat.div_le_self _ _) (Nat.div_le_self _ _)))
-  have h4 : (n/2/2).r≤n+4 := by exact le_add_right_of_le (Nat.le_trans (unpair_right_le (n/2/2)) (le_trans (Nat.div_le_self _ _) (Nat.div_le_self _ _)))
-  unfold c_evaln_aux
-  rw [c_cov_rec_evp_2 h3]
-  rw [c_cov_rec_evp_2 h4]
-  simp only [l, r, Nat.div2_val] -- removes local defns as well
-  rw [mul_comm]
-  simp? says simp only [mul_eq_mul_left_iff, OfNat.ofNat_ne_zero, or_false]
-  rw [mul_comm]
-set_option maxHeartbeats 3 in
-theorem c_evaln_evp_aux_nMod4_1 (h:n%4=1):
-  eval_prim O (c_evaln) (Nat.pair o ((n+4)+1))
-    =
-  let m:=n.div2.div2
-  let ml := eval_prim O (c_evaln) (Nat.pair o m.l)
-  let mr := eval_prim O (c_evaln) (Nat.pair o m.r)
-
-  2*(2*(Nat.pair (ml) (mr))  ) +1  + 5 := by
-
-  unfold c_evaln; simp only [eval_prim, c_l_get_last_evp]
-  rw (config := {occs := .pos [1]}) [c_evaln_aux]
-  simp only [c_cov_rec_evp_3]
-  rw [←c_evaln_aux] -- the key step to simplification. otherwise expression blows up
-  simp [eval_prim, h]
-  have h3 : (n/2/2).l≤n+4 := by exact le_add_right_of_le (Nat.le_trans (unpair_left_le (n/2/2)) (le_trans (Nat.div_le_self _ _) (Nat.div_le_self _ _)))
-  have h4 : (n/2/2).r≤n+4 := by exact le_add_right_of_le (Nat.le_trans (unpair_right_le (n/2/2)) (le_trans (Nat.div_le_self _ _) (Nat.div_le_self _ _)))
-  unfold c_evaln_aux
-  rw [c_cov_rec_evp_2 h3]
-  rw [c_cov_rec_evp_2 h4]
-  simp only [l, r, Nat.div2_val] -- removes local defns as well
-  rw [mul_comm]
-  simp? says simp only [mul_eq_mul_left_iff, OfNat.ofNat_ne_zero, or_false]
-  rw [mul_comm]
-set_option maxHeartbeats 3 in
-theorem c_evaln_evp_aux_nMod4_2 (h:n%4=2):
-  eval_prim O (c_evaln) (Nat.pair o ((n+4)+1))
-    =
-  let m:=n.div2.div2
-  let ml := eval_prim O (c_evaln) (Nat.pair o m.l)
-  let mr := eval_prim O (c_evaln) (Nat.pair o m.r)
-
-  2*(2*(Nat.pair (ml) (mr)) +1 )   + 5 := by
-
-  unfold c_evaln; simp only [eval_prim, c_l_get_last_evp]
-  rw (config := {occs := .pos [1]}) [c_evaln_aux]
-  simp only [c_cov_rec_evp_3]
-  rw [←c_evaln_aux] -- the key step to simplification. otherwise expression blows up
-  simp [eval_prim, h]
-  have h3 : (n/2/2).l≤n+4 := by exact le_add_right_of_le (Nat.le_trans (unpair_left_le (n/2/2)) (le_trans (Nat.div_le_self _ _) (Nat.div_le_self _ _)))
-  have h4 : (n/2/2).r≤n+4 := by exact le_add_right_of_le (Nat.le_trans (unpair_right_le (n/2/2)) (le_trans (Nat.div_le_self _ _) (Nat.div_le_self _ _)))
-  unfold c_evaln_aux
-  rw [c_cov_rec_evp_2 h3]
-  rw [c_cov_rec_evp_2 h4]
-  simp only [l, r, Nat.div2_val] -- removes local defns as well
-  rw [mul_comm]
-  simp? says simp only [mul_eq_mul_left_iff, OfNat.ofNat_ne_zero, or_false]
-  rw [mul_comm]
-set_option maxHeartbeats 3 in
-theorem c_evaln_evp_aux_nMod4_3 (h:n%4=3):
-  eval_prim O (c_evaln) (Nat.pair o ((n+4)+1))
-    =
-  let m:=n.div2.div2
-  -- let ml := eval_prim O (c_evaln) (Nat.pair o m.l)
-  -- let mr := eval_prim O (c_evaln) (Nat.pair o m.r)
-  let mprev := eval_prim O (c_evaln) (Nat.pair o m)
-  -- 2*(2*(Nat.pair (ml) (mr))  +1)+1   + 5 := by
-  2*(2*(mprev)  +1)+1   + 5 := by
-
-  unfold c_evaln; simp only [eval_prim, c_l_get_last_evp]
-  rw (config := {occs := .pos [1]}) [c_evaln_aux]
-  simp only [c_cov_rec_evp_3]
-  rw [←c_evaln_aux] -- the key step to simplification. otherwise expression blows up
-  simp [eval_prim, h]
-
-  -- have h3 : (n/2/2).l≤n+4 := by exact le_add_right_of_le (Nat.le_trans (unpair_left_le (n/2/2)) (le_trans (Nat.div_le_self _ _) (Nat.div_le_self _ _)))
-  have hmp : (n/2/2)≤n+4 := by exact le_add_right_of_le (le_trans (Nat.div_le_self _ _) (Nat.div_le_self _ _))
-  -- have h4 : (n/2/2).r≤n+4 := by exact le_add_right_of_le (Nat.le_trans (unpair_right_le (n/2/2)) (le_trans (Nat.div_le_self _ _) (Nat.div_le_self _ _)))
-  unfold c_evaln_aux
-  rw [c_cov_rec_evp_2 hmp]
-  -- rw [c_cov_rec_evp_2 h4]
-  simp only [l, r, Nat.div2_val] -- removes local defns as well
 
 
-  rw [mul_comm]
-  simp? says simp only [mul_eq_mul_left_iff, Nat.add_right_cancel_iff, OfNat.ofNat_ne_zero, or_false]
-  rw [mul_comm]
-
-
--- @[simp] theorem c_evaln_evp2: eval_prim O (c_evaln) =
---   fun inp =>
---   let x:=inp.l
---   let c:=inp.r.l
---   let s:=inp.r.r
---   Encodable.encode (evaln O s c x) := by
---   funext inp
---   let x:=inp.l
---   let cs:=inp.r
---   -- let c:=cs.l
---   -- let s:=cs.r
---   -- rw [show inp = Nat.pair x (Nat.pair c s) from by simp [x,cs,c,s]]
---   rw [show inp = Nat.pair x cs from by simp [x,cs]]
---   -- rw [show cs = Nat.pair c s from by simp [c,s]]
---   simp only [r, unpair_pair, l] -- simplify the rhs
---     -- unfold c_evaln; simp only [eval_prim, c_l_get_last_evp]
---     -- rw [c_evaln_aux]
---     -- simp [eval_prim]
-
---   induction cs using Nat.strong_induction_on with
---   | _ cs ih =>
-
---     let c:=cs.l
---     let s:=cs.r
---     rw [show cs = Nat.pair c s from by simp [c,s]]
---     simp only [unpair_pair]
-
-
---     match hs:s,hc:c with
---     | 0,    0   => exact c_evaln_evp_aux_0_0
---     | 0,    n+1 => exact c_evaln_evp_aux_0_np1
---     | sM1+1, 0   => exact c_evaln_evp_aux_0
---     | sM1+1, 1   => exact c_evaln_evp_aux_1
---     | sM1+1, 2   => exact c_evaln_evp_aux_2
---     | sM1+1, 3   => exact c_evaln_evp_aux_3
---     | sM1+1, 4   => exact c_evaln_evp_aux_4
---     | sM1+1, n+5 =>
---       let m := n.div2.div2
---       stop
-
-
--- set_option maxHeartbeats 10000000 in
--- set_option maxHeartbeats 1000000 in
--- set_option maxHeartbeats 3 in
--- set_option maxHeartbeats 3000 in
--- set_option maxHeartbeats 100000 in
 @[simp] theorem c_evaln_evp: eval_prim O (c_evaln) (Nat.pair x (Nat.pair code s)) =
   Encodable.encode (evaln O s code x) := by
   -- funext inp
