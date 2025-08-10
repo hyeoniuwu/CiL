@@ -325,13 +325,14 @@ theorem pair_nonzero_right_pos_aux : ¬ (Nat.pair x (s+1)=0) := by
 
 
 
-/-- `eval c_evaln_aux (x,(code,s))` = `evaln s code x` -/
+-- /-- `eval c_evaln_aux (x,(code,s))` = `evaln s code x` -/
+/-- `eval c_evaln_aux (anything,(x,(code,s)))` = `evaln s code x` -/
 def c_evaln_aux :=
-  let x         := left
-  let code_s    := succ.comp (left.comp right)
-  -- let code_s    := left.comp right
-  let code      := left.comp code_s
-  let s         := right.comp code_s
+  let x_code_s  := (succ.comp (left.comp right))
+  let x         := left.comp x_code_s
+  -- let code_s    := right.comp right
+  let code      := left.comp (right.comp x_code_s)
+  let s         := right.comp (right.comp x_code_s)
   let sM1       := c_pred.comp s
   let comp_hist := right.comp right
   let n         := c_sub.comp₂ code (c_const 5)
@@ -357,7 +358,7 @@ def c_evaln_aux :=
   c_if_eq_te.comp₄ nMod4 (c_const 1) (comp pcl pcr)           $
   c_if_eq_te.comp₄ nMod4 (c_const 2) (prec pcl pcr)           $
                                       rfind' pc
-def c_evaln := c_l_get_last.comp c_evaln_aux
+def c_evaln := c_l_get_last.comp (c_evaln_aux.comp (pair (c_const 0) c_id))
 
 
 
@@ -370,20 +371,75 @@ set_option maxHeartbeats 3 in
 
 --asd
 
-theorem c_evaln_evp_aux_0_0 : eval_prim O (c_evaln) (Nat.pair x (Nat.pair 0 0)) = Encodable.encode (evaln O 0 (0:ℕ) x) := by
+theorem pair_r_gt0 {x} : x>0→(Nat.pair y x)>0 := by
+  contrapose
+  simp
+  intro h
+  rw [show x=(Nat.pair y x).unpair.2 from by simp [unpair_pair]]
+  rw [h]
+  simp [unpair_zero]
+theorem pair_l_gt0 {x} : x>0→(Nat.pair x y)>0 := by
+  contrapose
+  simp
+  intro h
+  rw [show x=(Nat.pair x y).unpair.1 from by simp [unpair_pair]]
+  rw [h]
+  simp [unpair_zero]
+
+theorem c_evaln_evp_aux_0_0_0 : eval_prim O (c_evaln) (Nat.pair 0 (Nat.pair 0 0)) = Encodable.encode (evaln O 0 (0:ℕ) 0) := by
   simp [decodeCode, evaln] -- simp rhs
   rw [show Nat.pair 0 0 = 0 from rfl]
-  unfold c_evaln; simp only [eval_prim, c_l_get_last_evp]
+  -- unfold c_evaln; simp only [eval_prim, c_l_get_last_evp]
   -- rw [c_evaln_aux]
-  unfold c_evaln_aux
-  simp only [c_cov_rec_evp_4, l, c_const_evp]
+  -- unfold c_evaln_aux
+
+  unfold c_evaln; unfold c_evaln_aux
+  lift_lets
+  extract_lets
+  expose_names
+
+  simp
+  rw [show Nat.pair 0 0 = 0 from rfl]
+  simp
+
+theorem c_evaln_evp_aux_x_0_0 : eval_prim O (c_evaln) (Nat.pair (x+1) (Nat.pair 0 0)) = Encodable.encode (evaln O 0 (0:ℕ) (x+1)) := by
+
+  let k:=(Nat.pair (x+1) (Nat.pair 0 0))-1
+  have kP1_gt_0 : Nat.pair (x+1) (Nat.pair 0 0)>0 := by
+    apply pair_l_gt0
+    exact zero_lt_succ x
+  have h0: k+1=(Nat.pair (x+1) (Nat.pair 0 0)) := by exact Nat.sub_add_cancel kP1_gt_0
+  rw [←h0]
+
+  unfold c_evaln; unfold c_evaln_aux
+  lift_lets
+  extract_lets
+  expose_names
+  have hs {anything hist} : eval_prim O s (Nat.pair anything (Nat.pair k hist)) = 0 := by
+    simp [s]
+    simp [x_code_s]
+    simp [h0]
+  -- have hsM1 {anything hist} : eval_prim O sM1 (Nat.pair anything (Nat.pair k hist)) = s := by
+  --   simp [sM1]
+  --   simp [hs]
+  -- have hcode {anything hist} : eval_prim O code_1 (Nat.pair anything (Nat.pair k hist)) = code := by
+  --   simp [code_1]
+  --   simp [x_code_s]
+  --   simp [h0]
+  simp [hs]
+  simp [decodeCode, evaln] -- simp rhs
+
+  
 theorem c_evaln_evp_aux_0_np1 : eval_prim O (c_evaln) (Nat.pair x (Nat.pair (n+1) 0)) = Encodable.encode (evaln O 0 (n+1:ℕ) x) := by
   simp [decodeCode, evaln] -- simp rhs
 
-  have h0' : (Nat.pair (n + 1) 0)>0 := by exact zero_lt_succ (((n + 1) * (n + 1)).add n)
-  let k:=(Nat.pair (n + 1) 0)-1
-  have h0: k+1=(Nat.pair (n + 1) 0) := by exact Nat.sub_add_cancel h0'
-  rw [←h0]
+
+  have h0' : (Nat.pair x (Nat.pair (n + 1) 0))>0 := by
+    apply pair_r_gt0
+    apply pair_l_gt0
+    exact zero_lt_succ n
+  let k:=(Nat.pair x (Nat.pair (n + 1) 0))-1
+  have h0: k+1=(Nat.pair x (Nat.pair (n + 1) 0)) := by exact Nat.sub_add_cancel h0'
 
 
   unfold c_evaln; unfold c_evaln_aux
@@ -391,19 +447,26 @@ theorem c_evaln_evp_aux_0_np1 : eval_prim O (c_evaln) (Nat.pair x (Nat.pair (n+1
   extract_lets
   expose_names
 
-  have hs {x' hist} : eval_prim O s (Nat.pair x' (Nat.pair k hist)) = 0 := by
+  have hs {anything hist} : eval_prim O s (Nat.pair anything (Nat.pair k hist)) = 0 := by
     simp [s]
-    simp [code_s]
+    simp [x_code_s]
     simp [h0]
 
+  simp
+  rw [←h0]
   simp [hs]
+
 
 
 theorem c_evaln_evp_aux (hcode_val:code≤4) : eval_prim O (c_evaln) (Nat.pair x (Nat.pair code (s+1))) = Encodable.encode (evaln O (s+1) (code:ℕ) x) := by
   -- simp [decodeCode, evaln] -- simp rhs
 
-  let k:=(Nat.pair code (s+1))-1
-  have h0: k+1=(Nat.pair code (s+1)) := by exact Nat.sub_add_cancel pair_nonzero_right_pos
+  let k:=(Nat.pair x (Nat.pair code (s+1)))-1
+  have kP1_gt_0 : Nat.pair x (Nat.pair code (s+1))>0 := by
+    apply pair_r_gt0
+    apply pair_r_gt0
+    exact zero_lt_succ s
+  have h0: k+1=(Nat.pair x (Nat.pair code (s+1))) := by exact Nat.sub_add_cancel kP1_gt_0
   rw [←h0]
 
   unfold c_evaln; unfold c_evaln_aux
@@ -411,18 +474,20 @@ theorem c_evaln_evp_aux (hcode_val:code≤4) : eval_prim O (c_evaln) (Nat.pair x
   extract_lets
   expose_names
 
-  have hx {k' hist} : eval_prim O x_1 (Nat.pair x (Nat.pair k' hist)) = x := by
+  have hx {anything hist} : eval_prim O x_1 (Nat.pair anything (Nat.pair k hist)) = x := by
     simp [x_1]
-  have hs {x' hist} : eval_prim O s_1 (Nat.pair x' (Nat.pair k hist)) = s+1 := by
-    simp [s_1]
-    simp [code_s]
+    simp [x_code_s]
     simp [h0]
-  have hsM1 {x' hist} : eval_prim O sM1 (Nat.pair x' (Nat.pair k hist)) = s := by
+  have hs {anything hist} : eval_prim O s_1 (Nat.pair anything (Nat.pair k hist)) = s+1 := by
+    simp [s_1]
+    simp [x_code_s]
+    simp [h0]
+  have hsM1 {anything hist} : eval_prim O sM1 (Nat.pair anything (Nat.pair k hist)) = s := by
     simp [sM1]
     simp [hs]
-  have hcode {x' hist} : eval_prim O code_1 (Nat.pair x' (Nat.pair k hist)) = code := by
+  have hcode {anything hist} : eval_prim O code_1 (Nat.pair anything (Nat.pair k hist)) = code := by
     simp [code_1]
-    simp [code_s]
+    simp [x_code_s]
     simp [h0]
   match code with
   | 0 => simp [hs, hcode, hx, hsM1, decodeCode, evaln]
