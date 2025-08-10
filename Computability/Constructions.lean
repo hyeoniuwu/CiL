@@ -1071,48 +1071,7 @@ set_option maxRecDepth 5000 in
 
 -- expanding lets: ~70ms
 -- not expanding lets: ~20ms
-
-theorem c_replace_oracle_evp_aux_0 : eval_prim O (c_replace_oracle) (Nat.pair o 0) = replace_oracle o 0 := by
-  unfold c_replace_oracle
-  unfold c_replace_oracle_aux
-  lift_lets
-  extract_lets
-  expose_names
-
-  have hinput_to_decode {x hist} : eval_prim O input_to_decode (Nat.pair o (Nat.pair (x) hist)) = x+1 := by simp [input_to_decode]
-  simp [hinput_to_decode]
-  simp only [replace_oracle, encodeCode_replace_oracle, decodeCode]
-theorem c_replace_oracle_evp_aux_1 : eval_prim O (c_replace_oracle) (Nat.pair o 1) = replace_oracle o 1 := by
-  unfold c_replace_oracle
-  unfold c_replace_oracle_aux
-  lift_lets
-  extract_lets
-  expose_names
-
-  have hinput_to_decode {x hist} : eval_prim O input_to_decode (Nat.pair o (Nat.pair (x) hist)) = x+1 := by simp [input_to_decode]
-  simp [hinput_to_decode]
-  simp only [replace_oracle, encodeCode_replace_oracle, decodeCode]
-theorem c_replace_oracle_evp_aux_2 : eval_prim O (c_replace_oracle) (Nat.pair o 2) = replace_oracle o 2 := by
-  unfold c_replace_oracle
-  unfold c_replace_oracle_aux
-  lift_lets
-  extract_lets
-  expose_names
-
-  have hinput_to_decode {x hist} : eval_prim O input_to_decode (Nat.pair o (Nat.pair (x) hist)) = x+1 := by simp [input_to_decode]
-  simp [hinput_to_decode]
-  simp only [replace_oracle, encodeCode_replace_oracle, decodeCode]
-theorem c_replace_oracle_evp_aux_3 : eval_prim O (c_replace_oracle) (Nat.pair o 3) = replace_oracle o 3 := by
-  unfold c_replace_oracle
-  unfold c_replace_oracle_aux
-  lift_lets
-  extract_lets
-  expose_names
-
-  have hinput_to_decode {x hist} : eval_prim O input_to_decode (Nat.pair o (Nat.pair (x) hist)) = x+1 := by simp [input_to_decode]
-  simp [hinput_to_decode]
-  simp only [replace_oracle, encodeCode_replace_oracle, decodeCode]
-theorem c_replace_oracle_evp_aux_4 : eval_prim O (c_replace_oracle) (Nat.pair o 4) = replace_oracle o 4 := by
+theorem c_replace_oracle_evp_aux (hx:x≤4): eval_prim O (c_replace_oracle) (Nat.pair o x) = replace_oracle o x := by
   unfold c_replace_oracle
   unfold c_replace_oracle_aux
   lift_lets
@@ -1121,8 +1080,14 @@ theorem c_replace_oracle_evp_aux_4 : eval_prim O (c_replace_oracle) (Nat.pair o 
 
   have hinput_to_decode {x hist} : eval_prim O input_to_decode (Nat.pair o (Nat.pair (x) hist)) = x+1 := by simp [input_to_decode]
   have ho {x hist} : eval_prim O o_1 (Nat.pair o (Nat.pair (x) hist)) = o := by simp [o_1]
-  simp [hinput_to_decode, ho]
-  simp only [replace_oracle, encodeCode_replace_oracle, decodeCode]
+
+  match x with
+  | 0 => simp [hinput_to_decode, ho]; simp only [replace_oracle, encodeCode_replace_oracle, decodeCode]
+  | 1 => simp [hinput_to_decode, ho]; simp only [replace_oracle, encodeCode_replace_oracle, decodeCode]
+  | 2 => simp [hinput_to_decode, ho]; simp only [replace_oracle, encodeCode_replace_oracle, decodeCode]
+  | 3 => simp [hinput_to_decode, ho]; simp only [replace_oracle, encodeCode_replace_oracle, decodeCode]
+  | 4 => simp [hinput_to_decode, ho]; simp only [replace_oracle, encodeCode_replace_oracle, decodeCode]
+  | n+5 => simp at hx
 
 lemma c_replace_oracle_evp_aux_nMod4_bounds1 : (n/2/2).l≤n+4 := by exact le_add_right_of_le (Nat.le_trans (unpair_left_le (n/2/2)) (le_trans (Nat.div_le_self _ _) (Nat.div_le_self _ _)))
 lemma c_replace_oracle_evp_aux_nMod4_bounds2 : (n/2/2).r≤n+4 := by exact le_add_right_of_le (Nat.le_trans (unpair_right_le (n/2/2)) (le_trans (Nat.div_le_self _ _) (Nat.div_le_self _ _)))
@@ -1292,11 +1257,11 @@ theorem nMod4_eq_3 (h0:n.bodd=true ) (h1:n.div2.bodd=true ) : n%4=3 := by sorry
   induction c using Nat.strong_induction_on with
   | _ c ih =>
     match c with
-    | 0 => exact c_replace_oracle_evp_aux_0
-    | 1 => exact c_replace_oracle_evp_aux_1
-    | 2 => exact c_replace_oracle_evp_aux_2
-    | 3 => exact c_replace_oracle_evp_aux_3
-    | 4 => exact c_replace_oracle_evp_aux_4
+    | 0 => apply c_replace_oracle_evp_aux; decide
+    | 1 => apply c_replace_oracle_evp_aux; decide
+    | 2 => apply c_replace_oracle_evp_aux; decide
+    | 3 => apply c_replace_oracle_evp_aux; decide
+    | 4 => apply c_replace_oracle_evp_aux; decide
     | n + 5 =>
       let m := n.div2.div2
       have hm : m < n + 5 := by
