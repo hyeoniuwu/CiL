@@ -12,7 +12,23 @@ open Nat
 -- have asd:n%2≤1 := by exact?
 theorem bounds {m:ℕ} (h:Nat.pair m.l (s + 1) < k+1) : Nat.pair m.l (s + 1) ≤ k := by
   exact le_of_lt_succ h
-theorem bruh {x y:ℕ} (h:¬x≤y) : x>y := by exact gt_of_not_le h
+-- theorem bruh {x} (h:x>0) : (Nat.pair x y)>0 := by exact?
+theorem pair_r_gt0 {x} : x>0→(Nat.pair y x)>0 := by
+  contrapose
+  simp
+  intro h
+  rw [show x=(pair y x).unpair.2 from by simp [unpair_pair]]
+  rw [h]
+  simp [unpair_zero]
+theorem pair_l_gt0 {x} : x>0→(Nat.pair x y)>0 := by
+  contrapose
+  simp
+  intro h
+  rw [show x=(pair x y).unpair.1 from by simp [unpair_pair]]
+  rw [h]
+  simp [unpair_zero]
+  
+  -- apply unpair_zero
 
 
 --  m.l≤n+4 := by

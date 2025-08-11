@@ -116,34 +116,15 @@ end bind_opt
 def c_le_guard  (c:Code) := (c_bind_opt (c.comp right)).comp (c_if_le_te.comp₄ right left succ (c_const 0))
 section pair_g
 namespace Nat.RecursiveIn.Code
-/-
-the plan.
-pair the two inputs normally,
-then call
-if cf or cg evaluates to 0, we want the whole thing to be 0.
--/
--- takes inputs of the form: (s,x)
--- first we want to check that x≤s.
 
-/-
-if everything goes well we want to return
-
--/
 --
 -- def c_pair_g : Code→Code→Code := fun cf cg => (c_bind_opt2 pair).comp (pair cf cg)
+-- input is of the form (s,x)
 def c_pair_g : Code→Code→Code := fun cf cg =>
-  -- let x         := left
-  -- let code_s    := succ.comp (left.comp right)
-  -- let code      := left.comp code_s
-  -- let s         := right.comp code_s
-  -- let sM1         := c_pred.comp s
-  let x_code_s  := (succ.comp (left.comp right))
-  let x         := left.comp x_code_s
-  let code      := left.comp (right.comp x_code_s)
-  let s         := right.comp (right.comp x_code_s)
-  let sM1       := c_pred.comp s
+  let x         := right
+  let s         := left
 
-  c_if_le_te.comp₄ x sM1
+  c_if_le_te.comp₄ x s
 
   (
     c_ifz.comp₂ ( cf.comp c_id) $ pair (c_const 0) $
@@ -152,24 +133,13 @@ def c_pair_g : Code→Code→Code := fun cf cg =>
   )
 
   (c_const 0)
--- pair (c_le_guard cf) (c_le_guard cg)
--- @[simp] theorem c_pair_g_ev_pr :code_prim (c_pair_g) := by exact c_le_guard_ev_pr code_prim.zero
--- @[simp] theorem c_pair_g_evp:eval_prim O (c_pair_g cf cg) = fun n => Encodable.encode (do guard (n.r≤n.l); Nat.pair <$> evaln O (k + 1) cf n <*> evaln O (k + 1) cg n :Option ℕ) := by
--- @[simp] theorem c_pair_g_evp:eval_prim O (c_pair_g cf cg) = fun n => Encodable.encode (do guard (n.r≤n.l); Nat.pair <$> ((@Denumerable.ofNat (Option ℕ)) (eval_prim O cf n.r)) <*> ((@Denumerable.ofNat (Option ℕ)) (eval_prim O cg n.r)) :Option ℕ) := by
--- k=smth like Nat.pair code (s+1)
--- @[simp] theorem c_pair_g_evp:eval_prim O (c_pair_g cf cg) (Nat.pair x (Nat.pair (Nat.pair code (s+1)) hist))= Encodable.encode (do guard (x≤s); Nat.pair <$> ((@Denumerable.ofNat (Option ℕ)) (eval_prim O cf (Nat.pair x (Nat.pair (Nat.pair code (s+1)) hist)))) <*> ((@Denumerable.ofNat (Option ℕ)) (eval_prim O cg (Nat.pair x (Nat.pair (Nat.pair code (s+1)) hist)))) :Option ℕ) := by
-/-
-inp = (x, ((code,s)-1, hist))
--/
+@[simp] theorem c_pair_g_ev_pr (hcf:code_prim cf) (hcg:code_prim cg):code_prim (c_pair_g cf cg) := by
+  unfold c_pair_g
+  repeat (first|assumption|simp|constructor)
 @[simp] theorem c_pair_g_evp:eval_prim O (c_pair_g cf cg) inp =
-  let succ_x_code_s := inp.r.l+1
-  let x:=succ_x_code_s.l
-  let s:=succ_x_code_s.r.r
-  let sM1:=s-1
-  Encodable.encode (do guard (x≤sM1); Nat.pair <$> ((@Denumerable.ofNat (Option ℕ)) (eval_prim O cf inp)) <*> ((@Denumerable.ofNat (Option ℕ)) (eval_prim O cg inp)) :Option ℕ) := by
-  -- simp
-  -- simp [Option.map]
-
+  let x         := inp.r
+  let s         := inp.l
+  Encodable.encode (do guard (x≤s); Nat.pair <$> ((@Denumerable.ofNat (Option ℕ)) (eval_prim O cf inp)) <*> ((@Denumerable.ofNat (Option ℕ)) (eval_prim O cg inp))) := by
   
   lift_lets
   extract_lets
@@ -183,27 +153,19 @@ inp = (x, ((code,s)-1, hist))
   lift_lets
   extract_lets
   expose_names
-  -- unfold c_bind_opt2
   simp [eval_prim]
-  -- funext n
   have h0 : (Denumerable.ofNat (Option ℕ) 0) = Option.none := by exact rfl
   have h1 {x} (h2:¬x=0) : x=x-1+1 := by exact Eq.symm (succ_pred_eq_of_ne_zero h2)
   have h2 {x} (h3:¬x=0) : (Denumerable.ofNat (Option ℕ) x) = Option.some (x-1) := by
     rw (config := {occs := .pos [1]}) [h1 h3]
     exact rfl
   have hx : eval_prim O x_1 inp = x := by
-    simp [x_1, x_code_s, x, succ_x_code_s]
+    simp [x_1, x]
   have hs : eval_prim O s_1 inp = s := by
-    simp [s_1]
-    simp [x_code_s]
-    simp [s]
-    simp [succ_x_code_s]
-  have hsM1 : eval_prim O sM1_1 inp = sM1 := by
-    simp [sM1_1, sM1]
-    simp [hs]
+    simp [s_1, s]
   
 
-  cases Classical.em (x≤sM1) with
+  cases Classical.em (x≤s) with
   | inl hl =>
     simp [hl]
     cases Classical.em ((eval_prim O cf inp)=0) with
@@ -214,7 +176,7 @@ inp = (x, ((code,s)-1, hist))
       | inl hlrl => simp [hlrl, h0]
       | inr hlrr =>
         simp [hlrr, h2 hlrr]
-        simp [hx,hsM1]
+        simp [hx,hs]
         simp [hl]
 
   | inr hr =>
@@ -228,7 +190,7 @@ inp = (x, ((code,s)-1, hist))
       | inr hrrr =>
         simp [hrrr, h2 hrrr]
         simp [Option.bind]
-        simp [hx,hsM1]
+        simp [hx,hs]
         apply gt_of_not_le hr
 
 
@@ -345,6 +307,7 @@ def c_evaln_aux :=
 
   let pcl := c_l_get.comp₂ comp_hist (pair x (pair (left.comp m)  s)) -- the previous computation corresponding to evaluating code m.l for s steps.
   let pcr := c_l_get.comp₂ comp_hist (pair x (pair (right.comp m) s))
+  let pc_ml_pcr := c_l_get.comp₂ comp_hist (pair pcr (pair (left.comp m) s))
   let pc  := c_l_get.comp₂ comp_hist (pair x (pair m              s))
   let nMod4     := c_mod.comp₂ n (c_const 4)
 
@@ -359,7 +322,7 @@ def c_evaln_aux :=
   c_if_eq_te.comp₄ code  (c_const 3) (c_right_g.comp₂  sM1 x) $
   c_if_eq_te.comp₄ code  (c_const 4) (c_oracle_g.comp₂ sM1 x) $
   -- c_if_eq_te.comp₄ nMod4 (c_const 0) ((c_pair_g pcl pcr).comp₂ sM1 x)  $
-  c_if_eq_te.comp₄ nMod4 (c_const 0) (c_pair_g pcl pcr)  $
+  c_if_eq_te.comp₄ nMod4 (c_const 0) ((c_pair_g pcl pcr).comp₂ sM1 x)  $
   c_if_eq_te.comp₄ nMod4 (c_const 1) (comp pcl pcr)           $
   c_if_eq_te.comp₄ nMod4 (c_const 2) (prec pcl pcr)           $
                                       rfind' pc
@@ -510,6 +473,7 @@ theorem c_evaln_evp_aux_nMod4_0 :
   let m := n.div2.div2
   let pcl := eval_prim O (c_evaln) (Nat.pair x (Nat.pair m.l (s+1)))
   let pcr := eval_prim O (c_evaln) (Nat.pair x (Nat.pair m.r (s+1)))
+  let pc_ml_pcr := eval_prim O (c_evaln) (Nat.pair (eval_prim O (c_evaln) (Nat.pair x (Nat.pair m.r (s+1)))) (Nat.pair m.l (s+1)))
 
        if n%4=0 then Encodable.encode (do guard (x ≤ s); Nat.pair<$>(@Denumerable.ofNat (Option ℕ)) pcl<*>(@Denumerable.ofNat (Option ℕ)) pcr)
   else if n%4=1 then Encodable.encode (do guard (x ≤ s); let intermediate ← ((@Denumerable.ofNat (Option ℕ)) pcr); evaln O (s + 1) cf intermediate)

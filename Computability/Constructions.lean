@@ -262,15 +262,7 @@ namespace Nat.RecursiveIn.Code
 @[simp] def comp₄ : Code→Code→Code→Code→Code→Code := fun c1 c2 c3 c4 c5 => c1.comp₂ (pair c2 c3) (pair c4 c5)
 theorem comp₄_ev_pr (hc1:code_prim c1) (hc2:code_prim c2) (hc3:code_prim c3) (hc4:code_prim c4) (hc5:code_prim c5):code_prim (comp₄ c1 c2 c3 c4 c5) := by
   unfold comp₄;
-  constructor
-  exact hc1
-  constructor
-  constructor
-  exact hc2
-  exact hc3
-  constructor
-  exact hc4
-  exact hc5
+  repeat (first|assumption|simp|constructor)
 theorem comp₄_evp:eval_prim O (comp₄ c1 c2 c3 c4 c5) x=
   eval_prim O c1 (Nat.pair (Nat.pair (eval_prim O (c2) x) (eval_prim O (c3) x)) ((Nat.pair (eval_prim O (c4) x) (eval_prim O (c5) x)))) := by
   simp [comp₄,eval_prim];
@@ -282,6 +274,23 @@ end Nat.RecursiveIn.Code
 -- theorem Nat.PrimrecIn.comp₄:Nat.PrimrecIn O Nat.comp₄ := by ...
 -- theorem Nat.Primrec.comp₄:Nat.Primrec Nat.comp₄ := by ...
 end comp₄
+section comp₃
+namespace Nat.RecursiveIn.Code
+@[simp] def comp₃ : Code→Code→Code→Code→Code := fun c1 c2 c3 c4 => c1.comp₂ c2 (pair c3 c4)
+theorem comp₃_ev_pr (hc1:code_prim c1) (hc2:code_prim c2) (hc3:code_prim c3) (hc4:code_prim c4) (hc5:code_prim c5):code_prim (comp₃ c1 c2 c3 c4) := by
+  unfold comp₃;
+  repeat (first|assumption|simp|constructor)
+theorem comp₃_evp:eval_prim O (comp₃ c1 c2 c3 c4) x=
+  eval_prim O c1 (Nat.pair (eval_prim O (c2) x) ((Nat.pair (eval_prim O (c3) x) (eval_prim O (c4) x)))) := by
+  simp [comp₃,eval_prim];
+-- <$> x <*>
+-- @[simp] theorem comp₃_ev(hc1:code_prim c1) (hc2:code_prim c2) (hc3:code_prim c3):eval O (comp₃ c1 c2 c3) = fun x => (Nat.pair <$> (eval O (c2) x) <*> (eval O (c3) x)) >>= (eval O c1) := by
+  -- rw [← eval_prim_eq_eval (comp₃_ev_pr hc1 hc2 hc3)]; simp only [comp₃_evp]
+
+end Nat.RecursiveIn.Code
+-- theorem Nat.PrimrecIn.comp₃:Nat.PrimrecIn O Nat.comp₃ := by ...
+-- theorem Nat.Primrec.comp₃:Nat.Primrec Nat.comp₃ := by ...
+end comp₃
 
 
 
