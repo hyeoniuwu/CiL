@@ -27,7 +27,7 @@ theorem pair_l_gt0 {x} : x>0→(Nat.pair x y)>0 := by
   rw [show x=(pair x y).unpair.1 from by simp [unpair_pair]]
   rw [h]
   simp [unpair_zero]
-  
+theorem asd {a b :ℕ} (h:a>b) : ¬a≤b := by exact Nat.not_le_of_lt h
   -- apply unpair_zero
 
 

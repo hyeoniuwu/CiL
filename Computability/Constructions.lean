@@ -265,7 +265,7 @@ theorem comp₄_ev_pr (hc1:code_prim c1) (hc2:code_prim c2) (hc3:code_prim c3) (
   repeat (first|assumption|simp|constructor)
 theorem comp₄_evp:eval_prim O (comp₄ c1 c2 c3 c4 c5) x=
   eval_prim O c1 (Nat.pair (Nat.pair (eval_prim O (c2) x) (eval_prim O (c3) x)) ((Nat.pair (eval_prim O (c4) x) (eval_prim O (c5) x)))) := by
-  simp [comp₄,eval_prim];
+  simp [comp₄,eval_prim, comp₂];
 -- <$> x <*>
 -- @[simp] theorem comp₄_ev(hc1:code_prim c1) (hc2:code_prim c2) (hc3:code_prim c3):eval O (comp₄ c1 c2 c3) = fun x => (Nat.pair <$> (eval O (c2) x) <*> (eval O (c3) x)) >>= (eval O c1) := by
   -- rw [← eval_prim_eq_eval (comp₄_ev_pr hc1 hc2 hc3)]; simp only [comp₄_evp]
@@ -565,7 +565,7 @@ def c_l_get_opt :=
   -- c_l_get_opt_lastn.comp₂ left (c_sub.comp₂ (c_pred.comp (left.comp left)) (right))
 @[simp] theorem c_l_get_opt_ev_pr:code_prim c_l_get_opt := by unfold c_l_get_opt; repeat (first|assumption|simp|constructor)
 @[simp] theorem c_l_get_opt_evp {O list index}:eval_prim O c_l_get_opt (Nat.pair list index) = if index<Nat.list_size list then (Nat.list_get list index)+1 else 0 := by
-  simp [c_l_get_opt,eval_prim];
+  simp [c_l_get_opt,eval_prim, comp₄];
   exact rfl
 -- @[simp] theorem c_l_get_opt_ev:eval O c_l_get_opt = unpaired2 Nat.list_get := by rw [← eval_prim_eq_eval c_l_get_opt_ev_pr]; simp only [c_l_get_opt_evp]
 end Nat.RecursiveIn.Code
@@ -902,7 +902,7 @@ theorem c_div_flip_evp_aux_aux :
   rw [←c_div_flip_aux]
 
   -- now we can simplify the expression, without meddling with the internals of the list of previous calculations
-  simp [eval_prim]
+  simp [eval_prim, comp₄]
 
   -- to each call of a previous value, we rewrite to its eval_prim O c (previous value) by using c_cov_rec_evp_2
   have h0: n-d≤n := by exact sub_le n d
@@ -1145,11 +1145,11 @@ theorem c_replace_oracle_evp_aux (hx:x≤4): eval_prim O (c_replace_oracle) (Nat
   have ho {x hist} : eval_prim O o_1 (Nat.pair o (Nat.pair (x) hist)) = o := by simp [o_1]
 
   match x with
-  | 0 => simp [hinput_to_decode, ho]; simp only [replace_oracle, encodeCode_replace_oracle, decodeCode]
-  | 1 => simp [hinput_to_decode, ho]; simp only [replace_oracle, encodeCode_replace_oracle, decodeCode]
-  | 2 => simp [hinput_to_decode, ho]; simp only [replace_oracle, encodeCode_replace_oracle, decodeCode]
-  | 3 => simp [hinput_to_decode, ho]; simp only [replace_oracle, encodeCode_replace_oracle, decodeCode]
-  | 4 => simp [hinput_to_decode, ho]; simp only [replace_oracle, encodeCode_replace_oracle, decodeCode]
+  | 0 => simp [hinput_to_decode, ho, comp₄]; simp only [replace_oracle, encodeCode_replace_oracle, decodeCode]
+  | 1 => simp [hinput_to_decode, ho, comp₄]; simp only [replace_oracle, encodeCode_replace_oracle, decodeCode]
+  | 2 => simp [hinput_to_decode, ho, comp₄]; simp only [replace_oracle, encodeCode_replace_oracle, decodeCode]
+  | 3 => simp [hinput_to_decode, ho, comp₄]; simp only [replace_oracle, encodeCode_replace_oracle, decodeCode]
+  | 4 => simp [hinput_to_decode, ho, comp₄]; simp only [replace_oracle, encodeCode_replace_oracle, decodeCode]
   | n+5 => simp at hx
 
 lemma c_replace_oracle_evp_aux_nMod4_bounds1 : (n/2/2).l≤n+4 := by exact le_add_right_of_le (Nat.le_trans (unpair_left_le (n/2/2)) (le_trans (Nat.div_le_self _ _) (Nat.div_le_self _ _)))
@@ -1280,8 +1280,7 @@ theorem c_replace_oracle_evp_aux_nMod4 :
                                                     (prec_code.pair rfind'_code))))))))))))))))))))))
           (Nat.pair o (n + 4))) = eval_prim O c_replace_oracle_aux (Nat.pair o (n+4)) := by exact rfl
 
-  simp [stupidrewrite]
-
+  simp [comp₄, stupidrewrite]
 
 
   simp [hinput_to_decode]

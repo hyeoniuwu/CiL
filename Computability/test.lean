@@ -1,6 +1,6 @@
 import Computability.Constructions
 
-set_option profiler true
+-- set_option profiler true
 
 section bind_opt
 namespace Nat.RecursiveIn.Code
@@ -450,14 +450,23 @@ def c_evaln_aux :=
   let ml        := left.comp m
   let mr        := right.comp m
 
+
+
+  let opt_zero   := c_if_gt_te.comp₄ x sM1 (c_const 0) $ succ.comp (zero.comp     x)
+  let opt_succ   := c_if_gt_te.comp₄ x sM1 (c_const 0) $ succ.comp (succ.comp     x)
+  let opt_left   := c_if_gt_te.comp₄ x sM1 (c_const 0) $ succ.comp (left.comp     x)
+  let opt_right  := c_if_gt_te.comp₄ x sM1 (c_const 0) $ succ.comp (right.comp    x)
+  let opt_oracle := c_if_gt_te.comp₄ x sM1 (c_const 0) $ succ.comp (oracle.comp   x)
+
   -- pair
   let pc_ml_x := c_l_get.comp₂ comp_hist (x.pair (ml.pair s)) -- `[ml]ₛ(x)`
   let pc_mr_x := c_l_get.comp₂ comp_hist (x.pair (mr.pair s)) -- `[mr]ₛ(x)`
 
   let opt_pair :=
-    c_ifz.comp₃ pc_ml_x (c_const 0) $
-    c_ifz.comp₃ pc_mr_x (c_const 0) $
-    succ.comp (pair (c_pred.comp pc_ml_x) (c_pred.comp pc_mr_x))
+    c_if_gt_te.comp₄ x sM1 (c_const 0) $
+      c_ifz.comp₃ pc_ml_x (c_const 0) $
+      c_ifz.comp₃ pc_mr_x (c_const 0) $
+      succ.comp (pair (c_pred.comp pc_ml_x) (c_pred.comp pc_mr_x))
 
   -- comp: `[ml]ₛ ( [mr]ₛ(x) ) `
   let pc_mr_xM1 := c_pred.comp pc_mr_x
@@ -478,19 +487,19 @@ def c_evaln_aux :=
 
   (c_const 0) $
 
-  c_if_gt_te.comp₄ x     sM1           (c_const 0)              $ -- if ¬x≤s, then diverge
+  -- c_if_gt_te.comp₄ x     sM1           (c_const 0)              $ -- if ¬x≤s, then diverge
   c_if_eq_te.comp₄ s     (c_const 0) (c_const 0)                $ -- if s=0, then diverge
   -- c_if_eq_te.comp₄ code  (c_const 0) (c_zero_g.comp₂   sM1 x) $
-  c_if_eq_te.comp₄ code  (c_const 0) (succ.comp (zero.comp   x)) $
-  c_if_eq_te.comp₄ code  (c_const 1) (succ.comp (succ.comp   x)) $
-  c_if_eq_te.comp₄ code  (c_const 2) (succ.comp (left.comp   x)) $
-  c_if_eq_te.comp₄ code  (c_const 3) (succ.comp (right.comp  x)) $
-  c_if_eq_te.comp₄ code  (c_const 4) (succ.comp (oracle.comp x)) $
+  c_if_eq_te.comp₄ code  (c_const 0) opt_zero   $
+  c_if_eq_te.comp₄ code  (c_const 1) opt_succ   $
+  c_if_eq_te.comp₄ code  (c_const 2) opt_left   $
+  c_if_eq_te.comp₄ code  (c_const 3) opt_right  $
+  c_if_eq_te.comp₄ code  (c_const 4) opt_oracle $
   -- c_if_eq_te.comp₄ nMod4 (c_const 0) ((c_pair_g pc_ml_x pc_mr_x).comp₂ sM1 x)  $
   c_if_eq_te.comp₄ nMod4 (c_const 0) (opt_pair)  $
   c_if_eq_te.comp₄ nMod4 (c_const 1) pc_mlmr_x           $
-  c_if_eq_te.comp₄ nMod4 (c_const 2) (prec pc_ml_x pc_mr_x)           $
-                                      rfind' pc
+  c_if_eq_te.comp₄ nMod4 (c_const 2) (c_const 0)           $
+                                      (c_const 1)
 def c_evaln := c_l_get_last.comp (c_evaln_aux.comp (pair (c_const 0) c_id))
 
 
@@ -607,7 +616,7 @@ theorem c_evaln_evp_aux_0_np1 : eval_prim O (c_evaln) (Nat.pair x (Nat.pair (n+1
   rw [←h0]
   simp [hx,hsM1,hcode, hs]
 
-theorem c_evaln_evp_aux (hcode_val:code≤4) : eval_prim O (c_evaln) (Nat.pair x (Nat.pair code (s+1))) = Encodable.encode (evaln' O (s+1) (code:ℕ) x) := by
+theorem c_evaln_evp_aux (hcode_val:code≤4) : eval_prim O (c_evaln) (Nat.pair x (Nat.pair code (s+1))) = Encodable.encode (evaln O (s+1) (code:ℕ) x) := by
   -- simp [decodeCode, evaln] -- simp rhs
 
   let k:=(Nat.pair x (Nat.pair code (s+1)))-1
@@ -640,33 +649,38 @@ theorem c_evaln_evp_aux (hcode_val:code≤4) : eval_prim O (c_evaln) (Nat.pair x
     simp [h0]
   match code with
   | 0 =>
-    simp [hcode, hx, hsM1, hs, decodeCode, evaln']
+    simp [opt_zero]
+    simp [hcode, hx, hsM1, hs, decodeCode, evaln]
     cases Classical.em (x≤s) with
     | inl h => simp [h, Nat.not_lt_of_le h]
     | inr h => simp [h, gt_of_not_le h, Option.bind]
   | 1 =>
-    simp [hcode, hx, hsM1, hs, decodeCode, evaln']
+    simp [opt_succ]
+    simp [hcode, hx, hsM1, hs, decodeCode, evaln]
     cases Classical.em (x≤s) with
     | inl h => simp [h, Nat.not_lt_of_le h]
     | inr h => simp [h, gt_of_not_le h, Option.bind]
   | 2 =>
-    simp [hcode, hx, hsM1, hs, decodeCode, evaln']
+    simp [opt_left]
+    simp [hcode, hx, hsM1, hs, decodeCode, evaln]
     cases Classical.em (x≤s) with
     | inl h => simp [h, Nat.not_lt_of_le h]
     | inr h => simp [h, gt_of_not_le h, Option.bind]
   | 3 =>
-    simp [hcode, hx, hsM1, hs, decodeCode, evaln']
+    simp [opt_right]
+    simp [hcode, hx, hsM1, hs, decodeCode, evaln]
     cases Classical.em (x≤s) with
     | inl h => simp [h, Nat.not_lt_of_le h]
     | inr h => simp [h, gt_of_not_le h, Option.bind]
   | 4 =>
-    simp [hcode, hx, hsM1, hs, decodeCode, evaln']
+    simp [opt_oracle]
+    simp [hcode, hx, hsM1, hs, decodeCode, evaln]
     cases Classical.em (x≤s) with
     | inl h => simp [h, Nat.not_lt_of_le h]
     | inr h => simp [h, gt_of_not_le h, Option.bind]
   | n+5 => simp at hcode_val
 
-set_option maxHeartbeats 15000
+-- set_option maxHeartbeats 15000
 theorem c_evaln_evp_aux_nMod4_0 :
   -- eval_prim O (c_evaln) (Nat.pair o ((n+4)+1))
   eval_prim O (c_evaln) (Nat.pair x (Nat.pair ((n+4)+1) (s+1)))
@@ -704,6 +718,9 @@ theorem c_evaln_evp_aux_nMod4_0 :
     exact Nat.sub_add_cancel kP1_gt_0
   rw [←hkP1]
 
+  let covrec_inp := Nat.pair 0 (Nat.pair k (eval_prim O c_evaln_aux (Nat.pair 0 k)))
+  have covrec_inp_simp : Nat.pair 0 (Nat.pair k (eval_prim O c_evaln_aux (Nat.pair 0 k))) = covrec_inp := rfl
+
   lift_lets
   extract_lets
   expose_names
@@ -722,32 +739,35 @@ theorem c_evaln_evp_aux_nMod4_0 :
   -- rw [h0]
   -- simp
 
-  have hx : eval_prim O x_1 (Nat.pair 0 (Nat.pair k (eval_prim O c_evaln_aux (Nat.pair 0 k)))) = x := by
+  have hx : eval_prim O x_1 (covrec_inp) = x := by
+    simp [covrec_inp]
     simp [x_1]
     simp [x_code_s]
     simp [hkP1]
-  have hs : eval_prim O s_1 (Nat.pair 0 (Nat.pair k (eval_prim O c_evaln_aux (Nat.pair 0 k)))) = s+1 := by
+  have hs : eval_prim O s_1 (covrec_inp) = s+1 := by
+    simp [covrec_inp]
     simp [s_1]
     simp [x_code_s]
     simp [hkP1]
-  have hsM1 : eval_prim O sM1 (Nat.pair 0 (Nat.pair k (eval_prim O c_evaln_aux (Nat.pair 0 k)))) = s := by
+  have hsM1 : eval_prim O sM1 (covrec_inp) = s := by
     simp [sM1]
     simp [hs]
-  have hcode : eval_prim O code (Nat.pair 0 (Nat.pair k (eval_prim O c_evaln_aux (Nat.pair 0 k)))) = (n+4)+1 := by
+  have hcode : eval_prim O code (covrec_inp) = (n+4)+1 := by
+    simp [covrec_inp]
     simp [code]
     simp [x_code_s]
     simp [hkP1]
-  have hn : eval_prim O n_1 (Nat.pair 0 (Nat.pair k (eval_prim O c_evaln_aux (Nat.pair 0 k)))) = n := by
+  have hn : eval_prim O n_1 (covrec_inp) = n := by
     simp [n_1]
     simp [hcode]
-  have hm : eval_prim O m_1 (Nat.pair 0 (Nat.pair k (eval_prim O c_evaln_aux (Nat.pair 0 k)))) = m := by
+  have hm : eval_prim O m_1 (covrec_inp) = m := by
     simp [m_1]
     simp [hn]
     simp [m]
     simp [div2_val]
-  have hml:eval_prim O ml_1 (Nat.pair 0 (Nat.pair k (eval_prim O c_evaln_aux (Nat.pair 0 k))))=ml:=by simp [ml_1,hm,ml]
-  have hmr:eval_prim O mr_1 (Nat.pair 0 (Nat.pair k (eval_prim O c_evaln_aux (Nat.pair 0 k))))=mr:=by simp [mr_1,hm,mr]
-  have hnMod4 : eval_prim O nMod4 (Nat.pair 0 (Nat.pair k (eval_prim O c_evaln_aux (Nat.pair 0 k)))) = n%4 := by
+  have hml:eval_prim O ml_1 (covrec_inp)=ml:=by simp [ml_1,hm,ml]
+  have hmr:eval_prim O mr_1 (covrec_inp)=mr:=by simp [mr_1,hm,mr]
+  have hnMod4 : eval_prim O nMod4 (covrec_inp) = n%4 := by
     simp [nMod4]
     simp [hn]
 
@@ -784,22 +804,24 @@ theorem c_evaln_evp_aux_nMod4_0 :
   have bounds_right : Nat.pair x (Nat.pair mr (s + 1)) ≤ k := by
     apply le_of_lt_succ bounds_right_aux_2
 
-  have hpc_ml_x : eval_prim O pc_ml_x_1 (Nat.pair 0 (Nat.pair k (eval_prim O c_evaln_aux (Nat.pair 0 k)))) = pc_ml_x := by
+  have hpc_ml_x : eval_prim O pc_ml_x_1 (covrec_inp) = pc_ml_x := by
     simp [pc_ml_x_1]
     simp [comp_hist]
     unfold pc_ml_x
     simp [hml, hs, hx]
+    simp [covrec_inp]
 
     unfold c_evaln
     unfold c_evaln_aux
     lift_lets
     rw [c_cov_rec_evp_2 bounds_left]
     simp
-  have hpc_mr_x : eval_prim O pc_mr_x_1 (Nat.pair 0 (Nat.pair k (eval_prim O c_evaln_aux (Nat.pair 0 k)))) = pc_mr_x := by
+  have hpc_mr_x : eval_prim O pc_mr_x_1 (covrec_inp) = pc_mr_x := by
     simp [pc_mr_x_1]
     simp [comp_hist]
     unfold pc_mr_x
     simp [hmr, hs, hx]
+    simp [covrec_inp]
 
     unfold c_evaln
     unfold c_evaln_aux
@@ -812,8 +834,9 @@ theorem c_evaln_evp_aux_nMod4_0 :
   have hnat_to_opt_1 {x} (h3:¬x=0) : (Denumerable.ofNat (Option ℕ) x) = Option.some (x-1) := by
     rw (config := {occs := .pos [1]}) [hnat_to_opt_1_aux h3]
     exact rfl
-  have hopt_pair : eval_prim O opt_pair_1 (Nat.pair 0 (Nat.pair k (eval_prim O c_evaln_aux (Nat.pair 0 k)))) = opt_pair := by
+  have hopt_pair : eval_prim O opt_pair_1 (covrec_inp) = opt_pair := by
     simp [opt_pair_1]
+    simp [hsM1,hx]
     simp [hpc_ml_x]
     simp [hpc_mr_x]
     simp [opt_pair]
@@ -822,77 +845,85 @@ theorem c_evaln_evp_aux_nMod4_0 :
     cases Classical.em (pc_ml_x=0) with
     | inl h => simp [h, hnat_to_opt_0]
     | inr h =>
-      #check hnat_to_opt_1 h
       rw [hnat_to_opt_1 h]
       cases Classical.em (pc_mr_x=0) with
       | inl hl => simp [hl, hnat_to_opt_0]
       | inr hr =>
-        -- simp [h]
-        -- simp [hr]
         rw [hnat_to_opt_1 hr]
         simp [h,hr]
-        -- simp [hr, h2 hr]
-        -- simp [hx,hs]
-        -- simp [hl]
-      -- simp [h]
-      -- simp [h, hnat_to_opt_1 h]
+        cases Classical.em (x≤s) with
+        | inl hrl => simp [hrl]
+        | inr hrr =>
+          simp [hrr]
+          simp [Option.bind]
+          exact Nat.lt_of_not_le hrr
 
-    unfold pc_ml_x
-    unfold pc_mr_x
-    
-
-    unfold c_evaln
-    unfold c_evaln_aux
-    lift_lets
-    rw [c_cov_rec_evp_2 bounds_right]
-    simp
-
-
-  simp
-  have stupidrewrite : (eval_prim O
-                ((c_const 0).c_cov_rec
-                  (c_if_gt_te.comp
-                    ((x_1.pair sM1).pair
-                      ((c_const 0).pair
-                        (c_if_eq_te.comp
-                          ((code.pair (c_const 0)).pair
-                            ((succ.comp (zero.comp x_1)).pair
-                              (c_if_eq_te.comp
-                                ((code.pair (c_const 1)).pair
-                                  ((succ.comp (succ.comp x_1)).pair
-                                    (c_if_eq_te.comp
-                                      ((code.pair (c_const 2)).pair
-                                        ((succ.comp (left.comp x_1)).pair
-                                          (c_if_eq_te.comp
-                                            ((code.pair (c_const 3)).pair
-                                              ((succ.comp (right.comp x_1)).pair
-                                                (c_if_eq_te.comp
-                                                  ((code.pair (c_const 4)).pair
-                                                    ((succ.comp (oracle.comp x_1)).pair
-                                                      (c_if_eq_te.comp
-                                                        ((nMod4.pair (c_const 0)).pair
-                                                          (opt_pair.pair
-                                                            (c_if_eq_te.comp
-                                                              ((nMod4.pair (c_const 1)).pair
-                                                                (pc_mlmr_x.pair
-                                                                  (c_if_eq_te.comp
-                                                                    ((nMod4.pair (c_const 2)).pair
-                                                                      ((pc_ml_x_1.prec pc_mr_x_1).pair
-                                                                        pc.rfind'))))))))))))))))))))))))))))
-                (Nat.pair 0 k))
+  -- simp (config := { singlePass := true })
+  -- simp only [eval_prim, c_l_get_last_evp]
+  -- simp only [c_const_evp]
+  -- simp only [c_id_evp]
+  -- simp only [c_cov_rec_evp_3]
+  
+  -- simp only [c_cov_rec_evp_3]
+  have stupidrewrite :
+  (eval_prim O
+            ((c_const 0).c_cov_rec
+              (c_if_eq_te.comp
+                ((s_1.pair (c_const 0)).pair
+                  ((c_const 0).pair
+                    (c_if_eq_te.comp
+                      ((code.pair (c_const 0)).pair
+                        (opt_zero.pair
+                          (c_if_eq_te.comp
+                            ((code.pair (c_const 1)).pair
+                              (opt_succ.pair
+                                (c_if_eq_te.comp
+                                  ((code.pair (c_const 2)).pair
+                                    (opt_left.pair
+                                      (c_if_eq_te.comp
+                                        ((code.pair (c_const 3)).pair
+                                          (opt_right.pair
+                                            (c_if_eq_te.comp
+                                              ((code.pair (c_const 4)).pair
+                                                (opt_oracle.pair
+                                                  (c_if_eq_te.comp
+                                                    ((nMod4.pair (c_const 0)).pair
+                                                      (opt_pair_1.pair
+                                                        (c_if_eq_te.comp
+                                                          ((nMod4.pair (c_const 1)).pair
+                                                            (pc_mlmr_x.pair
+                                                              (c_if_eq_te.comp
+                                                                ((nMod4.pair (c_const 2)).pair
+                                                                  ((c_const 0).pair
+                                                                    (c_const 1)))))))))))))))))))))))))))))
+            (Nat.pair 0
+              k))
+  -- (eval_prim O
+  --             ((c_const 0).c_cov_rec
+  --               (c_if_eq_te.comp₄ s_1 (c_const 0) (c_const 0)
+  --                 (c_if_eq_te.comp₄ code (c_const 0) opt_zero
+  --                   (c_if_eq_te.comp₄ code (c_const 1) opt_succ
+  --                     (c_if_eq_te.comp₄ code (c_const 2) opt_left
+  --                       (c_if_eq_te.comp₄ code (c_const 3) opt_right
+  --                         (c_if_eq_te.comp₄ code (c_const 4) opt_oracle
+  --                           (c_if_eq_te.comp₄ nMod4 (c_const 0) opt_pair_1
+  --                             (c_if_eq_te.comp₄ nMod4 (c_const 1) pc_mlmr_x
+  --                               (c_if_eq_te.comp₄ nMod4 (c_const 2) (c_const 0) (c_const 1)))))))))))
+  --             (Nat.pair 0 k))
                 =eval_prim O c_evaln_aux (Nat.pair 0 k) := rfl
 
 
-  simp [hcode, hnMod4, hx, hsM1, stupidrewrite]
+  -- set_option trace.Meta.Tactic.simp.rewrite true in
+  -- simp [stupidrewrite]
+  -- simp [stupidrewrite, -Option.bind_eq_bind, -Option.map_eq_map]
+  -- simp only [eval_prim]
+  simp [stupidrewrite, covrec_inp_simp, hs, hcode, hnMod4, -Option.bind_eq_bind, -Option.map_eq_map]
+
+  -- stop
+  -- simp [hs, hcode, hnMod4, hx, hsM1, stupidrewrite]
 
   match h:n%4 with
-  | 0 =>
-    simp
-    cases Classical.em (x≤s) with
-    | inl h =>
-      simp [h, Nat.not_lt_of_le h]
-    | inr h => simp [h, gt_of_not_le h, Option.bind]
-    simp [hpc_ml_x, hpc_mr_x, hkP1]
+  | 0 => simp [hopt_pair]
   | 1 => sorry
   | 2 => sorry
   | 3 => sorry
