@@ -470,8 +470,6 @@ theorem c_ef_ev_left (h:(eval O c x).Dom) : eval O (left.comp $ c_ef c) x = x :=
   exact Part.Dom.bind h fun y ↦ Part.some x
 end ef
 
-
-
 section l_append
 def Nat.list_append (list index:ℕ):ℕ:=Nat.pair (list.l+1) $ Nat.pair list.r index
 namespace Nat.RecursiveIn.Code
