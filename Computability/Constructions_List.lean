@@ -4,78 +4,31 @@ open Nat
 open Denumerable
 open Encodable
 
-variable {α : Type*} {β : Type*} {σ : Type*} [Denumerable α] [Denumerable β] [Denumerable σ]
--- def n_to_l := @ofNat (List α) _
--- def l_to_n := @encode (List α) _
+-- variable {ℕ : Type*} {β : Type*} {σ : Type*} [Denumerable ℕ] [Denumerable β] [Denumerable σ]
+private abbrev n2l := @ofNat (List ℕ) _
+private abbrev l2n := @encode (List ℕ) _
+private abbrev o2n := @encode (Option ℕ) _
+
 
 section cons
 namespace Nat.RecursiveIn.Code
 def c_cons := succ
 @[simp] theorem c_cons_ev_pr:code_prim c_cons := by unfold c_cons; repeat (first|assumption|simp|constructor)
-@[simp] theorem c_cons_evp {O} {a l:ℕ} :eval_prim O c_cons (Nat.pair a l)= @encode (List α) _ ((@List.cons α) ((@ofNat α) a) (@ofNat (List α) _ l)) := by
-  unfold c_cons
-  simp
-  -- unfold l_to_n
-  -- simp [Encodable.encode]
-  -- simp [Encodable.encodeList]
-
-  -- unfold n_to_l
-  -- rw [show (@Encodable.encodeList α _) = (@Encodable.encode (List α) _) from rfl]
-  -- simp
--- @[simp] theorem c_cons_ev {l:ℕ}:eval O c_cons (Nat.pair a l)= l_to_n ((@List.cons ℕ) a (n_to_l l)) := by rw [← eval_prim_eq_eval c_cons_ev_pr]; simp only [c_cons_evp]
+@[simp] theorem c_cons_evp :eval_prim O c_cons (Nat.pair a lN)= l2n (List.cons a (n2l lN)) := by simp [c_cons]
+@[simp] theorem c_cons_ev :eval O c_cons (Nat.pair a lN)= l2n (List.cons a (n2l lN)) := by simp [←eval_prim_eq_eval c_cons_ev_pr]
 end Nat.RecursiveIn.Code
 end cons
-
-theorem test2 (h:¬la=0) : la≥1 := by exact one_le_iff_ne_zero.mpr h
-theorem test (h:la≥1) : ∃x,succ x=la := by exact exists_add_one_eq.mpr h
-
-#eval @encode (List (List ℕ)) _ List.nil
-section list_casesOn
-namespace Nat.RecursiveIn.Code
-def c_list_casesOn (cf cg:Code) :=
-
-  let x := left.comp c_pred
-  let xs := right.comp c_pred
-  
-  c_if_eq_te.comp₄ c_id (c_const 0) cf (cg.comp₂ x xs)
-@[simp] theorem c_list_casesOn_ev_pr (hcf:code_prim cf) (hcg:code_prim cg):code_prim (c_list_casesOn cf cg) := by unfold c_list_casesOn; repeat (first|assumption|simp|constructor)
-@[simp] theorem c_list_casesOn_evp {O} {l:ℕ} : eval_prim O (c_list_casesOn cf cg) l =
-
-  List.casesOn
-  (@ofNat (List α) _ l)
-  (eval_prim O cf l)
-  (fun x xs => eval_prim O cg (Nat.pair (@encode α _ x) (@encode (List α) _ xs)))
-  
-  := by
-  
-  unfold c_list_casesOn
-  simp
-  by_cases hl:l=0
-  · simp [hl]
-  · rcases exists_add_one_eq.mpr (one_le_iff_ne_zero.mpr hl) with ⟨lP1,hlP1⟩
-    rw [←hlP1]
-    simp
-    
--- @[simp] theorem c_list_casesOn_ev {l:ℕ}:eval O c_list_casesOn (Nat.pair a l)= l_to_n ((@List.list_casesOn ℕ) a (n_to_l l)) := by rw [← eval_prim_eq_eval c_list_casesOn_ev_pr]; simp only [c_list_casesOn_evp]
-end Nat.RecursiveIn.Code
-end list_casesOn
 
 section list_tail
 namespace Nat.RecursiveIn.Code
 def c_list_tail := right.comp c_pred
 @[simp] theorem c_list_tail_ev_pr:code_prim c_list_tail := by unfold c_list_tail; repeat (first|assumption|simp|constructor)
-@[simp] theorem c_list_tail_evp {O} : eval_prim O c_list_tail lN =
-  let l := @ofNat (List α) _ lN
-  @encode (List α) _ $ @List.tail α l
-  := by
-  unfold c_list_tail
-  simp
+@[simp] theorem c_list_tail_evp : eval_prim O c_list_tail lN = l2n (List.tail (n2l lN)) := by
+  simp [c_list_tail]
   by_cases hl:lN=0
   · simp [hl,r]
-  · rcases exists_add_one_eq.mpr (one_le_iff_ne_zero.mpr hl) with ⟨lP1,hlP1⟩
-    rw [←hlP1]
-    simp
--- @[simp] theorem c_list_tail_ev {l:ℕ}:eval O c_list_tail (Nat.pair a l)= l_to_n ((@List.list_tail ℕ) a (n_to_l l)) := by rw [← eval_prim_eq_eval c_list_tail_ev_pr]; simp only [c_list_tail_evp]
+  · rw [←(exists_add_one_eq.mpr (one_le_iff_ne_zero.mpr hl)).choose_spec]; simp
+@[simp] theorem c_list_tail_ev:eval O c_list_tail lN = l2n (List.tail (n2l lN)) := by simp [← eval_prim_eq_eval c_list_tail_ev_pr]
 end Nat.RecursiveIn.Code
 end list_tail
 
@@ -83,20 +36,41 @@ section list_head?
 namespace Nat.RecursiveIn.Code
 def c_list_head? := c_ifz.comp₃ c_id zero $ succ.comp (left.comp c_pred)
 @[simp] theorem c_list_head?_ev_pr:code_prim c_list_head? := by unfold c_list_head?; repeat (first|assumption|simp|constructor)
-@[simp] theorem c_list_head?_evp : eval_prim O c_list_head? lN =
-  let l := @ofNat (List α) _ lN
-  @encode (Option α) _ $ @List.head? α l
+@[simp] theorem c_list_head?_evp : eval_prim O c_list_head? lN = o2n (List.head? (n2l lN))
   := by
-  unfold c_list_head?
-  simp
+  simp [c_list_head?]
   by_cases hl:lN=0
   · simp [hl]
-  · rcases exists_add_one_eq.mpr (one_le_iff_ne_zero.mpr hl) with ⟨lP1,hlP1⟩
-    rw [←hlP1]
-    simp
--- @[simp] theorem c_list_head?_ev {l:ℕ}:eval O c_list_head? (Nat.pair a l)= l_to_n ((@List.list_head? ℕ) a (n_to_l l)) := by rw [← eval_prim_eq_eval c_list_head?_ev_pr]; simp only [c_list_head?_evp]
+  · rw [←(exists_add_one_eq.mpr (one_le_iff_ne_zero.mpr hl)).choose_spec]; simp
+@[simp] theorem c_list_head?_ev:eval O c_list_head? lN = o2n (List.head? (n2l lN)) := by simp [← eval_prim_eq_eval c_list_head?_ev_pr]
 end Nat.RecursiveIn.Code
 end list_head?
+
+section list_casesOn
+namespace Nat.RecursiveIn.Code
+def c_list_casesOn (cf cg:Code) :=
+  let x := left.comp c_pred
+  let xs := right.comp c_pred
+  c_if_eq_te.comp₄ c_id (c_const 0) cf (cg.comp₂ x xs)
+@[simp] theorem c_list_casesOn_ev_pr (hcf:code_prim cf) (hcg:code_prim cg):code_prim (c_list_casesOn cf cg) := by unfold c_list_casesOn; repeat (first|assumption|simp|constructor)
+@[simp] theorem c_list_casesOn_evp {O} : eval_prim O (c_list_casesOn cf cg) lN =
+  List.casesOn
+  (n2l lN)
+  (eval_prim O cf lN)
+  (fun x xs => eval_prim O cg (Nat.pair (@encode ℕ _ x) (l2n xs)))
+  := by
+  simp [c_list_casesOn]
+  by_cases hl:lN=0
+  · simp [hl]
+  · rw [←(exists_add_one_eq.mpr (one_le_iff_ne_zero.mpr hl)).choose_spec]; simp
+-- @[simp] theorem c_list_casesOn_ev :eval O (c_list_casesOn cf cg) lN =
+--   List.casesOn
+--   (n2l lN)
+--   (eval_prim O cf lN)
+--   (fun x xs => eval_prim O cg (Nat.pair (@encode ℕ _ x) (l2n xs))) := by
+--     simp [← eval_prim_eq_eval c_list_casesOn_ev_pr]
+end Nat.RecursiveIn.Code
+end list_casesOn
 
 section list_drop
 namespace Nat.RecursiveIn.Code
@@ -106,56 +80,30 @@ def c_list_drop := (
     c_list_tail.comp (right.comp right)
   ).comp c_flip
 @[simp] theorem c_list_drop_ev_pr:code_prim c_list_drop := by unfold c_list_drop; repeat (first|assumption|simp|constructor)
-@[simp] theorem c_list_drop_evp : eval_prim O c_list_drop (Nat.pair i lN) =
-  let l := @ofNat (List α) _ lN
-  @encode (List α) _ $ @List.drop α i l
-  := by
-  unfold c_list_drop
-  simp
+@[simp] theorem c_list_drop_evp : eval_prim O c_list_drop (Nat.pair i lN) = l2n (List.drop i (n2l lN)) := by
+  simp [c_list_drop]
   by_cases hl:lN=0
   · simp [hl]
-  · rcases exists_add_one_eq.mpr (one_le_iff_ne_zero.mpr hl) with ⟨lP1,hlP1⟩
-    rw [←hlP1]
-    simp
     induction i with
     | zero => simp
-    | succ n ih =>
-      simp [ih]
-      simp [@c_list_tail_evp α]
--- @[simp] theorem c_list_drop_ev {l:ℕ}:eval O c_list_drop (Nat.pair a l)= l_to_n ((@List.list_drop ℕ) a (n_to_l l)) := by rw [← eval_prim_eq_eval c_list_drop_ev_pr]; simp only [c_list_drop_evp]
+    | succ n ih => simp [ih]
+  · rw [←(exists_add_one_eq.mpr (one_le_iff_ne_zero.mpr hl)).choose_spec]; simp
+    induction i with
+    | zero => simp
+    | succ n ih => simp [ih]
+@[simp] theorem c_list_drop_ev:eval O c_list_drop (Nat.pair i lN) = l2n (List.drop i (n2l lN)) := by simp [← eval_prim_eq_eval c_list_drop_ev_pr]
 end Nat.RecursiveIn.Code
 end list_drop
 
-#check List.drop
-
 section list_getElem?
 namespace Nat.RecursiveIn.Code
--- `eval c_list_getElem?_aux (l,i) = [l, l[0:], l[1:], l[2:], ..., l[i:]]`
-def c_list_getElem?_aux :=
-  (
-    prec
-    c_id $
-    c_list_tail.comp (right.comp right)
-  ).comp c_flip
-def c_list_getElem? :=
-  c_list_head?.comp c_list_getElem?_aux
+def c_list_getElem? := c_list_head?.comp (c_list_drop.comp c_flip)
 @[simp] theorem c_list_getElem?_ev_pr:code_prim c_list_getElem? := by unfold c_list_getElem?; repeat (first|assumption|simp|constructor)
-@[simp] theorem c_list_getElem?_evp {O} {l:ℕ} : eval_prim O c_list_getElem? (Nat.pair lN i) =
-  let l := @ofNat (List α) _ lN
-  @encode (Option α) _ l[i]?
-  := by
-  unfold c_list_getElem?
-  simp
-  unfold l_to_n
-  simp [Encodable.encode]
-  simp [Encodable.encodeList]
-
-  unfold n_to_l
-  rw [show (@Encodable.encodeList α _) = (@Encodable.encode (List α) _) from rfl]
-  simp
--- @[simp] theorem c_list_getElem?_ev {l:ℕ}:eval O c_list_getElem? (Nat.pair a l)= l_to_n ((@List.list_getElem? ℕ) a (n_to_l l)) := by rw [← eval_prim_eq_eval c_list_getElem?_ev_pr]; simp only [c_list_getElem?_evp]
+@[simp] theorem c_list_getElem?_evp {O} : eval_prim O c_list_getElem? (Nat.pair lN i) = o2n (n2l lN)[i]? := by simp [c_list_getElem?]
+@[simp] theorem c_list_getElem?_ev : eval O c_list_getElem? (Nat.pair lN i) = o2n (n2l lN)[i]? := by simp [← eval_prim_eq_eval c_list_getElem?_ev_pr]
 end Nat.RecursiveIn.Code
 end list_getElem?
+
 /-
 `foldl :: (a -> b -> a) -> a -> [b] -> a`
 `foldl fn acc [] = acc`
@@ -165,8 +113,8 @@ section foldl
 namespace Nat.RecursiveIn.Code
 def c_foldl (cf:Code) (init:ℕ) := c_list_casesOn (c_const init) (cf)
 @[simp] theorem c_foldl_ev_pr:code_prim c_foldl := by unfold c_foldl; repeat (first|assumption|simp|constructor)
-@[simp] theorem c_foldl_evp {O} {l:ℕ} : eval_prim O (c_foldl cf init) l =
-  -- @encode α _
+@[simp] theorem c_foldl_evp {O}   : eval_prim O (c_foldl cf init) l =
+  -- @encode ℕ _
   (
     (@List.foldl ℕ β)
     (fun a b => eval_prim O cf (Nat.pair a (@encode β _ b)))
@@ -181,9 +129,9 @@ def c_foldl (cf:Code) (init:ℕ) := c_list_casesOn (c_const init) (cf)
   simp [Encodable.encodeList]
 
   unfold n_to_l
-  rw [show (@Encodable.encodeList α _) = (@Encodable.encode (List α) _) from rfl]
+  rw [show (@Encodable.encodeList ℕ _) = (@Encodable.encode (List ℕ) _) from rfl]
   simp
--- @[simp] theorem c_foldl_ev {l:ℕ}:eval O c_foldl (Nat.pair a l)= l_to_n ((@List.foldl ℕ) a (n_to_l l)) := by rw [← eval_prim_eq_eval c_foldl_ev_pr]; simp only [c_foldl_evp]
+-- @[simp] theorem c_foldl_ev : eval O c_foldl (Nat.pair a l)= l_to_n ((@List.foldl ℕ) a (n_to_l l)) := by rw [← eval_prim_eq_eval c_foldl_ev_pr]; simp only [c_foldl_evp]
 end Nat.RecursiveIn.Code
 end foldl
 
