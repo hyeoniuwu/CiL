@@ -1,5 +1,5 @@
-import Computability.Constructions.Basic
-import Computability.Constructions.List
+-- import Computability.Constructions.Basic
+import Computability.Constructions.CovRec
 
 -- set_option profiler true
 
@@ -437,13 +437,12 @@ theorem evaln_eq_evaln' : evaln O s code x = evaln' O s code x := by
 
 
 
--- /-- `eval c_evaln_aux (x,(code,s))` = `evaln s code x` -/
--- /-- `eval c_evaln_aux (anything,(x,(code,s)))` = `evaln s code x` -/
-/-- `eval c_evaln_aux (x,(x',(code,s)))` = `evaln s code x` -/
+/- `[c_evaln_aux](0, (0,0)) .last = [ [0]₀(0) ] = [0]` -/
+/-- `eval c_evaln_aux (_, (c,s)) .last = [ [c]ₛ(0), [c]ₛ(1), ..., [c]ₛ(s) ]` -/
 -- we might not care about what it means to query (x,(code,s)) in comp_hist when x>s or smth.
 def c_evaln_aux :=
   let x_code_s  := (succ.comp (left.comp right))
-  let x         := left.comp x_code_s
+  -- let x         := left.comp x_code_s
   let code      := left.comp (right.comp x_code_s)
   let s         := right.comp (right.comp x_code_s)
   let sM1       := c_pred.comp s
@@ -453,7 +452,10 @@ def c_evaln_aux :=
   let ml        := left.comp m
   let mr        := right.comp m
 
+  -- let opt_zero   := c_if_gt_te.comp₄ x sM1 (c_const 0) $ succ.comp (zero.comp     x)
   let opt_zero   := c_if_gt_te.comp₄ x sM1 (c_const 0) $ succ.comp (zero.comp     x)
+  let opt_zero_mapped := (c_list_map ) (c_list_range.comp s)
+
   let opt_succ   := c_if_gt_te.comp₄ x sM1 (c_const 0) $ succ.comp (succ.comp     x)
   let opt_left   := c_if_gt_te.comp₄ x sM1 (c_const 0) $ succ.comp (left.comp     x)
   let opt_right  := c_if_gt_te.comp₄ x sM1 (c_const 0) $ succ.comp (right.comp    x)
@@ -486,10 +488,10 @@ def c_evaln_aux :=
 
   c_cov_rec
 
-  (c_const 0) $
+  (c_list_singleton zero) $
 
   -- c_if_gt_te.comp₄ x     sM1           (c_const 0)              $ -- if ¬x≤s, then diverge
-  c_if_eq_te.comp₄ s     (c_const 0) (c_const 0)                $ -- if s=0, then diverge
+  c_if_eq_te.comp₄ s     (c_const 0) (c_list_singleton zero)                $ -- if s=0, then diverge
   -- c_if_eq_te.comp₄ code  (c_const 0) (c_zero_g.comp₂   sM1 x) $
   c_if_eq_te.comp₄ code  (c_const 0) opt_zero   $
   c_if_eq_te.comp₄ code  (c_const 1) opt_succ   $
