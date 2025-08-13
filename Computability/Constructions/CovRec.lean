@@ -85,6 +85,14 @@ theorem c_cov_rec_evp_0 :
   | succ i h =>
     simp [c_cov_rec_evp_0]
     exact h
+@[simp] theorem c_cov_rec_evp_1_I : getI (n2l (eval_prim O (c_cov_rec cf cg) (Nat.pair x i))) 0 = eval_prim O cf x := by
+  induction i with
+  | zero =>
+    unfold c_cov_rec
+    simp [eval_prim, getI]
+  | succ i h =>
+    simp [c_cov_rec_evp_0]
+    simp [getI]
 
 @[simp] theorem c_cov_rec_evp_3 :
   getLastI
@@ -102,6 +110,14 @@ theorem c_cov_rec_evp_2_aux1 :
   rw [getLastI_eq_getLast?]
   rw [getLast?_eq_getElem?]
   simp [c_cov_rec_evp_size]
+theorem c_cov_rec_evp_2_aux1_I :
+  getLastI (eval_prim O (c_cov_rec cf cg) (Nat.pair x i))
+    =
+  getI (n2l (eval_prim O (c_cov_rec cf cg) (Nat.pair x i))) i := by
+  rw [getLastI_eq_getLast?]
+  rw [getLast?_eq_getElem?]
+  simp [c_cov_rec_evp_size]
+  simp [getI]
 theorem c_cov_rec_evp_2_aux2 (h:j≤i) :
   (n2l (eval_prim O (c_cov_rec cf cg) (Nat.pair x i)))[j]'(by simp [c_cov_rec_evp_size]; grind only)
     =
@@ -116,10 +132,26 @@ theorem c_cov_rec_evp_2_aux2 (h:j≤i) :
     getElem_append_left'
       (Eq.mpr (_root_.id (congrArg (LT.lt j) c_cov_rec_evp_size)) (c_cov_rec_evp_2_aux2._proof_1 h))
       [eval_prim O cg (Nat.pair x (Nat.pair i (eval_prim O (cf.c_cov_rec cg) (Nat.pair x i))))]
+theorem c_cov_rec_evp_2_aux2_I (h:j≤i) :
+  getI (n2l (eval_prim O (c_cov_rec cf cg) (Nat.pair x i))) j
+    =
+  getI (n2l (eval_prim O (c_cov_rec cf cg) (Nat.pair x (i+1)))) j
+  := by
+  simp [c_cov_rec_evp_0]
+
+  have bounds1: j<(n2l (eval_prim O (c_cov_rec cf cg) (Nat.pair x i))).length := by
+    simp
+    exact lt_add_one_of_le h
+  have bounds2: j<((n2l (eval_prim O (cf.c_cov_rec cg) (Nat.pair x i)) ++ [eval_prim O cg (Nat.pair x (Nat.pair i (eval_prim O (cf.c_cov_rec cg) (Nat.pair x i))))])).length := by
+    simp
+    grind only
+  simp [getI]
+  grind? says grind only [= List.getElem?_eq_none, length_append, getElem?_pos, getElem?_neg, getElem?_append, → eq_nil_of_append_eq_nil]
+
 
 @[simp] theorem c_cov_rec_evp_2 (h:j≤i):
   (n2l (eval_prim O (c_cov_rec cf cg) (Nat.pair x i)))[j]'(by simp [c_cov_rec_evp_size]; grind only)
-    = 
+    =
   getLastI (eval_prim O (c_cov_rec cf cg) (Nat.pair x j)) := by
 
   rw [c_cov_rec_evp_2_aux1]
@@ -133,6 +165,32 @@ theorem c_cov_rec_evp_2_aux2 (h:j≤i) :
       have h2 := ih h1
       rw [←h2]
       rw [←c_cov_rec_evp_2_aux2]
+      exact h1
+@[simp] theorem c_cov_rec_evp_2_I (h:j≤i):
+  getI (n2l (eval_prim O (c_cov_rec cf cg) (Nat.pair x i))) j
+    =
+  getLastI (eval_prim O (c_cov_rec cf cg) (Nat.pair x j)) := by
+
+  rw [c_cov_rec_evp_2_aux1]
+  
+  induction i with
+  | zero =>
+    simp only [show j=0 from eq_zero_of_le_zero h]
+    have asd : 0<(n2l (eval_prim O (cf.c_cov_rec cg) (Nat.pair x 0))).length := by simp
+    rw [getI]
+    grind
+  | succ n ih =>
+    have h0: j=n+1 ∨ j≤n := by exact Or.symm (le_or_eq_of_le_succ h)
+    have asd : n+1<(n2l (eval_prim O (cf.c_cov_rec cg) (Nat.pair x (n + 1)))).length := by simp
+    cases h0 with
+    | inl h1 =>
+      simp only [h1]
+      rw [getI]
+      grind
+    | inr h1 =>
+      have h2 := ih h1
+      rw [←h2]
+      rw [←c_cov_rec_evp_2_aux2_I]
       exact h1
 
 end Nat.RecursiveIn.Code
@@ -199,7 +257,7 @@ def c_div_flip_aux :=
   c_ifz.comp₂ divisor $    -- in general, test if the divisor is zero
   pair (c_const 0) $       -- if so, return 0
   c_if_lt_te.comp₄ dividend divisor (c_const 0) $ -- if dividend < divisor, return 0
-  (succ.comp (c_list_get.comp₂ list_of_prev_values (c_sub.comp₂ dividend divisor))) -- else return (dividend-divisor)/divisor+1
+  (succ.comp (c_list_getI.comp₂ list_of_prev_values (c_sub.comp₂ dividend divisor))) -- else return (dividend-divisor)/divisor+1
 def c_div_flip := c_list_getLastI.comp c_div_flip_aux
 def c_div := c_div_flip.comp (c_flip)
 -- i want the inductive case to be simplified to an expression involving c_div_flip2.
@@ -239,28 +297,21 @@ theorem c_div_flip_evp_aux_aux :
                         ((dividend.pair divisor).pair
                           ((c_const 0).pair
                             (succ.comp
-                              (c_list_get.comp (list_of_prev_values.pair (c_sub.comp (dividend.pair divisor))))))))))))
-              (Nat.pair (d + 1) n)) = 
+                              (c_list_getI.comp (list_of_prev_values.pair (c_sub.comp (dividend.pair divisor))))))))))))
+              (Nat.pair (d + 1) n)) =
               eval_prim O c_div_flip_aux (Nat.pair (d+1) (n))
               := by exact rfl
 
   -- set_option trace.Meta.Tactic.simp.rewrite true in
   simp [stupidrewrite]
   simp [hdivisor,hdividend,hlist_of_prev_values]
-  
-  have h0: n-d≤n := by exact sub_le n d
-  have h1: n-d<(n2l (eval_prim O c_div_flip_aux (Nat.pair (d + 1) n))).length := by
-    unfold c_div_flip_aux
-    simp
-    exact sub_lt_succ n d
 
-  simp [c_list_get_evp h1]
   unfold c_div_flip
   unfold c_div_flip_aux
   simp only []
   rw [eval_prim]
   simp
-  
+
 
 
 
@@ -456,9 +507,9 @@ def c_replace_oracle_aux :=
   let comp_hist       := right.comp right
   let n               := c_sub.comp₂ input_to_decode (c_const 5)
   let m               := c_div2.comp $ c_div2.comp n
-  let ml              := c_l_get.comp₂ comp_hist (left.comp m)
-  let mr              := c_l_get.comp₂ comp_hist (right.comp m)
-  let mp              := c_l_get.comp₂ comp_hist m
+  let ml              := c_list_get.comp₂ comp_hist (left.comp m)
+  let mr              := c_list_get.comp₂ comp_hist (right.comp m)
+  let mp              := c_list_get.comp₂ comp_hist m
   let nMod4           := c_mod.comp₂ n (c_const 4)
   let pair_code       := c_add.comp₂ (            c_mul2.comp $             c_mul2.comp (pair ml mr)) (c_const 5)
   let comp_code       := c_add.comp₂ (succ.comp $ c_mul2.comp $             c_mul2.comp (pair ml mr)) (c_const 5)
@@ -479,7 +530,7 @@ def c_replace_oracle_aux :=
   c_if_eq_te.comp₄ nMod4           (c_const 1) (comp_code) $
   c_if_eq_te.comp₄ nMod4           (c_const 2) (prec_code) $
                                                 rfind'_code
-def c_replace_oracle := c_l_get_last.comp c_replace_oracle_aux
+def c_replace_oracle := c_list_getLastI.comp c_replace_oracle_aux
 set_option maxRecDepth 5000 in
 @[simp] theorem c_replace_oracle_ev_pr:code_prim (c_replace_oracle) := by
   unfold c_replace_oracle;
