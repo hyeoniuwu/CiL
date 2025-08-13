@@ -199,7 +199,7 @@ def c_div_flip_aux :=
   c_ifz.comp₂ divisor $    -- in general, test if the divisor is zero
   pair (c_const 0) $       -- if so, return 0
   c_if_lt_te.comp₄ dividend divisor (c_const 0) $ -- if dividend < divisor, return 0
-  (succ.comp (c_list_getI.comp₂ list_of_prev_values (c_sub.comp₂ dividend divisor))) -- else return (dividend-divisor)/divisor+1
+  (succ.comp (c_list_get.comp₂ list_of_prev_values (c_sub.comp₂ dividend divisor))) -- else return (dividend-divisor)/divisor+1
 def c_div_flip := c_list_getLastI.comp c_div_flip_aux
 def c_div := c_div_flip.comp (c_flip)
 -- i want the inductive case to be simplified to an expression involving c_div_flip2.
@@ -213,12 +213,9 @@ theorem c_div_flip_evp_aux_aux :
   if n<d then 0 else eval_prim O c_div_flip (Nat.pair (d+1) (n-d)) + 1
     := by
 
-  -- unfold c_div_flip;
-  -- unfold c_div_flip_aux
 
   rw (config:={occs:=.pos [1]}) [c_div_flip]
   unfold c_div_flip_aux
-  -- erw (config:={occs:=.pos [1]}) [c_div_flip_aux]
 
   lift_lets
   extract_lets
@@ -228,6 +225,8 @@ theorem c_div_flip_evp_aux_aux :
     simp [divisor]
   have hdividend : eval_prim O dividend (Nat.pair (d + 1) (Nat.pair n (eval_prim O c_div_flip_aux (Nat.pair (d + 1) n)))) = n+1 := by
     simp [dividend]
+  have hlist_of_prev_values : eval_prim O list_of_prev_values (Nat.pair (d + 1) (Nat.pair n (eval_prim O c_div_flip_aux (Nat.pair (d + 1) n)))) = eval_prim O c_div_flip_aux (Nat.pair (d + 1) n) := by
+    simp [list_of_prev_values]
 
 
 
@@ -240,42 +239,28 @@ theorem c_div_flip_evp_aux_aux :
                         ((dividend.pair divisor).pair
                           ((c_const 0).pair
                             (succ.comp
-                              (c_list_getI.comp (list_of_prev_values.pair (c_sub.comp (dividend.pair divisor))))))))))))
+                              (c_list_get.comp (list_of_prev_values.pair (c_sub.comp (dividend.pair divisor))))))))))))
               (Nat.pair (d + 1) n)) = 
               eval_prim O c_div_flip_aux (Nat.pair (d+1) (n))
               := by exact rfl
 
   -- set_option trace.Meta.Tactic.simp.rewrite true in
   simp [stupidrewrite]
-  simp [hdivisor,hdividend]
+  simp [hdivisor,hdividend,hlist_of_prev_values]
   
   have h0: n-d≤n := by exact sub_le n d
-  -- unfold c_div_flip_aux
-  #check c_cov_rec_evp_2 h0
-  simp [c_cov_rec_evp_2 h0]
-  -- simp only [eval_prim]
-  -- simp [stupidrewrite, -eval_prim]
+  have h1: n-d<(n2l (eval_prim O c_div_flip_aux (Nat.pair (d + 1) n))).length := by
+    unfold c_div_flip_aux
+    simp
+    exact sub_lt_succ n d
 
-  stop
-  -- simp
-  
-  simp only [eval_prim, c_l_get_last_evp] -- unwrap the list_get_last wrapper
-  simp only [eval_prim, c_l_get_last_evp] -- unwrap the list_get_last wrapper
-
-  -- now we rewrite the expr just until it contains the expression for the list of previous calculations
-  rw (config := {occs := .pos [1]}) [c_div_flip_aux]
-  simp only [c_cov_rec_evp_3]
-
-  -- we then "refold" the list of previous calculations in terms of the function
-  rw [←c_div_flip_aux]
-
-  -- now we can simplify the expression, without meddling with the internals of the list of previous calculations
-  simp [eval_prim, comp₄]
-
-  -- to each call of a previous value, we rewrite to its eval_prim O c (previous value) by using c_cov_rec_evp_2
-  have h0: n-d≤n := by exact sub_le n d
+  simp [c_list_get_evp h1]
+  unfold c_div_flip
   unfold c_div_flip_aux
-  rw [c_cov_rec_evp_2 h0]
+  simp only []
+  rw [eval_prim]
+  simp
+  
 
 
 
@@ -309,17 +294,19 @@ theorem c_div_flip_evp_aux:eval_prim O c_div_flip = unpaired2 div_flip_aux := by
 @[simp] theorem c_div_flip_evp:eval_prim O c_div_flip = unpaired2 (flip ((· / ·) : ℕ → ℕ → ℕ)) := by
   rw [c_div_flip_evp_aux]
   simp [div_flip_aux_eq_div_flip]
-@[simp] theorem c_div_evp : eval_prim O c_div = unpaired2 ((· / ·) : ℕ → ℕ → ℕ) := by
+@[simp] theorem c_div_evp : eval_prim O c_div (Nat.pair a b)= a/b := by
   unfold c_div
   simp [eval_prim]
   simp [flip]
-
 
 @[simp] theorem c_div_ev_pr :code_prim c_div := by
   unfold c_div;
   repeat (first|assumption|simp|constructor)
 
-@[simp] theorem c_div_ev:eval O c_div = unpaired2 Nat.div := by rw [← eval_prim_eq_eval c_div_ev_pr]; simp only [c_div_evp]; exact rfl
+@[simp] theorem c_div_ev:eval O c_div (Nat.pair a b)= a/b := by
+  rw [← eval_prim_eq_eval c_div_ev_pr];
+  simp
+  exact Eq.symm (Part.some_div_some a b)
 end Nat.RecursiveIn.Code
 -- theorem Nat.PrimrecIn.div:Nat.PrimrecIn O Nat.div := by ...
 -- theorem Nat.Primrec.div:Nat.Primrec Nat.div := by ...

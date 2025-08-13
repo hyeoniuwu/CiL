@@ -166,6 +166,22 @@ def c_list_getI := c_pred.comp c_list_getElem?
 end Nat.RecursiveIn.Code
 end list_getI
 
+section list_get
+namespace Nat.RecursiveIn.Code
+def c_list_get := c_list_getI
+@[simp] theorem c_list_get_ev_pr:code_prim c_list_get := by unfold c_list_get; repeat (first|assumption|simp|constructor)
+@[simp] theorem c_list_get_evp (h:i<(n2l lN).length) : eval_prim O c_list_get (Nat.pair lN i) = (n2l lN)[i] := by
+  simp [c_list_get]
+  simp [getI]
+  by_cases hl:i<(n2l lN).length
+  · simp [hl]
+  · contradiction
+@[simp] theorem c_list_get_ev (h:i<(n2l lN).length) : eval O c_list_get (Nat.pair lN i) = (n2l lN)[i] := by
+  simp [← eval_prim_eq_eval c_list_get_ev_pr]
+  simp [h]
+end Nat.RecursiveIn.Code
+end list_get
+
 section nat_iterate
 namespace Nat.RecursiveIn.Code
 def c_nat_iterate (cf:Code) :=
