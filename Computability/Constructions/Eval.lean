@@ -1,5 +1,5 @@
-import Computability.Constructions
-import Computability.Constructions_List
+import Computability.Constructions.Basic
+import Computability.Constructions.List
 
 -- set_option profiler true
 

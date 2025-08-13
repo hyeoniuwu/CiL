@@ -1,4 +1,4 @@
-import Computability.Constructions
+import Computability.Constructions.Basic
 
 open Nat
 open Denumerable

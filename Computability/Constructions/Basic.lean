@@ -746,7 +746,10 @@ base case:      `eval (c_cov_rec cf cg) (x 0)` = list with one element, eval cf 
 inductive case: Let `l` be the list of previous values, from `j=0` to `i`
                 Then `eval (c_cov_rec cf cg) (x i+1) = l.append (eval cg (x (i l)))`
 -/
-def c_cov_rec (cf cg:Code):= prec (c_l_append.comp₂ (c_const Nat.list_empty) (cf)) $ c_efl_prec cg
+def c_cov_rec (cf cg:Code):=
+  prec
+  (c_l_append.comp₂ (c_const Nat.list_empty) (cf))
+  (c_efl_prec cg)
 @[simp] theorem c_cov_rec_evp_size_positive : 0<(eval_prim O (c_cov_rec cf cg) (Nat.pair x i)).list_size := by
   unfold c_cov_rec
   simp [eval_prim]
