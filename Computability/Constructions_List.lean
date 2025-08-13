@@ -4,11 +4,9 @@ open Nat
 open Denumerable
 open Encodable
 
--- variable {ℕ : Type*} {β : Type*} {σ : Type*} [Denumerable ℕ] [Denumerable β] [Denumerable σ]
 private abbrev n2l := @ofNat (List ℕ) _
 private abbrev l2n := @encode (List ℕ) _
 private abbrev o2n := @encode (Option ℕ) _
-
 
 section list_nil
 namespace Nat.RecursiveIn.Code
@@ -71,10 +69,10 @@ def c_list_casesOn (cl cf cg:Code) :=
   by_cases hl:(eval_prim O cl input)=0
   · simp [hl]
   · rw [←(exists_add_one_eq.mpr (one_le_iff_ne_zero.mpr hl)).choose_spec]; simp
--- @[simp] theorem c_list_casesOn_ev :eval O (c_list_casesOn cf cg) lN =
+-- @[simp] theorem c_list_casesOn_ev :eval O (c_list_casesOn cl cf cg) input =
 --   List.casesOn
---   (n2l lN)
---   (eval_prim O cf lN)
+--   (n2l (eval_prim O cl input))
+--   (eval_prim O cf input)
 --   (fun x xs => eval_prim O cg (Nat.pair (@encode ℕ _ x) (l2n xs))) := by
 --     simp [← eval_prim_eq_eval c_list_casesOn_ev_pr]
 end Nat.RecursiveIn.Code
@@ -82,8 +80,6 @@ end list_casesOn
 section list_casesOn'
 namespace Nat.RecursiveIn.Code
 def c_list_casesOn' (cl cf cg:Code) :=
-  -- let x := left.comp (c_pred.comp cl)
-  -- let xs := right.comp (c_pred.comp cl)
   c_if_eq_te.comp₄ cl (c_const 0) cf cg
 @[simp] theorem c_list_casesOn'_ev_pr (hcl:code_prim cl) (hcf:code_prim cf) (hcg:code_prim cg):code_prim (c_list_casesOn' cl cf cg) := by unfold c_list_casesOn'; repeat (first|assumption|simp|constructor)
 @[simp] theorem c_list_casesOn'_evp : eval_prim O (c_list_casesOn' cl cf cg) input =
@@ -129,44 +125,6 @@ def c_list_drop :=
 end Nat.RecursiveIn.Code
 end list_drop
 
-#check Nat.find
-#check Decidable
-#check DecidablePred
-#check decidable_of_iff'
-
--- section bfind
--- namespace Nat.RecursiveIn.Code
--- def p_bfind (O) (cf) (b) (n) := n≤b ∧ eval_prim O cf n = 0
--- instance pbf : DecidablePred (p_bfind O cf b) := by
-
---   exact Classical.decRel (p_bfind O cf) b
--- theorem hp_bfind (cf) (b) : ∃n, p_bfind O cf b n := by
---   use b+1
---   simp [p_bfind]
--- -- abbrev bfind (cf) := fun a => Nat.rfind fun n => (fun m => m = 0) <$> eval_prim O c (Nat.pair a n)
--- def c_bfind (cf:Code) :=
---   let i := left.comp right
---   let b := left
---   let bMi := c_sub.comp₂ b i
---   let prev := right.comp right
---   (
---     prec
---     (c_ifz.comp₃ (cf.comp b) b zero) $
---     c_ifz.comp₃ (cf.comp bMi) bMi prev
---   ).comp (pair c_id c_id)
--- @[simp] theorem c_bfind_ev_pr (hcf:code_prim cf) :code_prim (c_bfind cf) := by unfold c_bfind; repeat (first|assumption|simp|constructor)
--- -- @[simp] theorem c_bfind_evp : eval_prim O (c_bfind cf) b = @Nat.find (p_bfind O cf b) _ (hp_bfind cf b) := by
--- @[simp] theorem c_bfind_evp : eval_prim O (c_bfind cf) b = o2n (if ∃x≤b,eval_prim O cf x=0 then some x else Option.none) := by
---   simp [c_bfind]
---   cases Classical.em (∃x≤b,eval_prim O cf x=0) with
---   | inl h =>
---     simp [h]
---   | inr h => simp [h]
-
--- @[simp] theorem c_bfind_ev : eval O c_bfind (Nat.pair lN i) = o2n (n2l lN)[i]? := by simp [← eval_prim_eq_eval c_bfind_ev_pr]
--- end Nat.RecursiveIn.Code
--- end bfind
-
 section list_getElem?
 namespace Nat.RecursiveIn.Code
 def c_list_getElem? := c_list_head?.comp (c_list_drop.comp c_flip)
@@ -175,32 +133,6 @@ def c_list_getElem? := c_list_head?.comp (c_list_drop.comp c_flip)
 @[simp] theorem c_list_getElem?_ev : eval O c_list_getElem? (Nat.pair lN i) = o2n (n2l lN)[i]? := by simp [← eval_prim_eq_eval c_list_getElem?_ev_pr]
 end Nat.RecursiveIn.Code
 end list_getElem?
-
-
-section list_take
-namespace Nat.RecursiveIn.Code
-def c_list_take :=
-  (
-    prec
-    zero $
-    c_list_tail.comp (right.comp right)
-  ).comp c_flip
-@[simp] theorem c_list_take_ev_pr:code_prim c_list_take := by unfold c_list_take; repeat (first|assumption|simp|constructor)
-@[simp] theorem c_list_take_evp : eval_prim O c_list_take (Nat.pair i lN) = l2n (List.drop i (n2l lN)) := by
-  simp [c_list_take]
-  by_cases hl:lN=0
-  · simp [hl]
-    induction i with
-    | zero => simp
-    | succ n ih => simp [ih]
-  · rw [←(exists_add_one_eq.mpr (one_le_iff_ne_zero.mpr hl)).choose_spec]; simp
-    induction i with
-    | zero => simp
-    | succ n ih => simp [ih]
-@[simp] theorem c_list_take_ev:eval O c_list_take (Nat.pair i lN) = l2n (List.drop i (n2l lN)) := by simp [← eval_prim_eq_eval c_list_take_ev_pr]
-end Nat.RecursiveIn.Code
-end list_take
-
 
 section nat_iterate
 namespace Nat.RecursiveIn.Code
@@ -428,11 +360,3 @@ def c_list_range :=
 @[simp] theorem c_list_range_ev : eval O c_list_range n = l2n (List.range n) := by simp [← eval_prim_eq_eval c_list_range_ev_pr]
 end Nat.RecursiveIn.Code
 end list_range
-
-
-
-#check @List.length
--- #check @Encodable.encode (List ℕ)
-#check (@Encodable.decode (List ℕ))
-#eval (@Encodable.decode (List ℕ)) 7
-#eval (@Denumerable.ofNat (List ℕ)) 7

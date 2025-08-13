@@ -1,0 +1,32 @@
+-- section bfind
+-- namespace Nat.RecursiveIn.Code
+-- def p_bfind (O) (cf) (b) (n) := n≤b ∧ eval_prim O cf n = 0
+-- instance pbf : DecidablePred (p_bfind O cf b) := by
+
+--   exact Classical.decRel (p_bfind O cf) b
+-- theorem hp_bfind (cf) (b) : ∃n, p_bfind O cf b n := by
+--   use b+1
+--   simp [p_bfind]
+-- -- abbrev bfind (cf) := fun a => Nat.rfind fun n => (fun m => m = 0) <$> eval_prim O c (Nat.pair a n)
+-- def c_bfind (cf:Code) :=
+--   let i := left.comp right
+--   let b := left
+--   let bMi := c_sub.comp₂ b i
+--   let prev := right.comp right
+--   (
+--     prec
+--     (c_ifz.comp₃ (cf.comp b) b zero) $
+--     c_ifz.comp₃ (cf.comp bMi) bMi prev
+--   ).comp (pair c_id c_id)
+-- @[simp] theorem c_bfind_ev_pr (hcf:code_prim cf) :code_prim (c_bfind cf) := by unfold c_bfind; repeat (first|assumption|simp|constructor)
+-- -- @[simp] theorem c_bfind_evp : eval_prim O (c_bfind cf) b = @Nat.find (p_bfind O cf b) _ (hp_bfind cf b) := by
+-- @[simp] theorem c_bfind_evp : eval_prim O (c_bfind cf) b = o2n (if ∃x≤b,eval_prim O cf x=0 then some x else Option.none) := by
+--   simp [c_bfind]
+--   cases Classical.em (∃x≤b,eval_prim O cf x=0) with
+--   | inl h =>
+--     simp [h]
+--   | inr h => simp [h]
+
+-- @[simp] theorem c_bfind_ev : eval O c_bfind (Nat.pair lN i) = o2n (n2l lN)[i]? := by simp [← eval_prim_eq_eval c_bfind_ev_pr]
+-- end Nat.RecursiveIn.Code
+-- end bfind
