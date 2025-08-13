@@ -3,11 +3,16 @@ import Computability.Constructions.Basic
 open Nat
 open Denumerable
 open Encodable
+open List
 
 abbrev n2l := @ofNat (List ℕ) _
 abbrev l2n := @encode (List ℕ) _
 abbrev n2o := @ofNat (Option ℕ) _
 abbrev o2n := @encode (Option ℕ) _
+
+instance : OfNat (List ℕ) lN where ofNat := n2l lN
+instance : Coe ℕ (List ℕ) := ⟨n2l⟩
+instance : Coe (List ℕ) ℕ := ⟨l2n⟩
 
 section list_nil
 namespace Nat.RecursiveIn.Code
@@ -426,3 +431,12 @@ def c_list_range :=
 @[simp] theorem c_list_range_ev : eval O c_list_range n = l2n (List.range n) := by simp [← eval_prim_eq_eval c_list_range_ev_pr]
 end Nat.RecursiveIn.Code
 end list_range
+
+
+
+-- 
+
+
+@[simp] theorem getLastI_append {y:ℕ}: (x++[y]).getLastI = y := by
+  rw [getLastI_eq_getLast?]
+  simp
