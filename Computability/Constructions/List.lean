@@ -4,9 +4,10 @@ open Nat
 open Denumerable
 open Encodable
 
-private abbrev n2l := @ofNat (List ℕ) _
-private abbrev l2n := @encode (List ℕ) _
-private abbrev o2n := @encode (Option ℕ) _
+abbrev n2l := @ofNat (List ℕ) _
+abbrev l2n := @encode (List ℕ) _
+abbrev n2o := @ofNat (Option ℕ) _
+abbrev o2n := @encode (Option ℕ) _
 
 section list_nil
 namespace Nat.RecursiveIn.Code
@@ -51,6 +52,21 @@ def c_list_head? := c_ifz.comp₃ c_id zero $ succ.comp (left.comp c_pred)
 @[simp] theorem c_list_head?_ev:eval O c_list_head? lN = o2n (List.head? (n2l lN)) := by simp [← eval_prim_eq_eval c_list_head?_ev_pr]
 end Nat.RecursiveIn.Code
 end list_head?
+
+
+
+section list_headI
+namespace Nat.RecursiveIn.Code
+def c_list_headI := c_ifz.comp₃ c_id zero (left.comp c_pred)
+@[simp] theorem c_list_headI_ev_pr:code_prim c_list_headI := by unfold c_list_headI; repeat (first|assumption|simp|constructor)
+@[simp] theorem c_list_headI_evp : eval_prim O c_list_headI lN = List.headI (n2l lN) := by
+  simp [c_list_headI]
+  by_cases hl:lN=0
+  · simp [hl]
+  · rw [←(exists_add_one_eq.mpr (one_le_iff_ne_zero.mpr hl)).choose_spec]; simp
+@[simp] theorem c_list_headI_ev:eval O c_list_headI lN = List.headI (n2l lN) := by simp [← eval_prim_eq_eval c_list_headI_ev_pr]
+end Nat.RecursiveIn.Code
+end list_headI
 
 section list_casesOn
 namespace Nat.RecursiveIn.Code
@@ -133,6 +149,17 @@ def c_list_getElem? := c_list_head?.comp (c_list_drop.comp c_flip)
 @[simp] theorem c_list_getElem?_ev : eval O c_list_getElem? (Nat.pair lN i) = o2n (n2l lN)[i]? := by simp [← eval_prim_eq_eval c_list_getElem?_ev_pr]
 end Nat.RecursiveIn.Code
 end list_getElem?
+
+section list_getI
+namespace Nat.RecursiveIn.Code
+def c_list_getI := c_pred.comp c_list_getElem?
+@[simp] theorem c_list_getI_ev_pr:code_prim c_list_getI := by unfold c_list_getI; repeat (first|assumption|simp|constructor)
+@[simp] theorem c_list_getI_evp : eval_prim O c_list_getI (Nat.pair lN i) = ((n2l lN).getI i) := by
+  simp [c_list_getI]
+  by_cases hl:i<(n2l lN).length <;> simp [hl, List.getI]
+@[simp] theorem c_list_getI_ev : eval O c_list_getI (Nat.pair lN i) = ((n2l lN).getI i) := by simp [← eval_prim_eq_eval c_list_getI_ev_pr]
+end Nat.RecursiveIn.Code
+end list_getI
 
 section nat_iterate
 namespace Nat.RecursiveIn.Code
@@ -299,6 +326,45 @@ def c_list_length := (c_list_foldl (succ.comp left)).comp₂ zero c_id
 @[simp] theorem c_list_length_ev : eval O c_list_length lN = List.length (n2l lN) := by simp [← eval_prim_eq_eval c_list_length_ev_pr]
 end Nat.RecursiveIn.Code
 end list_length
+
+section list_getLast?
+namespace Nat.RecursiveIn.Code
+def c_list_getLast? := c_list_getElem?.comp₂ c_id (c_pred.comp $ c_list_length.comp c_id)
+@[simp] theorem c_list_getLast?_ev_pr:code_prim c_list_getLast? := by unfold c_list_getLast?; repeat (first|assumption|simp|constructor)
+@[simp] theorem c_list_getLast?_evp : eval_prim O c_list_getLast? lN = o2n (List.getLast? (n2l lN)) := by
+  simp [c_list_getLast?]
+  exact Eq.symm List.getLast?_eq_getElem?
+@[simp] theorem c_list_getLast?_ev:eval O c_list_getLast? lN = o2n (List.getLast? (n2l lN)) := by simp [← eval_prim_eq_eval c_list_getLast?_ev_pr]
+end Nat.RecursiveIn.Code
+end list_getLast?
+
+section opt_iget
+namespace Nat.RecursiveIn.Code
+def c_opt_iget := c_pred
+@[simp] theorem c_opt_iget_ev_pr:code_prim c_opt_iget := by unfold c_opt_iget; repeat (first|assumption|simp|constructor)
+@[simp] theorem c_opt_iget_evp : eval_prim O c_opt_iget o = Option.iget (n2o o) := by
+  simp [c_opt_iget]
+  by_cases ho:o=0
+  · simp [ho]; exact rfl
+  · have asd := exists_add_one_eq.mpr (one_le_iff_ne_zero.mpr ho)
+    rcases asd with ⟨k,hk⟩
+    simp [←hk]
+    have rwma : n2o (k + 1) = Option.some k := by exact rfl
+    rw [rwma]
+@[simp] theorem c_opt_iget_ev:eval O c_opt_iget o = Option.iget (n2o o) := by simp [← eval_prim_eq_eval c_opt_iget_ev_pr]
+end Nat.RecursiveIn.Code
+end opt_iget
+
+section list_getLastI
+namespace Nat.RecursiveIn.Code
+def c_list_getLastI := c_opt_iget.comp c_list_getLast?
+@[simp] theorem c_list_getLastI_ev_pr:code_prim c_list_getLastI := by unfold c_list_getLastI; repeat (first|assumption|simp|constructor)
+@[simp] theorem c_list_getLastI_evp : eval_prim O c_list_getLastI lN = List.getLastI (n2l lN) := by
+  simp [c_list_getLastI]
+  exact Eq.symm (List.getLastI_eq_getLast? (n2l lN))
+@[simp] theorem c_list_getLastI_ev:eval O c_list_getLastI lN = List.getLastI (n2l lN) := by simp [← eval_prim_eq_eval c_list_getLastI_ev_pr]
+end Nat.RecursiveIn.Code
+end list_getLastI
 
 /-
 (++) []     ys = ys
