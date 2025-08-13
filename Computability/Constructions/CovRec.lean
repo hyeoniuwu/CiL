@@ -507,9 +507,9 @@ def c_replace_oracle_aux :=
   let comp_hist       := right.comp right
   let n               := c_sub.comp₂ input_to_decode (c_const 5)
   let m               := c_div2.comp $ c_div2.comp n
-  let ml              := c_list_get.comp₂ comp_hist (left.comp m)
-  let mr              := c_list_get.comp₂ comp_hist (right.comp m)
-  let mp              := c_list_get.comp₂ comp_hist m
+  let ml              := c_list_getI.comp₂ comp_hist (left.comp m)
+  let mr              := c_list_getI.comp₂ comp_hist (right.comp m)
+  let mp              := c_list_getI.comp₂ comp_hist m
   let nMod4           := c_mod.comp₂ n (c_const 4)
   let pair_code       := c_add.comp₂ (            c_mul2.comp $             c_mul2.comp (pair ml mr)) (c_const 5)
   let comp_code       := c_add.comp₂ (succ.comp $ c_mul2.comp $             c_mul2.comp (pair ml mr)) (c_const 5)
@@ -612,7 +612,7 @@ theorem c_replace_oracle_evp_aux_nMod4 :
     lift_lets
     unfold m
     simp only [div2_val]
-    rw [c_cov_rec_evp_2 c_replace_oracle_evp_aux_nMod4_bounds1]
+    rw [c_cov_rec_evp_2_I c_replace_oracle_evp_aux_nMod4_bounds1]
     simp
   have hmr : eval_prim O mr_1 (Nat.pair o (Nat.pair (n+4) (eval_prim O c_replace_oracle_aux (Nat.pair o (n+4))))) = mr := by
     simp [mr_1]
@@ -625,7 +625,7 @@ theorem c_replace_oracle_evp_aux_nMod4 :
     lift_lets
     unfold m
     simp only [div2_val]
-    rw [c_cov_rec_evp_2 c_replace_oracle_evp_aux_nMod4_bounds2]
+    rw [c_cov_rec_evp_2_I c_replace_oracle_evp_aux_nMod4_bounds2]
     simp
   have hmp : eval_prim O mp_1 (Nat.pair o (Nat.pair (n+4) (eval_prim O c_replace_oracle_aux (Nat.pair o (n+4))))) = mp := by
     simp [mp_1]
@@ -638,7 +638,7 @@ theorem c_replace_oracle_evp_aux_nMod4 :
     lift_lets
     unfold m
     simp only [div2_val]
-    rw [c_cov_rec_evp_2 c_replace_oracle_evp_aux_nMod4_bounds3]
+    rw [c_cov_rec_evp_2_I c_replace_oracle_evp_aux_nMod4_bounds3]
     simp
   have hpair_code : eval_prim O pair_code (Nat.pair o (Nat.pair (n+4) (eval_prim O c_replace_oracle_aux (Nat.pair o (n+4))))) = 2 * (2 * Nat.pair ml mr) + 5 := by
     simp [pair_code]
