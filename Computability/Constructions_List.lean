@@ -395,6 +395,41 @@ def c_list_concat := c_list_append.comp₂ left (c_list_cons.comp₂ right c_lis
 end Nat.RecursiveIn.Code
 end list_concat
 
+-- https://hackage.haskell.org/package/ghc-internal-9.1201.0/docs/src/GHC.Internal.Base.html#map
+section list_map
+namespace Nat.RecursiveIn.Code
+def c_list_map (cf:Code) := (c_list_foldr (c_list_cons.comp₂ (cf.comp left) right)).comp₂ (c_list_nil) (c_id)
+@[simp] theorem c_list_map_ev_pr (hcf:code_prim cf): code_prim (c_list_map cf) := by unfold c_list_map; repeat (first|assumption|simp|constructor)
+@[simp] theorem c_list_map_evp : eval_prim O (c_list_map cf) lN = l2n ((n2l lN).map (eval_prim O cf)) := by
+  simp [c_list_map, -encode_list_cons, -encode_list_nil]
+  induction (n2l lN) with
+  | nil => simp
+  | cons head tail ih => simp [ih, -encode_list_cons, -encode_list_nil]
+-- @[simp] theorem c_list_map_ev : eval O (c_list_map cf) lN = l2n ((n2l lN).map (eval_prim O cf)) := by simp [← eval_prim_eq_eval c_list_map_ev_pr]
+end Nat.RecursiveIn.Code
+end list_map
+
+section list_range
+namespace Nat.RecursiveIn.Code
+def c_list_range :=
+  let prev_list := right.comp right
+  let i := (left.comp right)
+  (prec
+  (c_list_nil)
+  (c_list_concat.comp₂ prev_list i)).comp₂ zero c_id
+@[simp] theorem c_list_range_ev_pr : code_prim c_list_range := by unfold c_list_range; repeat (first|assumption|simp|constructor)
+@[simp] theorem c_list_range_evp : eval_prim O c_list_range n = l2n (List.range n) := by
+  simp [c_list_range, -encode_list_cons, -encode_list_nil]
+  induction n with
+  | zero => simp
+  | succ n ih =>
+    simp [-encode_list_cons, -encode_list_nil, ih]
+    exact Eq.symm List.range_succ
+@[simp] theorem c_list_range_ev : eval O c_list_range n = l2n (List.range n) := by simp [← eval_prim_eq_eval c_list_range_ev_pr]
+end Nat.RecursiveIn.Code
+end list_range
+
+
 
 #check @List.length
 -- #check @Encodable.encode (List ℕ)
