@@ -454,23 +454,18 @@ def c_evaln_aux :=
   let mr        := right.comp m
 
   -- let opt_zero   := c_if_gt_te.comp₄ x sM1 (c_const 0) $ succ.comp (zero.comp     x)
-  let ele := left
   -- let opt_zero   := c_if_gt_te.comp₄ ele (sM1.comp right) (c_const 0) $ succ.comp (zero.comp     ele)
   -- let opt_succ   := c_if_gt_te.comp₄ ele (sM1.comp right) (c_const 0) $ succ.comp (succ.comp     ele)
   -- let opt_left   := c_if_gt_te.comp₄ ele (sM1.comp right) (c_const 0) $ succ.comp (left.comp     ele)
   -- let opt_right  := c_if_gt_te.comp₄ ele (sM1.comp right) (c_const 0) $ succ.comp (right.comp    ele)
   -- let opt_oracle := c_if_gt_te.comp₄ ele (sM1.comp right) (c_const 0) $ succ.comp (oracle.comp   ele)
-  let opt_zero   := c_if_gt_te.comp₄ ele (sM1.comp right) (c_const 0) $ succ.comp (zero.comp     ele)
-  let opt_succ   := c_if_gt_te.comp₄ ele (sM1.comp right) (c_const 0) $ succ.comp (succ.comp     ele)
-  let opt_left   := c_if_gt_te.comp₄ ele (sM1.comp right) (c_const 0) $ succ.comp (left.comp     ele)
-  let opt_right  := c_if_gt_te.comp₄ ele (sM1.comp right) (c_const 0) $ succ.comp (right.comp    ele)
-  let opt_oracle := c_if_gt_te.comp₄ ele (sM1.comp right) (c_const 0) $ succ.comp (oracle.comp   ele)
 
-  let opt_zero_mapped := ((c_list_map' zero).comp₂ (c_list_range.comp s) c_id)
-  let opt_succ_mapped := (c_list_map' opt_succ).comp (c_list_range.comp s)
-  let opt_left_mapped := (c_list_map' opt_left).comp (c_list_range.comp s)
-  let opt_right_mapped := (c_list_map' opt_right).comp (c_list_range.comp s)
-  let opt_oracle_mapped := (c_list_map' opt_oracle).comp (c_list_range.comp s)
+  let ele := left
+  let zero_mapped := ((c_list_map' (zero.comp ele)).comp₂ (c_list_range.comp s) c_id)
+  let succ_mapped := ((c_list_map' (succ.comp ele)).comp₂ (c_list_range.comp s) c_id)
+  let left_mapped := ((c_list_map' (left.comp ele)).comp₂ (c_list_range.comp s) c_id)
+  let right_mapped := ((c_list_map' (right.comp ele)).comp₂ (c_list_range.comp s) c_id)
+  let oracle_mapped := ((c_list_map' (oracle.comp ele)).comp₂ (c_list_range.comp s) c_id)
 /-
 
   -- pair
@@ -510,11 +505,11 @@ def c_evaln_aux :=
   -- c_if_gt_te.comp₄ x     sM1           (c_const 0)              $ -- if ¬x≤s, then diverge
   c_if_eq_te.comp₄ s     (c_const 0) (c_list_singleton zero)                $ -- if s=0, then diverge
   -- c_if_eq_te.comp₄ code  (c_const 0) (c_zero_g.comp₂   sM1 x) $
-  c_if_eq_te.comp₄ code  (c_const 0) opt_zero_mapped   $
-  c_if_eq_te.comp₄ code  (c_const 1) opt_succ_mapped   $
-  c_if_eq_te.comp₄ code  (c_const 2) opt_left_mapped   $
-  c_if_eq_te.comp₄ code  (c_const 3) opt_right_mapped  $
-  c_if_eq_te.comp₄ code  (c_const 4) opt_oracle_mapped $
+  c_if_eq_te.comp₄ code  (c_const 0) zero_mapped   $
+  c_if_eq_te.comp₄ code  (c_const 1) succ_mapped   $
+  c_if_eq_te.comp₄ code  (c_const 2) left_mapped   $
+  c_if_eq_te.comp₄ code  (c_const 3) right_mapped  $
+  c_if_eq_te.comp₄ code  (c_const 4) oracle_mapped $
   -- c_if_eq_te.comp₄ nMod4 (c_const 0) ((c_pair_g pc_ml_x pc_mr_x).comp₂ sM1 x)  $
   c_if_eq_te.comp₄ nMod4 (c_const 0) opt_pair   $
   c_if_eq_te.comp₄ nMod4 (c_const 1) opt_comp   $
@@ -736,19 +731,19 @@ theorem c_evaln_evp_aux (hcode_val:code≤4) :
                             (zero.c_list_singleton.pair
                               (c_if_eq_te.comp
                                 ((code_1.pair (c_const 0)).pair
-                                  (opt_zero_mapped.pair
+                                  (zero_mapped.pair
                                     (c_if_eq_te.comp
                                       ((code_1.pair (c_const 1)).pair
-                                        (opt_succ_mapped.pair
+                                        (succ_mapped.pair
                                           (c_if_eq_te.comp
                                             ((code_1.pair (c_const 2)).pair
-                                              (opt_left_mapped.pair
+                                              (left_mapped.pair
                                                 (c_if_eq_te.comp
                                                   ((code_1.pair (c_const 3)).pair
-                                                    (opt_right_mapped.pair
+                                                    (right_mapped.pair
                                                       (c_if_eq_te.comp
                                                         ((code_1.pair (c_const 4)).pair
-                                                          (opt_oracle_mapped.pair
+                                                          (oracle_mapped.pair
                                                             (c_if_eq_te.comp
                                                               ((nMod4.pair (c_const 0)).pair
                                                                 (opt_pair.pair
@@ -791,13 +786,21 @@ theorem c_evaln_evp_aux (hcode_val:code≤4) :
   --     cases Classical.em (elem≤s) with
   --     | inl h => simp [h, Nat.not_lt_of_le h]
   --     | inr h => simp [h, gt_of_not_le h, Option.bind]
-  have hopt_zero_mapped :
-  eval_prim O opt_zero_mapped covrec_inp
-    =
-  (List.map (eval_prim O zero) (List.range (s+1))) := by
-    unfold opt_zero_mapped
-    -- simp [hopt_zero]
+  have hzero_mapped:eval_prim O zero_mapped covrec_inp = (List.map (eval_prim O zero) (List.range (s+1))) := by
+    unfold zero_mapped
     simp [hs]
+  have hsucc_mapped:eval_prim O succ_mapped covrec_inp = (List.map (eval_prim O succ) (List.range (s+1))) := by
+    unfold succ_mapped
+    simp [hs,ele]
+  have hleft_mapped:eval_prim O left_mapped covrec_inp = (List.map (eval_prim O left) (List.range (s+1))) := by
+    unfold left_mapped
+    simp [hs,ele]
+  have hright_mapped:eval_prim O right_mapped covrec_inp = (List.map (eval_prim O right) (List.range (s+1))) := by
+    unfold right_mapped
+    simp [hs,ele]
+  have horacle_mapped:eval_prim O oracle_mapped covrec_inp = (List.map (eval_prim O oracle) (List.range (s+1))) := by
+    unfold oracle_mapped
+    simp [hs,ele]
 
   simp [hs,hcode]
   -- have hsM1 {anything hist} : eval_prim O sM1 (Nat.pair anything (Nat.pair k hist)) = s := by
@@ -809,12 +812,7 @@ theorem c_evaln_evp_aux (hcode_val:code≤4) :
   -- simp [hcode_s,hx]
   match code with
   | 0 =>
-
-    #check 12
-    -- stop
-    simp
-    simp [hopt_zero_mapped]
-
+    simp [hzero_mapped]
     cases Classical.em (x<s+1) with
     | inl h =>
       simp [h, Nat.not_lt_of_le h]
@@ -822,12 +820,43 @@ theorem c_evaln_evp_aux (hcode_val:code≤4) :
     | inr h =>
       simp [h, Nat.gt_of_not_le h]
       simp [decodeCode, evaln, Nat.not_le_of_lt (not_lt.mp h), Option.bind]
-  | 1 => sorry
-  | 2 => sorry
-  | 3 => sorry
-  | 4 => sorry
+  | 1 =>
+    simp [hsucc_mapped]
+    cases Classical.em (x<s+1) with
+    | inl h =>
+      simp [h, Nat.not_lt_of_le h]
+      simp [decodeCode, evaln, le_of_lt_succ h]
+    | inr h =>
+      simp [h, Nat.gt_of_not_le h]
+      simp [decodeCode, evaln, Nat.not_le_of_lt (not_lt.mp h), Option.bind]
+  | 2 =>
+    simp [hleft_mapped]
+    cases Classical.em (x<s+1) with
+    | inl h =>
+      simp [h, Nat.not_lt_of_le h]
+      simp [decodeCode, evaln, le_of_lt_succ h]
+    | inr h =>
+      simp [h, Nat.gt_of_not_le h]
+      simp [decodeCode, evaln, Nat.not_le_of_lt (not_lt.mp h), Option.bind]
+  | 3 =>
+    simp [hright_mapped]
+    cases Classical.em (x<s+1) with
+    | inl h =>
+      simp [h, Nat.not_lt_of_le h]
+      simp [decodeCode, evaln, le_of_lt_succ h]
+    | inr h =>
+      simp [h, Nat.gt_of_not_le h]
+      simp [decodeCode, evaln, Nat.not_le_of_lt (not_lt.mp h), Option.bind]
+  | 4 =>
+    simp [horacle_mapped]
+    cases Classical.em (x<s+1) with
+    | inl h =>
+      simp [h, Nat.not_lt_of_le h]
+      simp [decodeCode, evaln, le_of_lt_succ h]
+    | inr h =>
+      simp [h, Nat.gt_of_not_le h]
+      simp [decodeCode, evaln, Nat.not_le_of_lt (not_lt.mp h), Option.bind]
   | n+5 => simp at hcode_val
-
 -- set_option maxHeartbeats 15000
 theorem c_evaln_evp_aux_nMod4_0 :
   -- eval_prim O (c_evaln) (Nat.pair o ((n+4)+1))
