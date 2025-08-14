@@ -466,16 +466,25 @@ def c_evaln_aux :=
   let left_mapped := ((c_list_map' (left.comp ele)).comp₂ (c_list_range.comp s) c_id)
   let right_mapped := ((c_list_map' (right.comp ele)).comp₂ (c_list_range.comp s) c_id)
   let oracle_mapped := ((c_list_map' (oracle.comp ele)).comp₂ (c_list_range.comp s) c_id)
-/-
+
+  -- `=[c]ₛ(x)`
+  let lookup (x' c' s') := c_list_getElem?.comp₂ (c_list_getI.comp₂ comp_hist (pair c' s')) x'
 
   -- pair
-  let pc_ml_x := c_l_get.comp₂ comp_hist (x.pair (ml.pair s)) -- `[ml]ₛ(x)`
-  let pc_mr_x := c_l_get.comp₂ comp_hist (x.pair (mr.pair s)) -- `[mr]ₛ(x)`
+  let pc_ml_x := lookup ele ml s -- `[ml]ₛ(x)`
+  let pc_mr_x := lookup ele mr s -- `[mr]ₛ(x)`
 
-  let opt_pair := c_if_gt_te.comp₄ x sM1 (c_const 0) $
-    c_ifz.comp₃ pc_ml_x (c_const 0) $
-    c_ifz.comp₃ pc_mr_x (c_const 0) $
+  -- i think i do need the guard, as this one can fail after the initial check.
+  -- so that means i cant rely on getelem? being correct...
+  -- i.e. i have to change it in c_evaln too. :P
+
+  -- c_if_gt_te.comp₄ x sM1 (c_const 0) $
+  let opt_pair :=
+    c_ifz.comp₃ (lookup ele ml s) (c_const 0) $
+    c_ifz.comp₃ (lookup ele mr s) (c_const 0) $
     succ.comp (pair (c_pred.comp pc_ml_x) (c_pred.comp pc_mr_x))
+  let pair_mapped := ((c_list_map' (oracle.comp ele)).comp₂ (c_list_range.comp s) c_id)
+/-
 
   -- comp: `[ml]ₛ ( [mr]ₛ(x) ) `
   let pc_mr_xM1 := c_pred.comp pc_mr_x
@@ -684,16 +693,6 @@ theorem c_evaln_evp_aux (hcode_val:code≤4) :
   -- List.map (o2n ∘ evaln O (s+1) (code:ℕ)) (List.range (s+1))
   o2n (evaln O (s+1) (code:ℕ) x)
   := by
-  -- simp [decodeCode, evaln] -- simp rhs
-
-  -- let k:=(Nat.pair x (Nat.pair code (s+1)))-1
-  -- have kP1_gt_0 : Nat.pair x (Nat.pair code (s+1))>0 := by
-  --   apply pair_r_gt0
-  --   apply pair_r_gt0
-  --   exact zero_lt_succ s
-  -- have h0: k+1=(Nat.pair x (Nat.pair code (s+1))) := by exact Nat.sub_add_cancel kP1_gt_0
-  -- rw [←h0]
-
 
   unfold c_evaln; unfold c_evaln_aux
   lift_lets
@@ -701,61 +700,50 @@ theorem c_evaln_evp_aux (hcode_val:code≤4) :
   expose_names
   simp
 
-
-  -- have hcode_s : eval_prim O code_s (k+1) = Nat.pair code (s+1) := by
-  --   simp [code_s]
-  --   simp [h0]
-  have hcode_s_1 : eval_prim O code_s (Nat.pair x (Nat.pair code (s + 1))) = Nat.pair code (s+1) := by
-    simp [code_s]
-  have hx_1 : eval_prim O x_1 (Nat.pair x (Nat.pair code (s + 1))) = x := by
-    simp [x_1]
-  -- simp [hcode_s_1,hx_1]
-  -- simp
-
-  let k2:=((Nat.pair code (s + 1)))-1
-  have k2P1_gt_0 : (Nat.pair code (s + 1))>0 := by
+  let k:=((Nat.pair code (s + 1)))-1
+  have kP1_gt_0 : (Nat.pair code (s + 1))>0 := by
     apply pair_r_gt0
     -- apply pair_r_gt0
     exact zero_lt_succ s
-  have hk20: k2+1=((Nat.pair code (s + 1))) := by exact Nat.sub_add_cancel k2P1_gt_0
-  rw [←hk20]
+  have hkP1: k+1=((Nat.pair code (s + 1))) := by exact Nat.sub_add_cancel kP1_gt_0
+  rw [←hkP1]
 
-  let covrec_inp := Nat.pair 17 (Nat.pair k2 (eval_prim O c_evaln_aux (Nat.pair 17 k2)))
-  have covrec_inp_simp : Nat.pair 17 (Nat.pair k2 (eval_prim O c_evaln_aux (Nat.pair 17 k2))) = covrec_inp := rfl
+  let covrec_inp := Nat.pair 17 (Nat.pair k (eval_prim O c_evaln_aux (Nat.pair 17 k)))
+  have covrec_inp_simp : Nat.pair 17 (Nat.pair k (eval_prim O c_evaln_aux (Nat.pair 17 k))) = covrec_inp := rfl
 
   have stupidrewrite :
   (eval_prim O
-                      (zero.c_list_singleton.c_cov_rec
-                        (c_if_eq_te.comp
-                          ((s_1.pair (c_const 0)).pair
-                            (zero.c_list_singleton.pair
-                              (c_if_eq_te.comp
-                                ((code_1.pair (c_const 0)).pair
-                                  (zero_mapped.pair
-                                    (c_if_eq_te.comp
-                                      ((code_1.pair (c_const 1)).pair
-                                        (succ_mapped.pair
-                                          (c_if_eq_te.comp
-                                            ((code_1.pair (c_const 2)).pair
-                                              (left_mapped.pair
-                                                (c_if_eq_te.comp
-                                                  ((code_1.pair (c_const 3)).pair
-                                                    (right_mapped.pair
-                                                      (c_if_eq_te.comp
-                                                        ((code_1.pair (c_const 4)).pair
-                                                          (oracle_mapped.pair
-                                                            (c_if_eq_te.comp
-                                                              ((nMod4.pair (c_const 0)).pair
-                                                                (opt_pair.pair
-                                                                  (c_if_eq_te.comp
-                                                                    ((nMod4.pair (c_const 1)).pair
-                                                                      (opt_pair.pair
-                                                                        (c_if_eq_te.comp
-                                                                          ((nMod4.pair (c_const 2)).pair
-                                                                            ((c_const 0).pair
-                                                                              (c_const 1)))))))))))))))))))))))))))))
-                      (Nat.pair 17 k2))
-                      = (eval_prim O c_evaln_aux (Nat.pair 17 k2)) := by exact rfl
+                    (zero.c_list_singleton.c_cov_rec
+                      (c_if_eq_te.comp
+                        ((s_1.pair (c_const 0)).pair
+                          (zero.c_list_singleton.pair
+                            (c_if_eq_te.comp
+                              ((code_1.pair (c_const 0)).pair
+                                (zero_mapped.pair
+                                  (c_if_eq_te.comp
+                                    ((code_1.pair (c_const 1)).pair
+                                      (succ_mapped.pair
+                                        (c_if_eq_te.comp
+                                          ((code_1.pair (c_const 2)).pair
+                                            (left_mapped.pair
+                                              (c_if_eq_te.comp
+                                                ((code_1.pair (c_const 3)).pair
+                                                  (right_mapped.pair
+                                                    (c_if_eq_te.comp
+                                                      ((code_1.pair (c_const 4)).pair
+                                                        (oracle_mapped.pair
+                                                          (c_if_eq_te.comp
+                                                            ((nMod4.pair (c_const 0)).pair
+                                                              (opt_pair_1.pair
+                                                                (c_if_eq_te.comp
+                                                                  ((nMod4.pair (c_const 1)).pair
+                                                                    (opt_pair_1.pair
+                                                                      (c_if_eq_te.comp
+                                                                        ((nMod4.pair (c_const 2)).pair
+                                                                          ((c_const 0).pair
+                                                                            (c_const 1)))))))))))))))))))))))))))))
+                    (Nat.pair 17 k))
+                      = (eval_prim O c_evaln_aux (Nat.pair 17 k)) := by exact rfl
   simp [stupidrewrite,covrec_inp_simp]
 
 
@@ -765,7 +753,7 @@ theorem c_evaln_evp_aux (hcode_val:code≤4) :
   have hcode_s : eval_prim O code_s covrec_inp = (Nat.pair code (s + 1)) := by
     simp [code_s]
     simp [covrec_inp]
-    simp [hk20]
+    simp [hkP1]
   have hs : eval_prim O s_1 covrec_inp = s+1 := by
     simp [s_1]
     simp [hcode_s]
@@ -859,7 +847,6 @@ theorem c_evaln_evp_aux (hcode_val:code≤4) :
   | n+5 => simp at hcode_val
 -- set_option maxHeartbeats 15000
 theorem c_evaln_evp_aux_nMod4_0 :
-  -- eval_prim O (c_evaln) (Nat.pair o ((n+4)+1))
   eval_prim O (c_evaln) (Nat.pair x (Nat.pair ((n+4)+1) (s+1)))
     =
   let m := n.div2.div2
@@ -893,30 +880,63 @@ theorem c_evaln_evp_aux_nMod4_0 :
 
     := by
 
-  -- simp [decodeCode, evaln] -- simp rhs
+  lift_lets
+  extract_lets
+  expose_names
 
-  let k:=(Nat.pair x (Nat.pair ((n+4)+1) (s+1)))-1
-  have kP1_gt_0 : Nat.pair x (Nat.pair ((n+4)+1) (s+1))>0 := by
-    apply pair_r_gt0
+  unfold c_evaln; unfold c_evaln_aux
+  lift_lets
+  extract_lets
+  expose_names
+  simp
+
+  let k:=(Nat.pair ((n+4)+1) (s+1))-1
+  have kP1_gt_0 : Nat.pair ((n+4)+1) (s+1)>0 := by
     apply pair_r_gt0
     exact zero_lt_succ s
-  have hkP1: k+1=(Nat.pair x (Nat.pair ((n+4)+1) (s+1))) := by
+  have hkP1: k+1=(Nat.pair ((n+4)+1) (s+1)) := by
     exact Nat.sub_add_cancel kP1_gt_0
   rw [←hkP1]
 
-  let covrec_inp := Nat.pair 0 (Nat.pair k (eval_prim O c_evaln_aux (Nat.pair 0 k)))
-  have covrec_inp_simp : Nat.pair 0 (Nat.pair k (eval_prim O c_evaln_aux (Nat.pair 0 k))) = covrec_inp := rfl
+  let covrec_inp := Nat.pair 17 (Nat.pair k (eval_prim O c_evaln_aux (Nat.pair 17 k)))
+  have covrec_inp_simp : Nat.pair 17 (Nat.pair k (eval_prim O c_evaln_aux (Nat.pair 17 k))) = covrec_inp := rfl
 
-  lift_lets
-  extract_lets
-  expose_names
 
-  unfold c_evaln;
-  unfold c_evaln_aux
+  have stupidrewrite :
+  (eval_prim O
+                      (zero.c_list_singleton.c_cov_rec
+                        (c_if_eq_te.comp
+                          ((s_1.pair (c_const 0)).pair
+                            (zero.c_list_singleton.pair
+                              (c_if_eq_te.comp
+                                ((code.pair (c_const 0)).pair
+                                  (zero_mapped.pair
+                                    (c_if_eq_te.comp
+                                      ((code.pair (c_const 1)).pair
+                                        (succ_mapped.pair
+                                          (c_if_eq_te.comp
+                                            ((code.pair (c_const 2)).pair
+                                              (left_mapped.pair
+                                                (c_if_eq_te.comp
+                                                  ((code.pair (c_const 3)).pair
+                                                    (right_mapped.pair
+                                                      (c_if_eq_te.comp
+                                                        ((code.pair (c_const 4)).pair
+                                                          (oracle_mapped.pair
+                                                            (c_if_eq_te.comp
+                                                              ((nMod4.pair (c_const 0)).pair
+                                                                (opt_pair_2.pair
+                                                                  (c_if_eq_te.comp
+                                                                    ((nMod4.pair (c_const 1)).pair
+                                                                      (opt_pair_2.pair
+                                                                        (c_if_eq_te.comp
+                                                                          ((nMod4.pair (c_const 2)).pair
+                                                                            ((c_const 0).pair
+                                                                              (c_const 1)))))))))))))))))))))))))))))
+                      (Nat.pair 17 k))
+                      = (eval_prim O c_evaln_aux (Nat.pair 17 k)) := by exact rfl
+  simp [stupidrewrite,covrec_inp_simp]
 
-  lift_lets
-  extract_lets
-  expose_names
 
 
 
@@ -924,38 +944,43 @@ theorem c_evaln_evp_aux_nMod4_0 :
   -- simp
   -- rw [h0]
   -- simp
-
-  have hx : eval_prim O x_1 (covrec_inp) = x := by
+  have hcode_s : eval_prim O code_s covrec_inp = (Nat.pair ((n+4)+1) (s+1)) := by
+    simp [code_s]
     simp [covrec_inp]
-    simp [x_1]
-    simp [x_code_s]
     simp [hkP1]
-  have hs : eval_prim O s_1 (covrec_inp) = s+1 := by
-    simp [covrec_inp]
+  have hs : eval_prim O s_1 covrec_inp = s+1 := by
     simp [s_1]
-    simp [x_code_s]
-    simp [hkP1]
-  have hsM1 : eval_prim O sM1 (covrec_inp) = s := by
+    simp [hcode_s]
+  have hsM1 : eval_prim O sM1 covrec_inp = s := by
     simp [sM1]
     simp [hs]
-  have hcode : eval_prim O code (covrec_inp) = (n+4)+1 := by
-    simp [covrec_inp]
+  have hcode : eval_prim O code covrec_inp = (n+4)+1 := by
     simp [code]
-    simp [x_code_s]
-    simp [hkP1]
-  have hn : eval_prim O n_1 (covrec_inp) = n := by
+    simp [hcode_s]
+  have hn : eval_prim O n_1 covrec_inp = n := by
     simp [n_1]
     simp [hcode]
-  have hm : eval_prim O m_1 (covrec_inp) = m := by
+  have hm : eval_prim O m_1 covrec_inp = m := by
     simp [m_1]
     simp [hn]
     simp [m]
     simp [div2_val]
-  have hml:eval_prim O ml_1 (covrec_inp)=ml:=by simp [ml_1,hm,ml]
-  have hmr:eval_prim O mr_1 (covrec_inp)=mr:=by simp [mr_1,hm,mr]
-  have hnMod4 : eval_prim O nMod4 (covrec_inp) = n%4 := by
+  have hml:eval_prim O ml_1 covrec_inp=ml:=by simp [ml_1,hm,ml]
+  have hmr:eval_prim O mr_1 covrec_inp=mr:=by simp [mr_1,hm,mr]
+  have hnMod4 : eval_prim O nMod4 covrec_inp = n%4 := by
     simp [nMod4]
     simp [hn]
+  have hlookup {x' c' s'} :
+  eval_prim O (lookup x' c' s') covrec_inp
+    =
+  let x'':=eval_prim O x' covrec_inp
+  let c'':=eval_prim O c' covrec_inp
+  let s'':=eval_prim O s' covrec_inp
+  eval_prim O c_evaln (Nat.pair x'' (Nat.pair c'' s''))
+    := by
+    simp [lookup]
+    simp [comp_hist]
+    simp [covrec_inp]
 
 
   have bounds_left_aux_1 : ml<n+4+1 := by
@@ -990,7 +1015,7 @@ theorem c_evaln_evp_aux_nMod4_0 :
   have bounds_right : Nat.pair x (Nat.pair mr (s+1)) ≤ k := by
     apply le_of_lt_succ bounds_right_aux_2
 
-  have hpc_ml_x : eval_prim O pc_ml_x_1 (covrec_inp) = pc_ml_x := by
+  have hpc_ml_x : eval_prim O pc_ml_x_1 covrec_inp = pc_ml_x := by
     simp [pc_ml_x_1]
     simp [comp_hist]
     unfold pc_ml_x
@@ -1002,7 +1027,7 @@ theorem c_evaln_evp_aux_nMod4_0 :
     lift_lets
     rw [c_cov_rec_evp_2 bounds_left]
     simp
-  have hpc_mr_x : eval_prim O pc_mr_x_1 (covrec_inp) = pc_mr_x := by
+  have hpc_mr_x : eval_prim O pc_mr_x_1 covrec_inp = pc_mr_x := by
     simp [pc_mr_x_1]
     simp [comp_hist]
     unfold pc_mr_x
@@ -1014,7 +1039,7 @@ theorem c_evaln_evp_aux_nMod4_0 :
     lift_lets
     rw [c_cov_rec_evp_2 bounds_right]
     simp
-  have hpc_mr_xM1 : eval_prim O pc_mr_xM1 (covrec_inp) = pc_mr_x-1 := by
+  have hpc_mr_xM1 : eval_prim O pc_mr_xM1 covrec_inp = pc_mr_x-1 := by
     simp [pc_mr_xM1]
     simp [hpc_mr_x]
 
@@ -1023,7 +1048,7 @@ theorem c_evaln_evp_aux_nMod4_0 :
   have hnat_to_opt_1 {x} (h3:¬x=0) : (Denumerable.ofNat (Option ℕ) x) = Option.some (x-1) := by
     rw (config := {occs := .pos [1]}) [hnat_to_opt_1_aux h3]
     exact rfl
-  have hopt_pair : eval_prim O opt_pair_1 (covrec_inp) = opt_pair := by
+  have hopt_pair : eval_prim O opt_pair_1 covrec_inp = opt_pair := by
     simp [opt_pair_1]
     simp [hsM1,hx]
     simp [hpc_ml_x]
@@ -1049,7 +1074,7 @@ theorem c_evaln_evp_aux_nMod4_0 :
 
 
   -- comp
-  have hpc_mlmr_x_lookup : eval_prim O pc_mlmr_x_lookup (covrec_inp) =
+  have hpc_mlmr_x_lookup : eval_prim O pc_mlmr_x_lookup covrec_inp =
     (if Nat.pair (pc_mr_x - 1) (Nat.pair mr (s + 1)) < covrec_inp.r.r.list_size then
     covrec_inp.r.r.list_get (Nat.pair (pc_mr_x - 1) (Nat.pair mr (s + 1))) + 1
   else 0)
@@ -1066,7 +1091,7 @@ theorem c_evaln_evp_aux_nMod4_0 :
     -- lift_lets
     -- rw [c_cov_rec_evp_2 bounds_right]
     -- simp
-  have hopt_comp : eval_prim O opt_comp_1 (covrec_inp) = opt_comp := by
+  have hopt_comp : eval_prim O opt_comp_1 covrec_inp = opt_comp := by
     simp [opt_comp_1]
 
     simp [hsM1,hx]
@@ -1099,65 +1124,14 @@ theorem c_evaln_evp_aux_nMod4_0 :
       simp [h,Option.bind]
 
 
-  have stupidrewrite :
-  (eval_prim O
-            ((c_const 0).c_cov_rec
-              (c_if_eq_te.comp
-                ((s_1.pair (c_const 0)).pair
-                  ((c_const 0).pair
-                    (c_if_eq_te.comp
-                      ((code.pair (c_const 0)).pair
-                        (opt_zero.pair
-                          (c_if_eq_te.comp
-                            ((code.pair (c_const 1)).pair
-                              (opt_succ.pair
-                                (c_if_eq_te.comp
-                                  ((code.pair (c_const 2)).pair
-                                    (opt_left.pair
-                                      (c_if_eq_te.comp
-                                        ((code.pair (c_const 3)).pair
-                                          (opt_right.pair
-                                            (c_if_eq_te.comp
-                                              ((code.pair (c_const 4)).pair
-                                                (opt_oracle.pair
-                                                  (c_if_eq_te.comp
-                                                    ((nMod4.pair (c_const 0)).pair
-                                                      (opt_pair_1.pair
-                                                        (c_if_eq_te.comp
-                                                          ((nMod4.pair (c_const 1)).pair
-                                                            (pc_mlmr_x.pair
-                                                              (c_if_eq_te.comp
-                                                                ((nMod4.pair (c_const 2)).pair
-                                                                  ((c_const 0).pair
-                                                                    (c_const 1)))))))))))))))))))))))))))))
-            (Nat.pair 0
-              k))
-  -- (eval_prim O
-  --             ((c_const 0).c_cov_rec
-  --               (c_if_eq_te.comp₄ s_1 (c_const 0) (c_const 0)
-  --                 (c_if_eq_te.comp₄ code (c_const 0) opt_zero
-  --                   (c_if_eq_te.comp₄ code (c_const 1) opt_succ
-  --                     (c_if_eq_te.comp₄ code (c_const 2) opt_left
-  --                       (c_if_eq_te.comp₄ code (c_const 3) opt_right
-  --                         (c_if_eq_te.comp₄ code (c_const 4) opt_oracle
-  --                           (c_if_eq_te.comp₄ nMod4 (c_const 0) opt_pair_1
-  --                             (c_if_eq_te.comp₄ nMod4 (c_const 1) pc_mlmr_x
-  --                               (c_if_eq_te.comp₄ nMod4 (c_const 2) (c_const 0) (c_const 1)))))))))))
-  --             (Nat.pair 0 k))
-                =eval_prim O c_evaln_aux (Nat.pair 0 k) := rfl
-
-
-  -- set_option trace.Meta.Tactic.simp.rewrite true in
-  -- simp [stupidrewrite]
-  -- simp [stupidrewrite, -Option.bind_eq_bind, -Option.map_eq_map]
-  -- simp only [eval_prim]
-  simp [stupidrewrite, covrec_inp_simp, hs, hcode, hnMod4, -Option.bind_eq_bind, -Option.map_eq_map]
+  -- simp [stupidrewrite, covrec_inp_simp, hs, hcode, hnMod4, -Option.bind_eq_bind, -Option.map_eq_map]
 
   -- stop
   -- simp [hs, hcode, hnMod4, hx, hsM1, stupidrewrite]
 
   match h:n%4 with
-  | 0 => simp [hopt_pair]
+  | 0 =>
+    simp [hopt_pair]
   | 1 => sorry
   | 2 => sorry
   | 3 => sorry
