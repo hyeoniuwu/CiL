@@ -640,6 +640,9 @@ end list_replicate
 
 section list_map'
 namespace Nat.RecursiveIn.Code
+/--
+`eval_prim O (c_list_map' cf) (Nat.pair lN aux) = ((n2l lN).map (fun ele => eval_prim O cf (Nat.pair ele aux)))`
+-/
 def c_list_map' (cf:Code) :=
   let lN  := left
   let aux := right
