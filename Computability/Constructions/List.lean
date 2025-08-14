@@ -447,7 +447,7 @@ zipL xs ys = reverse $ fst $ foldl step ([], ys) xs
     step (acc, y:ys') x = ((x,y) : acc, ys')
     step (acc, [])    _ = (acc, [])
 -/
-def c_list_zipWith (cf:Code):=
+def c_list_zipWith_aux (cf:Code):=
   let yys' := right.comp left
   let ys'  := c_list_tail.comp  yys'
   let y    := c_list_headI.comp yys'
@@ -461,11 +461,11 @@ def c_list_zipWith (cf:Code):=
     (pair (c_list_cons.comp₂ (cf.comp₂ x y) (acc)) ys')
 
   (c_list_foldl step).comp₂ (pair c_list_nil right) left
-#check List.zipWith
--- #eval eval_prim (Nat.fzero) c_list_zipWith (Nat.pair [1] [3])
+def c_list_zipWith (cf:Code) := c_list_reverse.comp $ left.comp (c_list_zipWith_aux cf)
+-- #eval eval_prim (Nat.fzero) c_list_zipWith_aux (Nat.pair [1] [3])
 -- theorem zip_aux : List.foldr () = List.zip ()
-@[simp] theorem c_list_zipWith_ev_pr (hcf:code_prim cf) : code_prim (c_list_zipWith cf) := by unfold c_list_zipWith; repeat (first|assumption|simp|constructor)
--- @[simp] theorem c_list_zipWith_evp : eval_prim O c_list_zipWith (Nat.pair l1N l2N) = l2n (List.zipWith Nat.pair (n2l l1N) (n2l l2N)) := by
+@[simp] theorem c_list_zipWith_ev_pr (hcf:code_prim cf) : code_prim (c_list_zipWith_aux cf) := by unfold c_list_zipWith_aux; repeat (first|assumption|simp|constructor)
+-- @[simp] theorem c_list_zipWith_evp : eval_prim O c_list_zipWith_aux (Nat.pair l1N l2N) = l2n (List.zipWith Nat.pair (n2l l1N) (n2l l2N)) := by
 theorem c_list_zipWith_evp_aux_2 {a b : List ℕ} {f:ℕ→ℕ→ℕ} (h:a.length≤b.length) : List.zipWith f (b++c) a = List.zipWith f b a := by
   have aux3 : b = take a.length (b) ++ drop a.length (b) := by
     exact Eq.symm (take_append_drop a.length (b))
@@ -497,14 +497,14 @@ theorem c_list_zipWith_evp_aux_1 {a b : List ℕ} {f:ℕ→ℕ→ℕ} (h:a.lengt
   exact c_list_zipWith_evp_aux_2 h
 
 
-@[simp] theorem c_list_zipWith_evp :
-  eval_prim O (c_list_zipWith cf) (Nat.pair l1N l2N)
+theorem c_list_zipWith_aux_evp :
+  eval_prim O (c_list_zipWith_aux cf) (Nat.pair l1N l2N)
     =
   Nat.pair ((List.zipWith (fun x y => eval_prim O cf (Nat.pair x y)) l1N l2N).reverse) (drop (n2l l1N).length (n2l l2N)) := by
 
   let f:=fun x y => eval_prim O cf (Nat.pair x y)
 
-  simp [c_list_zipWith, -encode_list_cons, -encode_list_nil]
+  simp [c_list_zipWith_aux, -encode_list_cons, -encode_list_nil]
   have grind_helper_1: ((n2l l1N).reverse).reverse = (n2l l1N) := by exact reverse_reverse (n2l l1N)
   induction h:(n2l l1N).reverse generalizing l1N with
   | nil => simp_all
@@ -589,22 +589,14 @@ theorem c_list_zipWith_evp_aux_1 {a b : List ℕ} {f:ℕ→ℕ→ℕ} (h:a.lengt
         exact  c_list_zipWith_evp_aux_1 aux9
       rw [main]
 
--- @[simp] theorem c_list_zipWith_ev : eval O (c_list_zipWith cf) lN = l2n ((n2l lN).map (eval_prim O cf)) := by simp [← eval_prim_eq_eval c_list_zipWith_ev_pr]
+@[simp] theorem c_list_zipWith_evp :
+  eval_prim O (c_list_zipWith cf) (Nat.pair l1N l2N)
+    =
+  List.zipWith (fun x y => eval_prim O cf (Nat.pair x y)) l1N l2N := by
+    simp [c_list_zipWith, c_list_zipWith_aux_evp]
+-- @[simp] theorem c_list_zipWith_ev : eval O (c_list_zipWith_aux cf) lN = l2n ((n2l lN).map (eval_prim O cf)) := by simp [← eval_prim_eq_eval c_list_zipWith_ev_pr]
 end Nat.RecursiveIn.Code
 end list_zipWith
-
-section list_map'
-namespace Nat.RecursiveIn.Code
-def c_list_map' (cf:Code) := (c_list_foldr (c_list_cons.comp₂ (cf.comp₂ left) right)).comp₂ (c_list_nil) (c_id)
-@[simp] theorem c_list_map'_ev_pr (hcf:code_prim cf): code_prim (c_list_map' cf) := by unfold c_list_map'; repeat (first|assumption|simp|constructor)
-@[simp] theorem c_list_map'_evp : eval_prim O (c_list_map' cf) (Nat.pair ele x) = l2n ((n2l lN).map (fun ele => eval_prim O cf (Nat.pair ele x))) := by
-  simp [c_list_map', -encode_list_cons, -encode_list_nil]
-  induction (n2l lN) with
-  | nil => simp
-  | cons head tail ih => simp [ih, -encode_list_cons, -encode_list_nil]
--- @[simp] theorem c_list_map'_ev : eval O (c_list_map' cf) lN = l2n ((n2l lN).map (eval_prim O cf)) := by simp [← eval_prim_eq_eval c_list_map'_ev_pr]
-end Nat.RecursiveIn.Code
-end list_map'
 
 section list_range
 namespace Nat.RecursiveIn.Code
@@ -626,9 +618,47 @@ def c_list_range :=
 end Nat.RecursiveIn.Code
 end list_range
 
+section list_replicate
+namespace Nat.RecursiveIn.Code
+def c_list_replicate :=
+  let prev_list := right.comp right
+  let x := left
+  (prec
+  (c_list_nil)
+  (c_list_concat.comp₂ prev_list x)).comp c_flip
+@[simp] theorem c_list_replicate_ev_pr : code_prim c_list_replicate := by unfold c_list_replicate; repeat (first|assumption|simp|constructor)
+@[simp] theorem c_list_replicate_evp : eval_prim O c_list_replicate (Nat.pair n x) = l2n (List.replicate n x) := by
+  simp [c_list_replicate, -encode_list_cons, -encode_list_nil]
+  induction n with
+  | zero => simp
+  | succ n ih =>
+    simp [-encode_list_cons, -encode_list_nil, ih]
+    exact Eq.symm replicate_succ'
+@[simp] theorem c_list_replicate_ev : eval O c_list_replicate (Nat.pair n x) = l2n (List.replicate n x) := by simp [← eval_prim_eq_eval c_list_replicate_ev_pr]
+end Nat.RecursiveIn.Code
+end list_replicate
 
+section list_map'
+namespace Nat.RecursiveIn.Code
+def c_list_map' (cf:Code) :=
+  let lN  := left
+  let aux := right
+  (c_list_map cf).comp ((c_list_zipWith c_id).comp₂ lN (c_list_replicate.comp₂ (c_list_length.comp lN) aux))
+@[simp] theorem c_list_map'_ev_pr (hcf:code_prim cf): code_prim (c_list_map' cf) := by unfold c_list_map'; repeat (first|assumption|simp|constructor)
+@[simp] theorem c_list_map'_evp :
+  eval_prim O (c_list_map' cf) (Nat.pair lN aux)
+    =
+  ((n2l lN).map (fun ele => eval_prim O cf (Nat.pair ele aux))) := by
+  simp [c_list_map', -encode_list_cons, -encode_list_nil]
+  induction (n2l lN) with
+  | nil => simp [Nat.pair]
+  | cons head tail ih =>
+    simp [replicate_succ]
+    exact ih
+-- @[simp] theorem c_list_map'_ev : eval O (c_list_map' cf) lN = l2n ((n2l lN).map (eval_prim O cf)) := by simp [← eval_prim_eq_eval c_list_map'_ev_pr]
+end Nat.RecursiveIn.Code
+end list_map'
 
---
 
 
 @[simp] theorem getLastI_append {y:ℕ}: (x++[y]).getLastI = y := by
