@@ -874,7 +874,7 @@ theorem c_evaln_evp_aux_nMod4_0 :
   let pc_ml_x (elem) := eval_prim O (c_evaln) (Nat.pair elem (Nat.pair ml (s+1)))
   let pc_mr_x (elem) := eval_prim O (c_evaln) (Nat.pair elem (Nat.pair mr (s+1)))
 
-  let pc_ml (inp) := if inp≤s+1 then eval_prim O (c_evaln) (Nat.pair inp (Nat.pair ml (s+1))) + 1 else 0
+  -- let pc_ml (inp) := if inp≤s+1 then eval_prim O (c_evaln) (Nat.pair inp (Nat.pair ml (s+1))) + 1 else 0
 
   -- c_if_gt_te.comp₄ x sM1 (c_const 0) $
   --   c_ifz.comp₃ pc_mr_x (c_const 0) $
@@ -882,13 +882,13 @@ theorem c_evaln_evp_aux_nMod4_0 :
   --   (c_pred.comp pc_mlmr_x_lookup)
 
   let opt_pair (elem) := Encodable.encode (do guard (elem≤s); Nat.pair<$>(@Denumerable.ofNat (Option ℕ)) (pc_ml_x elem)<*>(@Denumerable.ofNat (Option ℕ)) (pc_mr_x elem))
-  let opt_comp := Encodable.encode (do guard (x≤s); let intermediate ← ((@Denumerable.ofNat (Option ℕ)) pc_mr_x); (@Denumerable.ofNat (Option ℕ)) ((pc_ml intermediate)-1))
+  let opt_comp (elem) := Encodable.encode (do guard (x≤s); let intermediate ← ((@Denumerable.ofNat (Option ℕ)) (pc_mr_x elem)); (@Denumerable.ofNat (Option ℕ)) (pc_ml_x intermediate))
 
   -- let pc_ml_pc_mr_x := eval_prim O (c_evaln) (Nat.pair (eval_prim O (c_evaln) (Nat.pair x (Nat.pair m.r (s+1)))) (Nat.pair m.l (s+1)))
 
 
        if n%4=0 then opt_pair x
-  else if n%4=1 then opt_comp
+  else if n%4=1 then opt_comp x
   else if n%4=2 then Encodable.encode (do guard (x≤s); Nat.pair<$>(@Denumerable.ofNat (Option ℕ)) (pc_ml_x x)<*>(@Denumerable.ofNat (Option ℕ)) (pc_mr_x x))
   else if n%4=3 then Encodable.encode (do guard (x≤s); Nat.pair<$>(@Denumerable.ofNat (Option ℕ)) (pc_ml_x x)<*>(@Denumerable.ofNat (Option ℕ)) (pc_mr_x x))
   else 0
@@ -988,12 +988,10 @@ theorem c_evaln_evp_aux_nMod4_0 :
   have hnMod4 : eval_prim O nMod4 covrec_inp = n%4 := by
     simp [nMod4]
     simp [hn]
+
   have hlookup {x' c' s'} (elem:ℕ)
-  -- (hx'': eval_prim O x' covrec_inp ≤ eval_prim O s' covrec_inp)
   (hcs'': Nat.pair (eval_prim O c' (Nat.pair elem covrec_inp)) (eval_prim O s' (Nat.pair elem covrec_inp)) ≤ k)
   :
-  
-
   eval_prim O (lookup x' c' s') (Nat.pair elem covrec_inp)
     =
   let x'':=eval_prim O x' (Nat.pair elem covrec_inp)
@@ -1109,31 +1107,6 @@ theorem c_evaln_evp_aux_nMod4_0 :
     simp [pc_mr_xM1]
     simp [hpc_mr_x]
 
-  
-  have hopt_pair : eval_prim O opt_pair_1 covrec_inp = opt_pair := by
-    simp [opt_pair_1]
-    simp [hsM1,hx]
-    simp [hpc_ml_x]
-    simp [hpc_mr_x]
-    simp [opt_pair]
-
-    simp [Seq.seq]
-
-    cases Classical.em (x≤s) with
-    | inl h =>
-      simp [h, Nat.not_lt_of_le h]
-      cases Classical.em (pc_ml_x=0) with
-      | inl hh => simp [hh, hnat_to_opt_0]
-      | inr hh =>
-        rw [hnat_to_opt_1 hh]
-        cases Classical.em (pc_mr_x=0) with
-        | inl hhh => simp [hhh, hnat_to_opt_0]
-        | inr hhh =>
-          rw [hnat_to_opt_1 hhh]
-          simp [hh,hhh]
-    | inr h =>
-      simp [h,Option.bind]
-
 
   -- comp
   have hpc_mlmr_x_lookup : eval_prim O pc_mlmr_x_lookup covrec_inp =
@@ -1219,23 +1192,22 @@ theorem evaln_bound' (h:¬x≤s) : evaln O s c x = Option.none := by sorry
 @[simp] theorem c_evaln_evp: eval_prim O (c_evaln) (Nat.pair x (Nat.pair code s)) =
   Encodable.encode (evaln O s code x) := by
 
-  -- let code_s:=Nat.pair code s
-  -- rw [show Nat.pair code s = code_s by rfl]
-  -- rw [show code = code_s.l by simp [code_s]]
-  -- rw [show s = code_s.r by simp [code_s]]
-  let x_code_s:=Nat.pair x (Nat.pair code s)
-  rw [show Nat.pair x (Nat.pair code s) = x_code_s by rfl]
-  rw [show code = x_code_s.r.l by simp [x_code_s]]
-  rw [show s = x_code_s.r.r by simp [x_code_s]]
-  rw [show x = x_code_s.l by simp [x_code_s]]
+  let code_s:=Nat.pair code s
+  rw [show Nat.pair code s = code_s by rfl]
+  rw [show code = code_s.l by simp [code_s]]
+  rw [show s = code_s.r by simp [code_s]]
+  -- let x_code_s:=Nat.pair x (Nat.pair code s)
+  -- rw [show Nat.pair x (Nat.pair code s) = x_code_s by rfl]
+  -- rw [show code = x_code_s.r.l by simp [x_code_s]]
+  -- rw [show s = x_code_s.r.r by simp [x_code_s]]
+  -- rw [show x = x_code_s.l by simp [x_code_s]]
 
-  induction x_code_s using Nat.strong_induction_on with
-  | _ x_code_s ih =>
+  induction code_s using Nat.strong_induction_on generalizing x with
+  | _ code_s ih =>
 
-    let code:=x_code_s.r.l
-    let s:=x_code_s.r.r
-    let x:=x_code_s.l
-    rw [show x_code_s = Nat.pair x (Nat.pair code s) from by simp [code,s,x]]
+    let code:=code_s.l
+    let s:=code_s.r
+    rw [show code_s = (Nat.pair code s) from by simp [code,s]]
     simp only [pair_r, pair_l]
 
 
@@ -1358,17 +1330,8 @@ theorem evaln_bound' (h:¬x≤s) : evaln O s c x = Option.none := by sorry
               rcases optval with ⟨inter, hinter⟩
               -- rw
               simp [hinter]
-              cases Classical.em (inter≤sM1+1) with
-              | inl hhh =>
-                simp [hhh]
-                have bounds : (Nat.pair inter (Nat.pair n.div2.div2.l (sM1 + 1))) < code_s := by sorry
-                rw [ih pc_mr_x bounds]
-              | inr hhh =>
-                simp [hhh]
-                rw [evaln_bound']
-                exact rfl
-                exact hhh
-
+              rw [ih pc_ml_x pc_ml_x_lt_cs];
+              simp [pc_ml_x, m]
 
               stop
               cases Classical.em (pc_mr_x=0) with
