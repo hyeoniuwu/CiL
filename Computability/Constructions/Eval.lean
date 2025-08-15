@@ -493,7 +493,7 @@ def c_evaln_aux :=
   let opt_comp := c_if_gt_te.comp₄ ele (sM1.comp right) (c_const 0) $
     c_ifz.comp₃ pc_mr_x (c_const 0) $
     c_ifz.comp₃ pc_mlmr_x_lookup (c_const 0) $
-    (c_pred.comp pc_mlmr_x_lookup)
+    (pc_mlmr_x_lookup)
 
   -- prec: if `x.r=n+1`, then `[mr](x.l, (x.r-1, [code](x.l, x.r-1)))` else `[ml](x.l,0)`
 
@@ -1113,49 +1113,36 @@ theorem c_evaln_evp_aux_nMod4_0 :
     simp [hpc_mr_x]
   have hpc_mlmr_x_lookup (elem:ℕ) : eval_prim O pc_mlmr_x_lookup (Nat.pair elem covrec_inp) = (pc_ml_x (Option.iget (n2o (pc_mr_x elem)))) := by
     simp [pc_mlmr_x_lookup]
-    #check hlookup elem bounds_left
     simp [hlookup elem bounds_left]
     simp [hpc_mr_xM1,hml,hs]
     simp [pc_ml_x]
   have hopt_comp :
     (fun ele => eval_prim O opt_comp_1 (Nat.pair ele covrec_inp))
       =
-    -- (o2n ∘ evaln O (s+1) (comp ml mr))
-    (opt_comp)
+    opt_comp
     := by
       funext elem
       simp [opt_comp_1]
-      simp [hsM1,ele]
-      simp [hpc_ml_x, hpc_mr_x]
+      simp [hsM1,hpc_mr_x,ele]
       simp [opt_comp]
-      -- simp [evaln]
       cases Classical.em (elem≤s) with
       | inl h =>
         simp [h, Nat.not_lt_of_le h]
-        -- unfold pc_ml_x
-        cases Classical.em (n2o (pc_mr_x elem)=Option.none) with
-        | inl hh =>
-          simp [hh, hnat_to_opt_0]
+        cases Classical.em (pc_mr_x elem=o2n Option.none) with
+        | inl hh => simp [hh, hnat_to_opt_0]
         | inr hh =>
-          simp [hh]
+          simp [hpc_mlmr_x_lookup]
+          simp [not_none_imp_not_zero hh]
           rw [hnat_to_opt_1 hh]
           simp [Option.bind]
-          simp [hpc_mlmr_x_lookup]
-          cases Classical.em (pc_mr_x elem=0) with
-          | inl hhh =>
-            simp [hhh, hnat_to_opt_0]
-            simp [Seq.seq]
-          | inr hhh =>
-            rw [hnat_to_opt_1 hhh]
-            simp [hh,hhh]
+          cases Classical.em (pc_ml_x (pc_mr_x elem - 1)=o2n Option.none) with
+          | inl hhh => simp [hhh]
+          | inr hhh => simp [not_none_imp_not_zero hhh]
       | inr h =>
          simp [h, gt_of_not_le h, Option.bind]
 
   
  
-  have hpc_mr_xM1 : eval_prim O pc_mr_xM1 covrec_inp = pc_mr_x-1 := by
-    simp [pc_mr_xM1]
-    simp [hpc_mr_x]
 
 
   -- comp
