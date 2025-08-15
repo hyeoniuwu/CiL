@@ -372,9 +372,24 @@ def c_opt_iget := c_pred
     simp [←hk]
     have rwma : n2o (k + 1) = Option.some k := by exact rfl
     rw [rwma]
+@[simp] theorem iget_evp_2 (h:o≠0):  Option.iget (n2o o) = o-1:= by
+  have asd : o = (o-1)+1 := by exact Eq.symm (succ_pred_eq_of_ne_zero h)
+  rw [asd]
+  exact rfl
+
 @[simp] theorem c_opt_iget_ev:eval O c_opt_iget o = Option.iget (n2o o) := by simp [← eval_prim_eq_eval c_opt_iget_ev_pr]
 end Nat.RecursiveIn.Code
 end opt_iget
+
+section opt_none
+namespace Nat.RecursiveIn.Code
+def c_opt_none := (c_const 0)
+@[simp] theorem c_opt_none_ev_pr:code_prim c_opt_none := by unfold c_opt_none; repeat (first|assumption|simp|constructor)
+@[simp] theorem c_opt_none_evp : eval_prim O c_opt_none o = o2n Option.none := by
+  simp [c_opt_none]
+-- @[simp] theorem c_opt_none_ev: n2o (eval O c_opt_none o) = (Option.none : Option ℕ) := by simp [← eval_prim_eq_eval c_opt_none_ev_pr]
+end Nat.RecursiveIn.Code
+end opt_none
 
 section list_getLastI
 namespace Nat.RecursiveIn.Code
