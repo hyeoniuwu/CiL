@@ -705,10 +705,32 @@ theorem c_replace_oracle_evp_aux_nMod4 :
     rw [show x.succ.succ.succ.succ=x+4 from rfl] at contrad
     simp at contrad
 
-theorem nMod4_eq_0 (h0:n.bodd=false) (h1:n.div2.bodd=false) : n%4=0 := by sorry
-theorem nMod4_eq_1 (h0:n.bodd=true ) (h1:n.div2.bodd=false) : n%4=1 := by sorry
-theorem nMod4_eq_2 (h0:n.bodd=false) (h1:n.div2.bodd=true ) : n%4=2 := by sorry
-theorem nMod4_eq_3 (h0:n.bodd=true ) (h1:n.div2.bodd=true ) : n%4=3 := by sorry
+lemma codes_aux_aux_0 (hno : n.bodd = false) :  2 * n.div2 = n := by
+  have h0 := bodd_add_div2 n
+  simp [hno] at h0
+  exact h0
+lemma codes_aux_aux_1 (hno : n.bodd = true) :  2 * n.div2 +1 = n := by
+  have h0 := bodd_add_div2 n
+  simp [hno] at h0
+  rw (config:={occs:=.pos [2]}) [←h0]
+  exact Nat.add_comm (2 * n.div2) 1
+lemma codes_aux_0 (hno : n.bodd = false) (hn2o : n.div2.bodd = false) : 2 * (2 * n.div2.div2) = n := by
+  rw [codes_aux_aux_0 hn2o]
+  rw [codes_aux_aux_0 hno]
+lemma codes_aux_1 (hno : n.bodd = true) (hn2o : n.div2.bodd = false) : 2 * (2 * n.div2.div2 ) +1 = n := by
+  rw [codes_aux_aux_0 hn2o]
+  rw [codes_aux_aux_1 hno]
+lemma codes_aux_2 (hno : n.bodd = false) (hn2o : n.div2.bodd = true) : 2 * (2 * n.div2.div2 + 1) = n := by
+  rw [codes_aux_aux_1 hn2o]
+  rw [codes_aux_aux_0 hno]
+lemma codes_aux_3 (hno : n.bodd = true) (hn2o : n.div2.bodd = true) : 2 * (2 * n.div2.div2 + 1)+1 = n := by
+  rw [codes_aux_aux_1 hn2o]
+  rw [codes_aux_aux_1 hno]
+
+theorem nMod4_eq_0 (hno:n.bodd=false) (hn2o:n.div2.bodd=false) : n%4=0 := by rw [←codes_aux_0 hno hn2o]; omega
+theorem nMod4_eq_1 (hno:n.bodd=true ) (hn2o:n.div2.bodd=false) : n%4=1 := by rw [←codes_aux_1 hno hn2o]; omega
+theorem nMod4_eq_2 (hno:n.bodd=false) (hn2o:n.div2.bodd=true ) : n%4=2 := by rw [←codes_aux_2 hno hn2o]; omega
+theorem nMod4_eq_3 (hno:n.bodd=true ) (hn2o:n.div2.bodd=true ) : n%4=3 := by rw [←codes_aux_3 hno hn2o]; omega
 
 -- set_option maxHeartbeats 1000000 in
 -- set_option maxHeartbeats 3 in
