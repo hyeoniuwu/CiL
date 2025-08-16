@@ -487,8 +487,8 @@ def c_evaln_aux :=
   -- let pc_mlmr_x_lookup := lookup pc_mr_xM1 (ml.comp right) (s.comp right)
   let opt_comp := c_if_gt_te.comp₄ ele (sM1.comp right) (c_opt_none) $
     c_ifz.comp₃ (pc_mr_s ele) (c_opt_none) $
-    c_ifz.comp₃ (pc_ml_s ele) (c_opt_none) $
-    (pc_ml_s ele)
+    c_ifz.comp₃ (pc_ml_s $ c_pred.comp (pc_mr_s ele)) (c_opt_none) $
+    (pc_ml_s $ c_pred.comp (pc_mr_s ele))
   let comp_mapped := ((c_list_map' opt_comp).comp₂ (c_list_range.comp s) c_id)
 
   -- prec: if `x.r=n+1`, then `[mr](x.l, (x.r-1, [code](x.l, x.r-1)))` else `[ml](x.l,0)`
@@ -1160,21 +1160,31 @@ theorem c_evaln_evp_aux_nMod4_0 :
     := by
       funext elem
       simp [opt_comp_1]
-      simp [hsM1,hpc_mr_x,ele]
+      simp [hsM1,hpc_mr_s,ele]
       simp [opt_comp]
       cases Classical.em (elem≤s) with
       | inl h =>
         simp [h, Nat.not_lt_of_le h]
-        cases Classical.em (pc_mr_x elem=o2n Option.none) with
+        cases Classical.em (pc_mr_s left elem=o2n Option.none) with
         | inl hh => simp [hh, hnat_to_opt_0]
         | inr hh =>
-          simp [hpc_mlmr_x_lookup]
+          simp [hpc_ml_s]
+          simp [hnat_to_opt_2 hh]
+          -- simp [hpc_mlmr_s_lookup]
           simp [not_none_imp_not_zero hh]
-          rw [hnat_to_opt_1 hh]
-          simp [Option.bind]
-          cases Classical.em (pc_ml_x (pc_mr_x elem - 1)=o2n Option.none) with
-          | inl hhh => simp [hhh]
-          | inr hhh => simp [not_none_imp_not_zero hhh]
+          -- rw [hnat_to_opt_1 hh]
+          -- simp [Option.bind]
+          cases Classical.em (pc_ml_s (c_pred.comp (pc_mr_s_1 left)) elem=o2n Option.none) with
+          | inl hhh =>
+            simp [hhh];
+            simp [pc_ml_s] at hhh
+            simp [hpc_mr_s] at hhh
+            simp [pc_ml_s]
+            exact hhh.symm
+          | inr hhh =>
+            simp [not_none_imp_not_zero hhh]
+            simp [pc_ml_s]
+            simp [hpc_mr_s]
       | inr h => simp [h, gt_of_not_le h, Option.bind]
   have hcomp_mapped:eval_prim O comp_mapped covrec_inp = (map (opt_comp) (range (s+1))) := by simp [comp_mapped, hs,hopt_comp]
 
@@ -1338,6 +1348,7 @@ theorem evaln_bound' (h:¬x≤s) : evaln O s c x = Option.none := by sorry
 
           simp only [pc_ml_x, pc_mr_x, m]
           simp
+          
 
         -- prec
         | true =>
