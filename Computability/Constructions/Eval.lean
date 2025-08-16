@@ -505,7 +505,12 @@ def c_evaln_aux :=
   let opt_prec := c_if_gt_te.comp₄ ele (sM1.comp right) (c_opt_none) $
     c_ifz.comp₃ prec_i prec_base_case $
     c_ifz.comp₃ prec_prev_case (zero) prec_inductive_case
-  let prec_mapped := ((c_list_map' opt_prec).comp₂ (c_list_range.prec s) c_id)
+  let prec_mapped := ((c_list_map' opt_prec).comp₂ (c_list_range.comp s) c_id)
+
+  let opt_rfind' := c_if_gt_te.comp₄ ele (sM1.comp right) (c_opt_none) $
+    c_ifz.comp₃ prec_i prec_base_case $
+    c_ifz.comp₃ prec_prev_case (zero) prec_inductive_case
+  let rfind'_mapped := ((c_list_map' opt_rfind').comp₂ (c_list_range.comp s) c_id)
 
 /-
     -- c_l_get.comp₂ comp_hist (pair pc_mr_x (pair (left.comp m) s))
@@ -531,7 +536,7 @@ def c_evaln_aux :=
   c_if_eq_te.comp₄ nMod4 (c_const 0) pair_mapped   $
   c_if_eq_te.comp₄ nMod4 (c_const 1) comp_mapped   $
   c_if_eq_te.comp₄ nMod4 (c_const 2) prec_mapped   $
-                                      (c_const 1)
+                                     rfind'_mapped
 /-- api: `Nat.pair x (Nat.pair code s)` -/
 def c_evaln :=
   -- let code_s := right
@@ -995,7 +1000,7 @@ theorem c_evaln_evp_aux_nMod4_0 :
                                                                         (c_if_eq_te.comp
                                                                           ((nMod4.pair (c_const 2)).pair
                                                                             (prec_mapped.pair
-                                                                              (c_const 1)))))))))))))))))))))))))))))
+                                                                              prec_mapped))))))))))))))))))))))))))))
                       (Nat.pair 17 k))
                       = (eval_prim O c_evaln_aux (Nat.pair 17 k)) := by exact rfl
   simp [stupidrewrite,covrec_inp_simp]
@@ -1308,7 +1313,7 @@ theorem c_evaln_evp_aux_nMod4_0 :
             simp [hprec_x, hprec_iM1]
 
       | inr h => simp [h, gt_of_not_le h, Option.bind]
-
+  have hprec_mapped:eval_prim O prec_mapped covrec_inp = (map (opt_prec) (range (s+1))) := by simp [prec_mapped, hs,hopt_prec]
 
 
   simp [hs,hcode,hnMod4]
@@ -1319,8 +1324,18 @@ theorem c_evaln_evp_aux_nMod4_0 :
     intro hh
     simp [Nat.not_le_of_lt hh]
     simp [Option.bind]
-  | 1 => sorry
-  | 2 => sorry
+  | 1 =>
+    simp [hcomp_mapped]
+    unfold opt_comp
+    intro hh
+    simp [Nat.not_le_of_lt hh]
+    simp [Option.bind]
+  | 2 => 
+    simp [hprec_mapped]
+    unfold opt_prec
+    intro hh
+    simp [Nat.not_le_of_lt hh]
+    simp [Option.bind]
   | 3 => sorry
   | x+4 =>
     have contrad : n%4<4 := by
