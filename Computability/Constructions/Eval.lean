@@ -883,6 +883,7 @@ theorem c_evaln_evp_aux_nMod4_0 :
 
   let pc_ml_s (c') (elem) := eval_prim O (c_evaln) (Nat.pair (eval_prim O c' (Nat.pair elem covrec_inp)) (Nat.pair ml (s+1)))
   let pc_mr_s (c') (elem) := eval_prim O (c_evaln) (Nat.pair (eval_prim O c' (Nat.pair elem covrec_inp)) (Nat.pair mr (s+1)))
+  let pc_m_s  (c') (elem) := eval_prim O (c_evaln) (Nat.pair (eval_prim O c' (Nat.pair elem covrec_inp)) (Nat.pair m  (s+1)))
 
   let pc_code_sM1 (c') (elem) := eval_prim O (c_evaln) (Nat.pair (eval_prim O c' (Nat.pair elem covrec_inp)) (Nat.pair ((n+4)+1) s))
   -- let pc_ml (inp) := if inp≤s+1 then eval_prim O (c_evaln) (Nat.pair inp (Nat.pair ml (s+1))) + 1 else 0
@@ -922,11 +923,14 @@ theorem c_evaln_evp_aux_nMod4_0 :
   Encodable.encode ( do
     guard (elem ≤ s)
     (unpaired fun a m => do
-      let x ← evaln O (s + 1) cf (Nat.pair a m)
+      -- let x ← evaln O (s + 1) m (Nat.pair a m)
+      let x ← n2o $ pc_m_s left elem
       if x = 0 then
         pure m
       else
-        evaln O s (rfind' cf) (Nat.pair a (m + 1))) elem
+        -- evaln O s (rfind' m) (Nat.pair a (m + 1)))
+        n2o (pc_code_sM1 left (Nat.pair a (m + 1)))) 
+      elem : Option ℕ
     )
 
 
@@ -1401,6 +1405,12 @@ theorem evaln_bound' (h:¬x≤s) : evaln O s c x = Option.none := by sorry
       have pc_mr_x_lt_cs : pc_mr_x < code_s := by
         unfold pc_mr_x; rw [h0]
         exact pair_lt_pair_left (sM1 + 1) _m2
+      let m_s := Nat.pair m (sM1+1)
+      have m_s_lt_cs : m_s < code_s := by
+        unfold m_s; rw [h0]
+        apply pair_lt_pair_left
+        exact hm
+        -- (sM1 + 1) _m2
 
       let pc_code_sM1 := Nat.pair (n+4+1) sM1
       have pc_code_s_lt_cs : pc_code_sM1 < code_s := by
@@ -1486,14 +1496,6 @@ theorem evaln_bound' (h:¬x≤s) : evaln O s c x = Option.none := by sorry
           | inr h =>
             simp [h,Option.bind]
 
-          stop
-          simp [evaln, encodeCode_evaln, decodeCode, hno, hn2o] -- simplify the rhs
-          rw [c_evaln_evp_aux_nMod4_2 h0]
-          simp
-          constructor
-          · rw [ih m.l _m1]; simp [evaln, m]
-          · rw [ih m.r _m2]; simp [evaln, m]
-
       | true => cases hn2o:n.div2.bodd with
         -- comp
         | false =>
@@ -1535,10 +1537,30 @@ theorem evaln_bound' (h:¬x≤s) : evaln O s c x = Option.none := by sorry
 
           rw [c_evaln_evp_aux_nMod4_0]
           simp [h0]
-          sorry
-          
 
--- theorem test : n+5=(n+4)+1 := by exact?
+          rw [ih m_s m_s_lt_cs];
+          rw [ih pc_code_sM1 pc_code_s_lt_cs]
+          -- have ih_i {i} : (eval_prim O c_evaln (Nat.pair (Nat.pair x.l (Nat.pair (x.r - 1) i)) (Nat.pair n.div2.div2.r (sM1 + 1)))) = (Encodable.encode (evaln O pc_mr_x.r (decodeCode pc_mr_x.l) (Nat.pair x.l (Nat.pair (x.r - 1) i)))) := by
+          --   rw [ih pc_mr_x pc_mr_x_lt_cs];
+          -- simp [ih_i]
+
+          -- have rw1 : (evaln O pc_ml_x.r (decodeCode pc_ml_x.l) x.l) = 
+          -- have rw2 : (evaln O pc_code_sM1.r (decodeCode pc_code_sM1.l) (Nat.pair x.l (x.r - 1))) = (evaln O sM1 ((decodeCode n.div2.div2.l).prec (decodeCode n.div2.div2.r)) (Nat.pair x.l n_1)) := by sorry
+
+          cases Classical.em (x≤sM1) with
+          | inl h =>
+            simp [h]
+            -- simp [pc_ml_x]
+            -- simp [pc_mr_x]
+            simp [m_s]
+            simp [m]
+            simp [pc_code_sM1]
+
+            have rw0 : (decodeCode (n + 4 + 1)) = (decodeCode n.div2.div2).rfind' := by sorry
+            rw [rw0]
+            
+          | inr h =>
+            simp [h,Option.bind]
 
 
 
