@@ -662,7 +662,7 @@ def c_list_map' (cf:Code) :=
   let lN  := left
   let aux := right
   (c_list_map cf).comp ((c_list_zipWith c_id).comp₂ lN (c_list_replicate.comp₂ (c_list_length.comp lN) aux))
-@[simp] theorem c_list_map'_ev_pr (hcf:code_prim cf): code_prim (c_list_map' cf) := by unfold c_list_map'; repeat (first|assumption|simp|constructor)
+@[simp, aesop safe] theorem c_list_map'_ev_pr (hcf:code_prim cf): code_prim (c_list_map' cf) := by unfold c_list_map'; repeat (first|assumption|simp|constructor)
 @[simp] theorem c_list_map'_evp :
   eval_prim O (c_list_map' cf) (Nat.pair lN aux)
     =

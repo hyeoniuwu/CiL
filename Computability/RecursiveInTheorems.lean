@@ -65,7 +65,7 @@ theorem PrimrecIn.PrimrecIn_iff_Primrec:(∀O,Nat.PrimrecIn O f) ↔ Nat.Primrec
 
 -- templates for primrec constructions as codes
 namespace Nat.RecursiveIn.Code
-inductive code_prim:Code → Prop
+@[aesop safe] inductive code_prim:Code → Prop
 | zero:code_prim zero
 | succ:code_prim succ
 | left:code_prim left
@@ -99,7 +99,8 @@ theorem prim_total (h:code_prim c):∀x,(eval O c x).Dom := by
       expose_names;
       use IH'
       apply hb_ih
-def eval_total (O:ℕ→ℕ) (c:Code) {h:∀x,(eval O c x).Dom}:ℕ→ℕ := fun x => (eval O c x).get (h x)
+def code_total (O) (c:Code) := ∀x,(eval O c x).Dom
+def eval_total (O:ℕ→ℕ) (c:Code) {h:code_total O c}:ℕ→ℕ := fun x => (eval O c x).get (h x)
 @[simp] def eval_prim (O:ℕ→ℕ):Code→ℕ→ℕ
 | zero       => fun x=>0
 | succ       => Nat.succ

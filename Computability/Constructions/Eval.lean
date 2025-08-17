@@ -90,7 +90,7 @@ def c_evaln_aux :=
   let rfind'_base := pc_m_s ele
   let rfind'_indt := pc_code_sM1 (pair (left.comp ele) (succ.comp (right.comp ele)))
   let opt_rfind' := c_if_gt_te.comp₄ ele (sM1.comp right) (c_opt_none) $
-    c_ifz.comp₃ rfind'_base (zero) $
+    c_ifz.comp₃ rfind'_base zero $
     c_ifz.comp₃ (c_pred.comp rfind'_base) (succ.comp $ right.comp ele) rfind'_indt
   let rfind'_mapped := ((c_list_map' opt_rfind').comp₂ (c_list_range.comp s) c_id)
 
@@ -119,11 +119,12 @@ def c_evaln :=
   c_list_getI.comp₂ (c_list_getLastI.comp $ c_evaln_aux.comp (pair (c_const 17) right)) left
 
 
--- set_option maxRecDepth 5000 in
-set_option maxHeartbeats 3 in
-@[simp] theorem c_evaln_ev_pr:code_prim (c_evaln) := by
-  unfold c_evaln;
-  repeat (first|assumption|simp|constructor)
+-- set_option maxHeartbeats 3 in
+-- set_option maxRecDepth 600 in
+-- @[simp] theorem c_evaln_ev_pr:code_prim (c_evaln) := by
+--   unfold c_evaln;
+--   -- repeat (first|assumption|simp|constructor)
+--   first|assumption|simp|constructor
 
 
 theorem pair_r_gt0 {x} : x>0→(Nat.pair y x)>0 := by
@@ -980,10 +981,44 @@ theorem c_evaln_evp_aux_nMod4 :
           | inr h =>
             simp [h,Option.bind]
 
-@[simp] theorem c_evaln_ev: eval O c_evaln (Nat.pair x (Nat.pair code s)) = o2n (evaln O s code x) := by
-  rw [← eval_prim_eq_eval c_evaln_ev_pr];
-  simp? says simp only [PFun.coe_val, c_evaln_evp, Part.coe_some]
+-- @[simp] theorem c_evaln_ev: eval O c_evaln (Nat.pair x (Nat.pair code s)) = o2n (evaln O s code x) := by
+--   rw [← eval_prim_eq_eval c_evaln_ev_pr];
+--   simp? says simp only [PFun.coe_val, c_evaln_evp, Part.coe_some]
 end Nat.RecursiveIn.Code
 -- theorem Nat.PrimrecIn.evaln:Nat.PrimrecIn O (unpaired evaln) := by rw [← c_evaln_evp]; apply code_prim_prop c_evaln_ev_pr
 -- theorem Nat.Primrec.evaln:Nat.Primrec (unpaired evaln) := by exact PrimrecIn.PrimrecIn_Empty PrimrecIn.evaln
 end evaln
+
+section rfindOpt
+namespace Nat.RecursiveIn.Code
+def c_rfindOpt (c:Code) := (rfind' c)
+-- @[simp, aesop safe] theorem c_rfindOpt_ev_pr:code_prim c_rfindOpt := by unfold c_rfindOpt; repeat (first|assumption|simp|constructor)
+-- @[simp] theorem c_rfindOpt_evp:rfindOpt_prim O c_rfindOpt = unpaired2 Nat.rfindOpt := by
+--   simp [c_rfindOpt,rfindOpt_prim]
+--   funext n;
+--   simp [unpaired2]
+--   induction n.r with
+--   | zero => exact rfl
+--   | succ n h => exact Nat.rfindOpt_left_inj.mpr h
+@[simp] theorem c_rfindOpt_ev (hc1:code_total O c) (hc2:∀ x,code_total O (@eval_total O c hc1 x)) : eval O (c_rfindOpt c) x =  Nat.rfindOpt (fun x => eval_total O c Nat.pair) := by rw [← rfindOpt_prim_eq_rfindOpt c_rfindOpt_ev_pr]; simp only [c_rfindOpt_evp]
+end Nat.RecursiveIn.Code
+-- theorem Nat.PrimrecIn.rfindOpt:Nat.PrimrecIn O Nat.rfindOpt := by ...
+-- theorem Nat.Primrec.rfindOpt:Nat.Primrec Nat.rfindOpt := by ...
+end rfindOpt
+
+section eval
+namespace Nat.RecursiveIn.Code
+def c_eval := (prec c_id ((succ.comp right).comp right))
+@[simp, aesop safe] theorem c_eval_ev_pr:code_prim c_eval := by unfold c_eval; repeat (first|assumption|simp|constructor)
+@[simp] theorem c_eval_evp:eval_prim O c_eval = unpaired2 Nat.eval := by
+  simp [c_eval,eval_prim]
+  funext n;
+  simp [unpaired2]
+  induction n.r with
+  | zero => exact rfl
+  | succ n h => exact Nat.eval_left_inj.mpr h
+@[simp] theorem c_eval_ev:eval O c_eval = unpaired2 Nat.eval := by rw [← eval_prim_eq_eval c_eval_ev_pr]; simp only [c_eval_evp]
+end Nat.RecursiveIn.Code
+-- theorem Nat.PrimrecIn.eval:Nat.PrimrecIn O Nat.eval := by ...
+-- theorem Nat.Primrec.eval:Nat.Primrec Nat.eval := by ...
+end eval
