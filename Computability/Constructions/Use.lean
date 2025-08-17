@@ -78,20 +78,15 @@ theorem use_pair_dom (h:(use O (pair cf cg) x).Dom) : (use O cf x).Dom ∧ (use 
   simp [use, Seq.seq]
   exact fun a ↦ h a
 
-theorem use_mono_pair_left (hh:(use O (pair cf cg) x).Dom):
-  (use O cf x).get ((use_pair_dom hh).left) ≤ (use O (pair cf cg) x).get hh
-  := by
-  sorry
-theorem use_mono_pair_right (hh:(use O (pair cf cg) x).Dom):
-  (use O cg x).get ((use_pair_dom hh).right) ≤ (use O (pair cf cg) x).get hh
-  := by
-  sorry
 theorem use_mono_pair (hh:(use O (pair cf cg) x).Dom):
   ((use O cf x).get ((use_pair_dom hh).left) ≤ (use O (pair cf cg) x).get hh)
   ∧
   ((use O cg x).get ((use_pair_dom hh).right) ≤ (use O (pair cf cg) x).get hh)
   := by
-  sorry
+    have h1 := Part.dom_imp_some ((use_pair_dom hh).left)
+    simp only [use, Seq.seq, Part.bind]
+    simp (config := { singlePass := true }) only [h1]
+    simp [Part.assert]
 
 theorem get_use : (eval O c x).Dom → (use O c x).Dom := by
   intro h
@@ -139,21 +134,20 @@ theorem up_to_use (hh:(eval O₁ c x).Dom) (hO: ∀ i≤(use O₁ c x).get (get_
     :=by
       intro xx
       intro hxx
-      have hxx2 := le_trans hxx (use_mono_pair_left (get_use hh))
+      have hxx2 := le_trans hxx (use_mono_pair (get_use hh)).left
       exact hO xx hxx2
     have h2:
     (∀ i ≤ (use O₁ cg x).get (get_use (eval_pair_dom hh).right), O₁ i = O₂ i)
     :=by
       intro xx
       intro hxx
-      have hxx2 := le_trans hxx (use_mono_pair_right (get_use hh))
+      have hxx2 := le_trans hxx (use_mono_pair (get_use hh)).right
       exact hO xx hxx2
     rw [hcf (eval_pair_dom hh).left h1]
     rw [hcg (eval_pair_dom hh).right h2]
   | comp _ _ _ _ => sorry
   | prec _ _ _ _ => sorry
   | rfind' _ _ => sorry
-  sorry
 
 -- def eval_clamped (O:Set ℕ) (u:ℕ) (c:Code) : ℕ→.ℕ :=
 def evaln_clamped (O:ℕ→ℕ) (use:ℕ) : ℕ→Code→ℕ→Option ℕ
