@@ -143,18 +143,16 @@ theorem usen_mono : ∀ {k₁ k₂ c n x}, k₁ ≤ k₂ → x ∈ usen O c k₁
       intro hmax
       use x1
       constructor
-      · 
-        sorry
+      · exact usen_mono hl' hx1
       · use x2
         constructor
-        · 
-          sorry
+        · rw [evaln_mono hl' hx2]
         · use x3
-          sorry
-        sorry
-      
-      
-      exact fun y h₁ h₂ => ⟨y, usen_mono hl' h₁, hg _ _ h₂⟩
+          constructor
+          · exact usen_mono hl hx3
+          · subst hmax
+            simp_all only [add_le_add_iff_right, Option.mem_def, Option.bind_eq_bind, unpair1_to_l, Option.pure_def]
+      -- exact fun y h₁ h₂ => ⟨y, usen_mono hl' h₁, hg _ _ h₂⟩
   · -- rfind' cf
     simp? [Bind.bind, Option.bind_eq_some] at h ⊢ says
       simp only [unpaired, bind, pair_unpair, Option.pure_def, Option.mem_def,
