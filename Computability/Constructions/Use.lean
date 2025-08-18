@@ -81,10 +81,8 @@ theorem eval_pair_dom (h:(eval O (pair cf cg) x).Dom) : (eval O cf x).Dom ∧ (e
   · simp [Part.eq_none_iff'.mpr hh]
   
 theorem use_pair_dom (h:(use O (pair cf cg) x).Dom) : (use O cf x).Dom ∧ (use O cg x).Dom := by
-
   contrapose h
   push_neg at h
-
   simp [use, Seq.seq]
   exact fun a ↦ h a
 theorem use_comp_dom_aux (h:(use O (comp cf cg) x).Dom) : (eval O cg x).Dom := by
@@ -99,11 +97,7 @@ theorem use_comp_dom_aux (h:(use O (comp cf cg) x).Dom) : (eval O cg x).Dom := b
 --   exact fun a x_1 a_1 ↦ h a
 theorem use_comp_dom (h:(use O (comp cf cg) x).Dom) : (use O cg x).Dom ∧ (use O cf ((eval O cg x).get (use_comp_dom_aux h))).Dom := by
   simp [use,Seq.seq] at h
-  contrapose h
-  push_neg at h
-
-  simp
-  exact fun a x ↦ h a
+  aesop
 
 theorem use_mono_pair (hh:(use O (pair cf cg) x).Dom):
   ((use O cf x).get ((use_pair_dom hh).left) ≤ (use O (pair cf cg) x).get hh)
@@ -140,25 +134,11 @@ theorem use_dom_iff_eval_dom : (use O c x).Dom ↔ (eval O c x).Dom := by
   | pair cf cg hcf hcg =>
     simp [use,eval]
     simp [Seq.seq]
-    exact and_congr hcf hcg
+    simp_all only []
   | comp cf cg hcf hcg =>
     simp [use,eval]
     simp [Seq.seq]
-    
-    constructor
-    · 
-      intro h
-      rcases h.right with ⟨h2,hh2⟩
-      use h2
-      apply hcf.mp hh2
-    · intro h
-      rcases h with ⟨h,hh⟩
-
-      constructor
-      · apply hcg.mpr h
-      · use h
-        apply hcf.mpr hh
-    
+    simp_all only [and_exists_self]
   | prec cf cg hcf hcg => sorry
   | rfind' _ _ => sorry
 
@@ -221,19 +201,15 @@ theorem up_to_use (hh:(eval O₁ c x).Dom) (hO: ∀ i≤(use O₁ c x).get (e2u 
     have aux0 : (eval O₂ cg x).Dom := by
       have aux00 := eval_comp_dom_aux hh
       rwa [ih1] at aux00
-    have aux1 : ((eval O₁ cg x).get (eval_comp_dom_aux hh)) = (eval O₂ cg x).get aux0 := by
-      exact Part.get_eq_get_of_eq (eval O₁ cg x) (eval_comp_dom_aux hh) ih1
+    have aux1 : ((eval O₁ cg x).get (eval_comp_dom_aux hh)) = (eval O₂ cg x).get aux0 := by simp_all only [implies_true]
     have aux2 : (eval O₁ cf ((eval O₂ cg x).get aux0)).Dom := by
       have aux10 :=(eval_comp_dom hh).right
       rwa [aux1] at aux10
-    have aux3 : use O₁ cf ((eval O₁ cg x).get (eval_comp_dom_aux hh)) = use O₁ cf ((eval O₂ cg x).get aux0) := by
-      rw [aux1]
-    have aux4 : (use O₁ cf ((eval O₁ cg x).get (eval_comp_dom_aux hh))).get (e2u (eval_comp_dom hh).right) = (use O₁ cf ((eval O₂ cg x).get aux0)).get (e2u aux2) := by
-      exact Part.get_eq_get_of_eq (use O₁ cf ((eval O₁ cg x).get (eval_comp_dom_aux hh)))
-          (e2u (eval_comp_dom hh).right) aux3
+    have aux4 :(use O₁ cf ((eval O₁ cg x).get (eval_comp_dom_aux hh))).get (e2u (eval_comp_dom hh).right) = (use O₁ cf ((eval O₂ cg x).get aux0)).get (e2u aux2) := by
+      simp_all only [implies_true]
     have h3:
     (∀ i ≤ (use O₁ cf ((eval O₂ cg x).get aux0)).get (e2u aux2), O₁ i = O₂ i)
-    :=by
+    := by
       have aux := h2
       rwa [aux4] at aux
 
