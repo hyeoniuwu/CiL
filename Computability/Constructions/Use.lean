@@ -23,10 +23,68 @@ match c with
     let IH_N ← eval O (prec cf cg) (Nat.pair xl iM1);
     Nat.max <$> IH <*> use O cg (Nat.pair xl (Nat.pair iM1 IH_N))
 | Code.rfind' cf =>
-  let (xl, xr) := Nat.unpair x
-  (Nat.rfind fun n => (fun x => x = 0) <$> eval O cf (Nat.pair xl (n + xr))).map (· + xr)
--- actually, maybe we dont have to define it like the above.
+  do
+    let asd ← (eval O c x);
+    let (xl, xr) := Nat.unpair x
+    (Nat.rfind fun n => (fun x => x = 0) <$> eval O cf (Nat.pair xl (n + xr))).map (· + xr)
 
+/-- `usen; the use of [c:O]ₛ(x)` -/
+def usen (O:ℕ→ℕ) (c:Code) (s:ℕ) (x:ℕ) : Option ℕ :=
+match c,s with
+| _,0              => Option.none
+| zero      , s+1  => do guard (x≤s); return 0
+| succ      , s+1  => do guard (x≤s); return 0
+| left      , s+1  => do guard (x≤s); return 0
+| right     , s+1  => do guard (x≤s); return 0
+| oracle    , s+1  => do guard (x≤s); return x+1
+| pair cf cg, s+1  =>
+  do
+    let usen_cf ← usen O cf (s+1) x
+    let usen_cg ← usen O cg (s+1) x
+    return Nat.max usen_cf usen_cg
+    -- let asd ← evaln O s c x;
+    -- Nat.max <$> (use O cf x) <*> (use O cg x)
+| comp cf cg, s+1  =>
+  do
+    let usen_cg ← usen O cg (s+1) x
+    let evaln_cg ← evaln O (s+1) cg x
+    let usen_cf ← usen O cf (s+1) evaln_cg
+    return Nat.max usen_cf usen_cg
+    -- Nat.max <$> (use O cg x) <*> (eval O cg x >>= use O cf)
+| prec cf cg, s+1 =>
+  
+  let (xl, i) := Nat.unpair x
+  i.casesOn
+  (usen O cf (s+1) xl)
+  fun iM1 =>
+  do
+    let usen_prev  ← usen  O (prec cf cg) s (Nat.pair xl iM1)
+    let evaln_prev ← evaln O s (prec cf cg) (Nat.pair xl iM1)
+    let usen_indt  ← usen  O cg (s+1) (Nat.pair xl (Nat.pair iM1 evaln_prev))
+    return Nat.max usen_prev usen_indt
+| rfind' cf, s+1 =>
+  do
+    let usen_base ← usen O cf (s+1) x
+    let evaln_base ← evaln O (s+1) cf x
+    let usen_indt ← usen O cf s (Nat.pair x.l (x.r+1))
+    if evaln_base=0 then usen_base else
+    Nat.max usen_base usen_indt
+      -- let asd ← (eval O c x);
+      -- let (xl, xr) := Nat.unpair x
+      -- (Nat.rfind fun n => (fun x => x = 0) <$> eval O cf (Nat.pair xl (n + xr))).map (· + xr)
+
+  -- if (eval O c x).Dom
+  -- then
+  -- else
+    -- Part.none
+-- actually, maybe we dont have to define it like the above.
+theorem usen_mono : ∀ {k₁ k₂ c n x}, k₁ ≤ k₂ → x ∈ usen O c k₁ n → x ∈ usen O c k₂ n := by sorry
+theorem usen_sound : ∀ {c s n x}, x ∈ usen O c s n → x ∈ use O c n := by sorry
+theorem usen_complete {c n x} : x ∈ use O c n ↔ ∃ s, x ∈ usen O c s n := by sorry
+theorem use_eq_rfindOpt (c n) : use O c n = Nat.rfindOpt fun s => usen O c s n :=
+  Part.ext fun x => by
+    refine usen_complete.trans (Nat.rfindOpt_mono ?_).symm
+    intro a m n hl; apply usen_mono hl
 
 theorem Part.dom_imp_ex_some {x:Part ℕ} (h:x.Dom) : ∃ y, x=Part.some y := by
   have h0 := Part.dom_iff_mem.mp h
