@@ -43,17 +43,27 @@ theorem eval_pair_dom (h:(eval O (pair cf cg) x).Dom) : (eval O cf x).Dom ∧ (e
   by_cases hh:(eval O cf x).Dom
   · exact fun a ↦ h hh
   · simp [Part.eq_none_iff'.mpr hh]
-theorem eval_comp_dom_1 (h:(eval O (comp cf cg) x).Dom) : (eval O cg x).Dom := by
-  contrapose h
-  push_neg at h
-  simp [eval]
-  intro hdom
-  exact fun a ↦ h hdom
-theorem eval_comp_dom_2 (h1:(eval O (comp cf cg) x).Dom) (h2:(eval O cg x).Dom) : (eval O cf ((eval O cg x).get h2)).Dom := by
-  contrapose h1
-  simp [eval]
-  intro hdom
-  exact h1
+
+theorem eval_comp_dom_aux (h:(eval O (comp cf cg) x).Dom) : (eval O cg x).Dom := by exact Part.Dom.of_bind h
+
+theorem eval_comp_dom
+(h:(eval O (comp cf cg) x).Dom)
+:
+(eval O cg x).Dom
+∧
+(eval O cf ((eval O cg x).get (eval_comp_dom_aux h))).Dom
+:= by
+  constructor
+  · contrapose h
+    push_neg at h
+    simp [eval]
+    intro hdom
+    exact fun a ↦ h hdom
+  · simp [eval] at h
+    contrapose h
+    simp
+    intro hdom
+    exact h
 
 theorem eval_pair_dom (h:(eval O (pair cf cg) x).Dom) : (eval O cf x).Dom ∧ (eval O cg x).Dom := by
   contrapose h
@@ -77,12 +87,22 @@ theorem use_pair_dom (h:(use O (pair cf cg) x).Dom) : (use O cf x).Dom ∧ (use 
 
   simp [use, Seq.seq]
   exact fun a ↦ h a
-theorem use_comp_dom (h:(use O (comp cf cg) x).Dom) (hh:(eval O cg x).Dom) : (use O cg x).Dom ∧ (use O cf ((eval O cg x).get hh)).Dom := by
-
+theorem use_comp_dom_aux (h:(use O (comp cf cg) x).Dom) : (eval O cg x).Dom := by
+  simp [use] at h
+  contrapose h
+  simp [Seq.seq]
+  exact fun a x_1 a ↦ h x_1
+-- theorem use_comp_dom_aux_2 (h:(use O (comp cf cg) x).Dom) : (use O cg x).Dom := by
+--   simp [use] at h
+--   contrapose h
+--   simp [Seq.seq]
+--   exact fun a x_1 a_1 ↦ h a
+theorem use_comp_dom (h:(use O (comp cf cg) x).Dom) : (use O cg x).Dom ∧ (use O cf ((eval O cg x).get (use_comp_dom_aux h))).Dom := by
+  simp [use,Seq.seq] at h
   contrapose h
   push_neg at h
 
-  simp [use, Seq.seq]
+  simp
   exact fun a x ↦ h a
 
 theorem use_mono_pair (hh:(use O (pair cf cg) x).Dom):
@@ -95,14 +115,19 @@ theorem use_mono_pair (hh:(use O (pair cf cg) x).Dom):
     simp (config := { singlePass := true }) only [h1]
     simp [Part.assert]
 theorem use_mono_comp (hh:(use O (comp cf cg) x).Dom):
-  ((use O cg x).get ((use_pair_dom hh).right) ≤ (use O (comp cf cg) x).get hh)
-  -- ∧
-  -- ((use O cf x).get ((use_pair_dom hh).left) ≤ (use O (comp cf cg) x).get hh)
+  ((use O cg x).get ((use_comp_dom hh).left) ≤ (use O (comp cf cg) x).get hh)
+  ∧
+  ((use O cf ((eval O cg x).get (use_comp_dom_aux hh))).get ((use_comp_dom hh).right) ≤ (use O (comp cf cg) x).get hh)
   := by
-    have h1 := Part.dom_imp_some ((use_pair_dom hh).left)
+    have h1 := Part.dom_imp_some ((use_comp_dom hh).left)
+    have h2 := Part.dom_imp_some (use_comp_dom_aux hh)
     simp only [use, Seq.seq, Part.bind]
     simp (config := { singlePass := true }) only [h1]
-    simp [Part.assert]
+    simp (config := { singlePass := true }) only [h2]
+    simp only [Part.assert]
+    simp [Part.bind]
+    simp only [Part.assert]
+    simp only [le_refl, or_true]
 
 theorem get_use : (eval O c x).Dom → (use O c x).Dom := by
   intro h
@@ -127,12 +152,32 @@ theorem get_use : (eval O c x).Dom → (use O c x).Dom := by
   sorry
   -- · 
   -- sorry
+theorem get_use_rev :  (use O c x).Dom → (eval O c x).Dom:= by
+  intro h
 
-#check Primrec
+  induction c with
+  | zero => exact h
+  | succ => exact h
+  | left => exact h
+  | right => exact h
+  | oracle => exact h
+  | pair cf cg hcf hcg =>
+    simp [eval]
+    simp [Seq.seq]
+    exact ⟨hcf (use_pair_dom h).left, hcg (use_pair_dom h).right⟩
+  | comp cf cg hcf hcg =>
+    simp [eval]
+    simp [Seq.seq]
+    exact ⟨hcf (eval_pair_dom h).left, hcg (eval_pair_dom h).right⟩
+  | prec cf cg hcf hcg => sorry
+  | rfind' _ _ => sorry
+
+  sorry
+
 -- #check Partrec.rfind'_dom
 theorem up_to_use (hh:(eval O₁ c x).Dom) (hO: ∀ i≤(use O₁ c x).get (get_use hh), O₁ i = O₂ i) : eval O₁ c x = eval O₂ c x := by
   -- have h:x≤use O₁ c x
-  induction c with
+  induction c generalizing x with
   | zero => simp [eval]
   | succ => simp [eval]
   | left => simp [eval]
@@ -161,13 +206,56 @@ theorem up_to_use (hh:(eval O₁ c x).Dom) (hO: ∀ i≤(use O₁ c x).get (get_
     rw [hcg (eval_pair_dom hh).right h2]
   | comp cf cg hcf hcg =>
     simp only [eval]
-    #check eval_comp_dom_1 hh
-    #check eval_comp_dom_2 hh
-    #check hcg (eval_comp_dom_1 hh)
-    sorry
+    have h1:
+    (∀ i ≤ (use O₁ cg x).get (get_use (eval_comp_dom hh).left), O₁ i = O₂ i)
+    :=by
+      intro xx
+      intro hxx
+      have hxx2 := le_trans hxx (use_mono_comp (get_use hh)).left
+      exact hO xx hxx2
+    have ih1 := hcg (eval_comp_dom hh).left h1
+    rw [ih1]
+    
+    have h2:
+    (∀ i ≤ (use O₁ cf ((eval O₁ cg x).get (eval_comp_dom_aux hh))).get (get_use (eval_comp_dom hh).right), O₁ i = O₂ i)
+    :=by
+      intro xx
+      intro hxx
+      have hxx2 := le_trans hxx (use_mono_comp (get_use hh)).right
+      
+      exact hO xx hxx2
+    
+    have aux0 : (eval O₂ cg x).Dom := by
+      have aux00 := eval_comp_dom_aux hh
+      rwa [ih1] at aux00
+    have aux1 : ((eval O₁ cg x).get (eval_comp_dom_aux hh)) = (eval O₂ cg x).get aux0 := by
+      exact Part.get_eq_get_of_eq (eval O₁ cg x) (eval_comp_dom_aux hh) ih1
+    have aux2 : (eval O₁ cf ((eval O₂ cg x).get aux0)).Dom := by
+      have aux10 :=(eval_comp_dom hh).right
+      rwa [aux1] at aux10
+    have aux3 : use O₁ cf ((eval O₁ cg x).get (eval_comp_dom_aux hh)) = use O₁ cf ((eval O₂ cg x).get aux0) := by
+      rw [aux1]
+    have aux4 : (use O₁ cf ((eval O₁ cg x).get (eval_comp_dom_aux hh))).get (get_use (eval_comp_dom hh).right) = (use O₁ cf ((eval O₂ cg x).get aux0)).get (get_use aux2) := by
+      exact Part.get_eq_get_of_eq (use O₁ cf ((eval O₁ cg x).get (eval_comp_dom_aux hh)))
+          (get_use (eval_comp_dom hh).right) aux3
+    have h3:
+    (∀ i ≤ (use O₁ cf ((eval O₂ cg x).get aux0)).get (get_use aux2), O₁ i = O₂ i)
+    :=by
+      have aux := h2
+      rwa [aux4] at aux
+
+    have ih2 := hcf aux2 h3
+    
+    simp
+    [
+      Part.bind_eq_bind,
+      Part.bind,
+      ih2,
+    ]
   | prec _ _ _ _ => sorry
   | rfind' _ _ => sorry
-
+theorem test {a:Part ℕ} {h0 h1:a.Dom} (heq:h0=h1): a.get h0=a.get h1 := by
+  exact rfl
 -- def eval_clamped (O:Set ℕ) (u:ℕ) (c:Code) : ℕ→.ℕ :=
 def evaln_clamped (O:ℕ→ℕ) (use:ℕ) : ℕ→Code→ℕ→Option ℕ
   | 0, _ => fun _ => Option.none
