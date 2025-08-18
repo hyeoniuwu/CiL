@@ -143,13 +143,15 @@ theorem usen_mono : ∀ {k₁ k₂ c n x}, k₁ ≤ k₂ → x ∈ usen O c k₁
       intro hmax
       use x1
       constructor
+      -- stop
       · exact usen_mono hl' hx1
       · use x2
         constructor
         · rw [evaln_mono hl' hx2]
         · use x3
           constructor
-          · exact usen_mono hl hx3
+          · exact hg (Nat.pair n.l (Nat.pair n_1 x2)) x3 hx3
+            -- exact usen_mono hl hx3
           · subst hmax
             simp_all only [add_le_add_iff_right, Option.mem_def, Option.bind_eq_bind, unpair1_to_l, Option.pure_def]
       -- exact fun y h₁ h₂ => ⟨y, usen_mono hl' h₁, hg _ _ h₂⟩
@@ -158,9 +160,17 @@ theorem usen_mono : ∀ {k₁ k₂ c n x}, k₁ ≤ k₂ → x ∈ usen O c k₁
       simp only [unpaired, bind, pair_unpair, Option.pure_def, Option.mem_def,
         Option.bind_eq_some] at h ⊢
     refine h.imp fun x => And.imp (hf _ _) ?_
-    by_cases x0 : x = 0 <;> simp [x0]
-    sorry
-    exact usen_mono hl'
+    -- by_cases x0 : x = 0 <;> simp [x0]
+    rintro ⟨x_1,⟨hx_1,⟨x_2,⟨hx_21,hx_22⟩⟩⟩⟩
+    rcases h with ⟨x_1',⟨hx_1',⟨x_2',⟨hx_21',⟨a,⟨ha1,ha2⟩⟩⟩⟩⟩⟩
+    use x_1
+    constructor
+    · rw [evaln_mono hl hx_1]
+    · expose_names
+      use a
+      constructor
+      · exact usen_mono hl' ha1
+      · simp_all only [add_le_add_iff_right, Option.mem_def, Option.bind_eq_bind, Option.some.injEq]
 theorem usen_sound : ∀ {c s n x}, x ∈ usen O c s n → x ∈ use O c n := by sorry
 theorem usen_complete {c n x} : x ∈ use O c n ↔ ∃ s, x ∈ usen O c s n := by sorry
 theorem use_eq_rfindOpt (c n) : use O c n = Nat.rfindOpt fun s => usen O c s n :=
