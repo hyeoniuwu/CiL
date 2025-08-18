@@ -57,7 +57,6 @@ match c,s with
     return Nat.max usen_cf usen_cg
     -- Nat.max <$> (use O cg x) <*> (eval O cg x >>= use O cf)
 | prec cf cg, s+1 =>
-  
   let (xl, i) := Nat.unpair x
   i.casesOn
   (usen O cf (s+1) xl)
@@ -106,13 +105,6 @@ theorem usen_mono : ∀ {k₁ k₂ c n x}, k₁ ≤ k₂ → x ∈ usen O c k₁
     exact h.imp fun a => And.imp (hf _ _) <| Exists.imp fun b => And.imp_left (hg _ _)
   · -- comp cf cg
     simp only [bind, Option.pure_def, Option.bind_eq_some, Option.some.injEq] at h ⊢
-    -- have loc := evaln_mono
-    -- simp? [Bind.bind, Option.bind_eq_some] at h ⊢ says
-    --   simp only [bind, Option.mem_def, Option.bind_eq_some] at h ⊢
-    -- apply h.imp fun a => And.imp (hg _ _)
-    -- exact h.imp fun a => And.imp (hg _ _) (hf _ _)
-    -- exact h.imp fun a => And.imp (hg _ _) (evaln_mono hl _ _)
-    -- #check h.imp
     rcases h with ⟨a,⟨ha1,⟨b,⟨hb1,⟨hb2,⟨hb3,hb4⟩⟩⟩⟩⟩⟩
     use a
     constructor
@@ -126,7 +118,6 @@ theorem usen_mono : ∀ {k₁ k₂ c n x}, k₁ ≤ k₂ → x ∈ usen O c k₁
     exact hb4
 -- TODO: golf proof above?
 
-    
   · -- prec cf cg
     revert h
     simp only [unpaired, bind, Option.mem_def]
@@ -143,7 +134,6 @@ theorem usen_mono : ∀ {k₁ k₂ c n x}, k₁ ≤ k₂ → x ∈ usen O c k₁
       intro hmax
       use x1
       constructor
-      -- stop
       · exact usen_mono hl' hx1
       · use x2
         constructor
@@ -151,7 +141,6 @@ theorem usen_mono : ∀ {k₁ k₂ c n x}, k₁ ≤ k₂ → x ∈ usen O c k₁
         · use x3
           constructor
           · exact hg (Nat.pair n.l (Nat.pair n_1 x2)) x3 hx3
-            -- exact usen_mono hl hx3
           · subst hmax
             simp_all only [add_le_add_iff_right, Option.mem_def, Option.bind_eq_bind, unpair1_to_l, Option.pure_def]
       -- exact fun y h₁ h₂ => ⟨y, usen_mono hl' h₁, hg _ _ h₂⟩
@@ -171,7 +160,88 @@ theorem usen_mono : ∀ {k₁ k₂ c n x}, k₁ ≤ k₂ → x ∈ usen O c k₁
       constructor
       · exact usen_mono hl' ha1
       · simp_all only [add_le_add_iff_right, Option.mem_def, Option.bind_eq_bind, Option.some.injEq]
-theorem usen_sound : ∀ {c s n x}, x ∈ usen O c s n → x ∈ use O c n := by sorry
+theorem usen_sound : ∀ {c s n x}, x ∈ usen O c s n → x ∈ use O c n
+| _, 0, n, x, h => by simp [usen] at h
+| c, k + 1, n, x, h => by
+  induction' c with cf cg hf hg cf cg hf hg cf cg hf hg cf hf generalizing x n
+  -- <;>
+      -- simp [use, usen, Option.bind_eq_some, Seq.seq] at h ⊢ <;>
+    -- obtain ⟨_, h⟩ := h
+  -- iterate 5 simpa [pure, PFun.pure, eq_comm] using h
+  · simp [use, usen, Option.bind_eq_some, Seq.seq] at h ⊢
+    obtain ⟨_, h⟩ := h
+    exact (Part.get_eq_iff_mem trivial).mp h
+    -- simpa [pure, PFun.pure, eq_comm] using h
+  · simp [use, usen, Option.bind_eq_some, Seq.seq] at h ⊢
+    obtain ⟨_, h⟩ := h
+    exact (Part.get_eq_iff_mem trivial).mp h
+  · sorry
+  · sorry
+  · sorry
+  · -- pair cf cg
+    simp [use, usen, Option.bind_eq_some, Seq.seq] at h ⊢
+    obtain ⟨_, h⟩ := h
+    rcases h with ⟨y, ef, z, eg, rfl⟩
+    aesop? says
+      simp_all only [Option.mem_def]
+      apply Exists.intro
+      · apply And.intro
+        on_goal 2 => apply Exists.intro
+        on_goal 2 => apply And.intro
+        on_goal 3 => {rfl
+        }
+        · simp_all only
+        · simp_all only
+    -- exact ⟨_, hf _ _ ef, _, hg _ _ eg, rfl⟩
+  · --comp hf hg
+    simp [use, usen, Option.bind_eq_some, Seq.seq] at h ⊢
+    obtain ⟨_, h⟩ := h
+    rcases h with ⟨y, eg, ef⟩
+    expose_names
+    use w
+    constructor
+    · simp_all only [Option.mem_def]
+    · use eg
+      rcases ef with ⟨efl,⟨ef,efr⟩⟩
+      constructor
+      · exact evaln_sound efl
+      · use ef
+        constructor
+        · simp_all only [Option.mem_def]
+        · 
+          simp_all only [Option.mem_def]
+          obtain ⟨left, right⟩ := efr
+          subst right
+          exact Nat.max_comm w ef
+    -- exact ⟨_, hg _ _ eg, hf _ _ ef⟩
+  · -- prec cf cg
+    simp [use, usen, Option.bind_eq_some, Seq.seq] at h ⊢
+    -- obtain ⟨_, h⟩ := h
+    revert h
+    induction' n.unpair.2 with m IH generalizing x
+    -- <;> simp [Option.bind_eq_some]
+    · apply hf
+    · refine fun y h₁ h₂ => ⟨y, IH _ ?_, ?_⟩
+      · have := usen_mono k.le_succ h₁
+        simp [usen, Option.bind_eq_some] at this
+        exact this.2
+      · exact hg _ _ h₂
+  · -- rfind' cf
+    
+    rcases h with ⟨m, h₁, h₂⟩
+    by_cases m0 : m = 0 <;> simp [m0] at h₂
+    · exact
+        ⟨0, ⟨by simpa [m0] using hf _ _ h₁, fun {m} => (Nat.not_lt_zero _).elim⟩, by simp [h₂]⟩
+    · have := usen_sound h₂
+      simp [eval] at this
+      rcases this with ⟨y, ⟨hy₁, hy₂⟩, rfl⟩
+      refine
+        ⟨y + 1, ⟨by simpa [add_comm, add_left_comm] using hy₁, fun {i} im => ?_⟩, by
+          simp [add_comm, add_left_comm]⟩
+      rcases i with - | i
+      · exact ⟨m, by simpa using hf _ _ h₁, m0⟩
+      · rcases hy₂ (Nat.lt_of_succ_lt_succ im) with ⟨z, hz, z0⟩
+        exact ⟨z, by simpa [add_comm, add_left_comm] using hz, z0⟩
 theorem usen_complete {c n x} : x ∈ use O c n ↔ ∃ s, x ∈ usen O c s n := by sorry
 theorem use_eq_rfindOpt (c n) : use O c n = Nat.rfindOpt fun s => usen O c s n :=
   Part.ext fun x => by
@@ -242,7 +312,30 @@ theorem eval_comp_dom
     intro hdom
     exact h
 
-theorem eval_pair_dom (h:(eval O (pair cf cg) x).Dom) : (eval O cf x).Dom ∧ (eval O cg x).Dom := by
+theorem eval_prec_dom_aux
+(h:(eval O (prec cf cg) x).Dom)
+:
+(eval O (prec cf cg) (Nat.pair x.l (x.r-1))).Dom
+:= by sorry
+theorem eval_prec_dom
+(h:(eval O (prec cf cg) x).Dom)
+:
+(eval O cf x.l).Dom ∧
+(eval O cg (Nat.pair x.l (Nat.pair (x.r-1) ((eval O (prec cf cg) (Nat.pair x.l (x.r-1))).get (eval_prec_dom_aux h))))).Dom
+:= by
+  constructor
+  · contrapose h
+    push_neg at h
+    simp [eval]
+    intro hdom
+    
+    exact fun a ↦ h hdom
+  · simp [eval] at h
+    contrapose h
+    -- simp
+    intro hdom
+    
+    exact h
   contrapose h
   push_neg at h
   simp [eval, Seq.seq]
@@ -499,6 +592,7 @@ theorem up_to_use (hh:(eval O₁ c x).Dom) (hO: ∀ i≤(use O₁ c x).get (e2u 
       ih2,
     ]
   | prec cf cg hcf hcg =>
+    simp [eval]
     sorry
   | rfind' cf hcf =>
     simp [eval]
