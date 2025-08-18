@@ -94,6 +94,33 @@ theorem Part.dom_imp_ex_some {x:Part ℕ} (h:x.Dom) : ∃ y, x=Part.some y := by
 theorem Part.dom_imp_some {x:Part ℕ} (h:x.Dom) : x=Part.some (x.get h) := by
   exact Part.get_eq_iff_eq_some.mp rfl
 
+
+theorem use_dom_iff_eval_dom : (use O c x).Dom ↔ (eval O c x).Dom := by
+  induction c generalizing x with
+  | zero => exact Eq.to_iff rfl
+  | succ => exact Eq.to_iff rfl
+  | left => exact Eq.to_iff rfl
+  | right => exact Eq.to_iff rfl
+  | oracle => exact Eq.to_iff rfl
+  | pair cf cg hcf hcg =>
+    simp [use,eval]
+    simp [Seq.seq]
+    simp_all only []
+  | comp cf cg hcf hcg =>
+    simp [use,eval]
+    simp [Seq.seq]
+    simp_all only [and_exists_self]
+  | prec cf cg hcf hcg => sorry
+  | rfind' _ _ => sorry
+
+  sorry
+
+#check use_dom_iff_eval_dom.mpr
+abbrev e2u : (eval O c x).Dom → (use O c x).Dom := use_dom_iff_eval_dom.mpr
+abbrev u2e : (use O c x).Dom → (eval O c x).Dom := use_dom_iff_eval_dom.mp
+
+
+
 theorem eval_pair_dom (h:(eval O (pair cf cg) x).Dom) : (eval O cf x).Dom ∧ (eval O cg x).Dom := by
   contrapose h
   push_neg at h
@@ -139,10 +166,7 @@ theorem eval_pair_dom (h:(eval O (pair cf cg) x).Dom) : (eval O cf x).Dom ∧ (e
   · simp [Part.eq_none_iff'.mpr hh]
   
 theorem use_pair_dom (h:(use O (pair cf cg) x).Dom) : (use O cf x).Dom ∧ (use O cg x).Dom := by
-  contrapose h
-  push_neg at h
-  simp [use, Seq.seq]
-  exact fun a ↦ h a
+  exact exists_prop.mp h
 theorem use_comp_dom_aux (h:(use O (comp cf cg) x).Dom) : (eval O cg x).Dom := by
   simp [use] at h
   contrapose h
@@ -156,6 +180,51 @@ theorem use_comp_dom_aux (h:(use O (comp cf cg) x).Dom) : (eval O cg x).Dom := b
 theorem use_comp_dom (h:(use O (comp cf cg) x).Dom) : (use O cg x).Dom ∧ (use O cf ((eval O cg x).get (use_comp_dom_aux h))).Dom := by
   simp [use,Seq.seq] at h
   aesop
+
+def rfind'_obtain (h:(eval O (rfind' cf) x).Dom) : ℕ := ((eval O (rfind' cf) x).get h)-x.r
+theorem rfind'_obtain_prop
+(h:(eval O (rfind' cf) x).Dom) : 
+∀ j ≤ rfind'_obtain h, (eval O cf (Nat.pair x.l (j+x.r))).Dom := by
+-- 0 ∈ eval O cf (Nat.pair x.l ((rfind'_obtain h) + x.r)) ∧ ∀ {m : ℕ}, m < (rfind'_obtain h) → (eval O cf (Nat.pair x.l (m + x.r))).Dom := by
+  -- have h0 : ∃ m, m ∈ eval O (rfind' cf) x := by exact Part.dom_iff_mem.mp h
+  -- simp [eval] at h
+  -- simp [eval] at h0
+  -- rcases h0 with ⟨m,a,⟨⟨hmal,asd⟩, hmar⟩⟩
+  let rf_result := (eval O cf.rfind' x).get h
+  have aux0 : rf_result ∈ eval O cf.rfind' x := by exact Part.get_mem h
+  have aux1 : rf_result ≥ x.r := by
+    unfold rf_result
+    simp [eval]
+
+  have aux2 : rfind'_obtain h = rf_result - x.r:= by exact rfl
+  -- have aux3 : rf_result = m := by exact?
+  have aux3 : rf_result ∈ eval O cf.rfind' x := by exact Part.get_mem h
+  simp [eval] at aux3
+  rcases aux3 with ⟨a,⟨⟨lll,rrr⟩,ha⟩⟩
+  have aux4: rf_result - x.r = a := by exact (Nat.sub_eq_iff_eq_add aux1).mpr (_root_.id (Eq.symm ha))
+  
+  intro j
+  rw [aux2]
+  rw [aux4]
+  intro hja
+  cases lt_or_eq_of_le hja with
+  | inl hja =>
+    rcases rrr hja with ⟨witness,⟨hwitness,_⟩⟩
+    have exform : ∃ a, a ∈ eval O cf (Nat.pair x.l (j + x.r)) := by exact Exists.intro witness hwitness
+    exact Part.dom_iff_mem.mpr exform
+  | inr hja =>
+    rw [hja]
+    
+    have exform : ∃ a', a' ∈ eval O cf (Nat.pair x.l (a + x.r)) := by exact Exists.intro 0 lll
+    exact Part.dom_iff_mem.mpr exform
+
+  
+theorem use_rfind'_dom
+(h:(use O (rfind' cf) x).Dom) :
+∀ j ≤ rfind'_obtain (u2e h),
+  (use O cf (Nat.pair x.l (j+x.r))).Dom := by
+  have aux0 := rfind'_obtain_prop (u2e h)
+  exact fun j a ↦ e2u (aux0 j a)
 
 theorem use_mono_pair (hh:(use O (pair cf cg) x).Dom):
   ((use O cf x).get ((use_pair_dom hh).left) ≤ (use O (pair cf cg) x).get hh)
@@ -180,30 +249,14 @@ theorem use_mono_comp (hh:(use O (comp cf cg) x).Dom):
     simp [Part.bind]
     simp only [Part.assert]
     simp only [le_refl, or_true]
-
-
-theorem use_dom_iff_eval_dom : (use O c x).Dom ↔ (eval O c x).Dom := by
-  induction c generalizing x with
-  | zero => exact Eq.to_iff rfl
-  | succ => exact Eq.to_iff rfl
-  | left => exact Eq.to_iff rfl
-  | right => exact Eq.to_iff rfl
-  | oracle => exact Eq.to_iff rfl
-  | pair cf cg hcf hcg =>
-    simp [use,eval]
-    simp [Seq.seq]
-    simp_all only []
-  | comp cf cg hcf hcg =>
-    simp [use,eval]
-    simp [Seq.seq]
-    simp_all only [and_exists_self]
-  | prec cf cg hcf hcg => sorry
-  | rfind' _ _ => sorry
-
+theorem use_mono_rfind' (hh:(use O (rfind' cf) x).Dom):
+  ∀ j ≤ (eval O (rfind' cf) x).get (sorry), (use O cf (Nat.pair x.l j)).get (use_rfind'_dom hh j) ≤ (use O (rfind' cf) x).get hh
+  -- ((use O cg x).get ((use_comp_dom hh).left) ≤ (use O (comp cf cg) x).get hh)
+  -- ∧
+  -- ((use O cf ((eval O cg x).get (use_comp_dom_aux hh))).get ((use_comp_dom hh).right) ≤ (use O (comp cf cg) x).get hh)
+  := by
   sorry
 
-#check use_dom_iff_eval_dom.mpr
-abbrev e2u : (eval O c x).Dom → (use O c x).Dom := use_dom_iff_eval_dom.mpr
 
 -- #check Partrec.rfind'_dom
 theorem up_to_use (hh:(eval O₁ c x).Dom) (hO: ∀ i≤(use O₁ c x).get (e2u hh), O₁ i = O₂ i) : eval O₁ c x = eval O₂ c x := by
@@ -282,8 +335,33 @@ theorem up_to_use (hh:(eval O₁ c x).Dom) (hO: ∀ i≤(use O₁ c x).get (e2u 
   | prec cf cg hcf hcg =>
     sorry
   | rfind' cf hcf =>
-    sorry
+    simp [eval]
+    simp [Part.map]
+    #check hcf
+    constructor
+    · constructor
+      · intro h2
+        rcases h2 with ⟨h2,hh2⟩
+        use h2
+        rcases hh2.left with ⟨hh2l,hhh2l⟩
+        constructor
+        · use hh2l
+          -- sorry
+        · have hh2r := hh2.right
+          #check 1
+      · sorry
+      sorry
+    · sorry
 
+    sorry
+/-
+What does rfind' do?
+rfind' cf (x,i) = the smallest (i+j) s.t. `[cf](x,i+j)=0`
+
+So to calculate `rfind' cf x`, we will need to calculate
+`[cf]` on all inputs from `x` to `(x.l, rfind' cf x)`
+
+-/
 -- def eval_clamped (O:Set ℕ) (u:ℕ) (c:Code) : ℕ→.ℕ :=
 def evaln_clamped (O:ℕ→ℕ) (use:ℕ) : ℕ→Code→ℕ→Option ℕ
   | 0, _ => fun _ => Option.none
