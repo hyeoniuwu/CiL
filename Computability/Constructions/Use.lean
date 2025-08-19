@@ -44,6 +44,7 @@ match c,s with
 | oracle    , s+1  => do guard (x≤s); return x+1
 | pair cf cg, s+1  =>
   do
+    guard (x≤s);
     let usen_cf ← usen O cf (s+1) x
     let usen_cg ← usen O cg (s+1) x
     return Nat.max usen_cf usen_cg
@@ -51,23 +52,26 @@ match c,s with
     -- Nat.max <$> (use O cf x) <*> (use O cg x)
 | comp cf cg, s+1  =>
   do
+    guard (x≤s);
     let usen_cg ← usen O cg (s+1) x
     let evaln_cg ← evaln O (s+1) cg x
     let usen_cf ← usen O cf (s+1) evaln_cg
     return Nat.max usen_cf usen_cg
     -- Nat.max <$> (use O cg x) <*> (eval O cg x >>= use O cf)
-| prec cf cg, s+1 =>
+| prec cf cg, s+1 => do
+  guard (x≤s);
   let (xl, i) := Nat.unpair x
-  i.casesOn
+  (i.casesOn
   (usen O cf (s+1) xl)
   fun iM1 =>
   do
     let usen_prev  ← usen  O (prec cf cg) s (Nat.pair xl iM1)
     let evaln_prev ← evaln O s (prec cf cg) (Nat.pair xl iM1)
     let usen_indt  ← usen  O cg (s+1) (Nat.pair xl (Nat.pair iM1 evaln_prev))
-    return Nat.max usen_prev usen_indt
+    return Nat.max usen_prev usen_indt)
 | rfind' cf, s+1 =>
   do
+    guard (x≤s);
     let usen_base ← usen O cf (s+1) x
     let evaln_base ← evaln O (s+1) cf x
     let usen_indt ← usen O cf s (Nat.pair x.l (x.r+1))
@@ -81,7 +85,53 @@ match c,s with
   -- then
   -- else
     -- Part.none
--- actually, maybe we dont have to define it like the above.
+theorem test (h:∀ (a : ℕ), ¬x = some a) : x=Option.none := by exact Option.eq_none_iff_forall_ne_some.mpr h
+theorem usen_none_iff_evaln_none : (usen O c s x) = Option.none ↔ (evaln O s c x) = Option.none := by
+  cases s with
+  | zero => simp [usen,evaln]
+  | succ s =>
+
+  induction c generalizing x with
+  | zero => simp [usen, evaln]
+  | succ => simp [usen, evaln]
+  | left => simp [usen, evaln]
+  | right => simp [usen, evaln]
+  | oracle => simp [usen, evaln]
+  | pair cf cg hcf hcg =>
+    simp [usen,evaln]
+    simp [Seq.seq]
+    cases Classical.em (x≤s) with
+    | inl h =>
+      simp [h]
+
+      constructor
+      · intro hh
+        intro a ha
+
+        have := (@usen_none_iff_evaln_none O cf (s+1) x).not
+        simp only [Option.ne_none_iff_exists'] at this
+        obtain ⟨a2,ha2⟩ := this.mpr ⟨a,ha⟩
+        have := Option.eq_none_iff_forall_ne_some.mpr (hh a2 ha2)
+        have := hcg.mp this
+        exact this
+        
+      · intro hh
+        intro a ha
+
+        have := (@usen_none_iff_evaln_none O cf (s+1) x).not
+        simp only [Option.ne_none_iff_exists'] at this
+        obtain ⟨a2,ha2⟩ := this.mp ⟨a,ha⟩
+        have := hh a2 ha2
+        have := hcg.mpr this
+        simp [this]
+    | inr h => simp [h]
+    simp_all only []
+  | comp cf cg hcf hcg =>
+    simp [use,eval]
+    simp [Seq.seq]
+    simp_all only [and_exists_self]
+  | prec cf cg hcf hcg => sorry
+  | rfind' _ _ => sorry
 theorem usen_mono : ∀ {k₁ k₂ c n x}, k₁ ≤ k₂ → x ∈ usen O c k₁ n → x ∈ usen O c k₂ n
 | 0, k₂, c, n, x, _, h => by simp [usen] at h
 | k + 1, k₂ + 1, c, n, x, hl, h => by
@@ -102,6 +152,7 @@ theorem usen_mono : ∀ {k₁ k₂ c n x}, k₁ ≤ k₂ → x ∈ usen O c k₁
   iterate 5 exact this hl' (fun a ↦ a) h
   · -- pair cf cg
     simp only [Option.pure_def, Option.bind_eq_bind, Option.bind_eq_some, Option.some.injEq] at h ⊢
+    
     exact h.imp fun a => And.imp (hf _ _) <| Exists.imp fun b => And.imp_left (hg _ _)
   · -- comp cf cg
     simp only [bind, Option.pure_def, Option.bind_eq_some, Option.some.injEq] at h ⊢
@@ -218,16 +269,33 @@ theorem usen_sound : ∀ {c s n x}, x ∈ usen O c s n → x ∈ use O c n
     simp [use, usen, Option.bind_eq_some, Seq.seq] at h ⊢
     -- obtain ⟨_, h⟩ := h
     revert h
-    induction' n.unpair.2 with m IH generalizing x
+    induction' n.r with m IH generalizing x
     -- <;> simp [Option.bind_eq_some]
     · apply hf
-    · refine fun y h₁ h₂ => ⟨y, IH _ ?_, ?_⟩
-      · have := usen_mono k.le_succ h₁
-        simp [usen, Option.bind_eq_some] at this
-        exact this.2
-      · exact hg _ _ h₂
+    · simp
+      intro hh
+      simp [Option.bind_eq_some] at hh
+      rcases hh with ⟨hh,⟨h3,⟨h4,⟨h5,⟨h7,⟨h8,h9⟩⟩⟩⟩⟩⟩
+
+      use h4
+      constructor
+      · exact evaln_sound h5
+      · use hh
+        constructor
+        · 
+          have main := usen_sound h3
+          simp [use] at main
+          exact main
+        · use h7
+          constructor
+          · exact hg (Nat.pair n.l (Nat.pair m h4)) h7 h8
+          · exact h9
+
   · -- rfind' cf
-    
+    simp [use, usen, Option.bind_eq_some, Seq.seq] at h ⊢
+    obtain ⟨_, h⟩ := h
+
+
     rcases h with ⟨m, h₁, h₂⟩
     by_cases m0 : m = 0 <;> simp [m0] at h₂
     · exact
@@ -242,7 +310,95 @@ theorem usen_sound : ∀ {c s n x}, x ∈ usen O c s n → x ∈ use O c n
       · exact ⟨m, by simpa using hf _ _ h₁, m0⟩
       · rcases hy₂ (Nat.lt_of_succ_lt_succ im) with ⟨z, hz, z0⟩
         exact ⟨z, by simpa [add_comm, add_left_comm] using hz, z0⟩
-theorem usen_complete {c n x} : x ∈ use O c n ↔ ∃ s, x ∈ usen O c s n := by sorry
+theorem usen_complete {c n x} : x ∈ use O c n ↔ ∃ s, x ∈ usen O c s n := by
+  refine ⟨fun h => ?_, fun ⟨k, h⟩ => usen_sound h⟩
+  rsuffices ⟨k, h⟩ : ∃ k, x ∈ usen O  c (k + 1) n
+  · exact ⟨k + 1, h⟩
+  induction c generalizing n x with
+      simp [use, usen, pure, PFun.pure, Seq.seq, Option.bind_eq_some] at h ⊢
+  | pair cf cg hf hg =>
+    rcases h with ⟨x, hx, y, hy, rfl⟩
+    rcases hf hx with ⟨k₁, hk₁⟩; rcases hg hy with ⟨k₂, hk₂⟩
+    refine ⟨max k₁ k₂, ?_⟩
+    -- refine
+    --   ⟨le_max_of_le_left <| Nat.le_of_lt_succ <| usen_bound hk₁, _,
+    --     usen_mono (Nat.succ_le_succ <| le_max_left _ _) hk₁, _,
+    --     usen_mono (Nat.succ_le_succ <| le_max_right _ _) hk₂, rfl⟩
+    -- rw [le_max_of_le_left]
+    use x
+    constructor
+    · refine usen_mono (Nat.succ_le_succ <| le_max_left _ _) hk₁
+    · use y
+      constructor
+      · refine usen_mono (Nat.succ_le_succ <| le_max_right _ _) hk₂
+      · exact rfl
+  | comp cf cg hf hg =>
+    rcases h with ⟨y, hy, ⟨hx1,⟨hx2,⟨hx3,⟨hx4,hx5⟩⟩⟩⟩⟩
+    -- rcases h with ⟨y, hy, ⟨hx1,hx2⟩⟩
+    rcases hg hy with ⟨k₁, hk₁⟩; rcases hf hx4 with ⟨k₂, hk₂⟩
+    refine ⟨max k₁ k₂, ?_⟩
+    -- exact
+    --   ⟨le_max_of_le_left <| Nat.le_of_lt_succ <| usen_bound hk₁, _,
+    --     usen_mono (Nat.succ_le_succ <| le_max_left _ _) hk₁,
+    --     usen_mono (Nat.succ_le_succ <| le_max_right _ _) hk₂⟩
+    use y
+    constructor
+    · apply usen_mono (Nat.succ_le_succ <| le_max_left _ _) hk₁
+    · use hx1
+      constructor
+      · sorry
+      · use hx3
+        constructor
+        · apply usen_mono (Nat.succ_le_succ <| le_max_right _ _) hk₂
+        · 
+          subst hx5
+          exact Nat.max_comm hx3 y
+  | prec cf cg hf hg =>
+    revert h
+    generalize n.unpair.1 = n₁; generalize n.unpair.2 = n₂
+    induction' n₂ with m IH generalizing x n <;> simp [Option.bind_eq_some]
+    · intro h
+      rcases hf h with ⟨k, hk⟩
+      exact ⟨_, le_max_left _ _, usen_mono (Nat.succ_le_succ <| le_max_right _ _) hk⟩
+    · intro y hy hx
+      rcases IH hy with ⟨k₁, nk₁, hk₁⟩
+      rcases hg hx with ⟨k₂, hk₂⟩
+      refine
+        ⟨(max k₁ k₂).succ,
+          Nat.le_succ_of_le <| le_max_of_le_left <|
+            le_trans (le_max_left _ (Nat.pair n₁ m)) nk₁, y,
+          usen_mono (Nat.succ_le_succ <| le_max_left _ _) ?_,
+          usen_mono (Nat.succ_le_succ <| Nat.le_succ_of_le <| le_max_right _ _) hk₂⟩
+      simp only [usen, bind, unpaired, unpair_pair, Option.mem_def, Option.bind_eq_some,
+        Option.guard_eq_some', exists_and_left, exists_const]
+      exact ⟨le_trans (le_max_right _ _) nk₁, hk₁⟩
+
+  | rfind' cf hf =>
+    rcases h with ⟨y, ⟨hy₁, hy₂⟩, rfl⟩
+    suffices ∃ k, y + n.unpair.2 ∈ usen O (k + 1) (rfind' cf) (Nat.pair n.unpair.1 n.unpair.2) by
+      simpa [usen, Option.bind_eq_some]
+    revert hy₁ hy₂
+    generalize n.unpair.2 = m
+    intro hy₁ hy₂
+    induction' y with y IH generalizing m <;> simp [usen, Option.bind_eq_some]
+    · simp at hy₁
+      rcases hf hy₁ with ⟨k, hk⟩
+      exact ⟨_, Nat.le_of_lt_succ <| usen_bound hk, _, hk, by simp⟩
+    · rcases hy₂ (Nat.succ_pos _) with ⟨a, ha, a0⟩
+      rcases hf ha with ⟨k₁, hk₁⟩
+      rcases IH m.succ (by simpa [Nat.succ_eq_add_one, add_comm, add_left_comm] using hy₁)
+          fun {i} hi => by
+          simpa [Nat.succ_eq_add_one, add_comm, add_left_comm] using
+            hy₂ (Nat.succ_lt_succ hi) with
+        ⟨k₂, hk₂⟩
+      use (max k₁ k₂).succ
+      rw [zero_add] at hk₁
+      use Nat.le_succ_of_le <| le_max_of_le_left <| Nat.le_of_lt_succ <| usen_bound hk₁
+      use a
+      use usen_mono (Nat.succ_le_succ <| Nat.le_succ_of_le <| le_max_left _ _) hk₁
+      simpa [a0, add_comm, add_left_comm] using
+        usen_mono (Nat.succ_le_succ <| le_max_right _ _) hk₂
+  | _ => exact ⟨⟨_, le_rfl⟩, h.symm⟩
 theorem use_eq_rfindOpt (c n) : use O c n = Nat.rfindOpt fun s => usen O c s n :=
   Part.ext fun x => by
     refine usen_complete.trans (Nat.rfindOpt_mono ?_).symm
