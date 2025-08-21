@@ -109,29 +109,71 @@ theorem usen_none_iff_evaln_none : (usen O c s x) = Option.none ↔ (evaln O s c
         intro a ha
 
         have := (@usen_none_iff_evaln_none O cf (s+1) x).not
+        -- have := (@usen_none_iff_evaln_none O cf (s+1) x)
+        -- stop
+        -- have := this.not
         simp only [Option.ne_none_iff_exists'] at this
         obtain ⟨a2,ha2⟩ := this.mpr ⟨a,ha⟩
         have := Option.eq_none_iff_forall_ne_some.mpr (hh a2 ha2)
-        have := hcg.mp this
+        have := (hcg rfl).mp this
         exact this
         
       · intro hh
         intro a ha
 
+        apply Option.eq_none_iff_forall_ne_some.mp
+        stop
         have := (@usen_none_iff_evaln_none O cf (s+1) x).not
         simp only [Option.ne_none_iff_exists'] at this
         obtain ⟨a2,ha2⟩ := this.mp ⟨a,ha⟩
         have := hh a2 ha2
         have := hcg.mpr this
-        simp [this]
+        
+        exact this
     | inr h => simp [h]
-    simp_all only []
   | comp cf cg hcf hcg =>
-    simp [use,eval]
-    simp [Seq.seq]
-    simp_all only [and_exists_self]
+    stop
+    simp [usen,evaln]
+    cases Classical.em (x≤s) with
+    | inl h =>
+      simp [h]
+      constructor
+      · intro hh
+        intro a ha
+
+        have := (@usen_none_iff_evaln_none O cg (s+1) x).not
+        simp only [Option.ne_none_iff_exists'] at this
+        obtain ⟨a2,ha2⟩ := this.mpr ⟨a,ha⟩
+        have := Option.eq_none_iff_forall_ne_some.mpr (hh a2 ha2 a ha)
+        have := hcf.mp this
+        exact this
+        
+      · intro hh
+        intro a ha
+        intro a3
+        intro ha3
+
+        apply Option.eq_none_iff_forall_ne_some.mp
+
+        have := (@usen_none_iff_evaln_none O cf (s+1) x).not
+        simp only [Option.ne_none_iff_exists'] at this
+        have := hh a3 ha3
+        have := hcf.mpr this
+        exact this
+    | inr h => simp [h]
   | prec cf cg hcf hcg => sorry
   | rfind' _ _ => sorry
+-- termination_by c
+-- decreasing_by
+--   -- have : c=pair cf cg := by exact?
+--   #check sizeOf Code.zero
+--   have asd : sizeOf Code.zero = 1 := by simp
+--   have asd : sizeOf Code.oracle = 1 := by simp
+--   have asd : sizeOf (pair oracle oracle) = 3 := by simp
+--   #check 0+2
+--   -- #eval )
+--   sorry
+
 theorem usen_mono : ∀ {k₁ k₂ c n x}, k₁ ≤ k₂ → x ∈ usen O c k₁ n → x ∈ usen O c k₂ n
 | 0, k₂, c, n, x, _, h => by simp [usen] at h
 | k + 1, k₂ + 1, c, n, x, hl, h => by
