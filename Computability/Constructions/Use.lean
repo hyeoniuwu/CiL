@@ -90,6 +90,9 @@ theorem usen_none_iff_evaln_none : (usen O c s x) = Option.none ↔ (evaln O s c
   cases s with
   | zero => simp [usen,evaln]
   | succ s =>
+  -- let c':=c
+  -- have asdasd : c=c' := rfl
+  -- revert c'
 
   induction c generalizing x with
   | zero => simp [usen, evaln]
@@ -105,25 +108,20 @@ theorem usen_none_iff_evaln_none : (usen O c s x) = Option.none ↔ (evaln O s c
       simp [h]
 
       constructor
-      · intro hh
+      · 
+        intro hh
         intro a ha
-
-        have := (@usen_none_iff_evaln_none O cf (s+1) x).not
-        -- have := (@usen_none_iff_evaln_none O cf (s+1) x)
-        -- stop
-        -- have := this.not
+        have := (@hcf x).not
         simp only [Option.ne_none_iff_exists'] at this
         obtain ⟨a2,ha2⟩ := this.mpr ⟨a,ha⟩
         have := Option.eq_none_iff_forall_ne_some.mpr (hh a2 ha2)
-        have := (hcg rfl).mp this
+        have := hcg.mp this
         exact this
         
       · intro hh
         intro a ha
-
         apply Option.eq_none_iff_forall_ne_some.mp
-        stop
-        have := (@usen_none_iff_evaln_none O cf (s+1) x).not
+        have := (@hcf x).not
         simp only [Option.ne_none_iff_exists'] at this
         obtain ⟨a2,ha2⟩ := this.mp ⟨a,ha⟩
         have := hh a2 ha2
@@ -163,17 +161,17 @@ theorem usen_none_iff_evaln_none : (usen O c s x) = Option.none ↔ (evaln O s c
     | inr h => simp [h]
   | prec cf cg hcf hcg => sorry
   | rfind' _ _ => sorry
--- termination_by c
--- decreasing_by
---   -- have : c=pair cf cg := by exact?
---   #check sizeOf Code.zero
---   have asd : sizeOf Code.zero = 1 := by simp
---   have asd : sizeOf Code.oracle = 1 := by simp
---   have asd : sizeOf (pair oracle oracle) = 3 := by simp
---   #check 0+2
---   -- #eval )
---   sorry
 
+theorem usen_dom_iff_evaln_dom : (∃a,a∈(usen O c s x)) ↔ (∃b,b∈(evaln O s c x)) := by
+  have := (@usen_none_iff_evaln_none O c s x).not
+  simp [Option.eq_none_iff_forall_ne_some] at this
+  exact this
+theorem usen_bound : ∀ {k c n x}, x ∈ usen O c k n → n < k
+  | 0, c, n, x, h => by simp [usen] at h
+  | k + 1, c, n, x, h => by
+    suffices ∀ {o : Option ℕ}, x ∈ do { guard (n ≤ k); o } → n < k + 1 by
+      cases c <;> rw [usen] at h <;> exact this h
+    simpa [Option.bind_eq_some] using Nat.lt_succ_of_le
 theorem usen_mono : ∀ {k₁ k₂ c n x}, k₁ ≤ k₂ → x ∈ usen O c k₁ n → x ∈ usen O c k₂ n
 | 0, k₂, c, n, x, _, h => by simp [usen] at h
 | k + 1, k₂ + 1, c, n, x, hl, h => by
@@ -194,6 +192,7 @@ theorem usen_mono : ∀ {k₁ k₂ c n x}, k₁ ≤ k₂ → x ∈ usen O c k₁
   iterate 5 exact this hl' (fun a ↦ a) h
   · -- pair cf cg
     simp only [Option.pure_def, Option.bind_eq_bind, Option.bind_eq_some, Option.some.injEq] at h ⊢
+    
     
     exact h.imp fun a => And.imp (hf _ _) <| Exists.imp fun b => And.imp_left (hg _ _)
   · -- comp cf cg
@@ -352,6 +351,14 @@ theorem usen_sound : ∀ {c s n x}, x ∈ usen O c s n → x ∈ use O c n
       · exact ⟨m, by simpa using hf _ _ h₁, m0⟩
       · rcases hy₂ (Nat.lt_of_succ_lt_succ im) with ⟨z, hz, z0⟩
         exact ⟨z, by simpa [add_comm, add_left_comm] using hz, z0⟩
+lemma evaln_sing (h1:a∈(evaln O s1 c x)) (h2:b∈(evaln O s2 c x)): a=b := by
+  cases Classical.em (s1≤s2) with
+  | inl h =>
+    have := evaln_mono h h1
+    simp_all only [Option.mem_def, Option.some.injEq]
+  | inr h =>
+    have := evaln_mono (Nat.le_of_not_ge h) h2
+    simp_all only [Option.mem_def, Option.some.injEq]
 theorem usen_complete {c n x} : x ∈ use O c n ↔ ∃ s, x ∈ usen O c s n := by
   refine ⟨fun h => ?_, fun ⟨k, h⟩ => usen_sound h⟩
   rsuffices ⟨k, h⟩ : ∃ k, x ∈ usen O  c (k + 1) n
@@ -362,18 +369,12 @@ theorem usen_complete {c n x} : x ∈ use O c n ↔ ∃ s, x ∈ usen O c s n :=
     rcases h with ⟨x, hx, y, hy, rfl⟩
     rcases hf hx with ⟨k₁, hk₁⟩; rcases hg hy with ⟨k₂, hk₂⟩
     refine ⟨max k₁ k₂, ?_⟩
-    -- refine
-    --   ⟨le_max_of_le_left <| Nat.le_of_lt_succ <| usen_bound hk₁, _,
-    --     usen_mono (Nat.succ_le_succ <| le_max_left _ _) hk₁, _,
-    --     usen_mono (Nat.succ_le_succ <| le_max_right _ _) hk₂, rfl⟩
-    -- rw [le_max_of_le_left]
-    use x
-    constructor
-    · refine usen_mono (Nat.succ_le_succ <| le_max_left _ _) hk₁
-    · use y
-      constructor
-      · refine usen_mono (Nat.succ_le_succ <| le_max_right _ _) hk₂
-      · exact rfl
+    -- constructor
+    
+    refine
+      ⟨le_max_of_le_left <| Nat.le_of_lt_succ <| usen_bound hk₁, _,
+        usen_mono (Nat.succ_le_succ <| le_max_left _ _) hk₁, _,
+        usen_mono (Nat.succ_le_succ <| le_max_right _ _) hk₂, rfl⟩
   | comp cf cg hf hg =>
     rcases h with ⟨y, hy, ⟨hx1,⟨hx2,⟨hx3,⟨hx4,hx5⟩⟩⟩⟩⟩
     -- rcases h with ⟨y, hy, ⟨hx1,hx2⟩⟩
@@ -383,18 +384,21 @@ theorem usen_complete {c n x} : x ∈ use O c n ↔ ∃ s, x ∈ usen O c s n :=
     --   ⟨le_max_of_le_left <| Nat.le_of_lt_succ <| usen_bound hk₁, _,
     --     usen_mono (Nat.succ_le_succ <| le_max_left _ _) hk₁,
     --     usen_mono (Nat.succ_le_succ <| le_max_right _ _) hk₂⟩
-    use y
+    refine
+      ⟨le_max_of_le_left <| Nat.le_of_lt_succ <| usen_bound hk₁, _,
+        usen_mono (Nat.succ_le_succ <| le_max_left _ _) hk₁,
+        ?_⟩
+
+    use hx1
     constructor
-    · apply usen_mono (Nat.succ_le_succ <| le_max_left _ _) hk₁
-    · use hx1
-      constructor
-      · sorry
-      · use hx3
-        constructor
-        · apply usen_mono (Nat.succ_le_succ <| le_max_right _ _) hk₂
-        · 
-          subst hx5
-          exact Nat.max_comm hx3 y
+    · 
+      rcases usen_dom_iff_evaln_dom.mp (Exists.intro y hk₁) with ⟨b,hb⟩
+      rcases evaln_complete.mp hx2 with ⟨kk,hkk⟩
+      rw [evaln_sing hkk hb]
+      exact evaln_mono (Nat.succ_le_succ <| le_max_left _ _) hb
+    · 
+      refine ⟨_,usen_mono (Nat.succ_le_succ <| le_max_right _ _) hk₂,
+      (by subst hx5; exact Nat.max_comm hx3 y) ⟩
   | prec cf cg hf hg =>
     revert h
     generalize n.unpair.1 = n₁; generalize n.unpair.2 = n₂
