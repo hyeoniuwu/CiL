@@ -1,5 +1,13 @@
 import Computability.Constructions.CovRec
 
+import Mathlib.Algebra.BigOperators.Intervals
+import Mathlib.Algebra.Order.BigOperators.Group.Finset
+
+
+
+
+
+
 open Nat.RecursiveIn.Code
 namespace Nat.RecursiveIn.Code
 /--
@@ -33,16 +41,71 @@ match c with
     -- let (xl, xr) := Nat.unpair x
     -- (Nat.rfind fun n => (fun x => x = 0) <$> eval O cf (Nat.pair xl (n + xr))).map (· + xr)
 
+-- /-- `usen; the use of [c:O]ₛ(x)` -/
+-- def usen (O:ℕ→ℕ) (c:Code) (s:ℕ) (x:ℕ) : Option ℕ :=
+-- match c,s with
+-- | _,0              => Option.none
+-- | zero      , s+1  => do guard (x≤s); return 0
+-- | succ      , s+1  => do guard (x≤s); return 0
+-- | left      , s+1  => do guard (x≤s); return 0
+-- | right     , s+1  => do guard (x≤s); return 0
+-- | oracle    , s+1  => do guard (x≤s); return x+1
+-- | pair cf cg, s+1  =>
+--   do
+--     guard (x≤s);
+--     let usen_cf ← usen O cf (s+1) x
+--     let usen_cg ← usen O cg (s+1) x
+--     return Nat.max usen_cf usen_cg
+--     -- let asd ← evaln O s c x;
+--     -- Nat.max <$> (use O cf x) <*> (use O cg x)
+-- | comp cf cg, s+1  =>
+--   do
+--     guard (x≤s);
+--     let usen_cg ← usen O cg (s+1) x
+--     let evaln_cg ← evaln O (s+1) cg x
+--     let usen_cf ← usen O cf (s+1) evaln_cg
+--     return Nat.max usen_cf usen_cg
+--     -- Nat.max <$> (use O cg x) <*> (eval O cg x >>= use O cf)
+-- | prec cf cg, s+1 => do
+--   guard (x≤s);
+--   let (xl, i) := Nat.unpair x
+--   (i.casesOn
+--   (usen O cf (s+1) xl)
+--   fun iM1 =>
+--   do
+--     let usen_prev  ← usen  O (prec cf cg) s (Nat.pair xl iM1)
+--     let evaln_prev ← evaln O s (prec cf cg) (Nat.pair xl iM1)
+--     let usen_indt  ← usen  O cg (s+1) (Nat.pair xl (Nat.pair iM1 evaln_prev))
+--     return Nat.max usen_prev usen_indt)
+-- | rfind' cf, s+1 =>
+--   do
+--     guard (x≤s);
+--     let usen_base ← usen O cf (s+1) x
+--     let evaln_base ← evaln O (s+1) cf x
+--     let usen_indt ← usen O cf s (Nat.pair x.l (x.r+1))
+--     if evaln_base=0 then usen_base else
+--     Nat.max usen_base usen_indt
+--       -- let asd ← (eval O c x);
+--       -- let (xl, xr) := Nat.unpair x
+--       -- (Nat.rfind fun n => (fun x => x = 0) <$> eval O cf (Nat.pair xl (n + xr))).map (· + xr)
+
+--   -- if (eval O c x).Dom
+--   -- then
+--   -- else
+--     -- Part.none
+
+
+
 /-- `usen; the use of [c:O]ₛ(x)` -/
-def usen (O:ℕ→ℕ) (c:Code) (s:ℕ) (x:ℕ) : Option ℕ :=
+def usen (O:ℕ→ℕ) (c:Code) (s:ℕ) : ℕ→ Option ℕ :=
 match c,s with
-| _,0              => Option.none
-| zero      , s+1  => do guard (x≤s); return 0
-| succ      , s+1  => do guard (x≤s); return 0
-| left      , s+1  => do guard (x≤s); return 0
-| right     , s+1  => do guard (x≤s); return 0
-| oracle    , s+1  => do guard (x≤s); return x+1
-| pair cf cg, s+1  =>
+| _,0              => fun x=> Option.none
+| zero      , s+1  => fun x=> do guard (x≤s); return 0
+| succ      , s+1  => fun x=> do guard (x≤s); return 0
+| left      , s+1  => fun x=> do guard (x≤s); return 0
+| right     , s+1  => fun x=> do guard (x≤s); return 0
+| oracle    , s+1  => fun x=> do guard (x≤s); return x+1
+| pair cf cg, s+1  => fun x=>
   do
     guard (x≤s);
     let usen_cf ← usen O cf (s+1) x
@@ -50,7 +113,7 @@ match c,s with
     return Nat.max usen_cf usen_cg
     -- let asd ← evaln O s c x;
     -- Nat.max <$> (use O cf x) <*> (use O cg x)
-| comp cf cg, s+1  =>
+| comp cf cg, s+1  => fun x=>
   do
     guard (x≤s);
     let usen_cg ← usen O cg (s+1) x
@@ -58,7 +121,7 @@ match c,s with
     let usen_cf ← usen O cf (s+1) evaln_cg
     return Nat.max usen_cf usen_cg
     -- Nat.max <$> (use O cg x) <*> (eval O cg x >>= use O cf)
-| prec cf cg, s+1 => do
+| prec cf cg, s+1 => fun x=> do
   guard (x≤s);
   let (xl, i) := Nat.unpair x
   (i.casesOn
@@ -69,13 +132,13 @@ match c,s with
     let evaln_prev ← evaln O s (prec cf cg) (Nat.pair xl iM1)
     let usen_indt  ← usen  O cg (s+1) (Nat.pair xl (Nat.pair iM1 evaln_prev))
     return Nat.max usen_prev usen_indt)
-| rfind' cf, s+1 =>
+| rfind' cf, s+1 => fun x =>
   do
     guard (x≤s);
     let usen_base ← usen O cf (s+1) x
     let evaln_base ← evaln O (s+1) cf x
-    let usen_indt ← usen O cf s (Nat.pair x.l (x.r+1))
     if evaln_base=0 then usen_base else
+    let usen_indt ← usen O (rfind' cf) s (Nat.pair x.l (x.r+1))
     Nat.max usen_base usen_indt
       -- let asd ← (eval O c x);
       -- let (xl, xr) := Nat.unpair x
@@ -85,22 +148,52 @@ match c,s with
   -- then
   -- else
     -- Part.none
-theorem test (h:∀ (a : ℕ), ¬x = some a) : x=Option.none := by exact Option.eq_none_iff_forall_ne_some.mpr h
-theorem usen_none_iff_evaln_none : (usen O c s x) = Option.none ↔ (evaln O s c x) = Option.none := by
-  cases s with
-  | zero => simp [usen,evaln]
-  | succ s =>
-  -- let c':=c
-  -- have asdasd : c=c' := rfl
-  -- revert c'
 
-  induction c generalizing x with
-  | zero => simp [usen, evaln]
-  | succ => simp [usen, evaln]
-  | left => simp [usen, evaln]
-  | right => simp [usen, evaln]
-  | oracle => simp [usen, evaln]
-  | pair cf cg hcf hcg =>
+
+
+
+theorem test (h:∀ (a : ℕ), ¬x = some a) : x=Option.none := by exact Option.eq_none_iff_forall_ne_some.mpr h
+-- #check Nat.le_induction
+-- #check induct
+
+private def ind : ℕ → Code → ℕ
+| 0, _ => 0
+| s+1, zero => 0
+| s+1, succ => 0
+| s+1, left => 0
+| s+1, right => 0
+| s+1, oracle => 0
+| s+1, pair cf cg => ind (s+1) cf + ind (s+1) cg
+| s+1, comp cf cg => ind (s+1) cf + ind (s+1) cg
+-- | 0, prec cf cg => ind 0 cf + ind 0 cg
+| s+1, prec cf cg =>
+  -- ∑ i ∈ Finset.range (s+1),
+  -- (ind i cf + ind i cg)
+  ind (s+1) cf
+  + ind (s+1) cg
+  + ind s (prec cf cg)
+  -- +
+  -- ind s cf +
+  -- ind s cg
+-- | 0, rfind' cf => 0
+| s+1, rfind' cf =>
+  ind (s+1) cf
+  + ind s (rfind' cf)
+#check ind.induct
+#check Nat.strong_induction_on
+
+private theorem bound_lemma (h:Nat.pair a (b+1)≤s+1) : (Nat.pair a b≤s):= by
+  exact le_of_lt_succ (Nat.lt_of_lt_of_le (pair_lt_pair_right a (lt_add_one b)) h)
+theorem usen_none_iff_evaln_none : (usen O c s x) = Option.none ↔ (evaln O s c x) = Option.none := by
+-- using evaln.induct doesnt work, the prec inductive hypothesis w cf.prec cg is s+1 instead of s for some reason
+  induction s,c using ind.induct generalizing x with
+  | case1 _ => simp [usen,evaln]
+  | case2 s => simp [usen,evaln]
+  | case3 s => simp [usen,evaln]
+  | case4 s => simp [usen,evaln]
+  | case5 s => simp [usen,evaln]
+  | case6 s => simp [usen,evaln]
+  | case7 s cf cg hcf hcg =>
     simp [usen,evaln]
     simp [Seq.seq]
     cases Classical.em (x≤s) with
@@ -114,9 +207,7 @@ theorem usen_none_iff_evaln_none : (usen O c s x) = Option.none ↔ (evaln O s c
         have := (@hcf x).not
         simp only [Option.ne_none_iff_exists'] at this
         obtain ⟨a2,ha2⟩ := this.mpr ⟨a,ha⟩
-        have := Option.eq_none_iff_forall_ne_some.mpr (hh a2 ha2)
-        have := hcg.mp this
-        exact this
+        exact hcg.mp (Option.eq_none_iff_forall_ne_some.mpr (hh a2 ha2))
         
       · intro hh
         intro a ha
@@ -124,13 +215,9 @@ theorem usen_none_iff_evaln_none : (usen O c s x) = Option.none ↔ (evaln O s c
         have := (@hcf x).not
         simp only [Option.ne_none_iff_exists'] at this
         obtain ⟨a2,ha2⟩ := this.mp ⟨a,ha⟩
-        have := hh a2 ha2
-        have := hcg.mpr this
-        
-        exact this
+        exact hcg.mpr (hh a2 ha2)
     | inr h => simp [h]
-  | comp cf cg hcf hcg =>
-    stop
+  | case8 s cf cg hcf hcg =>
     simp [usen,evaln]
     cases Classical.em (x≤s) with
     | inl h =>
@@ -138,29 +225,94 @@ theorem usen_none_iff_evaln_none : (usen O c s x) = Option.none ↔ (evaln O s c
       constructor
       · intro hh
         intro a ha
-
-        have := (@usen_none_iff_evaln_none O cg (s+1) x).not
+        have := (@hcg x).not
         simp only [Option.ne_none_iff_exists'] at this
         obtain ⟨a2,ha2⟩ := this.mpr ⟨a,ha⟩
-        have := Option.eq_none_iff_forall_ne_some.mpr (hh a2 ha2 a ha)
-        have := hcf.mp this
-        exact this
-        
+        have := hh a2 ha2 a ha
+        have := Option.eq_none_iff_forall_ne_some.mpr this
+        exact hcf.mp (Option.eq_none_iff_forall_ne_some.mpr (hh a2 ha2 a ha))
+      · intro hh
+        intro a ha
+        intro a3
+        intro ha3
+        apply Option.eq_none_iff_forall_ne_some.mp
+        have := (@hcf x).not
+        simp only [Option.ne_none_iff_exists'] at this
+        exact hcf.mpr (hh a3 ha3)
+    | inr h => simp [h]
+  | case9 s cf cg hcf hcg ih =>
+    simp [usen,evaln]
+    cases Classical.em (x≤s) with
+    | inl h =>
+      simp [h]
+      cases hxr:x.r with
+      | zero =>
+        simp
+        exact hcf
+      | succ xrM1 =>
+      simp only [Option.bind_eq_none_iff, reduceCtorEq, imp_false]
+
+      constructor
+      · 
+        intro hh
+        intro a ha
+        have := (@ih (Nat.pair x.l xrM1)).not
+        simp only [Option.ne_none_iff_exists'] at this
+        obtain ⟨a2,ha2⟩ := this.mpr ⟨a,ha⟩
+        have := hh a2 ha2 a ha
+        have := Option.eq_none_iff_forall_ne_some.mpr this
+        exact hcg.mp this
       · intro hh
         intro a ha
         intro a3
         intro ha3
 
         apply Option.eq_none_iff_forall_ne_some.mp
-
-        have := (@usen_none_iff_evaln_none O cf (s+1) x).not
-        simp only [Option.ne_none_iff_exists'] at this
         have := hh a3 ha3
-        have := hcf.mpr this
-        exact this
+        exact hcg.mpr this
     | inr h => simp [h]
-  | prec cf cg hcf hcg => sorry
-  | rfind' _ _ => sorry
+  | case10 s cf hcf ih =>
+    simp [usen,evaln]
+    cases Classical.em (x≤s) with
+    | inl h =>
+      simp [h]
+      constructor
+      · 
+        intro hh
+        intro a ha
+        
+
+        have := (@hcf x).not
+
+        simp only [Option.ne_none_iff_exists'] at this
+        obtain ⟨a2,ha2⟩ := this.mpr ⟨a,ha⟩
+        have := hh a2 ha2 a ha
+
+        cases a with
+        | zero =>
+          simp at this
+        | succ n =>
+          simp at this ⊢
+          have := Option.eq_none_iff_forall_ne_some.mpr this
+          exact ih.mp this
+        
+
+      · intro hh
+        intro a ha
+        intro a3
+        intro ha3
+
+        have := hh a3 ha3
+
+        cases a3 with
+        | zero =>
+          simp at this
+        | succ n =>
+          simp at this ⊢
+          apply Option.eq_none_iff_forall_ne_some.mp
+          exact ih.mpr this
+    | inr h => simp [h]
+
 
 theorem usen_dom_iff_evaln_dom : (∃a,a∈(usen O c s x)) ↔ (∃b,b∈(evaln O s c x)) := by
   have := (@usen_none_iff_evaln_none O c s x).not
