@@ -665,6 +665,7 @@ theorem eval_comp_dom
     simp
     intro hdom
     exact h
+theorem auaua (h:x∨y∨z) : (x∨y)∨z := by exact or_assoc.mpr h
 
 theorem eval_prec_dom_aux
 (h:(eval O (prec cf cg) (Nat.pair x (i+1))).Dom)
@@ -869,7 +870,7 @@ theorem use_mono_comp (hh:(use O (comp cf cg) x).Dom):
 -- (
 -- let eval_prev := (eval O (prec cf cg) (Nat.pair x i)).get (use_prec_dom_aux h)
 -- (use O cg (Nat.pair x (Nat.pair i eval_prev))).Dom)
-    
+-- set_option maxHeartbeats 1000000 in
 theorem use_mono_prec (hh:(use O (prec cf cg) (Nat.pair x (i+1))).Dom):
 ((use O cf x).get ((use_prec_dom hh).left) ≤ (use O (prec cf cg) (Nat.pair x (i+1))).get hh)
 ∧
@@ -883,34 +884,84 @@ let eval_prev := (eval O (prec cf cg) (Nat.pair x i)).get (use_prec_dom_aux h)
       simp
       have h1 := Part.dom_imp_some ((use_prec_dom hh).left)
       have h2 := Part.dom_imp_some (use_prec_dom_aux hh)
-      have h3 : (eval O cf x).Dom := by sorry
-      simp [use]
-      -- simp only [use, Seq.seq, Part.bind]
+      have := eval_prec_dom_aux (u2e hh)
+      simp at this
+      have h3 := Part.dom_imp_some this
+      -- simp [use]
+      simp only [use, Seq.seq, Part.bind]
       
-      simp
+      -- simp
       simp (config := { singlePass := true }) only [h1]
+      simp (config := { singlePass := true }) only [h3]
       -- simp (config := { singlePass := true }) only [h2]
       simp only [Part.assert]
       simp [Part.bind]
       simp only [Part.assert]
+      simp only [le_sup_left, le_sup_right, and_self]
+    | succ n ih =>
+      simp
+      have h1 := Part.dom_imp_some ((use_prec_dom hh).left)
+      have h2 := Part.dom_imp_some (use_prec_dom_aux hh)
+      have h3' := eval_prec_dom_aux (u2e hh)
+      simp at h3'
+      have h3 := Part.dom_imp_some h3'
+      have h5' := eval_prec_dom_aux h3'
+      have h5 := Part.dom_imp_some h5'
+      -- have h4' := (eval_prec_dom (u2e hh)).right
+      have h4' := (eval_prec_dom h3').right
+      simp at h4'
+      have h4 := e2u h4'
+
+      -- sorry
+      -- simp [use]
+      -- simp only [use]
+      simp only [use, Seq.seq, Part.bind,unpair_pair]
+      -- simp only [h3',h5']
+      -- simp
+      -- simp only []
+      -- simp
+      simp (config := { singlePass := true }) only [h2]
+      simp (config := { singlePass := true }) only [h5]
+      -- simp (config := { singlePass := true }) only [h1]
+      -- simp (config := { singlePass := true }) only [h3]
+      -- have : (use O (cf.prec cg) (Nat.pair x (n + 1))).Dom := by exact (e2u h3')
+      -- have : (use O (cf.prec cg) (Nat.pair x (n + 1))).Dom := by exact?
+      -- have ihsimp := ih (e2u h3')
+      
+      have ihsimp := @ih (e2u h3') (e2u h3')
+      
+      -- simp only [unpair]
+      -- simp [ihsimp]
+      -- stop
+      simp only [Part.assert]
+      simp [Part.bind]
+      -- aesop
+      simp only [Part.assert]
+      -- simp only [Part.assert]
+      -- #check le_sup_left
+      simp
+      -- apply Or.inr
+      -- apply Or.inl
+      have ihsimp := ihsimp.left
+      simp only [use, Seq.seq, Part.bind] at ihsimp
+      simp only [unpair_pair] at ihsimp
+      simp (config := { singlePass := true }) only [h5] at ihsimp
+      -- simp (config := { singlePass := true }) only [h1] at ihsimp
+      -- simp (config := { singlePass := true }) only [h2] at ihsimp
+      simp only [Part.assert] at ihsimp
+      simp [Part.bind] at ihsimp
+      -- aesop
+      simp only [Part.assert] at ihsimp
+      apply or_assoc.mp
+      apply Or.inl
+      
+      -- have aux0 : (eval O (cf.prec cg) (Nat.pair x n)).Dom := by exact h5'
+      let v2 := (use O cg (Nat.pair x (Nat.pair n ((eval O (cf.prec cg) (Nat.pair x n)).get ?_)))).get ?_
+      exact le_sup_iff.mp ihsimp
+      exact h5'
+      exact h4
       
       
-      simp only [le_refl, or_true]
-    | succ n _ => sorry
-
-
-    have h1 := Part.dom_imp_some ((use_prec_dom hh).left)
-    have h2 := Part.dom_imp_some (use_prec_dom_aux hh)
-    simp only [use, Seq.seq, Part.bind]
-    
-    simp
-    simp (config := { singlePass := true }) only [h1]
-    simp (config := { singlePass := true }) only [h2]
-    simp only [Part.assert]
-    simp [Part.bind]
-    simp only [Part.assert]
-    
-    simp only [le_refl, or_true]
 theorem use_mono_rfind'
 (hh:(use O (rfind' cf) x).Dom):
 ∀ hj:j ≤ rfind'_obtain (u2e hh),
