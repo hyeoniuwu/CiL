@@ -357,19 +357,19 @@ theorem usen_mono : ∀ {k₁ k₂ c n x}, k₁ ≤ k₂ → x ∈ usen O c k₁
     exact guard_imp hl'
 
     refine Exists.imp fun b => ?_
-    rintro ⟨h1,⟨h2,⟨h3,h4⟩⟩⟩
-    exact ⟨hf n b h1, ⟨h2,⟨hg n h2 h3, h4⟩⟩⟩
+    rintro ⟨h1,h2,h3,h4⟩
+    exact ⟨hf n b h1, h2, hg n h2 h3, h4⟩
 
 
     -- exact h.imp fun a => And.imp (hf _ _) <| Exists.imp fun b => And.imp_left (hg _ _)
   · -- comp cf cg
     simp only [bind, Option.pure_def, Option.bind_eq_some, Option.some.injEq] at h ⊢
-    rcases h with ⟨h1,⟨h2,⟨h3,⟨h4,⟨h5,⟨h6,⟨h7,⟨h8,h9⟩⟩⟩⟩⟩⟩⟩⟩
-    refine ⟨h1,⟨guard_imp hl' h2,
-    ⟨h3,⟨hg n h3 h4,
-    ⟨h5,⟨evaln_mono hl h6,
-    ⟨h7,⟨hf h5 h7 h8,
-    h9⟩⟩⟩⟩⟩⟩⟩⟩
+    rcases h with ⟨h1,h2,h3,h4,h5,h6,h7,h8,h9⟩
+    refine ⟨h1,guard_imp hl' h2,
+    h3,hg n h3 h4,
+    h5,evaln_mono hl h6,
+    h7,hf h5 h7 h8,
+    h9⟩
 
 
   · -- prec cf cg    
@@ -382,12 +382,10 @@ theorem usen_mono : ∀ {k₁ k₂ c n x}, k₁ ≤ k₂ → x ∈ usen O c k₁
     · 
       intros g x1 hx1 x2 hx2 x3 hx3 hmax
       refine ⟨Nat.le_trans g hl',
-      ⟨x1,⟨usen_mono hl' hx1,
-      ⟨x2,⟨by rw [evaln_mono hl' hx2],
-      ⟨x3,
-      ⟨by (expose_names; exact hg (Nat.pair n.l (Nat.pair n_1 x2)) x3 hx3), hmax⟩
-      ⟩
-      ⟩⟩⟩⟩
+      x1,usen_mono hl' hx1,
+      x2,by rw [evaln_mono hl' hx2],
+      x3,
+      by (expose_names; exact hg (Nat.pair n.l (Nat.pair n_1 x2)) x3 hx3), hmax
       ⟩
 
   · -- rfind' cf
@@ -395,14 +393,13 @@ theorem usen_mono : ∀ {k₁ k₂ c n x}, k₁ ≤ k₂ → x ∈ usen O c k₁
       simp only [unpaired, bind, pair_unpair, Option.pure_def, Option.mem_def,
         Option.bind_eq_some] at h ⊢
 
-    rcases h with ⟨h1,⟨h2,⟨h3,⟨h4,⟨h5,⟨h6,h7⟩⟩⟩⟩⟩⟩
+    rcases h with ⟨h1,h2,h3,h4,h5,h6,h7⟩
 
-    refine ⟨h1,⟨guard_imp hl' h2,
-    ⟨h3,⟨hf n h3 h4,
-    ⟨h5,⟨evaln_mono hl h6,
-    ?_⟩⟩
-    ⟩⟩
-    ⟩⟩
+    refine ⟨h1,guard_imp hl' h2,
+    h3,hf n h3 h4,
+    h5,evaln_mono hl h6,
+    ?_
+    ⟩
     cases h5 with
     | zero => simp at h7 ⊢; assumption
     | succ n =>
@@ -410,8 +407,8 @@ theorem usen_mono : ∀ {k₁ k₂ c n x}, k₁ ≤ k₂ → x ∈ usen O c k₁
       expose_names
       simp only [unpaired, bind, pair_unpair, Option.pure_def, Option.mem_def,
         Option.bind_eq_some] at h7 ⊢
-      rcases h7 with ⟨h8,⟨h9,h10⟩⟩
-      refine ⟨h8,⟨usen_mono hl' h9, h10⟩⟩
+      rcases h7 with ⟨h8,h9,h10⟩
+      refine ⟨h8,usen_mono hl' h9, h10⟩
       
 
       
@@ -450,25 +447,16 @@ theorem usen_sound : ∀ {c s n x}, x ∈ usen O c s n → x ∈ use O c n
     -- exact ⟨_, hf _ _ ef, _, hg _ _ eg, rfl⟩
   · --comp hf hg
     simp [use, usen, Option.bind_eq_some, Seq.seq] at h ⊢
-    obtain ⟨_, h⟩ := h
-    rcases h with ⟨y, eg, ef⟩
-    expose_names
-    use w
-    constructor
-    · simp_all only [Option.mem_def]
-    · use eg
-      rcases ef with ⟨efl,⟨ef,efr⟩⟩
-      constructor
-      · exact evaln_sound efl
-      · use ef
-        constructor
-        · simp_all only [Option.mem_def]
-        · 
-          simp_all only [Option.mem_def]
-          obtain ⟨left, right⟩ := efr
-          subst right
-          exact Nat.max_comm w ef
-    -- exact ⟨_, hg _ _ eg, hf _ _ ef⟩
+    -- obtain ⟨_, h⟩ := h
+    -- rcases h with ⟨y, eg, ef⟩
+    rcases h with ⟨h1, h2, h3, h4, h5, h6, h7, h8⟩
+    refine ⟨h2,hg n h2 h3,
+            h4,evaln_sound h5,
+            h6,hf h4 h6 h7,
+            ?_⟩
+    subst h8
+    exact Nat.max_comm h2 h6
+    
   · -- prec cf cg
     simp [use, usen, Option.bind_eq_some, Seq.seq] at h ⊢
     -- obtain ⟨_, h⟩ := h
