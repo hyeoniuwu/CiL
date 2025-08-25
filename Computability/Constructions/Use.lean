@@ -372,19 +372,12 @@ theorem usen_mono : ∀ {k₁ k₂ c n x}, k₁ ≤ k₂ → x ∈ usen O c k₁
     h9⟩⟩⟩⟩⟩⟩⟩⟩
 
 
-  · -- prec cf cg
-    
+  · -- prec cf cg    
     revert h
     simp only [unpaired, bind, Option.mem_def]
-    -- intro h
-    -- simp [Option.bind_eq_some]
-    -- rcases h with ⟨h1,a⟩
-
     induction n.unpair.2 <;> simp [Option.bind_eq_some]
     · 
       intros g h
-      -- intro g
-      -- intro h
       exact ⟨Nat.le_trans g hl', hf n.l x h⟩
     · 
       intros g x1 hx1 x2 hx2 x3 hx3 hmax
@@ -401,18 +394,27 @@ theorem usen_mono : ∀ {k₁ k₂ c n x}, k₁ ≤ k₂ → x ∈ usen O c k₁
     simp? [Bind.bind, Option.bind_eq_some] at h ⊢ says
       simp only [unpaired, bind, pair_unpair, Option.pure_def, Option.mem_def,
         Option.bind_eq_some] at h ⊢
-    refine h.imp fun x => And.imp (hf _ _) ?_
-    -- by_cases x0 : x = 0 <;> simp [x0]
-    rintro ⟨x_1,⟨hx_1,⟨x_2,⟨hx_21,hx_22⟩⟩⟩⟩
-    rcases h with ⟨x_1',⟨hx_1',⟨x_2',⟨hx_21',⟨a,⟨ha1,ha2⟩⟩⟩⟩⟩⟩
-    use x_1
-    constructor
-    · rw [evaln_mono hl hx_1]
-    · expose_names
-      use a
-      constructor
-      · exact usen_mono hl' ha1
-      · simp_all only [add_le_add_iff_right, Option.mem_def, Option.bind_eq_bind, Option.some.injEq]
+
+    rcases h with ⟨h1,⟨h2,⟨h3,⟨h4,⟨h5,⟨h6,h7⟩⟩⟩⟩⟩⟩
+
+    refine ⟨h1,⟨guard_imp hl' h2,
+    ⟨h3,⟨hf n h3 h4,
+    ⟨h5,⟨evaln_mono hl h6,
+    ?_⟩⟩
+    ⟩⟩
+    ⟩⟩
+    cases h5 with
+    | zero => simp at h7 ⊢; assumption
+    | succ n =>
+      simp at h7 ⊢
+      expose_names
+      simp only [unpaired, bind, pair_unpair, Option.pure_def, Option.mem_def,
+        Option.bind_eq_some] at h7 ⊢
+      rcases h7 with ⟨h8,⟨h9,h10⟩⟩
+      refine ⟨h8,⟨usen_mono hl' h9, h10⟩⟩
+      
+
+      
 theorem usen_sound : ∀ {c s n x}, x ∈ usen O c s n → x ∈ use O c n
 | _, 0, n, x, h => by simp [usen] at h
 | c, k + 1, n, x, h => by
