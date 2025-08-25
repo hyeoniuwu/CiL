@@ -324,6 +324,13 @@ theorem usen_bound : ∀ {k c n x}, x ∈ usen O c k n → n < k
     suffices ∀ {o : Option ℕ}, x ∈ do { guard (n ≤ k); o } → n < k + 1 by
       cases c <;> rw [usen] at h <;> exact this h
     simpa [Option.bind_eq_some] using Nat.lt_succ_of_le
+private lemma guard_imp {k:ℕ} (h:k≤k₂) : guard (n ≤ k) = some a → (guard (n ≤ k₂):Option Unit) = some a := by
+  intro hhh
+  have : n≤k := by
+    contrapose hhh
+    simp only [hhh, guard_false, reduceCtorEq, not_false_eq_true]
+  have : n≤k₂ := by exact Nat.le_trans this h
+  simp [this]
 theorem usen_mono : ∀ {k₁ k₂ c n x}, k₁ ≤ k₂ → x ∈ usen O c k₁ n → x ∈ usen O c k₂ n
 | 0, k₂, c, n, x, _, h => by simp [usen] at h
 | k + 1, k₂ + 1, c, n, x, hl, h => by
@@ -345,49 +352,51 @@ theorem usen_mono : ∀ {k₁ k₂ c n x}, k₁ ≤ k₂ → x ∈ usen O c k₁
   · -- pair cf cg
     simp only [Option.pure_def, Option.bind_eq_bind, Option.bind_eq_some, Option.some.injEq] at h ⊢
     
-    
-    exact h.imp fun a => And.imp (hf _ _) <| Exists.imp fun b => And.imp_left (hg _ _)
+    -- refine h.imp fun a => ?_
+    refine h.imp fun a => And.imp (?_) <| ?_
+    exact guard_imp hl'
+
+    refine Exists.imp fun b => ?_
+    rintro ⟨h1,⟨h2,⟨h3,h4⟩⟩⟩
+    exact ⟨hf n b h1, ⟨h2,⟨hg n h2 h3, h4⟩⟩⟩
+
+
+    -- exact h.imp fun a => And.imp (hf _ _) <| Exists.imp fun b => And.imp_left (hg _ _)
   · -- comp cf cg
     simp only [bind, Option.pure_def, Option.bind_eq_some, Option.some.injEq] at h ⊢
-    rcases h with ⟨a,⟨ha1,⟨b,⟨hb1,⟨hb2,⟨hb3,hb4⟩⟩⟩⟩⟩⟩
-    use a
-    constructor
-    exact hg n a ha1
-    use b
-    constructor
-    exact evaln_mono hl hb1
-    use hb2
-    constructor
-    exact hf b hb2 hb3
-    exact hb4
--- TODO: golf proof above?
+    rcases h with ⟨h1,⟨h2,⟨h3,⟨h4,⟨h5,⟨h6,⟨h7,⟨h8,h9⟩⟩⟩⟩⟩⟩⟩⟩
+    refine ⟨h1,⟨guard_imp hl' h2,
+    ⟨h3,⟨hg n h3 h4,
+    ⟨h5,⟨evaln_mono hl h6,
+    ⟨h7,⟨hf h5 h7 h8,
+    h9⟩⟩⟩⟩⟩⟩⟩⟩
+
 
   · -- prec cf cg
+    
     revert h
     simp only [unpaired, bind, Option.mem_def]
+    -- intro h
+    -- simp [Option.bind_eq_some]
+    -- rcases h with ⟨h1,a⟩
+
     induction n.unpair.2 <;> simp [Option.bind_eq_some]
-    · apply hf
     · 
-      expose_names
-      intro x1
-      intro hx1
-      intro x2
-      intro hx2
-      intro x3
-      intro hx3
-      intro hmax
-      use x1
-      constructor
-      · exact usen_mono hl' hx1
-      · use x2
-        constructor
-        · rw [evaln_mono hl' hx2]
-        · use x3
-          constructor
-          · exact hg (Nat.pair n.l (Nat.pair n_1 x2)) x3 hx3
-          · subst hmax
-            simp_all only [add_le_add_iff_right, Option.mem_def, Option.bind_eq_bind, unpair1_to_l, Option.pure_def]
-      -- exact fun y h₁ h₂ => ⟨y, usen_mono hl' h₁, hg _ _ h₂⟩
+      intros g h
+      -- intro g
+      -- intro h
+      exact ⟨Nat.le_trans g hl', hf n.l x h⟩
+    · 
+      intros g x1 hx1 x2 hx2 x3 hx3 hmax
+      refine ⟨Nat.le_trans g hl',
+      ⟨x1,⟨usen_mono hl' hx1,
+      ⟨x2,⟨by rw [evaln_mono hl' hx2],
+      ⟨x3,
+      ⟨by (expose_names; exact hg (Nat.pair n.l (Nat.pair n_1 x2)) x3 hx3), hmax⟩
+      ⟩
+      ⟩⟩⟩⟩
+      ⟩
+
   · -- rfind' cf
     simp? [Bind.bind, Option.bind_eq_some] at h ⊢ says
       simp only [unpaired, bind, pair_unpair, Option.pure_def, Option.mem_def,
