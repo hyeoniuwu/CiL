@@ -463,9 +463,16 @@ theorem usen_sound : ∀ {c s n x}, x ∈ usen O c s n → x ∈ use O c n
     revert h
     induction' n.r with m IH generalizing x
     -- <;> simp [Option.bind_eq_some]
-    · apply hf
+    · 
+      intro h1
+      have h1 := h1.right
+      simp at h1
+      apply hf
+      exact h1
     · simp
+      intro hh1
       intro hh
+      -- have hh := hh.right
       simp [Option.bind_eq_some] at hh
       rcases hh with ⟨hh,⟨h3,⟨h4,⟨h5,⟨h7,⟨h8,h9⟩⟩⟩⟩⟩⟩
 
@@ -552,12 +559,49 @@ theorem usen_complete {c n x} : x ∈ use O c n ↔ ∃ s, x ∈ usen O c s n :=
       (by subst hx5; exact Nat.max_comm hx3 y) ⟩
   | prec cf cg hf hg =>
     revert h
-    generalize n.unpair.1 = n₁; generalize n.unpair.2 = n₂
-    induction' n₂ with m IH generalizing x n <;> simp [Option.bind_eq_some]
-    · intro h
+    generalize n.l = n₁; generalize n.r = n₂
+    -- induction' n₂ with m IH generalizing x n <;> simp [Option.bind_eq_some]
+    induction' n₂ with m IH generalizing x n
+    · 
+      intro h
+      -- simp [use] at h
+      -- use n+1
+      -- constructor
+      -- exact le_add_right n 1
+      -- simp at h
+      -- simp [Option.bind_eq_some]
+      -- have : Nat.rec (use O cf n.l) (fun iM1 IH ↦
+      -- (eval O (cf.prec cg) (Nat.pair n.l iM1)).bind fun IH_N ↦
+      --   IH.bind fun y ↦ Part.map y.max (use O cg (Nat.pair n.l (Nat.pair iM1 IH_N)))) n.r = 2 := by sorry
       rcases hf h with ⟨k, hk⟩
       exact ⟨_, le_max_left _ _, usen_mono (Nat.succ_le_succ <| le_max_right _ _) hk⟩
-    · intro y hy hx
+    · 
+      -- intro y hy hx
+      intro y
+      simp at y
+      rcases y with ⟨h1,h2,h3,h4,h5,h6,h7⟩
+
+      -- #check IH h4
+      -- #check hg h6
+      rcases IH h4 with ⟨k₁, nk₁, hk₁⟩
+      rcases hg h6 with ⟨k₂, hk₂⟩
+
+      refine ⟨(max k₁ k₂).succ,Nat.le_succ_of_le <| le_max_of_le_left <|
+            le_trans (le_max_left _ (Nat.pair n₁ m)) nk₁,
+            ?_
+            ⟩
+
+      simp
+      subst h7
+      simp_all only [Option.mem_def, sup_le_iff]
+      obtain ⟨left, right⟩ := nk₁
+      
+      sorry
+      -- simp at hk₁
+      constructor
+      exact Nat.le_succ_of_le <| le_max_of_le_left <|
+            le_trans (le_max_left _ (Nat.pair n₁ m)) nk₁
+      sorry
       rcases IH hy with ⟨k₁, nk₁, hk₁⟩
       rcases hg hx with ⟨k₂, hk₂⟩
       refine
@@ -706,13 +750,13 @@ let eval_prev := (eval O (prec cf cg) (Nat.pair x i)).get (eval_prec_dom_aux h)
     simp_all only [and_true]
     have : (eval O (cf.prec cg) (Nat.pair x (n + 1))).Dom := by (expose_names; exact eval_prec_dom_aux h_1)
     exact (ih this).left
-theorem eval_pair_dom (h:(eval O (pair cf cg) x).Dom) : (eval O cf x).Dom ∧ (eval O cg x).Dom := by
-  contrapose h
-  push_neg at h
-  simp [eval, Seq.seq]
-  by_cases hh:(eval O cf x).Dom
-  · exact fun a ↦ h hh
-  · simp [Part.eq_none_iff'.mpr hh]
+-- theorem eval_pair_dom (h:(eval O (pair cf cg) x).Dom) : (eval O cf x).Dom ∧ (eval O cg x).Dom := by
+--   contrapose h
+--   push_neg at h
+--   simp [eval, Seq.seq]
+--   by_cases hh:(eval O cf x).Dom
+--   · exact fun a ↦ h hh
+--   · simp [Part.eq_none_iff'.mpr hh]
   
 theorem use_pair_dom (h:(use O (pair cf cg) x).Dom) : (use O cf x).Dom ∧ (use O cg x).Dom := by
   exact exists_prop.mp h
@@ -1042,35 +1086,6 @@ theorem use_mono_rfind'
   -- | succ n _ => sorry
   -- sorry
 
-theorem prec_alt
-(h:(eval O (prec cf cg) (Nat.pair x (i+1))).Dom)
-:
-eval O (prec cf cg) (Nat.pair x (i+1))
-=
-let eval_prev := (eval O (prec cf cg) (Nat.pair x i)).get (sorry)
-eval O cg (Nat.pair x (Nat.pair i eval_prev))
--- (Nat.unpaired fun a n =>
---       n.rec (eval O cf a) fun y IH => do
---         let i ← IH
---         eval O cg (Nat.pair a (Nat.pair y i)))
-:= by
-  sorry
--- #check Partrec.rfind'_dom
-private def ind2 : Code → ℕ → ℕ
-| zero,   x => 0
-| succ,   x => 0
-| left,   x => 0
-| right,  x => 0
-| oracle, x => 0
-| pair cf cg, x => ind2 cf x + ind2 cg x
-| comp cf cg, x => ind2 cg x + ind2 cf (ind2 cf x)
--- | 0, prec cf cg => ind 0 cf + ind 0 cg
-| prec cf cg, x =>
-  ∑ i ∈ Finset.range (x-1),
-  (ind2 (prec cf cg) i)
-  -- 2
-| rfind' cf,x =>
-  2
 -- Custom strong induction principle
 def CodeNat.induction
   {motive : Code → ℕ → Prop}
@@ -1219,14 +1234,8 @@ theorem up_to_use (hh:(eval O₁ c x).Dom) (hO: ∀ i≤(use O₁ c x).get (e2u 
       simp [hcf x.l aux0 aux2]
     | succ xrM1 =>
 
-      -- rw [←eval]
-      -- rw [←eval]
-
-      -- simp [eval]
       rw [hxr] at hh ih
       simp only [hxr] at hO
-      #check prec_alt hh
-      -- rw [prec_alt hh]
       simp
       have srw2 : (Nat.rec (eval O₂ cf x.l) (fun y IH ↦ IH.bind fun i ↦ eval O₂ cg (Nat.pair x.l (Nat.pair y i))) xrM1) = eval O₂ (prec cf cg) (Nat.pair x.l xrM1) := by
         rw (config:={occs:=.pos [1]}) [eval.eq_8]
@@ -1247,14 +1256,6 @@ theorem up_to_use (hh:(eval O₁ c x).Dom) (hO: ∀ i≤(use O₁ c x).get (e2u 
         exact hO xx hxx2
       have aux03 := ih (Nat.pair x.l xrM1) (pair_lt_pair_right x.l (lt_add_one xrM1)) aux00 aux02
       have aux01 : (eval O₂ (cf.prec cg) (Nat.pair x.l xrM1)).Dom := by rwa [aux03] at aux00
-
-      
-      -- simp only [Part.bind, Part.assert]
-      -- simp only [Part.bind]
-      -- simp [aux01, Part.assert]
-      -- simp [aux01]
-      -- constructor
-      -- constructor
 
       have aux11 := eval_prec_dom hh
       simp at aux11
