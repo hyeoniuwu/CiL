@@ -675,6 +675,13 @@ theorem eval_prec_dom_aux
   simp [eval] at h ⊢
   contrapose h
   simp [h]
+theorem eval_prec_dom'
+(h:(eval O (prec cf cg) (Nat.pair x 0)).Dom)
+:
+(eval O cf x).Dom
+:= by
+  simp [eval] at h
+  exact h
 theorem eval_prec_dom
 (h:(eval O (prec cf cg) (Nat.pair x (i+1))).Dom)
 :
@@ -867,15 +874,29 @@ theorem use_mono_comp (hh:(use O (comp cf cg) x).Dom):
     simp only [Part.assert]
     simp only [le_refl, or_true]
 
--- (
--- let eval_prev := (eval O (prec cf cg) (Nat.pair x i)).get (use_prec_dom_aux h)
--- (use O cg (Nat.pair x (Nat.pair i eval_prev))).Dom)
--- set_option maxHeartbeats 1000000 in
+-- #check use_prec_dom'
+theorem use_mono_prec' (hh:(use O (prec cf cg) (Nat.pair x 0)).Dom):
+((use O cf x).get (use_prec_dom' hh) ≤ (use O (prec cf cg) (Nat.pair x 0)).get hh)
+:= by
+  simp [use]
+theorem use_mono_prec_1 (hh:(use O (prec cf cg) (Nat.pair x (i+1))).Dom):
+(use O (prec cf cg) (Nat.pair x i)).get (e2u $ use_prec_dom_aux hh) ≤ (use O (prec cf cg) (Nat.pair x (i+1))).get hh
+  := by
+    simp  [use.eq_8]
+    have : (Nat.rec (use O cf x)
+        (fun iM1 IH ↦
+          (eval O (cf.prec cg) (Nat.pair x iM1)).bind fun IH_N ↦
+            Part.map Nat.max IH <*> use O cg (Nat.pair x (Nat.pair iM1 IH_N)))
+        i) = (use O (cf.prec cg) (Nat.pair x i)) := by simp [use]
+    simp [this]
+    simp [Seq.seq]
+    simp [Part.bind, Part.assert]
+-- todo: simplify below proof
 theorem use_mono_prec (hh:(use O (prec cf cg) (Nat.pair x (i+1))).Dom):
 ((use O cf x).get ((use_prec_dom hh).left) ≤ (use O (prec cf cg) (Nat.pair x (i+1))).get hh)
 ∧
+let eval_prev := (eval O (prec cf cg) (Nat.pair x i)).get (use_prec_dom_aux hh)
 (
-let eval_prev := (eval O (prec cf cg) (Nat.pair x i)).get (use_prec_dom_aux h)
 (use O cg (Nat.pair x (Nat.pair i eval_prev))).get ((use_prec_dom hh).right) ≤ (use O (prec cf cg) (Nat.pair x (i+1))).get hh
 )
   := by
@@ -928,7 +949,9 @@ let eval_prev := (eval O (prec cf cg) (Nat.pair x i)).get (use_prec_dom_aux h)
       -- have : (use O (cf.prec cg) (Nat.pair x (n + 1))).Dom := by exact?
       -- have ihsimp := ih (e2u h3')
       
-      have ihsimp := @ih (e2u h3') (e2u h3')
+      -- #check @ih (e2u h3') 
+      -- have ihsimp := @ih (e2u h3') (e2u h3')
+      have ihsimp := @ih (e2u h3')
       
       -- simp only [unpair]
       -- simp [ihsimp]
@@ -1019,20 +1042,97 @@ theorem use_mono_rfind'
   -- | succ n _ => sorry
   -- sorry
 
-
+theorem prec_alt
+(h:(eval O (prec cf cg) (Nat.pair x (i+1))).Dom)
+:
+eval O (prec cf cg) (Nat.pair x (i+1))
+=
+let eval_prev := (eval O (prec cf cg) (Nat.pair x i)).get (sorry)
+eval O cg (Nat.pair x (Nat.pair i eval_prev))
+-- (Nat.unpaired fun a n =>
+--       n.rec (eval O cf a) fun y IH => do
+--         let i ← IH
+--         eval O cg (Nat.pair a (Nat.pair y i)))
+:= by
+  sorry
 -- #check Partrec.rfind'_dom
+private def ind2 : Code → ℕ → ℕ
+| zero,   x => 0
+| succ,   x => 0
+| left,   x => 0
+| right,  x => 0
+| oracle, x => 0
+| pair cf cg, x => ind2 cf x + ind2 cg x
+| comp cf cg, x => ind2 cg x + ind2 cf (ind2 cf x)
+-- | 0, prec cf cg => ind 0 cf + ind 0 cg
+| prec cf cg, x =>
+  ∑ i ∈ Finset.range (x-1),
+  (ind2 (prec cf cg) i)
+  -- 2
+| rfind' cf,x =>
+  2
+-- Custom strong induction principle
+def CodeNat.induction
+  {motive : Code → ℕ → Prop}
+  (hzero : ∀ x, motive .zero x)
+  (hsucc : ∀ x, motive .succ x)
+  (hleft : ∀ x, motive .left x)
+  (hright : ∀ x, motive .right x)
+  (horacle : ∀ x, motive .oracle x)
+  (hpair : ∀ cf cg,
+    (∀ x, motive cf x) →
+    (∀ x, motive cg x) →
+    ∀ x, motive (.pair cf cg) x)
+  (hcomp : ∀ cf cg,
+    (∀ x, motive cf x) →
+    (∀ x, motive cg x) →
+    ∀ x, motive (.comp cf cg) x)
+  (hprec : ∀ cf cg,
+    (∀ x, motive cf x) →
+    (∀ x, motive cg x) →
+    (∀ x, (∀ x' < x, motive (.prec cf cg) x') → motive (.prec cf cg) x))
+  (hrfind' : ∀ cf,
+    (∀ x, motive cf x) →
+    (∀ x, (∀ x' < x, motive (.rfind' cf) x') → motive (.rfind' cf) x))
+  : ∀ c x, motive c x := by
+    intro c
+    induction c with
+    | zero => exact fun x => hzero x
+    | succ => exact fun x => hsucc x
+    | left => exact fun x => hleft x
+    | right => exact fun x => hright x
+    | oracle => exact fun x => horacle x
+    | pair cf cg ihcf ihcg => exact fun x => hpair cf cg (ihcf) (ihcg) x
+    | comp cf cg ihcf ihcg => exact fun x ↦ hcomp cf cg ihcf ihcg x
+    | prec cf cg ihcf ihcg  =>
+      intro x
+      apply hprec cf cg ihcf ihcg x
+      intro x' hlt
+      apply @Nat.strongRecOn (fun n => motive (.prec cf cg) n) x' (fun n ih => ?_)
+      exact hprec cf cg ihcf ihcg n ih
+    | rfind' cf ihcf =>
+      intro x
+      apply hrfind' cf ihcf x
+      intro x' hlt
+      apply @Nat.strongRecOn (fun n => motive (.rfind' cf ) n) x' (fun n ih => ?_)
+      exact hrfind' cf ihcf n ih
 theorem up_to_use (hh:(eval O₁ c x).Dom) (hO: ∀ i≤(use O₁ c x).get (e2u hh), O₁ i = O₂ i) : eval O₁ c x = eval O₂ c x := by
   -- have h:x≤use O₁ c x
-  induction c generalizing x with
-  | zero => simp [eval]
-  | succ => simp [eval]
-  | left => simp [eval]
-  | right => simp [eval]
-  | oracle =>
+  -- induction x using Nat.strong_induction_on with
+  -- | h x ih =>
+  -- induction c×x with
+
+    -- sorry
+  induction c,x using CodeNat.induction with
+  | hzero x => simp [eval]
+  | hsucc x => simp [eval]
+  | hleft x => simp [eval]
+  | hright x => simp [eval]
+  | horacle x =>
     have h1:x≤(use O₁ oracle x).get (e2u hh) := by simp [use]
     simp [eval]
     exact hO x h1
-  | pair cf cg hcf hcg =>
+  | hpair cf cg hcf hcg x =>
     simp only [eval]
     have h1:
     (∀ i ≤ (use O₁ cf x).get (e2u (eval_pair_dom hh).left), O₁ i = O₂ i)
@@ -1048,9 +1148,9 @@ theorem up_to_use (hh:(eval O₁ c x).Dom) (hO: ∀ i≤(use O₁ c x).get (e2u 
       intro hxx
       have hxx2 := le_trans hxx (use_mono_pair (e2u hh)).right
       exact hO xx hxx2
-    rw [hcf (eval_pair_dom hh).left h1]
-    rw [hcg (eval_pair_dom hh).right h2]
-  | comp cf cg hcf hcg =>
+    rw [hcf x (eval_pair_dom hh).left h1]
+    rw [hcg x (eval_pair_dom hh).right h2]
+  | hcomp cf cg hcf hcg x =>
     simp only [eval]
     have h1:
     (∀ i ≤ (use O₁ cg x).get (e2u (eval_comp_dom hh).left), O₁ i = O₂ i)
@@ -1059,7 +1159,7 @@ theorem up_to_use (hh:(eval O₁ c x).Dom) (hO: ∀ i≤(use O₁ c x).get (e2u 
       intro hxx
       have hxx2 := le_trans hxx (use_mono_comp (e2u hh)).left
       exact hO xx hxx2
-    have ih1 := hcg (eval_comp_dom hh).left h1
+    have ih1 := hcg x (eval_comp_dom hh).left h1
     rw [ih1]
     
     have h2:
@@ -1086,7 +1186,7 @@ theorem up_to_use (hh:(eval O₁ c x).Dom) (hO: ∀ i≤(use O₁ c x).get (e2u 
       have aux := h2
       rwa [aux4] at aux
 
-    have ih2 := hcf aux2 h3
+    have ih2 := hcf ((eval O₂ cg x).get aux0) aux2 h3
     
     simp
     [
@@ -1094,40 +1194,89 @@ theorem up_to_use (hh:(eval O₁ c x).Dom) (hO: ∀ i≤(use O₁ c x).get (e2u 
       Part.bind,
       ih2,
     ]
-  | prec cf cg hcf hcg =>
-    simp [eval]
-    have aux0 : (eval O₁ cf x.l).Dom := (eval_prec_dom hh).left
-    have aux1 : (use O₁ cf x.l).Dom := e2u aux0
-    have aux2 : (∀ i ≤ (use O₁ cf x.l).get (aux1), O₁ i = O₂ i) := by sorry
-    simp [hcf aux0 aux2]
-    cases x.r with
+  | hprec cf cg hcf hcg x ih =>
+    rw [eval]
+    rw [eval]
+    -- simp only [prec_alt]
+    -- rw [←eval]
+    -- rw [←eval]
+    rw [show x=Nat.pair x.l x.r from by simp] at hh ⊢ ih
+    simp (config := { singlePass := true }) only [show x=Nat.pair x.l x.r from by simp] at hO
+    
+    cases hxr:x.r with
     | zero =>
       simp
+      rw [hxr] at hh
+      simp only [hxr] at hO
+      have aux0 : (eval O₁ cf x.l).Dom := eval_prec_dom' hh
+      have aux1 : (use O₁ cf x.l).Dom := e2u aux0
+      have aux3 := use_mono_prec' (e2u hh)
+      have aux2 : (∀ i ≤ (use O₁ cf x.l).get aux1, O₁ i = O₂ i) := by
+        intro xx
+        intro hxx
+        have hxx2 := le_trans hxx (use_mono_prec' (e2u hh))
+        exact hO xx hxx2
+      simp [hcf x.l aux0 aux2]
     | succ xrM1 =>
-      simp
-      
-      sorry
-    sorry
-  | rfind' cf hcf =>
-    simp [eval]
-    simp [Part.map]
-    #check hcf
-    constructor
-    · constructor
-      · intro h2
-        rcases h2 with ⟨h2,hh2⟩
-        use h2
-        rcases hh2.left with ⟨hh2l,hhh2l⟩
-        constructor
-        · use hh2l
-          -- sorry
-        · have hh2r := hh2.right
-          #check 1
-      · sorry
-      sorry
-    · sorry
 
+      -- rw [←eval]
+      -- rw [←eval]
+
+      -- simp [eval]
+      rw [hxr] at hh ih
+      simp only [hxr] at hO
+      #check prec_alt hh
+      -- rw [prec_alt hh]
+      simp
+      have srw2 : (Nat.rec (eval O₂ cf x.l) (fun y IH ↦ IH.bind fun i ↦ eval O₂ cg (Nat.pair x.l (Nat.pair y i))) xrM1) = eval O₂ (prec cf cg) (Nat.pair x.l xrM1) := by
+        rw (config:={occs:=.pos [1]}) [eval.eq_8]
+        simp
+      have srw1 : (Nat.rec (eval O₁ cf x.l) (fun y IH ↦ IH.bind fun i ↦ eval O₁ cg (Nat.pair x.l (Nat.pair y i))) xrM1) = eval O₁ (prec cf cg) (Nat.pair x.l xrM1) := by
+        rw (config:={occs:=.pos [1]}) [eval.eq_8]
+        simp
+      rw [srw2]
+      rw [srw1]
+      
+      have aux00 : (eval O₁ (cf.prec cg) (Nat.pair x.l xrM1)).Dom := by exact eval_prec_dom_aux hh
+      
+      -- have aux01 : (use O₁ (cf.prec cg) (Nat.pair x.l xrM1)).get (e2u aux00) ≤  := by sorry
+      have aux02 : (∀ i ≤ (use O₁ (cf.prec cg) (Nat.pair x.l xrM1)).get (e2u aux00), O₁ i = O₂ i) := by
+        intro xx
+        intro hxx
+        have hxx2 := le_trans hxx (use_mono_prec_1 (e2u hh))
+        exact hO xx hxx2
+      have aux03 := ih (Nat.pair x.l xrM1) (pair_lt_pair_right x.l (lt_add_one xrM1)) aux00 aux02
+      have aux01 : (eval O₂ (cf.prec cg) (Nat.pair x.l xrM1)).Dom := by rwa [aux03] at aux00
+
+      
+      -- simp only [Part.bind, Part.assert]
+      -- simp only [Part.bind]
+      -- simp [aux01, Part.assert]
+      -- simp [aux01]
+      -- constructor
+      -- constructor
+
+      have aux11 := eval_prec_dom hh
+      simp at aux11
+      have aux10 := aux11.right
+      have aux12 : (∀ i ≤ ((use O₁ cg (Nat.pair x.l (Nat.pair xrM1 ((eval O₁ (cf.prec cg) (Nat.pair x.l xrM1)).get (aux00)))))).get (e2u aux10), O₁ i = O₂ i) := by
+        intro xx
+        intro hxx
+        have hxx2 := le_trans hxx (use_mono_prec (e2u hh)).right
+        exact hO xx hxx2
+      have aux13 := hcg (Nat.pair x.l (Nat.pair xrM1 ((eval O₁ (cf.prec cg) (Nat.pair x.l xrM1)).get (aux00)))) aux10 aux12
+
+      rw [←aux03]
+      
+      have rw1 : ((eval O₁ (cf.prec cg) (Nat.pair x.l xrM1)).bind fun i ↦ eval O₁ cg (Nat.pair x.l (Nat.pair xrM1 i))) = eval O₁ cg (Nat.pair x.l (Nat.pair xrM1 ((eval O₁ (cf.prec cg) (Nat.pair x.l xrM1)).get (aux00)))) := by
+        exact Part.Dom.bind aux00 fun i ↦ eval O₁ cg (Nat.pair x.l (Nat.pair xrM1 i))
+      have rw2 : ((eval O₁ (cf.prec cg) (Nat.pair x.l xrM1)).bind fun i ↦ eval O₂ cg (Nat.pair x.l (Nat.pair xrM1 i))) = eval O₂ cg (Nat.pair x.l (Nat.pair xrM1 ((eval O₁ (cf.prec cg) (Nat.pair x.l xrM1)).get (aux00)))) := by
+        exact Part.Dom.bind aux00 fun i ↦ eval O₂ cg (Nat.pair x.l (Nat.pair xrM1 i))
+      rw [rw1, rw2]
+      rw [aux13]
+  | hrfind' cf  hcf x ih =>
     sorry
+  
 /-
 What does rfind' do?
 rfind' cf (x,i) = the smallest (i+j) s.t. `[cf](x,i+j)=0`
