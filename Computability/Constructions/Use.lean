@@ -577,9 +577,9 @@ theorem usen_complete {c n x} : x ∈ use O c n ↔ ∃ s, x ∈ usen O c s n :=
       exact ⟨_, le_max_left _ _, usen_mono (Nat.succ_le_succ <| le_max_right _ _) hk⟩
     · 
       -- intro y hy hx
-      intro y
-      simp at y
-      rcases y with ⟨h1,h2,h3,h4,h5,h6,h7⟩
+      intro h
+      simp at h
+      rcases h with ⟨h1,h2,h3,h4,h5,h6,h7⟩
 
       -- #check IH h4
       -- #check hg h6
@@ -595,6 +595,42 @@ theorem usen_complete {c n x} : x ∈ use O c n ↔ ∃ s, x ∈ usen O c s n :=
       subst h7
       simp_all only [Option.mem_def, sup_le_iff]
       obtain ⟨left, right⟩ := nk₁
+
+      have aux1 : h5 ∈ (usen O cg (max k₁ k₂ + 1 + 1) (Nat.pair n₁ (Nat.pair m h1))) := by
+        simp
+        have : k₂+1 ≤ max k₁ k₂ + 1 + 1:= by
+          apply Nat.add_le_add_iff_right.mpr
+          apply le_add_right_of_le
+          apply le_sup_right
+        exact usen_mono this hk₂
+      have aux2 : h3 ∈ (usen O (cf.prec cg) (max k₁ k₂ + 1) (Nat.pair n₁ m)) := by
+        -- have aux_aux : Nat.pair n₁ m ≤ k₁ := by exact right
+        have : Nat.rec (usen O cf (k₁ + 1) n₁) (fun n n_ih ↦
+            (usen O (cf.prec cg) k₁ (Nat.pair n₁ n)).bind fun usen_prev ↦
+            (evaln O k₁ (cf.prec cg) (Nat.pair n₁ n)).bind fun evaln_prev ↦
+            (usen O cg (k₁ + 1) (Nat.pair n₁ (Nat.pair n evaln_prev))).bind fun usen_indt ↦
+            some (usen_prev.max usen_indt)) m = (usen O (cf.prec cg) ( k₁ + 1) (Nat.pair n₁ m)) := by
+          simp [usen]
+          simp [right]
+        
+        rw [this] at hk₁
+
+        have : (k₁ + 1) ≤ (max k₁ k₂ + 1) := by
+          apply Nat.add_le_add_iff_right.mpr
+          apply le_sup_left
+        exact usen_mono this hk₁
+      have aux0 : h1 ∈ (evaln O (max k₁ k₂ + 1) (cf.prec cg) (Nat.pair n₁ m)) := by
+        rcases usen_dom_iff_evaln_dom.mp ⟨h3, aux2⟩ with ⟨hh1,hh2⟩
+        rcases evaln_complete.mp h2 with ⟨hh3,hh4⟩
+        #check evaln_sing hh2 hh4
+        rwa [evaln_sing hh2 hh4] at hh2
+      rw [aux2]
+      rw [aux0]
+      simp
+      rw [aux1]
+      simp
+
+      
       
       sorry
       -- simp at hk₁
