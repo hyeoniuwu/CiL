@@ -10,12 +10,140 @@ import Mathlib.Algebra.Order.BigOperators.Group.Finset
 
 open Nat.RecursiveIn.Code
 namespace Nat.RecursiveIn.Code
-/--
-we define the use `max(all naturals queried to the oracle)+1`
-use=0 when no queries are made.
-use=none when the computation diverges.
--/
-def use (O:ℕ→ℕ) (c:Code) (x:ℕ) : Part ℕ :=
+
+
+theorem ne_of_mem_imp_not_mem {y:Part ℕ} (h:x∈y) (h2:x≠z) : z∉y := by
+  have aux: y=Part.some x := by exact Part.eq_some_iff.mpr h
+  rw [aux]
+  aesop? says
+    subst aux
+    simp_all only [ne_eq, Part.mem_some_iff]
+    apply Aesop.BuiltinRules.not_intro
+    intro a
+    subst a
+    simp_all only [not_true_eq_false]
+lemma rfind'_geq_xr (h:(eval O (rfind' cf) x).Dom) : (eval O cf.rfind' x).get h ≥ x.r := by simp [eval]
+def rfind'_obtain (h:(eval O (rfind' cf) x).Dom) : ℕ := ((eval O (rfind' cf) x).get h)-x.r
+theorem rfind'_obtain_prop
+(h:(eval O (rfind' cf) x).Dom) :
+0∈(eval O cf (Nat.pair x.l (rfind'_obtain h+x.r)))
+∧ (∀ j ≤ rfind'_obtain h, (eval O cf (Nat.pair x.l (j+x.r))).Dom)
+∧ (∀ j < rfind'_obtain h, ¬0∈(eval O cf (Nat.pair x.l (j+x.r))))
+:= by
+-- 0 ∈ eval O cf (Nat.pair x.l ((rfind'_obtain h) + x.r)) ∧ ∀ {m : ℕ}, m < (rfind'_obtain h) → (eval O cf (Nat.pair x.l (m + x.r))).Dom := by
+  -- have h0 : ∃ m, m ∈ eval O (rfind' cf) x := by exact Part.dom_iff_mem.mp h
+  -- simp [eval] at h
+  -- simp [eval] at h0
+  -- rcases h0 with ⟨m,a,⟨⟨hmal,asd⟩, hmar⟩⟩
+  let rf_result := (eval O cf.rfind' x).get h
+  have aux0 : rf_result ∈ eval O cf.rfind' x := by exact Part.get_mem h
+
+  have aux2 : rfind'_obtain h = rf_result - x.r:= by exact rfl
+  -- have aux3 : rf_result = m := by exact?
+  have aux3 : rf_result ∈ eval O cf.rfind' x := by exact Part.get_mem h
+  simp [eval] at aux3
+  rcases aux3 with ⟨a,⟨⟨lll,rrr⟩,ha⟩⟩
+  have aux4: rf_result - x.r = a := by exact (Nat.sub_eq_iff_eq_add (rfind'_geq_xr h)).mpr (_root_.id (Eq.symm ha))
+
+  constructor
+  · subst aux4
+    simp_all only [ge_iff_le, Nat.sub_add_cancel, rf_result]
+  rw [aux2]
+  rw [aux4]
+  constructor
+  ·
+    intro j
+    intro hja
+
+    cases lt_or_eq_of_le hja with
+    | inl hja =>
+      rcases rrr hja with ⟨witness,⟨hwitness,_⟩⟩
+      have exform : ∃ a, a ∈ eval O cf (Nat.pair x.l (j + x.r)) := by exact Exists.intro witness hwitness
+
+
+      exact Part.dom_iff_mem.mpr exform
+    | inr hja =>
+      rw [hja]
+
+      have exform : ∃ a', a' ∈ eval O cf (Nat.pair x.l (a + x.r)) := by exact Exists.intro 0 lll
+      exact Part.dom_iff_mem.mpr exform
+  · intro j
+    intro hja
+    rcases rrr hja with ⟨witness,⟨hwitness_1,hwitness_2⟩⟩
+    exact ne_of_mem_imp_not_mem hwitness_1 hwitness_2
+theorem rfind'_obtain_prop_4 (h:(eval O (rfind' cf) x).Dom) : ∀ j ≤ rfind'_obtain h, (eval O (rfind' cf) (Nat.pair x.l (j+x.r))).Dom := by
+  have rop := rfind'_obtain_prop h
+  let ro := rfind'_obtain h
+  have rwro : rfind'_obtain h = ro := rfl
+  simp [rwro] at rop ⊢
+  have rop1 := rop.left
+  have rop2 := rop.right.left
+  have rop3 := rop.right.right
+
+  intro j
+  intro hjro
+  simp [eval]
+  use ro-j
+  constructor
+  have : (ro - j + (j + x.r)) = ro + x.r := by grind
+  simp [this]
+  exact rop1
+  intro m hm
+  rw [← (Nat.add_assoc m j x.r)]
+  have : m+j ≤ ro := by exact le_of_succ_le (add_lt_of_lt_sub hm)
+  exact rop2 (m+j) this
+
+lemma forall_mem_part {y:Part ℕ} (h1:y.Dom) (h2:∀ x ∈ y, x = c ) : c∈y := by
+  contrapose h2
+  simp
+  use y.get h1
+  constructor
+  exact Part.get_mem h1
+  apply Aesop.BuiltinRules.not_intro
+  intro a
+  subst a
+  have : y.get h1 ∈ y := by exact Part.get_mem h1
+  contradiction
+theorem rfind'_prop
+(h:(eval O (rfind' cf) x).Dom)
+:
+(y+x.r∈eval O (rfind' cf) x)
+↔
+(
+0∈(eval O cf (Nat.pair x.l (y+x.r)))
+∧ (∀ j ≤ y, (eval O cf (Nat.pair x.l (j+x.r))).Dom)
+∧ (∀ j < y, ¬0∈(eval O cf (Nat.pair x.l (j+x.r))))
+)
+:= by
+  constructor
+  intro h1
+  have : y=rfind'_obtain h := by
+    unfold rfind'_obtain
+    have := rfind'_geq_xr h
+    have aux0 : (eval O cf.rfind' x).get h = y+x.r := by exact Part.get_eq_of_mem h1 h
+    simp_all only [ge_iff_le, le_add_iff_nonneg_left, _root_.zero_le, add_tsub_cancel_right]
+  rw [this]
+  exact rfind'_obtain_prop h
+
+  contrapose
+  intro h1
+  push_neg
+  intro h2
+  intro h3
+
+  simp [eval] at h1
+  rcases h1 h2 with ⟨h4,h5,h6⟩
+  use h4
+  refine ⟨h5,forall_mem_part (h3 h4 (le_of_succ_le h5)) h6⟩
+
+
+-- /--
+-- we define the use `max(all naturals queried to the oracle)+1`
+-- use=0 when no queries are made.
+-- use=none when the computation diverges.
+-- -/
+open Classical in
+noncomputable def use (O:ℕ→ℕ) (c:Code) (x:ℕ) : Part ℕ :=
 match c with
 | zero        => 0
 | succ        => 0
@@ -32,71 +160,29 @@ match c with
     Nat.max <$> IH <*> use O cg (Nat.pair xl (Nat.pair iM1 IH_N))
 | Code.rfind' cf =>
   do
-    let guard ← eval O (rfind' cf) x
+    -- let ro := rfind'_obtain h
+    
+    let guard ← eval O (rfind' cf) x;
+    let ro := guard - x.r
     -- eval O (rfind' cf) x;
     -- guard ((eval O (rfind' cf) x).Dom);
-    let use_base ← use O cf x
-    let eval_base ← eval O cf x
-    if eval_base=0 then use_base else
-    let use_indt ← use O cf (Nat.pair x.l (x.r+1))
-    Nat.max use_base use_indt
-    -- let asd ← (eval O c x);
-    -- let (xl, xr) := Nat.unpair x
-    -- (Nat.rfind fun n => (fun x => x = 0) <$> eval O cf (Nat.pair xl (n + xr))).map (· + xr)
+    
+    -- let use_base ← use O cf x
+    -- let eval_base ← eval O cf x
+    -- if eval_base = 0 then use_base else
 
--- /-- `usen; the use of [c:O]ₛ(x)` -/
--- def usen (O:ℕ→ℕ) (c:Code) (s:ℕ) (x:ℕ) : Option ℕ :=
--- match c,s with
--- | _,0              => Option.none
--- | zero      , s+1  => do guard (x≤s); return 0
--- | succ      , s+1  => do guard (x≤s); return 0
--- | left      , s+1  => do guard (x≤s); return 0
--- | right     , s+1  => do guard (x≤s); return 0
--- | oracle    , s+1  => do guard (x≤s); return x+1
--- | pair cf cg, s+1  =>
---   do
---     guard (x≤s);
---     let usen_cf ← usen O cf (s+1) x
---     let usen_cg ← usen O cg (s+1) x
---     return Nat.max usen_cf usen_cg
---     -- let asd ← evaln O s c x;
---     -- Nat.max <$> (use O cf x) <*> (use O cg x)
--- | comp cf cg, s+1  =>
---   do
---     guard (x≤s);
---     let usen_cg ← usen O cg (s+1) x
---     let evaln_cg ← evaln O (s+1) cg x
---     let usen_cf ← usen O cf (s+1) evaln_cg
---     return Nat.max usen_cf usen_cg
---     -- Nat.max <$> (use O cg x) <*> (eval O cg x >>= use O cf)
--- | prec cf cg, s+1 => do
---   guard (x≤s);
---   let (xl, i) := Nat.unpair x
---   (i.casesOn
---   (usen O cf (s+1) xl)
---   fun iM1 =>
---   do
---     let usen_prev  ← usen  O (prec cf cg) s (Nat.pair xl iM1)
---     let evaln_prev ← evaln O s (prec cf cg) (Nat.pair xl iM1)
---     let usen_indt  ← usen  O cg (s+1) (Nat.pair xl (Nat.pair iM1 evaln_prev))
---     return Nat.max usen_prev usen_indt)
--- | rfind' cf, s+1 =>
---   do
---     guard (x≤s);
---     let usen_base ← usen O cf (s+1) x
---     let evaln_base ← evaln O (s+1) cf x
---     let usen_indt ← usen O cf s (Nat.pair x.l (x.r+1))
---     if evaln_base=0 then usen_base else
---     Nat.max usen_base usen_indt
---       -- let asd ← (eval O c x);
---       -- let (xl, xr) := Nat.unpair x
---       -- (Nat.rfind fun n => (fun x => x = 0) <$> eval O cf (Nat.pair xl (n + xr))).map (· + xr)
+    -- let use_indt ← use O cf (Nat.pair x.l (x.r+1)) -- this is wrong :(
+    -- let use_indt ← use O (rfind' cf) (Nat.pair x.l (x.r+1)) -- this is right but you have to show termination...
 
---   -- if (eval O c x).Dom
---   -- then
---   -- else
---     -- Part.none
+    let mut max := 0
+    for i in [0:ro+1] do
+    -- for i in [ro+1:0:-1] do
 
+      let use_i ← (use O cf (Nat.pair x.l ((ro-i)+x.r)))
+      -- let use_i := (use O cf (Nat.pair x.l ((ro-i)+x.r))).get this
+      -- let use_i := (use O cf (Nat.pair x.l (i+x.r))).get this
+      max := Nat.max max use_i
+    max
 
 
 /-- `usen; the use of [c:O]ₛ(x)` -/
@@ -662,13 +748,13 @@ theorem use_eq_rfindOpt (c n) : use O c n = Nat.rfindOpt fun s => usen O c s n :
     refine usen_complete.trans (Nat.rfindOpt_mono ?_).symm
     intro a m n hl; apply usen_mono hl
 
-theorem Part.dom_imp_ex_some {x:Part ℕ} (h:x.Dom) : ∃ y, x=Part.some y := by
-  have h0 := Part.dom_iff_mem.mp h
-  rcases h0 with ⟨y,hy⟩
-  use y
-  exact Part.eq_some_iff.mpr hy
-theorem Part.dom_imp_some {x:Part ℕ} (h:x.Dom) : x=Part.some (x.get h) := by
-  exact Part.get_eq_iff_eq_some.mp rfl
+-- theorem Part.dom_imp_ex_some {x:Part ℕ} (h:x.Dom) : ∃ y, x=Part.some y := by
+--   have h0 := Part.dom_iff_mem.mp h
+--   rcases h0 with ⟨y,hy⟩
+--   use y
+--   exact Part.eq_some_iff.mpr hy
+-- theorem Part.dom_imp_some {x:Part ℕ} (h:x.Dom) : x=Part.some (x.get h) := by
+--   exact Part.get_eq_iff_eq_some.mp rfl
 
 
 theorem use_dom_iff_eval_dom : (use O c x).Dom ↔ (eval O c x).Dom := by
@@ -824,107 +910,6 @@ let eval_prev := (eval O (prec cf cg) (Nat.pair x i)).get (use_prec_dom_aux h)
     simp at ih
     exact (ih (e2u w) h_2).left
 
-theorem ne_of_mem_imp_not_mem {y:Part ℕ} (h:x∈y) (h2:x≠z) : z∉y := by
-  have aux: y=Part.some x := by exact Part.eq_some_iff.mpr h
-  rw [aux]
-  aesop? says
-    subst aux
-    simp_all only [ne_eq, Part.mem_some_iff]
-    apply Aesop.BuiltinRules.not_intro
-    intro a
-    subst a
-    simp_all only [not_true_eq_false]
-lemma rfind'_geq_xr (h:(eval O (rfind' cf) x).Dom) : (eval O cf.rfind' x).get h ≥ x.r := by simp [eval]
-def rfind'_obtain (h:(eval O (rfind' cf) x).Dom) : ℕ := ((eval O (rfind' cf) x).get h)-x.r
-theorem rfind'_obtain_prop
-(h:(eval O (rfind' cf) x).Dom) :
-0∈(eval O cf (Nat.pair x.l (rfind'_obtain h+x.r)))
-∧ (∀ j ≤ rfind'_obtain h, (eval O cf (Nat.pair x.l (j+x.r))).Dom)
-∧ (∀ j < rfind'_obtain h, ¬0∈(eval O cf (Nat.pair x.l (j+x.r))))
-:= by
--- 0 ∈ eval O cf (Nat.pair x.l ((rfind'_obtain h) + x.r)) ∧ ∀ {m : ℕ}, m < (rfind'_obtain h) → (eval O cf (Nat.pair x.l (m + x.r))).Dom := by
-  -- have h0 : ∃ m, m ∈ eval O (rfind' cf) x := by exact Part.dom_iff_mem.mp h
-  -- simp [eval] at h
-  -- simp [eval] at h0
-  -- rcases h0 with ⟨m,a,⟨⟨hmal,asd⟩, hmar⟩⟩
-  let rf_result := (eval O cf.rfind' x).get h
-  have aux0 : rf_result ∈ eval O cf.rfind' x := by exact Part.get_mem h
-
-  have aux2 : rfind'_obtain h = rf_result - x.r:= by exact rfl
-  -- have aux3 : rf_result = m := by exact?
-  have aux3 : rf_result ∈ eval O cf.rfind' x := by exact Part.get_mem h
-  simp [eval] at aux3
-  rcases aux3 with ⟨a,⟨⟨lll,rrr⟩,ha⟩⟩
-  have aux4: rf_result - x.r = a := by exact (Nat.sub_eq_iff_eq_add (rfind'_geq_xr h)).mpr (_root_.id (Eq.symm ha))
-
-  constructor
-  · subst aux4
-    simp_all only [ge_iff_le, Nat.sub_add_cancel, rf_result]
-  rw [aux2]
-  rw [aux4]
-  constructor
-  ·
-    intro j
-    intro hja
-
-    cases lt_or_eq_of_le hja with
-    | inl hja =>
-      rcases rrr hja with ⟨witness,⟨hwitness,_⟩⟩
-      have exform : ∃ a, a ∈ eval O cf (Nat.pair x.l (j + x.r)) := by exact Exists.intro witness hwitness
-
-
-      exact Part.dom_iff_mem.mpr exform
-    | inr hja =>
-      rw [hja]
-
-      have exform : ∃ a', a' ∈ eval O cf (Nat.pair x.l (a + x.r)) := by exact Exists.intro 0 lll
-      exact Part.dom_iff_mem.mpr exform
-  · intro j
-    intro hja
-    rcases rrr hja with ⟨witness,⟨hwitness_1,hwitness_2⟩⟩
-    exact ne_of_mem_imp_not_mem hwitness_1 hwitness_2
-lemma forall_mem_part {y:Part ℕ} (h1:y.Dom) (h2:∀ x ∈ y, x = c ) : c∈y := by
-  contrapose h2
-  simp
-  use y.get h1
-  constructor
-  exact Part.get_mem h1
-  apply Aesop.BuiltinRules.not_intro
-  intro a
-  subst a
-  have : y.get h1 ∈ y := by exact Part.get_mem h1
-  contradiction
-theorem rfind'_prop
-(h:(eval O (rfind' cf) x).Dom)
-:
-(y+x.r∈eval O (rfind' cf) x)
-↔
-(
-0∈(eval O cf (Nat.pair x.l (y+x.r)))
-∧ (∀ j ≤ y, (eval O cf (Nat.pair x.l (j+x.r))).Dom)
-∧ (∀ j < y, ¬0∈(eval O cf (Nat.pair x.l (j+x.r))))
-)
-:= by
-  constructor
-  intro h1
-  have : y=rfind'_obtain h := by
-    unfold rfind'_obtain
-    have := rfind'_geq_xr h
-    have aux0 : (eval O cf.rfind' x).get h = y+x.r := by exact Part.get_eq_of_mem h1 h
-    simp_all only [ge_iff_le, le_add_iff_nonneg_left, _root_.zero_le, add_tsub_cancel_right]
-  rw [this]
-  exact rfind'_obtain_prop h
-
-  contrapose
-  intro h1
-  push_neg
-  intro h2
-  intro h3
-
-  simp [eval] at h1
-  rcases h1 h2 with ⟨h4,h5,h6⟩
-  use h4
-  refine ⟨h5,forall_mem_part (h3 h4 (le_of_succ_le h5)) h6⟩
 
 theorem use_rfind'_dom
 (h:(use O (rfind' cf) x).Dom) :
@@ -938,24 +923,16 @@ theorem use_mono_pair (hh:(use O (pair cf cg) x).Dom):
   ∧
   ((use O cg x).get ((use_pair_dom hh).right) ≤ (use O (pair cf cg) x).get hh)
   := by
-    have h1 := Part.dom_imp_some ((use_pair_dom hh).left)
-    simp only [use, Seq.seq, Part.bind]
-    simp (config := { singlePass := true }) only [h1]
-    simp [Part.assert]
+    simp only [use, Seq.seq]
+    simp [Part.Dom.bind ((use_pair_dom hh).left)]
 theorem use_mono_comp (hh:(use O (comp cf cg) x).Dom):
   ((use O cg x).get ((use_comp_dom hh).left) ≤ (use O (comp cf cg) x).get hh)
   ∧
   ((use O cf ((eval O cg x).get (use_comp_dom_aux hh))).get ((use_comp_dom hh).right) ≤ (use O (comp cf cg) x).get hh)
   := by
-    have h1 := Part.dom_imp_some ((use_comp_dom hh).left)
-    have h2 := Part.dom_imp_some (use_comp_dom_aux hh)
-    simp only [use, Seq.seq, Part.bind]
-    simp (config := { singlePass := true }) only [h1]
-    simp (config := { singlePass := true }) only [h2]
-    simp only [Part.assert]
-    simp [Part.bind]
-    simp only [Part.assert]
-    simp only [le_refl, or_true]
+    simp only [use, Seq.seq]
+    simp [Part.Dom.bind ((use_comp_dom hh).left)]
+    simp [Part.Dom.bind (use_comp_dom_aux hh)]
 theorem use_mono_prec' (hh:(use O (prec cf cg) (Nat.pair x 0)).Dom):
 ((use O cf x).get (use_prec_dom' hh) ≤ (use O (prec cf cg) (Nat.pair x 0)).get hh)
 := by
@@ -983,112 +960,329 @@ let eval_prev := (eval O (prec cf cg) (Nat.pair x i)).get (use_prec_dom_aux hh)
   := by
     induction i with
     | zero =>
-      simp
-      have h1 := Part.dom_imp_some ((use_prec_dom hh).left)
-      have h2 := Part.dom_imp_some (use_prec_dom_aux hh)
+      simp only [use, Seq.seq]
+      simp [Part.Dom.bind ((use_prec_dom hh).left)]
       have := eval_prec_dom_aux (u2e hh)
       simp at this
-      have h3 := Part.dom_imp_some this
-      -- simp [use]
-      simp only [use, Seq.seq, Part.bind]
-
-      -- simp
-      simp (config := { singlePass := true }) only [h1]
-      simp (config := { singlePass := true }) only [h3]
-      -- simp (config := { singlePass := true }) only [h2]
-      simp only [Part.assert]
-      simp [Part.bind]
-      simp only [Part.assert]
-      simp only [le_sup_left, le_sup_right, and_self]
+      simp [Part.Dom.bind (this)]
     | succ n ih =>
-      simp
-      have h1 := Part.dom_imp_some ((use_prec_dom hh).left)
-      have h2 := Part.dom_imp_some (use_prec_dom_aux hh)
       have h3' := eval_prec_dom_aux (u2e hh)
-      simp at h3'
-      have h3 := Part.dom_imp_some h3'
+      simp only at h3'
       have h5' := eval_prec_dom_aux h3'
-      have h5 := Part.dom_imp_some h5'
-      -- have h4' := (eval_prec_dom (u2e hh)).right
-      have h4' := (eval_prec_dom h3').right
-      simp at h4'
-      have h4 := e2u h4'
-
-      -- sorry
-      -- simp [use]
-      -- simp only [use]
-      simp only [use, Seq.seq, Part.bind,unpair_pair]
-      -- simp only [h3',h5']
-      -- simp
-      -- simp only []
-      -- simp
-      simp (config := { singlePass := true }) only [h2]
-      simp (config := { singlePass := true }) only [h5]
-      -- simp (config := { singlePass := true }) only [h1]
-      -- simp (config := { singlePass := true }) only [h3]
-      -- have : (use O (cf.prec cg) (Nat.pair x (n + 1))).Dom := by exact (e2u h3')
-      -- have : (use O (cf.prec cg) (Nat.pair x (n + 1))).Dom := by exact?
-      -- have ihsimp := ih (e2u h3')
-
-      -- #check @ih (e2u h3')
-      -- have ihsimp := @ih (e2u h3') (e2u h3')
+      
+      have stupidrewrite : (Nat.rec (use O cf x)
+                  (fun iM1 IH ↦
+                    (eval O (cf.prec cg) (Nat.pair x iM1)).bind fun IH_N ↦
+                      IH.bind fun y ↦ Part.map y.max (use O cg (Nat.pair x (Nat.pair iM1 IH_N))))
+                  n) = use O (prec cf cg) (Nat.pair x n) := by
+                  simp [use]
+                  rfl
+      have h8 := eval_prec_dom (h3')
+      simp at h8
+      have h9 := h8.right
       have ihsimp := @ih (e2u h3')
-
-      -- simp only [unpair]
-      -- simp [ihsimp]
-      -- stop
-      simp only [Part.assert]
-      simp [Part.bind]
-      -- aesop
-      simp only [Part.assert]
-      -- simp only [Part.assert]
-      -- #check le_sup_left
-      simp
-      -- apply Or.inr
-      -- apply Or.inl
       have ihsimp := ihsimp.left
-      simp only [use, Seq.seq, Part.bind] at ihsimp
-      simp only [unpair_pair] at ihsimp
-      simp (config := { singlePass := true }) only [h5] at ihsimp
-      -- simp (config := { singlePass := true }) only [h1] at ihsimp
-      -- simp (config := { singlePass := true }) only [h2] at ihsimp
-      simp only [Part.assert] at ihsimp
-      simp [Part.bind] at ihsimp
-      -- aesop
-      simp only [Part.assert] at ihsimp
-      apply or_assoc.mp
-      apply Or.inl
 
-      -- have aux0 : (eval O (cf.prec cg) (Nat.pair x n)).Dom := by exact h5'
-      let v2 := (use O cg (Nat.pair x (Nat.pair n ((eval O (cf.prec cg) (Nat.pair x n)).get ?_)))).get ?_
-      exact le_sup_iff.mp ihsimp
-      exact h5'
-      exact h4
+      simp only [use, Seq.seq, unpair_pair] at ihsimp ⊢
+      simp [Part.Dom.bind (use_prec_dom_aux hh)] at ihsimp ⊢
+      simp only [Part.Dom.bind (h5')] at ihsimp ⊢
+      simp [stupidrewrite] at ihsimp ⊢
+      simp [Part.Dom.bind (e2u h5')] at ihsimp ⊢
+      simp [Part.Dom.bind (e2u h9)] at ihsimp ⊢
 
+      aesop? says
+        rename_i ihsimp_1
+        simp_all only [and_self, implies_true, and_true]
+        obtain ⟨left, right⟩ := ihsimp_1
+        cases ihsimp with
+        | inl h => simp_all only [true_or]
+        | inr h_1 => simp_all only [true_or, or_true]
+
+
+#check forIn
+open List in
+@[simp, grind =] theorem forIn'_cons [Monad m] {a : α} {as : List α}
+    (f : (a' : α) → a' ∈ a :: as → β → m (ForInStep β)) (b : β) :
+    forIn' (a::as) b f = f a mem_cons_self b >>=
+      fun | ForInStep.done b => pure b | ForInStep.yield b => forIn' as b fun a' m b => f a' (mem_cons_of_mem a m) b := by
+  simp only [forIn', List.forIn', forIn'.loop]
+  congr 1
+  funext s
+  obtain b | b := s
+  · rfl
+  · apply forIn'_loop_congr
+    intros
+    rfl
+open List in
+@[simp] theorem forIn'_append [Monad m] {a : α} {as : List α}
+    (f : (a' : α) → a' ∈ as++[a] → β → m (ForInStep β))
+    (g : (a' : α) → a' ∈ as → β → m (ForInStep β))
+    -- (hfg:)
+    (b : β) :
+    forIn' (as++[a]) b f
+    =
+    (forIn' (as) b g) >>=
+      fun asd => f a (sorry) asd
+      >>=
+      fun
+      | ForInStep.done b => pure b
+      | ForInStep.yield b => pure b
+      -- fun asd => f a (sorry) asd
+    -- f a (False.elim mem_cons_of_mem) b >>=
+    --   fun | ForInStep.done b => pure b | ForInStep.yield b => forIn' as b fun a' m b => f a' (mem_cons_of_mem a m) b
+      := by
+  induction as with
+  | nil =>
+    simp
+    congr 1
+    · 
+    sorry
+  | cons head tail ih =>
+    simp
+    sorry
+  simp only [forIn', List.forIn', forIn'.loop]
+  congr 1
+  funext s
+  obtain b | b := s
+  · rfl
+  · apply forIn'_loop_congr
+    intros
+    rfl
 theorem use_mono_rfind'
 (hh:(use O (rfind' cf) x).Dom):
 ∀ hj:j ≤ rfind'_obtain (u2e hh),
   (use O cf (Nat.pair x.l (j+x.r))).get (use_rfind'_dom hh j hj) ≤ (use O (rfind' cf) x).get hh
   := by
-  -- induction s with
-  -- simp
-  -- [
-  --   use,
-  --   -- eval,
-  --   Part.bind,
-  --   Part.assert,
-  -- ]
-  intro hj
-  have aux0 := (rfind'_obtain_prop (u2e hh)).right.left
-  have aux1 := (rfind'_obtain_prop (u2e hh)).right.right
-  have aux2 := (rfind'_obtain_prop (u2e hh)).left
+
+  intro hjro
+  have rop := rfind'_obtain_prop (u2e hh)
+  let ro := rfind'_obtain (u2e hh)
+  have rwro : rfind'_obtain (u2e hh) = ro := rfl
+  simp [rwro] at rop hjro
+  have rop1 := rop.left
+  have rop2 := rop.right.left
+  have rop3 := rop.right.right
+  have rop4 := rfind'_obtain_prop_4 (u2e hh)
+  simp [rwro] at rop4
+
+  have aux3 := rop2 0 (zero_le ro)
+  simp at aux3
+  have aux5 := rop2 j hjro
+  
+  simp [use]
+  simp [Part.Dom.bind (u2e hh)]
+  -- simp [Part.Dom.bind (e2u aux3)]
+  -- simp [Part.Dom.bind (aux3)]
+  have rwro2 : (eval O (rfind' cf) x).get (u2e hh) - x.r = ro := rfl
+  simp [rwro2]
+
+  simp only [forIn_eq_forIn']
+  have :
+      (fun i h r ↦
+      (use O cf (Nat.pair x.l (ro - i + x.r))).bind fun use_i
+      ↦ Part.some (ForInStep.yield (r.max use_i))
+      : (i : ℕ) → i ∈ List.range' 0 (ro+1) → ℕ → Part (ForInStep ℕ))
+    = (fun i h r ↦
+        Part.some (ForInStep.yield (r.max
+        ((use O cf (Nat.pair x.l (ro - i + x.r))).get (e2u $ rop2 (ro-i) (sub_le ro i)))
+        ))
+      
+      : (i : ℕ) → i ∈ List.range' 0 (ro+1) → ℕ → Part (ForInStep ℕ)) := by
+        funext i h r
+        simp [Part.Dom.bind (e2u $ rop2 (ro-i) (sub_le ro i))]
+  simp only [this]
+
+
+  -- have : (List.range' 0 (ro + 1)) = (List.range' 0 (ro + 1))
+  -- (List.range' k (ro + 1 - k))
+  have basecase :
+  (use O cf (Nat.pair x.l (j + x.r))).get (sorry) ≤
+  (forIn' (List.range' j (ro + 1 - j)) 0 fun i h r ↦
+        Part.some (ForInStep.yield (r.max ((use O cf (Nat.pair x.l (ro - i + x.r))).get (sorry))))).get
+    (sorry)
+    := by
+    have : List.range' 0 (ro + 1) = 0 :: List.range' 1 (ro) := by
+      simp_all [ro]
+      rfl
+    have : List.range' j (ro + 1 - j) = j :: List.range' (j+1) (ro-j) := by
+      have : ro + 1 - j = ro-j+1 := by (expose_names; exact Nat.sub_add_comm hjro_1)
+      rw [this]
+      rfl
+    simp [this]
+    
+    sorry
+
+
+  induction j with
+  | zero => sorry
+  | succ n _ => sorry
+  -- generalize ro=a at *
+  -- revert ro
+  -- generalize (eval O (rfind' cf) x).get (u2e hh) - x.r = ro2
+  -- generalize x = ro2
+
+  -- induction hro:ro generalizing j with
+  cases hro:ro
+  -- generalizing
+  --   rwro
+  --   rwro2
+  --   rop
+  --   hjro
+  --   rop1
+  --   rop2
+  --   rop3
+  --   rop4
+  with
+  | zero =>
+    simp [hro] at hjro rop1
+    simp only [hjro, zero_add, pair_lr]
+    have : (eval O cf x).get aux3 = 0 := by exact Eq.symm ((fun {α} {o} {a} h ↦ (Part.eq_get_iff_mem h).mpr) aux3 rop1)
+    simp [this]
+  | succ n =>
+    have aux4 := rop3 0 (Nat.lt_of_sub_eq_succ hro)
+    
+    -- simp [use]
+    -- simp [Part.Dom.bind (u2e hh)]
+    -- simp [Part.Dom.bind (e2u aux3)]
+    -- simp [Part.Dom.bind (aux3)]
+    have := rop3 0 (Nat.lt_of_sub_eq_succ hro)
+    simp at this
+    have : ¬ (eval O cf x).get aux3 = 0 := by
+      contrapose this
+      simp at this ⊢
+      exact (Part.get_eq_iff_mem aux3).mp this
+    simp [this] at ⊢
+    have rwro2 : (eval O (rfind' cf) x).get (u2e hh) - x.r = ro := rfl
+    simp [rwro2] at ⊢
+
+    
+    simp
+    sorry
+
+    -- have redundant : ro ≤ rfind'_obtain (u2e hh) := Nat.le_refl ro
+    -- have ih1 := ih redundant (redundant) (rop2 ro le_rfl)
+    -- -- simp [rwro] at ih1
+    -- #check ih (le_rfl) (le_rfl)
+
+
+    
+    -- induction ro generalizing * with
+    -- | zero => sorry
+    -- | succ n _ => sorry
+  
+    cases lt_or_eq_of_le hjro with
+    | inl hjro2 => sorry
+    | inr hjro2 =>
+      simp [hjro2]
+
+      
+
+      have : List.range' 0 (ro + 1) = 0 :: List.range' 1 (ro) := by
+        aesop
+      -- rw [this]
+      simp [this]
+      #check List.forIn_cons
+      -- #check bind_assoc
+      -- simp [←bind_assoc]
+
+      simp [Part.Dom.bind (e2u $ rop2 ro le_rfl)]
+      simp only [forIn_eq_forIn']
+
+      have :
+        (fun i h r ↦
+        (use O cf (Nat.pair x.l (ro - i + x.r))).bind fun use_i
+        ↦ Part.some (ForInStep.yield (r.max use_i))
+        : (i : ℕ) → i ∈ List.range' 1 ro → ℕ → Part (ForInStep ℕ))
+      = (fun i h r ↦
+          Part.some (ForInStep.yield (r.max
+          ((use O cf (Nat.pair x.l (ro - i + x.r))).get (e2u $ rop2 (ro-i) (sub_le ro i)))
+          ))
+        
+        : (i : ℕ) → i ∈ List.range' 1 ro → ℕ → Part (ForInStep ℕ)) := by
+          funext i h r
+          simp [Part.Dom.bind (e2u $ rop2 (ro-i) (sub_le ro i))]
+      simp [this]
+      simp [hro]
+      have : List.range' 1 (n + 1) = 1 :: List.range' 2 n := by
+        aesop
+      simp [this]
+      induction n with
+      | zero =>
+        simp
+      | succ n ih =>
+        have : List.range' 2 (n + 1) = 2 :: List.range' 3 n := by
+          aesop
+        simp [this]
+        
+
+      #check forIn
+      #check rop2 ro le_rfl
+      -- have : (eval O cf (Nat.pair x.l (ro + x.r))).Dom := by exact?
+
+      
+      -- rw (config:={occs:=.pos [1]}) [rwro2]
+      -- #check forM_loop_eq_forM_range'
+      have : List.range' 0 (ro + 1) = List.range (ro) ++ [ro] := by
+        sorry
+      simp [this]
+  
+    
+    
+    -- have aux6 := rop3 j
+    -- simp [hro] at hjro rop1
+  
+    have main1 : (use O cf (Nat.pair x.l (j + x.r))).get (use_rfind'_dom hh j hjro) ≤ (use O cf.rfind' (Nat.pair x.l (j + x.r))).get (e2u $ rop4 j hjro) := by
+      simp [use]
+      simp [Part.bind, Part.assert]
+      have basecasefail := rop3 j
+      sorry
+    
+    simp only
+    [
+      use,
+    ]
+    
+    -- simp only [hjro, zero_add, pair_lr]
+    simp []
+    -- simp only []
+    simp [Part.bind, Part.assert]
+    have := rop3 0 (Nat.lt_of_sub_eq_succ hro)
+    simp at this
+    have : ¬ (eval O cf x).get aux3 = 0 := by
+      contrapose this
+      simp at this ⊢
+      exact (Part.get_eq_iff_mem aux3).mp this
+    simp [this]
+    -- #check rop3 0 (Nat.lt_of_sub_eq_succ hro)
+    have rwro2 : (eval O (rfind' cf) x).get (u2e hh) - x.r = ro := rfl
+
+    simp [rwro2]
+
+    -- aesop
+    -- unfold forIn
+    -- simp only [Part.bind, Part.assert]
+    -- simp [aux3]
+    
+    simp only [Part.bind]
+    -- simp only [Part.coe_some, Part.bind_eq_bind, ge_iff_le]
+    -- simp (config := { singlePass := true }) only [Part.dom_imp_some aux3]
+    -- simp (config := { singlePass := true }) only [Part.dom_imp_some (u2e hh)]
+    simp only [Part.assert]
+    -- aesop? says
+    --   subst hj
+    --   simp_all [ro]
+    --   split
+    --   next h => simp_all only [le_refl]
+    --   next h => simp_all only [le_sup_left]
+  
+  sorry
   cases lt_or_eq_of_le hj with
   | inl hhh =>
-    have aux3 := aux0 0 (zero_le (rfind'_obtain (u2e hh)))
+    have aux3 := rop2 0 (zero_le (rfind'_obtain (u2e hh)))
     simp at aux3
-    have aux4 := aux1 0 (zero_lt_of_lt hhh)
-    have aux5 := aux0 j hj
-    have aux6 := aux1 j hhh
+    have aux4 := rop3 0 (zero_lt_of_lt hhh)
+    have aux5 := rop2 j hj
+    have aux6 := rop3 j hhh
     simp only
     [
       use,
@@ -1107,7 +1301,9 @@ theorem use_mono_rfind'
     · simp only [hhhh]
     rw [Part.dom_imp_some aux3]
     simp [hhh]
-  | inr h => sorry
+  | inr h =>
+
+    sorry
   -- cases (lt_or_eq_of_le hj)
 
   -- simp [aux0,aux1,aux2]
