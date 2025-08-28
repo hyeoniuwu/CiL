@@ -161,12 +161,12 @@ match c with
 | Code.rfind' cf =>
   do
     -- let ro := rfind'_obtain h
-    
+
     let guard ← eval O (rfind' cf) x;
     let ro := guard - x.r
     -- eval O (rfind' cf) x;
     -- guard ((eval O (rfind' cf) x).Dom);
-    
+
     -- let use_base ← use O cf x
     -- let eval_base ← eval O cf x
     -- if eval_base = 0 then use_base else
@@ -175,10 +175,14 @@ match c with
     -- let use_indt ← use O (rfind' cf) (Nat.pair x.l (x.r+1)) -- this is right but you have to show termination...
 
     let mut max := 0
-    for i in [0:ro+1] do
+    -- #check Std.Range|
+    -- let l := List.reverse (List.range (ro+1))
+    -- for i in List.reverse [0:ro+1] do
+    for i in List.reverse (List.range (ro+1)) do
     -- for i in [ro+1:0:-1] do
 
-      let use_i ← (use O cf (Nat.pair x.l ((ro-i)+x.r)))
+      -- let use_i ← (use O cf (Nat.pair x.l ((ro-i)+x.r)))
+      let use_i ← (use O cf (Nat.pair x.l (i+x.r)))
       -- let use_i := (use O cf (Nat.pair x.l ((ro-i)+x.r))).get this
       -- let use_i := (use O cf (Nat.pair x.l (i+x.r))).get this
       max := Nat.max max use_i
@@ -969,7 +973,7 @@ let eval_prev := (eval O (prec cf cg) (Nat.pair x i)).get (use_prec_dom_aux hh)
       have h3' := eval_prec_dom_aux (u2e hh)
       simp only at h3'
       have h5' := eval_prec_dom_aux h3'
-      
+
       have stupidrewrite : (Nat.rec (use O cf x)
                   (fun iM1 IH ↦
                     (eval O (cf.prec cg) (Nat.pair x iM1)).bind fun IH_N ↦
@@ -1035,7 +1039,7 @@ open List in
   | nil =>
     simp
     congr 1
-    · 
+    ·
     sorry
   | cons head tail ih =>
     simp
@@ -1048,6 +1052,80 @@ open List in
   · apply forIn'_loop_congr
     intros
     rfl
+#check Finset
+theorem clause_mono_1 {base1 base2 : ℕ} {f:ℕ→ℕ} {l:List ℕ}
+-- {l:List ℕ}
+-- {h:(forIn l (base) fun a b ↦ Part.some (ForInStep.yield (b.max (f a)))).Dom}
+{h:∀ (l') (base:ℕ), (∃l'',l''++l'=l) → (forIn (l') (base) fun a b ↦ Part.some (ForInStep.yield (b.max (f a)))).Dom}
+{h2:base1≤base2}
+-- (hr:r≤ro)
+:
+(forIn l base1 fun a b ↦ Part.some (ForInStep.yield (b.max (f a)))).get (h l base1 (⟨[],rfl⟩))
+≤
+(forIn l base2 fun a b ↦ Part.some (ForInStep.yield (b.max (f a)))).get (h l base2 (⟨[],rfl⟩))
+:= by
+  induction l generalizing base1 base2 with
+  | nil => simpa
+  | cons head tail ih =>
+    -- have : head :: tail = l := by exact?
+    simp
+    have ihmain :
+    ∀ (l' : List ℕ) (base : ℕ),
+      (∃ l'', l'' ++ l' = tail) → (forIn l' base fun a b ↦ Part.some (ForInStep.yield (b.max (f a)))).Dom
+      := by
+      intro l' base h1
+      rcases h1 with ⟨l'',hl''⟩
+      have : (head::l'') ++ l' = head :: tail := by simp [hl'']
+      exact h l' base  ⟨(head::l''),this⟩
+    have ihmain2 : base1.max (f head) ≤ base2.max (f head) := by exact sup_le_sup_right h2 (f head)
+    have := @ih (base1.max (f head)) (base2.max (f head)) ihmain ihmain2
+    exact this
+
+    -- #check @ih sorry
+-- theorem clause_mono {base2:ℕ} {f:ℕ→ℕ} {r}
+-- -- {l:List ℕ}
+-- -- {h:(forIn l (base) fun a b ↦ Part.some (ForInStep.yield (b.max (f a)))).Dom}
+-- {h:∀ r (base:ℕ), r≤ro → (forIn (((List.range r).reverse)) (base) fun a b ↦ Part.some (ForInStep.yield (b.max (f a)))).Dom}
+-- {h2:base1≤base2}
+-- (hr:r≤ro)
+-- :
+-- (forIn (((List.range r).reverse)) base1 fun a b ↦ Part.some (ForInStep.yield (b.max (f a)))).get (h r base1 hr)
+-- ≤
+-- (forIn (((List.range r).reverse)) base2 fun a b ↦ Part.some (ForInStep.yield (b.max (f a)))).get (h r base2 hr)
+-- := by
+--   induction l with
+--   | nil => simpa
+--   | cons head tail ih =>
+--     simp
+--     sorry
+--   sorry
+
+
+theorem clause_mono {base:ℕ} {f:ℕ→ℕ} {ro:ℕ}
+-- {l:List ℕ}
+-- {h:(forIn l (base) fun a b ↦ Part.some (ForInStep.yield (b.max (f a)))).Dom}
+{h:∀r≤(ro+1), (forIn ((List.range r).reverse) (base) fun a b ↦ Part.some (ForInStep.yield (b.max (f a)))).Dom}
+-- {h2:∀l1 l2 (base':ℕ),l1::l2=l→(forIn l2 (base') fun a b ↦ Part.some (ForInStep.yield (b.max (f a)))).Dom}
+:
+  base ≤ (forIn l (base) fun a b ↦ Part.some (ForInStep.yield (b.max (f a)))).get h
+  :=
+  by
+    -- induction l generalizing base with
+    induction l generalizing base with
+    | nil =>
+      simp
+    | cons head tail ih =>
+      simp
+      #check h2 head tail (base.max (f head)) rfl
+      have := h2 head tail (base.max (f head)) rfl
+      -- have doms : (forIn tail base fun a b ↦ Part.some (ForInStep.yield (b.max (f a)))).Dom := sorry
+      have := @ih (base.max (f head)) (this)
+      grind only [= List.forIn_cons, = Nat.max_def, cases Or]
+      simp_all only [implies_true, ge_iff_le]
+
+      sorry
+      sorry
+
 theorem use_mono_rfind'
 (hh:(use O (rfind' cf) x).Dom):
 ∀ hj:j ≤ rfind'_obtain (u2e hh),
@@ -1068,7 +1146,7 @@ theorem use_mono_rfind'
   have aux3 := rop2 0 (zero_le ro)
   simp at aux3
   have aux5 := rop2 j hjro
-  
+
   simp [use]
   simp [Part.Dom.bind (u2e hh)]
   -- simp [Part.Dom.bind (e2u aux3)]
@@ -1077,22 +1155,34 @@ theorem use_mono_rfind'
   simp [rwro2]
 
   simp only [forIn_eq_forIn']
+
+  -- simp (config := { singlePass := true }) [List.reverse]
+  have domaux1 {i} (h : i ∈ (List.range (ro + 1)).reverse) : i≤ro := by
+    grind
   have :
       (fun i h r ↦
-      (use O cf (Nat.pair x.l (ro - i + x.r))).bind fun use_i
+      (use O cf (Nat.pair x.l (i + x.r))).bind fun use_i
       ↦ Part.some (ForInStep.yield (r.max use_i))
-      : (i : ℕ) → i ∈ List.range' 0 (ro+1) → ℕ → Part (ForInStep ℕ))
+      : (i : ℕ) → i ∈ (List.range (ro + 1)).reverse → ℕ → Part (ForInStep ℕ))
     = (fun i h r ↦
         Part.some (ForInStep.yield (r.max
-        ((use O cf (Nat.pair x.l (ro - i + x.r))).get (e2u $ rop2 (ro-i) (sub_le ro i)))
+        -- ((use O cf (Nat.pair x.l (i + x.r))).get (e2u $ rop2 (ro-i) (sub_le ro i)))
+        ((use O cf (Nat.pair x.l (i + x.r))).get (e2u $ rop2 i (domaux1 h)))
         ))
-      
-      : (i : ℕ) → i ∈ List.range' 0 (ro+1) → ℕ → Part (ForInStep ℕ)) := by
+
+      : (i : ℕ) → i ∈ (List.range (ro + 1)).reverse → ℕ → Part (ForInStep ℕ)) := by
         funext i h r
-        simp [Part.Dom.bind (e2u $ rop2 (ro-i) (sub_le ro i))]
-  simp only [this]
+        -- simp [Part.Dom.bind (e2u $ rop2 (ro-i) (sub_le ro i))]
+        simp [Part.Dom.bind (e2u $ rop2 i (domaux1 h))]
+  simp [this]
 
-
+  have listrwgen (n): (List.range (n + 1)).reverse = n :: (List.range n).reverse := by
+    simp
+    exact List.range_succ
+  have listrw : (List.range (ro + 1)).reverse = ro :: (List.range ro).reverse := by
+    simp
+    exact List.range_succ
+  simp [listrw]
   -- have : (List.range' 0 (ro + 1)) = (List.range' 0 (ro + 1))
   -- (List.range' k (ro + 1 - k))
   have basecase :
@@ -1109,13 +1199,124 @@ theorem use_mono_rfind'
       rw [this]
       rfl
     simp [this]
-    
+
     sorry
+
+  -- show 3 things.
+  -- 1. that basecase ≤ forIn l ~
+  -- 2. that use @ j ≤ forin range j ~
+  -- 3. that forin range j ~ ≤ forin range full.
+  -- simp only [forIn_eq_forIn']
+  have : (use O cf x).Dom := by exact e2u aux3
+  have domaux2 : (use O cf (Nat.pair x.l (ro + x.r))).Dom := e2u $ rop2 ro le_rfl
+  have domaux3aux {a' k} (h0:k≤ro) (h:a' ∈ (List.range k).reverse) : a' ∈ (List.range ro).reverse  := by
+    simp at h ⊢
+    exact Nat.lt_of_lt_of_le h h0
+    -- exact?
+  have domaux3 (a' k m) (h0:k≤ro) := e2u (rop2 a' (domaux1 (List.forIn'_congr._proof_1 listrw a' (List.mem_cons_of_mem ro (domaux3aux h0 m)))))
+  have forInDom {k :ℕ} (base:ℕ) (h:k≤ro):
+  (forIn' (List.range k).reverse (base) fun a' m b ↦
+        Part.some (ForInStep.yield (b.max ((use O cf (Nat.pair x.l (a' + x.r))).get (domaux3 a' k m h))))).Dom := by
+    induction k generalizing base with
+    | zero =>
+      simp
+    | succ n ih =>
+      simp [listrwgen, -forIn'_eq_forIn]
+      have auxdom4 : (use O cf (Nat.pair x.l (n + x.r))).Dom := by
+        aesop? says
+          rename_i hjro_1 this_1
+          simp_all [ro]
+          apply domaux3
+          on_goal 2 => simp_all only [ro]
+          on_goal 2 => rfl
+          simp_all only [List.mem_reverse, List.mem_range]
+          exact h
+      have := @ih (base.max ((use O cf (Nat.pair x.l (n + x.r))).get auxdom4)) (le_of_succ_le h)
+      aesop? says
+        simp_all only [implies_true, not_false_eq_true, and_self, and_true, List.mem_range'_1, and_imp, forIn'_eq_forIn,
+        List.mem_reverse, List.mem_range, ro]
+
+  have auxdom5:(use O cf (Nat.pair x.l (j + x.r))).Dom:= by (expose_names; exact use_rfind'_dom hh j hjro_1)
+  have auxdom8 (k:ℕ):(use O cf (Nat.pair x.l (ro - k + x.r))).Dom:= use_rfind'_dom hh (ro-k) (sub_le ro k)
+  have auxdom6:= forInDom ((use O cf (Nat.pair x.l (ro + x.r))).get domaux2) hjro
+  have auxdom9 (k:ℕ):= forInDom ((use O cf (Nat.pair x.l (ro -k + x.r))).get (auxdom8 k)) (sub_le ro k)
+  have auxdom7:= forInDom ((use O cf (Nat.pair x.l (ro + x.r))).get domaux2) le_rfl
+  have main2:
+    (use O cf (Nat.pair x.l (j + x.r))).get auxdom5 ≤ (forIn' (List.range j).reverse ((use O cf (Nat.pair x.l (ro + x.r))).get domaux2) fun a' m b ↦ Part.some (ForInStep.yield (b.max ((use O cf (Nat.pair x.l (a' + x.r))).get (domaux3 a' j m hjro))))).get auxdom6 := by
+      -- wait this should be literally just an application of main1.
+      sorry
+  -- here we are saying, starting calculations from j, we'll get smaller results bc we're not taking into account the values j~ro.
+
+  have main3 :
+    ∀k,
+    (forIn' (List.range (ro-k)).reverse ((use O cf (Nat.pair x.l ((ro-k) + x.r))).get (auxdom8 k)) fun a' m b ↦ Part.some (ForInStep.yield (b.max ((use O cf (Nat.pair x.l (a' + x.r))).get (domaux3 a' (ro-k) m (sub_le ro k)))))).get (auxdom9 k)
+    ≤
+    (forIn' (List.range ro).reverse ((use O cf (Nat.pair x.l (ro + x.r))).get domaux2) fun a' m b ↦ Part.some (ForInStep.yield (b.max ((use O cf (Nat.pair x.l (a' + x.r))).get (domaux3 a' ro m (le_rfl)))))).get auxdom7
+    := by
+      intro k
+      induction k with
+      | zero =>
+        simp
+      | succ n ih =>
+        -- do cases on if ro-n≤0
+        cases eq_zero_or_pos (ro - n) with
+        | inl hh =>
+          simp [show ro-(n+1)=ro-n-1 from rfl]
+          have : ro-n-1=ro-n := by exact sub_one_eq_self.mpr hh
+          simp [this]
+          exact ih
+        | inr hh =>
+          -- we want to say:
+          -- ih:has all calculations from 0 to ro-k
+          -- want to show: all calculations from 0 to ro-k-1
+          -- i need to show that lhs of goal is leq lhs of ih.
+          -- for that, i need a theorem saying that in this max forin thing,
+          -- if everything is the same but the basecase of L is leq R
+          -- then L leq R.
+          have ronrw0 : ro-(n+1)=ro-n-1 := rfl
+          simp [ronrw0]
+          have ronrw : ro-n = ro-n-1+1 := by exact Eq.symm (Nat.sub_add_cancel hh)
+          simp (config := { singlePass := true }) [ronrw] at ih
+          #check listrwgen (ro-n-1)
+          simp [listrwgen (ro-n-1)] at ih
+
+          have domaux10 : (use O cf (Nat.pair x.l (ro - n - 1 + 1 + x.r))).Dom := by
+            rw [←ronrw]
+            exact auxdom8 n
+          have domaux11 : (use O cf (Nat.pair x.l (ro - n - 1 + x.r))).Dom := by
+            rw [←ronrw0]
+            exact auxdom8 (n + 1)
+          let base2 := (((use O cf (Nat.pair x.l (ro - n - 1 + 1 + x.r))).get domaux10).max
+          ((use O cf (Nat.pair x.l (ro - n - 1 + x.r))).get domaux11))
+          let base1 := (use O cf (Nat.pair x.l (ro - n - 1 + x.r))).get domaux11
+
+          have main_aux : ∀ (l' : List ℕ) (base : ℕ),
+      (∃ l'', l'' ++ l' = (List.range (ro - n - 1)).reverse) → (forIn l' base fun a b ↦ Part.some (ForInStep.yield (b.max ((fun a => ((use O cf (Nat.pair x.l (a + x.r))).get (⋯))) a)))).Dom := by sorry
+          #check clause_mono_1
+
+          sorry
+
+        simp [ih]
+        sorry
+      sorry
+
+  #check le_trans main2 main3
+  apply le_trans main2 main3
+
+
+
+-- (forIn' (List.range ro).reverse ((use O cf x).get (e2u aux3)) fun a h b ↦ Part.some (ForInStep.yield (b.max ((use O cf (Nat.pair x.l (ro - a + x.r))).get (by
+
+--   done))))).Dom := by sorry
 
 
   induction j with
-  | zero => sorry
-  | succ n _ => sorry
+  | zero =>
+    simp
+    sorry
+  | succ n ih =>
+    simp
+    sorry
   -- generalize ro=a at *
   -- revert ro
   -- generalize (eval O (rfind' cf) x).get (u2e hh) - x.r = ro2
@@ -1140,7 +1341,7 @@ theorem use_mono_rfind'
     simp [this]
   | succ n =>
     have aux4 := rop3 0 (Nat.lt_of_sub_eq_succ hro)
-    
+
     -- simp [use]
     -- simp [Part.Dom.bind (u2e hh)]
     -- simp [Part.Dom.bind (e2u aux3)]
@@ -1155,7 +1356,7 @@ theorem use_mono_rfind'
     have rwro2 : (eval O (rfind' cf) x).get (u2e hh) - x.r = ro := rfl
     simp [rwro2] at ⊢
 
-    
+
     simp
     sorry
 
@@ -1165,17 +1366,17 @@ theorem use_mono_rfind'
     -- #check ih (le_rfl) (le_rfl)
 
 
-    
+
     -- induction ro generalizing * with
     -- | zero => sorry
     -- | succ n _ => sorry
-  
+
     cases lt_or_eq_of_le hjro with
     | inl hjro2 => sorry
     | inr hjro2 =>
       simp [hjro2]
 
-      
+
 
       have : List.range' 0 (ro + 1) = 0 :: List.range' 1 (ro) := by
         aesop
@@ -1197,7 +1398,7 @@ theorem use_mono_rfind'
           Part.some (ForInStep.yield (r.max
           ((use O cf (Nat.pair x.l (ro - i + x.r))).get (e2u $ rop2 (ro-i) (sub_le ro i)))
           ))
-        
+
         : (i : ℕ) → i ∈ List.range' 1 ro → ℕ → Part (ForInStep ℕ)) := by
           funext i h r
           simp [Part.Dom.bind (e2u $ rop2 (ro-i) (sub_le ro i))]
@@ -1213,35 +1414,35 @@ theorem use_mono_rfind'
         have : List.range' 2 (n + 1) = 2 :: List.range' 3 n := by
           aesop
         simp [this]
-        
+
 
       #check forIn
       #check rop2 ro le_rfl
       -- have : (eval O cf (Nat.pair x.l (ro + x.r))).Dom := by exact?
 
-      
+
       -- rw (config:={occs:=.pos [1]}) [rwro2]
       -- #check forM_loop_eq_forM_range'
       have : List.range' 0 (ro + 1) = List.range (ro) ++ [ro] := by
         sorry
       simp [this]
-  
-    
-    
+
+
+
     -- have aux6 := rop3 j
     -- simp [hro] at hjro rop1
-  
+
     have main1 : (use O cf (Nat.pair x.l (j + x.r))).get (use_rfind'_dom hh j hjro) ≤ (use O cf.rfind' (Nat.pair x.l (j + x.r))).get (e2u $ rop4 j hjro) := by
       simp [use]
       simp [Part.bind, Part.assert]
       have basecasefail := rop3 j
       sorry
-    
+
     simp only
     [
       use,
     ]
-    
+
     -- simp only [hjro, zero_add, pair_lr]
     simp []
     -- simp only []
@@ -1262,7 +1463,7 @@ theorem use_mono_rfind'
     -- unfold forIn
     -- simp only [Part.bind, Part.assert]
     -- simp [aux3]
-    
+
     simp only [Part.bind]
     -- simp only [Part.coe_some, Part.bind_eq_bind, ge_iff_le]
     -- simp (config := { singlePass := true }) only [Part.dom_imp_some aux3]
@@ -1274,7 +1475,7 @@ theorem use_mono_rfind'
     --   split
     --   next h => simp_all only [le_refl]
     --   next h => simp_all only [le_sup_left]
-  
+
   sorry
   cases lt_or_eq_of_le hj with
   | inl hhh =>
@@ -1542,7 +1743,7 @@ theorem up_to_use (hh:(eval O₁ c x).Dom) (hO: ∀ i≤(use O₁ c x).get (e2u 
         have hxx2 := le_trans hxx this
         exact hO xx hxx2
       exact hcf (Nat.pair x.l (j + x.r)) aux1 aux2
-    
+
 
     -- rw [rop1'] at ih1
     have aux0 : (eval O₂ cf.rfind' x).Dom := by
@@ -1562,12 +1763,12 @@ theorem up_to_use (hh:(eval O₁ c x).Dom) (hO: ∀ i≤(use O₁ c x).get (e2u 
       rw [Part.dom_imp_some hh]
       rw [Part.dom_imp_some aux0]
       exact congrArg Part.some h2
-    
+
     have geqlem := rfind'_geq_xr hh
     suffices (eval O₁ cf.rfind' x).get hh -x.r +x.r ∈ eval O₂ cf.rfind' x from by
       have h0 : (eval O₁ cf.rfind' x).get hh - x.r + x.r = (eval O₁ cf.rfind' x).get hh := by exact Nat.sub_add_cancel geqlem
       rwa [h0] at this
-    
+
     have rwro2 : (eval O₁ cf.rfind' x).get hh - x.r = ro := rfl
 
     apply (rfind'_prop aux0).mpr
@@ -1588,7 +1789,7 @@ theorem up_to_use (hh:(eval O₁ c x).Dom) (hO: ∀ i≤(use O₁ c x).get (e2u 
 
 
 
-    
+
 
 /-
 What does rfind' do?
