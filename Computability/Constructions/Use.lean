@@ -1003,83 +1003,6 @@ let eval_prev := (eval O (prec cf cg) (Nat.pair x i)).get (use_prec_dom_aux hh)
         | inr h_1 => simp_all only [true_or, or_true]
 
 
-#check forIn
-open List in
-@[simp, grind =] theorem forIn'_cons [Monad m] {a : α} {as : List α}
-    (f : (a' : α) → a' ∈ a :: as → β → m (ForInStep β)) (b : β) :
-    forIn' (a::as) b f = f a mem_cons_self b >>=
-      fun | ForInStep.done b => pure b | ForInStep.yield b => forIn' as b fun a' m b => f a' (mem_cons_of_mem a m) b := by
-  simp only [forIn', List.forIn', forIn'.loop]
-  congr 1
-  funext s
-  obtain b | b := s
-  · rfl
-  · apply forIn'_loop_congr
-    intros
-    rfl
-open List in
-@[simp] theorem forIn'_append [Monad m] {a : α} {as : List α}
-    (f : (a' : α) → a' ∈ as++[a] → β → m (ForInStep β))
-    (g : (a' : α) → a' ∈ as → β → m (ForInStep β))
-    -- (hfg:)
-    (b : β) :
-    forIn' (as++[a]) b f
-    =
-    (forIn' (as) b g) >>=
-      fun asd => f a (sorry) asd
-      >>=
-      fun
-      | ForInStep.done b => pure b
-      | ForInStep.yield b => pure b
-      -- fun asd => f a (sorry) asd
-    -- f a (False.elim mem_cons_of_mem) b >>=
-    --   fun | ForInStep.done b => pure b | ForInStep.yield b => forIn' as b fun a' m b => f a' (mem_cons_of_mem a m) b
-      := by
-  induction as with
-  | nil =>
-    simp
-    congr 1
-    ·
-    sorry
-  | cons head tail ih =>
-    simp
-    sorry
-  simp only [forIn', List.forIn', forIn'.loop]
-  congr 1
-  funext s
-  obtain b | b := s
-  · rfl
-  · apply forIn'_loop_congr
-    intros
-    rfl
-#check Finset
-theorem clause_mono_1 {base1 base2 : ℕ} {f:ℕ→ℕ} {l:List ℕ}
--- {l:List ℕ}
--- {h:(forIn l (base) fun a b ↦ Part.some (ForInStep.yield (b.max (f a)))).Dom}
-{h:∀ (l') (base:ℕ), (∃l'',l''++l'=l) → (forIn (l') (base) fun a b ↦ Part.some (ForInStep.yield (b.max (f a)))).Dom}
-{h2:base1≤base2}
--- (hr:r≤ro)
-:
-(forIn l base1 fun a b ↦ Part.some (ForInStep.yield (b.max (f a)))).get (h l base1 (⟨[],rfl⟩))
-≤
-(forIn l base2 fun a b ↦ Part.some (ForInStep.yield (b.max (f a)))).get (h l base2 (⟨[],rfl⟩))
-:= by
-  induction l generalizing base1 base2 with
-  | nil => simpa
-  | cons head tail ih =>
-    -- have : head :: tail = l := by exact?
-    simp
-    have ihmain :
-    ∀ (l' : List ℕ) (base : ℕ),
-      (∃ l'', l'' ++ l' = tail) → (forIn l' base fun a b ↦ Part.some (ForInStep.yield (b.max (f a)))).Dom
-      := by
-      intro l' base h1
-      rcases h1 with ⟨l'',hl''⟩
-      have : (head::l'') ++ l' = head :: tail := by simp [hl'']
-      exact h l' base  ⟨(head::l''),this⟩
-    have ihmain2 : base1.max (f head) ≤ base2.max (f head) := by exact sup_le_sup_right h2 (f head)
-    have := @ih (base1.max (f head)) (base2.max (f head)) ihmain ihmain2
-    exact this
 lemma httconv' {l'} (htt : ∃ l'', l'' ++ l' = tail) : ∃ l'', l'' ++ l' = head :: tail := by
   rcases htt with ⟨h1,h2⟩
   exact ⟨head::h1,Eq.symm (List.append_cancel_left (congrArg (HAppend.hAppend tail) (congrArg (List.cons head) (_root_.id (Eq.symm h2)))))⟩
@@ -1176,7 +1099,6 @@ theorem clause_mono_2
     exact ih1.left
     have := ih1.right
     exact le_of_max_le_left this
-
 
 
 theorem le_of_le_sub {a b :ℕ}(h:a≤b-c): a≤b := by
