@@ -1080,6 +1080,96 @@ theorem clause_mono_1 {base1 base2 : ℕ} {f:ℕ→ℕ} {l:List ℕ}
     have ihmain2 : base1.max (f head) ≤ base2.max (f head) := by exact sup_le_sup_right h2 (f head)
     have := @ih (base1.max (f head)) (base2.max (f head)) ihmain ihmain2
     exact this
+lemma httconv' {l'} (htt : ∃ l'', l'' ++ l' = tail) : ∃ l'', l'' ++ l' = head :: tail := by
+  rcases htt with ⟨h1,h2⟩
+  exact ⟨head::h1,Eq.symm (List.append_cancel_left (congrArg (HAppend.hAppend tail) (congrArg (List.cons head) (_root_.id (Eq.symm h2)))))⟩
+lemma cm_aux_0
+{l}
+{head :ℕ}
+(hhht : ∃ l'', l'' ++ l' = l)
+(hht : head :: tail = l')
+:
+∃ l'':List ℕ, l'' ++ head :: tail = l
+:= by
+  grind
+lemma cm_aux_1
+{l}
+{head :ℕ}
+(hhht : ∃ l'', l'' ++ l' = l)
+(hht : head :: tail = l')
+:
+∃ l'', l'' ++ tail = l
+:= by
+  rcases hhht with ⟨h1,h2⟩
+  use h1 ++ [head]
+  aesop? says
+    subst h2 hht
+    simp_all only [List.append_assoc, List.cons_append, List.nil_append]
+theorem clause_mono_2
+{base1 base2 : ℕ}
+{l:List ℕ}
+{f:(a:ℕ)→(l':List ℕ)→(∃l'',l''++l'=l)→(a∈l')→ℕ}
+(hf:∀ a head tail (m:a∈tail) (l':List ℕ) (hhht:∃l'',l''++l'=l) (hht:head::tail=l'), (f a (head :: tail) (cm_aux_0 hhht hht) (List.mem_cons_of_mem head (List.forIn'_congr._proof_1 (Eq.refl tail) a m))) = f a tail (cm_aux_1 hhht hht) m)
+
+-- {l:List ℕ}
+-- {h:(forIn l (base) fun a b ↦ Part.some (ForInStep.yield (b.max (f a)))).Dom}
+{h:∀ (l') (base:ℕ) (htt:∃l'',l''++l'=l),  (forIn' (l') (base) fun a h b ↦ Part.some (ForInStep.yield (b.max (f a l' (htt) h)))).Dom}
+{h2:base1≤base2}
+-- (hr:r≤ro)
+:
+(forIn' l base1 fun a h b ↦ Part.some (ForInStep.yield (b.max (f a l ⟨[],rfl⟩ h)))).get (h l base1 (⟨[],rfl⟩))
+≤
+(forIn' l base2 fun a h b ↦ Part.some (ForInStep.yield (b.max (f a l ⟨[],rfl⟩ h)))).get (h l base2 (⟨[],rfl⟩))
+:= by
+  -- simp [forIn'_eq_forIn]
+  induction l generalizing base1 base2 with
+  | nil => simpa
+  | cons head tail ih =>
+    -- have : head :: tail = l := by exact?
+    simp
+    have httconv {l'} (htt : ∃ l'', l'' ++ l' = tail) : ∃ l'', l'' ++ l' = head :: tail := by
+      rcases htt with ⟨h1,h2⟩
+      exact ⟨head::h1,Eq.symm (List.append_cancel_left (congrArg (HAppend.hAppend tail) (congrArg (List.cons head) (_root_.id (Eq.symm h2)))))⟩
+    have ihmain :
+    ∀ (l' : List ℕ) (base : ℕ) (htt:∃ l'', l'' ++ l' = tail),
+       (forIn' l' base fun a h b ↦ Part.some (ForInStep.yield (b.max (f a l' (httconv htt) h)))).Dom
+      := by
+      intro l' base h1
+      rcases h1 with ⟨l'',hl''⟩
+      have : (head::l'') ++ l' = head :: tail := by simp [hl'']
+      exact h l' base  ⟨(head::l''),this⟩
+    let addendum := (f head (head :: tail) ⟨[],rfl⟩ (List.mem_cons_self))
+    have ihmain2 : base1.max addendum ≤ base2.max addendum := by exact sup_le_sup_right h2 addendum
+    have ihmain0 : (∀ (a head : ℕ) (tail_1 : List ℕ) (m : a ∈ tail_1) (l' : List ℕ) (hhht : ∃ l'', l'' ++ l' = tail)
+    (hht : head :: tail_1 = l'), f a (head :: tail_1) (httconv (cm_aux_0 hhht hht)) (List.mem_cons_of_mem head (List.forIn'_congr._proof_1 (Eq.refl tail_1) a m)) = f a tail_1 (httconv (cm_aux_1 hhht hht)) m) := by
+      intro a head tail_1 m l' hhht hht
+      exact hf a head tail_1 m l' (httconv hhht) hht
+    have ih1 := @ih (base1.max addendum) (base2.max addendum) (fun a l' h hl => f a l' (httconv h) hl) ihmain0 ihmain ihmain2
+    -- have aaaa (l'): (∃ l'', l'' ++ l' = head :: tail) →  (∃ l'', l'' ++ l' = tail) := by sorry
+    -- have ih1 := @ih (base1.max addendum) (base2.max addendum) f ihmain ihmain2
+    
+    simp [show f head (head :: tail) ⟨[],rfl⟩ (List.mem_cons_self) = addendum from rfl]
+    
+    have aux (a:ℕ) (m:a∈tail): (f a (head :: tail) ⟨[],rfl⟩ (List.mem_cons_of_mem head (List.forIn'_congr._proof_1 (Eq.refl tail) a m))) = (f a tail (httconv ⟨[],rfl⟩) m):= by
+      refine hf a head tail m (head :: tail) ⟨[],rfl⟩ rfl
+      -- refine 
+      -- grind
+      -- grind
+      -- have := hf a head tail m (?_)
+      -- exact hf a head tail m rfl
+      -- exact hf a head tail m
+    have :
+    (fun a m (b:ℕ) ↦ Part.some (ForInStep.yield (b.max (f a (head :: tail) ⟨[],rfl⟩ (List.mem_cons_of_mem head (List.forIn'_congr._proof_1 (Eq.refl tail) a m))))))
+    =
+    fun a m (b:ℕ) ↦ Part.some (ForInStep.yield (b.max (f a tail (httconv ⟨[],rfl⟩) m)))
+    := by
+      funext a m b
+      simp [aux a m]
+    
+    simp [this]
+    -- exact?
+    -- simp [this]
+    exact ih1
 
     -- #check @ih sorry
 -- theorem clause_mono {base2:ℕ} {f:ℕ→ℕ} {r}
@@ -1125,7 +1215,31 @@ theorem clause_mono {base:ℕ} {f:ℕ→ℕ} {ro:ℕ}
 
       sorry
       sorry
-
+theorem le_of_le_sub {a b :ℕ}(h:a≤b-c): a≤b := by
+  grind
+theorem listrwgen (n): (List.range (n + 1)).reverse = n :: (List.range n).reverse := by
+  simp
+  exact List.range_succ
+lemma listrevlem (h:∃ l'':List ℕ, l'' ++ l' = (List.range x).reverse) : ∃ y, l'=(List.range y).reverse∧y≤x := by
+  rcases h with ⟨h1,h2⟩
+  induction h1 generalizing x with
+  | nil =>
+    simp at h2
+    aesop
+  | cons head tail ih =>
+    simp at h2
+    have : x>0 := by
+      grind only [=_ List.cons_append, = List.range_zero, List.reverse_nil, → List.eq_nil_of_append_eq_nil]
+    have : tail ++ l' = (List.range (x-1)).reverse := by
+      rw [show x=x-1+1 from (Nat.sub_eq_iff_eq_add this).mp rfl] at h2
+      simp [listrwgen] at h2
+      simp_all only [List.reverse_inj, gt_iff_lt]
+    have := @ih (x-1) this
+    
+    grind
+lemma listrevlem2 (h:∃ l'':List ℕ, l'' ++ l' = (List.range x).reverse) (h2:a∈l') : a<x := by
+  have := listrevlem h
+  grind
 theorem use_mono_rfind'
 (hh:(use O (rfind' cf) x).Dom):
 ∀ hj:j ≤ rfind'_obtain (u2e hh),
@@ -1176,9 +1290,7 @@ theorem use_mono_rfind'
         simp [Part.Dom.bind (e2u $ rop2 i (domaux1 h))]
   simp [this]
 
-  have listrwgen (n): (List.range (n + 1)).reverse = n :: (List.range n).reverse := by
-    simp
-    exact List.range_succ
+  
   have listrw : (List.range (ro + 1)).reverse = ro :: (List.range ro).reverse := by
     simp
     exact List.range_succ
@@ -1242,7 +1354,8 @@ theorem use_mono_rfind'
   have auxdom9 (k:ℕ):= forInDom ((use O cf (Nat.pair x.l (ro -k + x.r))).get (auxdom8 k)) (sub_le ro k)
   have auxdom7:= forInDom ((use O cf (Nat.pair x.l (ro + x.r))).get domaux2) le_rfl
   have main2:
-    (use O cf (Nat.pair x.l (j + x.r))).get auxdom5 ≤ (forIn' (List.range j).reverse ((use O cf (Nat.pair x.l (ro + x.r))).get domaux2) fun a' m b ↦ Part.some (ForInStep.yield (b.max ((use O cf (Nat.pair x.l (a' + x.r))).get (domaux3 a' j m hjro))))).get auxdom6 := by
+    -- (use O cf (Nat.pair x.l (j + x.r))).get auxdom5 ≤ (forIn' (List.range j).reverse ((use O cf (Nat.pair x.l (ro + x.r))).get domaux2) fun a' m b ↦ Part.some (ForInStep.yield (b.max ((use O cf (Nat.pair x.l (a' + x.r))).get (domaux3 a' j m hjro))))).get auxdom6 := by
+    (use O cf (Nat.pair x.l (j + x.r))).get auxdom5 ≤ (forIn' (List.range j).reverse ((use O cf (Nat.pair x.l (j + x.r))).get domaux2) fun a' m b ↦ Part.some (ForInStep.yield (b.max ((use O cf (Nat.pair x.l (a' + x.r))).get (domaux3 a' j m hjro))))).get auxdom6 := by
       -- wait this should be literally just an application of main1.
       sorry
   -- here we are saying, starting calculations from j, we'll get smaller results bc we're not taking into account the values j~ro.
@@ -1289,18 +1402,36 @@ theorem use_mono_rfind'
           let base2 := (((use O cf (Nat.pair x.l (ro - n - 1 + 1 + x.r))).get domaux10).max
           ((use O cf (Nat.pair x.l (ro - n - 1 + x.r))).get domaux11))
           let base1 := (use O cf (Nat.pair x.l (ro - n - 1 + x.r))).get domaux11
+          have base1_le_base2 : base1≤base2 := by
+            exact Nat.le_max_right ((use O cf (Nat.pair x.l (ro - n - 1 + 1 + x.r))).get domaux10) base1
+          -- #check clause_mono_1
+          let f (a : ℕ) (l' : List ℕ) (h2:∃ l'':List ℕ, l'' ++ l' = (List.range (ro - n - 1)).reverse) (h3:a ∈ l')
+            := (use O cf (Nat.pair x.l (a + x.r))).get (
+              by
+                exact domaux3 a (ro - (n + 1)) (List.forIn'_congr._proof_1 (congrArg (fun x ↦ (List.range x).reverse) ronrw0) a (by
+                  simp; exact listrevlem2 h2 h3
+                  )) (sub_le ro (n + 1))
+            )
+          
+          let auxaxuaxuaxuaxa : ∀ (l' : List ℕ) (base : ℕ) (htt : ∃ l'', l'' ++ l' = (List.range (ro - n - 1)).reverse),
+        (forIn' l' base fun a h b ↦ Part.some (ForInStep.yield (b.max (f a l' htt h)))).Dom := by
+            intro l' base htt
+            unfold f
+            rcases listrevlem htt with ⟨h1,h2,h3⟩
+            simp [h2]
+            have : h1≤ro := by exact le_of_le_sub (le_of_le_sub h3)
+            exact forInDom base this
+          -- let f (a : ℕ) (l : List ℕ) (h:a ∈ l) :ℕ := use O cf (Nat.pair x.l (a + x.r))
+          have mainclause := @clause_mono_2 base1 base2 (List.range (ro - n - 1)).reverse f (fun a head tail m l' hhht hht ↦ rfl) auxaxuaxuaxuaxa base1_le_base2
+          exact Nat.le_trans mainclause ih
 
-          have main_aux : ∀ (l' : List ℕ) (base : ℕ),
-      (∃ l'', l'' ++ l' = (List.range (ro - n - 1)).reverse) → (forIn l' base fun a b ↦ Part.some (ForInStep.yield (b.max ((fun a => ((use O cf (Nat.pair x.l (a + x.r))).get (⋯))) a)))).Dom := by sorry
-          #check clause_mono_1
 
-          sorry
 
-        simp [ih]
-        sorry
-      sorry
 
-  #check le_trans main2 main3
+  -- have :=(main3 (ro-j))
+  -- have aux92: ro-(ro-j)=j:= by (expose_names; exact Nat.sub_sub_self hjro_1)
+  -- simp [aux92] at this
+  -- #check le_trans main2 this
   apply le_trans main2 main3
 
 
