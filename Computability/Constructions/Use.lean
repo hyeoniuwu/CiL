@@ -178,6 +178,7 @@ match c with
     -- #check Std.Range|
     -- let l := List.reverse (List.range (ro+1))
     -- for i in List.reverse [0:ro+1] do
+
     for i in List.reverse (List.range (ro+1)) do
     -- for i in [ro+1:0:-1] do
 
@@ -228,6 +229,7 @@ match c,s with
 | rfind' cf, s+1 => fun x =>
   do
     guard (x≤s);
+    -- let evaln_guard ← evaln O (s+1) cf.rfind' x
     let usen_base ← usen O cf (s+1) x
     let evaln_base ← evaln O (s+1) cf x
     if evaln_base=0 then usen_base else
@@ -379,7 +381,9 @@ theorem usen_none_iff_evaln_none : (usen O c s x) = Option.none ↔ (evaln O s c
 
         simp only [Option.ne_none_iff_exists'] at this
         obtain ⟨a2,ha2⟩ := this.mpr ⟨a,ha⟩
+        -- #check hh a2 (sorry) a2 ha2 a ha
         have := hh a2 ha2 a ha
+        -- have := hh a2 (sorry) a2 ha2 a ha
 
         cases a with
         | zero =>
@@ -502,6 +506,264 @@ theorem usen_mono : ∀ {k₁ k₂ c n x}, k₁ ≤ k₂ → x ∈ usen O c k₁
       rcases h7 with ⟨h8,h9,h10⟩
       refine ⟨h8,usen_mono hl' h9, h10⟩
 
+-- theorem Part.dom_imp_ex_some {x:Part ℕ} (h:x.Dom) : ∃ y, x=Part.some y := by
+--   have h0 := Part.dom_iff_mem.mp h
+--   rcases h0 with ⟨y,hy⟩
+--   use y
+--   exact Part.eq_some_iff.mpr hy
+theorem Part.dom_imp_some {x:Part ℕ} (h:x.Dom) : x=Part.some (x.get h) := by
+  exact Part.get_eq_iff_eq_some.mp rfl
+
+
+theorem use_dom_iff_eval_dom : (use O c x).Dom ↔ (eval O c x).Dom := by
+  induction c generalizing x with
+  | zero => exact Eq.to_iff rfl
+  | succ => exact Eq.to_iff rfl
+  | left => exact Eq.to_iff rfl
+  | right => exact Eq.to_iff rfl
+  | oracle => exact Eq.to_iff rfl
+  | pair cf cg hcf hcg =>
+    simp [use,eval]
+    simp [Seq.seq]
+    simp_all only []
+  | comp cf cg hcf hcg =>
+    simp [use,eval]
+    simp [Seq.seq]
+    simp_all only [and_exists_self]
+  | prec cf cg hcf hcg =>
+    sorry
+  | rfind' _ _ => sorry
+
+  sorry
+
+#check use_dom_iff_eval_dom.mpr
+abbrev e2u : (eval O c x).Dom → (use O c x).Dom := use_dom_iff_eval_dom.mpr
+abbrev u2e : (use O c x).Dom → (eval O c x).Dom := use_dom_iff_eval_dom.mp
+
+noncomputable def use_rfind_rec (cf:Code) (x) (h:(use O (rfind' cf) x).Dom) :=
+  -- have ro := rfind'_obtain (u2e h)
+  let use_rfind_rec_base := (use O cf x).get (sorry)
+  if (eval O cf x).get (sorry)=0
+  then use_rfind_rec_base
+  else
+    let use_rfind_rec_indt := @use_rfind_rec O cf (Nat.pair x.l (x.r+1)) (sorry)
+    Nat.max use_rfind_rec_base use_rfind_rec_base
+termination_by (rfind'_obtain (u2e h))
+decreasing_by
+
+  sorry
+
+theorem use_rfind_eq_use_rfind_rec (h:(use O (rfind' cf) x).Dom): (use O (rfind' cf) x).get h = use_rfind_rec cf x h := by
+
+  sorry
+lemma evaln_sing (h1:a∈(evaln O s1 c x)) (h2:b∈(evaln O s2 c x)): a=b := by
+  cases Classical.em (s1≤s2) with
+  | inl h =>
+    have := evaln_mono h h1
+    simp_all only [Option.mem_def, Option.some.injEq]
+  | inr h =>
+    have := evaln_mono (Nat.le_of_not_ge h) h2
+    simp_all only [Option.mem_def, Option.some.injEq]
+theorem evaln_rfind_prop :
+y+x.r∈evaln O (k+1) cf.rfind' x
+↔
+0∈(evaln O (k+1-y) cf (Nat.pair x.l (y+x.r)))
+∧ (∀ j ≤ y, ∃z,z∈(evaln O (k+1-j) cf (Nat.pair x.l (j+x.r))))
+∧ (∀ j < y, ¬0∈(evaln O (k+1-j) cf (Nat.pair x.l (j+x.r))))
+:= by
+
+  -- simp [evaln]
+  constructor
+  intro h
+  have h0 : y+x.r∈eval O cf.rfind' x := by exact evaln_sound h
+  have h1 : (eval O cf.rfind' x).Dom := Part.dom_iff_mem.mpr ⟨(y+x.r),h0⟩
+  constructor
+  · 
+    have : ∃z,z∈evaln O (k+1-y) cf (Nat.pair x.l (y + x.r)) := by
+      contrapose h
+      simp at h
+      have h7 := Option.eq_none_iff_forall_ne_some.mpr h
+      
+      induction y generalizing x k with
+      | zero =>
+        simp_all [evaln]
+      | succ yM1 ih =>
+        have h2 := (rfind'_prop h1).mp h0
+        have h3 := h2.left
+        have h10 := h2.right.left
+        have h11 := h2.right.right
+        have h4 := evaln_complete.mp h3
+        
+        -- have h8 := 
+        rcases h4 with ⟨h5,h6⟩
+        simp_all
+        have h12 := h11 0 (zero_lt_succ yM1)
+        simp at h12
+        simp_all
+        cases em ((evaln O (k + 1) cf x)=Option.none) with
+        | inl hh =>
+          simp [evaln, hh]
+        | inr hh =>
+          simp [evaln]
+          simp at hh
+          have : ∃z,z∈ evaln O (k + 1) cf x := by exact Option.ne_none_iff_exists'.mp hh
+          rcases this with ⟨h13,h14⟩
+          simp_all
+          have h15 := evaln_complete.not.mp h12
+          simp at h15
+          have h16 := h15 (k+1)
+          simp_all
+
+          -- simp [evaln]
+          intro hhh
+          -- #check 
+          have : x≤k := by exact le_of_lt_succ (evaln_bound h14)
+          simp_all
+          have h17 := evaln_sound hhh
+          have h17 : yM1 + (x.r + 1) ∈ eval O cf.rfind' (Nat.pair x.l (x.r + 1)) := by
+            -- simp [evaln]
+            rw [add_assoc] at h17
+            rw (config:={occs:=.pos [3]}) [add_comm] at h17
+            exact h17
+          have ih1 := @ih (k-1) (Nat.pair x.l (x.r+1))
+          simp at ih1
+          #check Part.dom_iff_mem.mpr ⟨yM1 + (x.r + 1),h17⟩
+          -- have h18 : (eval O cf.rfind' (Nat.pair x.l (x.r + 1))).Dom := by exact?
+          have ih1 := ih1 (h17) (Part.dom_iff_mem.mpr ⟨yM1 + (x.r + 1),h17⟩)
+          cases em (Nat.pair x.l (x.r + 1) < k +1) with
+          | inl hhhh =>
+
+            cases k with
+            | zero =>
+              simp_all
+              simp [l,r,Nat.pair] at hhhh
+            | succ kM1 =>
+              simp at ih1
+              #check Option.eq_none_iff_forall_ne_some.mp h7
+              rw [add_assoc] at h7
+              rw (config:={occs:=.pos [3]}) [add_comm] at h7
+              have ih1 := ih1 (Option.eq_none_iff_forall_ne_some.mp h7) h7
+              rw [hhh] at ih1
+              simp at ih1
+              rw [add_assoc] at ih1
+              rw (config:={occs:=.pos [2]}) [add_comm] at ih1
+              simp at ih1
+
+          | inr hhhh =>
+            have : evaln O k cf.rfind' (Nat.pair x.l (x.r + 1)) = Option.none := by
+              cases k with
+              | zero => simp [evaln]
+              | succ n =>
+                simp [evaln]
+                have : ¬ (Nat.pair x.l (x.r + 1) ≤ n) := by
+                  grind
+                simp [this]
+            rw [this] at hhh
+            simp at hhh
+    have h2 := (rfind'_prop h1).mp h0
+    have h3 := h2.left
+    have h4 := evaln_complete.mp h3
+    rcases h4 with ⟨h5,h6⟩
+    rcases this with ⟨h7,h8⟩
+
+    rwa [←evaln_sing h6 h8] at h8
+  
+
+      -- have h9 : 
+      cases y with
+      | zero =>
+        simp_all
+      | succ yM1 =>
+        simp_all
+        have h12 := h11 0 (zero_lt_succ yM1)
+        simp at h12
+        have : x≤k := by exact le_of_lt_succ h8
+        simp_all
+        cases em ((evaln O (k + 1) cf x)=Option.none) with
+        | inl hh =>
+          simp [hh]
+        | inr hh =>
+          simp at hh
+          have : ∃z,z∈ evaln O (k + 1) cf x := by exact Option.ne_none_iff_exists'.mp hh
+          rcases this with ⟨h13,h14⟩
+          simp_all
+          have h15 := evaln_complete.not.mp h12
+          simp at h15
+          have h16 := h15 (k+1)
+          simp_all
+
+
+
+          have h14 := h11 0 (zero_lt_succ n)
+          simp [hh]
+          sorry
+
+        sorry
+      simp [evaln]
+      
+      sorry
+      simp [h7]
+      sorry
+    #check evaln_complete.mp h3
+  sorry
+
+  intro h
+  rcases h with ⟨h1,h2,h3⟩
+  
+
+  sorry
+
+theorem usen_rfind_prop_aux0 {cf:Code} :
+(x ∈ usen O cf.rfind' (k + 1) n)
+→ 
+∃y,y∈evaln O (k+1) cf.rfind' n
+:= by
+  simp [usen]
+  simp [evaln]
+
+  -- we should show that there exists some number ro s.t.
+  /-
+  0∈(eval O cf (Nat.pair x.l (ro+x.r)))
+  ∧ (∀ j ≤ ro, (eval O cf (Nat.pair x.l (j+x.r))).Dom)
+  ∧ (∀ j < ro, ¬0∈(eval O cf (Nat.pair x.l (j+x.r))))
+  -/
+
+
+  -- need to show that
+  -- evaln cf is defined for all (n.l, n.r+i)
+  
+  contrapose
+  simp
+  intro h
+  have : evaln O (k+1) cf.rfind' n = Option.none := by
+    exact Option.eq_none_iff_forall_ne_some.mpr h
+  simp [evaln] at this
+  simp [usen]
+  sorry
+theorem usen_rfind_prop_aux {cf:Code} :
+(x ∈ usen O cf.rfind' (k + 1) n)
+→ 
+(eval O cf.rfind' n).Dom
+:= by
+  intro h
+  have : ∃y,y∈evaln O (k+1) cf.rfind' n := by
+    contrapose h
+    simp at h
+    have : evaln O (k+1) cf.rfind' n = Option.none := by
+      exact Option.eq_none_iff_forall_ne_some.mpr h
+    simp [usen]
+    simp [evaln] at this
+    simp [this]
+    sorry
+  simp [usen] at h
+  sorry
+theorem usen_rfind_prop :
+x ∈ usen O cf.rfind' (k + 1) n
+↔
+∀j≤rfind'_obtain (sorry), ∃y∈ (usen O cf (k + 1 - j) (Nat.pair n.l (n.r+j)))
+:= by
+  sorry
+
 theorem usen_sound : ∀ {c s n x}, x ∈ usen O c s n → x ∈ use O c n
 | _, 0, n, x, h => by simp [usen] at h
 | c, k + 1, n, x, h => by
@@ -581,8 +843,22 @@ theorem usen_sound : ∀ {c s n x}, x ∈ usen O c s n → x ∈ use O c n
           · exact h9
 
   · -- rfind' cf
+    -- #check usen_dom_iff_evaln_dom.mp ⟨x,h⟩
+    #check use_rfind_eq_use_rfind_rec
+    
+    rcases usen_dom_iff_evaln_dom.mp ⟨x,h⟩ with ⟨h7,h8⟩
     simp [use, usen, Option.bind_eq_some_iff, Seq.seq] at h ⊢
-    obtain ⟨_, h⟩ := h
+    -- obtain ⟨_, h⟩ := h
+    rcases h with ⟨h1,h2,h3,h4,h5,h6⟩
+    use h7
+    constructor
+    · 
+      exact evaln_sound h8
+
+    · 
+      simp [usen] at h6
+      sorry
+    sorry
 
 
     rcases h with ⟨m, h₁, h₂⟩
@@ -599,20 +875,12 @@ theorem usen_sound : ∀ {c s n x}, x ∈ usen O c s n → x ∈ use O c n
       · exact ⟨m, by simpa using hf _ _ h₁, m0⟩
       · rcases hy₂ (Nat.lt_of_succ_lt_succ im) with ⟨z, hz, z0⟩
         exact ⟨z, by simpa [add_comm, add_left_comm] using hz, z0⟩
-lemma evaln_sing (h1:a∈(evaln O s1 c x)) (h2:b∈(evaln O s2 c x)): a=b := by
-  cases Classical.em (s1≤s2) with
-  | inl h =>
-    have := evaln_mono h h1
-    simp_all only [Option.mem_def, Option.some.injEq]
-  | inr h =>
-    have := evaln_mono (Nat.le_of_not_ge h) h2
-    simp_all only [Option.mem_def, Option.some.injEq]
 theorem usen_complete {c n x} : x ∈ use O c n ↔ ∃ s, x ∈ usen O c s n := by
   refine ⟨fun h => ?_, fun ⟨k, h⟩ => usen_sound h⟩
   rsuffices ⟨k, h⟩ : ∃ k, x ∈ usen O  c (k + 1) n
   · exact ⟨k + 1, h⟩
   induction c generalizing n x with
-      simp [use, usen, pure, PFun.pure, Seq.seq, Option.bind_eq_some_iff] at h ⊢
+      -- simp [use, usen, pure, PFun.pure, Seq.seq, Option.bind_eq_some_iff] at h ⊢
   | pair cf cg hf hg =>
     rcases h with ⟨x, hx, y, hy, rfl⟩
     rcases hf hx with ⟨k₁, hk₁⟩; rcases hg hy with ⟨k₂, hk₂⟩
@@ -722,6 +990,23 @@ theorem usen_complete {c n x} : x ∈ use O c n ↔ ∃ s, x ∈ usen O c s n :=
 
 
   | rfind' cf hf =>
+    
+    have auxdom1 : (use O cf.rfind' n).Dom := by exact Part.dom_iff_mem.mpr (Exists.intro x h)
+    have : use O cf.rfind' n = some x := Part.eq_some_iff.mpr h
+
+      -- #check Part.eq_some_iff.mpr h
+      -- apply Part.eq_some_iff
+    have : x= (use O cf.rfind' n).get auxdom1 := by simp [this]
+
+    #check use_rfind_eq_use_rfind_rec auxdom1
+    simp [use_rfind_eq_use_rfind_rec auxdom1] at this
+    simp [use_rfind_rec] at this
+    simp [use] at h
+    -- rcases h with ⟨h1,h2,h3⟩
+
+    
+    
+    sorry
     rcases h with ⟨y, ⟨hy₁, hy₂⟩, rfl⟩
     suffices ∃ k, y + n.unpair.2 ∈ usen O (k + 1) (rfind' cf) (Nat.pair n.unpair.1 n.unpair.2) by
       simpa [usen, Option.bind_eq_some_iff]
@@ -752,39 +1037,8 @@ theorem use_eq_rfindOpt (c n) : use O c n = Nat.rfindOpt fun s => usen O c s n :
     refine usen_complete.trans (Nat.rfindOpt_mono ?_).symm
     intro a m n hl; apply usen_mono hl
 
--- theorem Part.dom_imp_ex_some {x:Part ℕ} (h:x.Dom) : ∃ y, x=Part.some y := by
---   have h0 := Part.dom_iff_mem.mp h
---   rcases h0 with ⟨y,hy⟩
---   use y
---   exact Part.eq_some_iff.mpr hy
--- theorem Part.dom_imp_some {x:Part ℕ} (h:x.Dom) : x=Part.some (x.get h) := by
---   exact Part.get_eq_iff_eq_some.mp rfl
 
 
-theorem use_dom_iff_eval_dom : (use O c x).Dom ↔ (eval O c x).Dom := by
-  induction c generalizing x with
-  | zero => exact Eq.to_iff rfl
-  | succ => exact Eq.to_iff rfl
-  | left => exact Eq.to_iff rfl
-  | right => exact Eq.to_iff rfl
-  | oracle => exact Eq.to_iff rfl
-  | pair cf cg hcf hcg =>
-    simp [use,eval]
-    simp [Seq.seq]
-    simp_all only []
-  | comp cf cg hcf hcg =>
-    simp [use,eval]
-    simp [Seq.seq]
-    simp_all only [and_exists_self]
-  | prec cf cg hcf hcg =>
-    sorry
-  | rfind' _ _ => sorry
-
-  sorry
-
-#check use_dom_iff_eval_dom.mpr
-abbrev e2u : (eval O c x).Dom → (use O c x).Dom := use_dom_iff_eval_dom.mpr
-abbrev u2e : (use O c x).Dom → (eval O c x).Dom := use_dom_iff_eval_dom.mp
 
 
 
@@ -1325,7 +1579,9 @@ theorem use_mono_rfind'
   apply le_trans main2 this
 
 
-
+#check Option
+theorem up_to_usen (hh:y∈(evaln O₁ s c x)) (hO: ∀ i≤(usen O₁ c s x).getD 0, O₁ i = O₂ i) : evaln O₁ s c x = evaln O₂ s c x := by
+  sorry
 -- Custom strong induction principle
 def CodeNat.induction
   {motive : Code → ℕ → Prop}
@@ -1371,6 +1627,7 @@ def CodeNat.induction
       intro x' hlt
       apply @Nat.strongRecOn (fun n => motive (.rfind' cf ) n) x' (fun n ih => ?_)
       exact hrfind' cf ihcf n ih
+
 theorem up_to_use (hh:(eval O₁ c x).Dom) (hO: ∀ i≤(use O₁ c x).get (e2u hh), O₁ i = O₂ i) : eval O₁ c x = eval O₂ c x := by
   -- have h:x≤use O₁ c x
   -- induction x using Nat.strong_induction_on with
