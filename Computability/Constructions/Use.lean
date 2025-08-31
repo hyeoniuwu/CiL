@@ -1050,6 +1050,14 @@ theorem usen_rfind_prop_aux {cf:Code} :
     sorry
   simp [usen] at h
   sorry
+theorem use_rfind_prop (h:(use O (rfind' cf) n).Dom):
+
+
+∀j≤rfind'_obtain (u2e h),
+  (use O cf (Nat.pair n.l (n.r+j))).Dom
+  -- and also the maximum of these is equal to the usen.
+:= by
+  sorry
 theorem usen_rfind_prop (h:x ∈ usen O cf.rfind' (k + 1) n):
 
 
@@ -1378,48 +1386,43 @@ theorem usen_complete {c n x} : x ∈ use O c n ↔ ∃ s, x ∈ usen O c s n :=
       use k
       exact usen_rfind_prop2.mpr hk
     simp
+    
     generalize 0=a at h ⊢
     -- generalize 0=a at h
     -- generalize 0=a at *
     rcases h with ⟨h1,h2,h3⟩
     rw [show h1=h1-n.r+n.r from by simp [eval_rfind_prop5 h2]] at h2
-    #check usen_rfind_prop2.mpr
+
+
+    have hdom : (use O cf.rfind' n).Dom := by sorry
+    have urop1 := use_rfind_prop hdom
+    have h145: rfind'_obtain (u2e hdom) = h1 - n.r := by
+      simp [rfind'_obtain]
+      simp [Part.eq_some_iff.mpr h2]
+    simp [h145] at *
+    clear h145
+    
     revert h3
     revert h2
-    induction h1-n.r generalizing a x with
+    revert urop1
+    induction h1-n.r generalizing a n with
     | zero =>
       simp_all
+      intro urop1
       intro h2
       intro h4
       intro h5
       intro h6
       intro h7
       intro h8
-      -- rcases hf h6 with ⟨h9,h10⟩
-      -- rcases evaln_complete.mp h2 with ⟨h11,h12⟩
+
       rcases evaln_complete.mp h2 with ⟨h9,h10⟩
       rcases hf h6 with ⟨h14,h15⟩
       rcases usen_dom_iff_evaln_dom.mp ⟨h5,h15⟩ with ⟨h16,h17⟩
-      -- simp_all
+
       use Nat.max (h9-1) (h14+1)
-      -- use h9-1
-      -- simp [usen]
       simp_all
-      have : n≤h9-1 := by
-        -- have := usen_bound h10
-        have := evaln_bound h10
-        exact le_sub_one_of_lt this
-        -- exact le_of_lt this
-        -- exact le_of_lt_add_one this
       rcases usen_dom_iff_evaln_dom.mpr ⟨n.r,h10⟩ with ⟨h12,h13⟩
-      have hh9 : h9 - 1 + 1 = h9 := by
-        suffices h9≠0 from by grind
-        contrapose h10
-        simp at h10
-        rw [h10]
-        simp [evaln]
-      -- simp [hh9]
-      -- simp [this]
       have aux2 := evaln_mono (show (h9) ≤ (h9 - 1).max (h14 + 1) + 1 from by grind) h10
       simp at aux2
       simp [aux2]
@@ -1430,7 +1433,41 @@ theorem usen_complete {c n x} : x ∈ use O c n ↔ ∃ s, x ∈ usen O c s n :=
     | succ nn ih =>
       simp (config:={singlePass:=true}) [listrwgen]
       simp
-      intro h1 h2 h3 h4 h5
+      intro urop1 h2 h3 h5 h6 h7 h8
+
+      rcases evaln_complete.mp h2 with ⟨h9,h10⟩
+      rcases hf h6 with ⟨h14,h15⟩
+      rcases usen_dom_iff_evaln_dom.mp ⟨h5,h15⟩ with ⟨h16,h17⟩
+
+      use (Nat.max (h9-1) (h14+1)+nn)
+      simp_all
+      rcases usen_dom_iff_evaln_dom.mpr ⟨nn + 1 + n.r,h10⟩ with ⟨h12,h13⟩
+      have aux2 := evaln_mono (show (h9) ≤ (h9 - 1).max (h14 + 1) + nn + 1 from by grind) h10
+      simp at aux2
+      simp [aux2]
+      have aux0 := usen_mono (show (h14 + 1) ≤ (h9 - 1).max (h14 + 1) from by grind) h15
+      simp at aux0
+      simp [aux0]
+
+      -- have ih1 := @ih (Nat.pair n.l (1 + n.r))  (a.max h5) 
+      have ih1 := @ih (Nat.pair n.l (1 + n.r)) (hdom) (a.max h5) 
+      clear ih
+      simp at ih1
+      have ih1_aux : nn + (1 + n.r) ∈ eval O cf.rfind' (Nat.pair n.l (1 + n.r)) := by
+
+        sorry
+      have ih2 := ih1 sorry sorry
+      rcases ih2 with ⟨k,hk⟩
+      have : (evaln O (k + 1) cf.rfind' (Nat.pair n.l (1 + n.r))) = Option.some h16 := by sorry
+      simp [this] at hk
+      have : h16 = nn + 1 + n.r := by sorry
+      simp [this] at hk
+      have : nn + 1 + n.r - (1 + n.r) + 1 = nn +1 := by grind
+      simp [this] at hk
+      -- have h18 :=
+
+
+
       simp [h5]
 
       sorry
