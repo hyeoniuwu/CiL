@@ -687,11 +687,12 @@ theorem use_rfind_eq_use_rfind_rec (h:(use O (rfind' cf) x).Dom): (use O (rfind'
 
   sorry
 lemma eval_rfind_prop5 :
-x∈eval O (rfind' cf) (Nat.pair a b)→b≤x := by
+-- x∈eval O (rfind' cf) (Nat.pair a b)→b≤x := by
+x∈eval O (rfind' cf) y→y.r≤x := by
   simp [eval]
   grind
 lemma evaln_rfind_prop5 :
-x∈evaln O s (rfind' cf) (Nat.pair a b)→b≤x := by
+x∈evaln O s (rfind' cf) y→y.r≤x := by
   intro h
   exact eval_rfind_prop5 (evaln_sound h)
 
@@ -711,11 +712,10 @@ lemma evaln_rfind_prop_aux :
   grind
   intro h
   rcases Option.ne_none_iff_exists'.mp h with ⟨h1,h2⟩
-  rw [show x=Nat.pair x.l x.r from by simp] at h2
+  -- rw [show x=Nat.pair x.l x.r from by simp] at h2
   have := evaln_rfind_prop5 h2
   use h1-x.r
   simp [this]
-  simp at h2
   exact h2
   
 theorem evaln_rfind_prop_not' :
@@ -1058,7 +1058,9 @@ theorem usen_rfind_prop (h:x ∈ usen O cf.rfind' (k + 1) n):
   -- and also the maximum of these is equal to the usen.
 := by
   sorry
-theorem usen_rfind_prop2 (h:y ∈ usen O cf.rfind' (k + 1) x):
+theorem usen_rfind_prop2 :
+(y ∈ usen O cf.rfind' (k + 1) x)
+↔
 y∈(do
   let guard ← evaln O (k+1) (rfind' cf) x;
   let ro := guard - x.r
@@ -1167,8 +1169,7 @@ theorem usen_sound : ∀ {c s n x}, x ∈ usen O c s n → x ∈ use O c n
   | hrfind k cf hfih =>
     -- have hf := hfih (k+1) (le_rfl)
     simp [use]
-    #check usen_rfind_prop2 h
-    have := usen_rfind_prop2 h
+    have := usen_rfind_prop2.mp h
     have urop1 := usen_rfind_prop h
     -- have urop11 := urop1 1
     rcases urop1 0 (zero_le (rfind'_obtain (usen_rfind_prop_aux h))) with ⟨h1,h2⟩
@@ -1248,9 +1249,11 @@ theorem usen_complete {c n x} : x ∈ use O c n ↔ ∃ s, x ∈ usen O c s n :=
   refine ⟨fun h => ?_, fun ⟨k, h⟩ => usen_sound h⟩
   rsuffices ⟨k, h⟩ : ∃ k, x ∈ usen O  c (k + 1) n
   · exact ⟨k + 1, h⟩
+  
   induction c generalizing n x with
       -- simp [use, usen, pure, PFun.pure, Seq.seq, Option.bind_eq_some_iff] at h ⊢
   | pair cf cg hf hg =>
+    simp [use, usen, pure, PFun.pure, Seq.seq, Option.bind_eq_some_iff] at h ⊢
     rcases h with ⟨x, hx, y, hy, rfl⟩
     rcases hf hx with ⟨k₁, hk₁⟩; rcases hg hy with ⟨k₂, hk₂⟩
     refine ⟨max k₁ k₂, ?_⟩
@@ -1261,6 +1264,7 @@ theorem usen_complete {c n x} : x ∈ use O c n ↔ ∃ s, x ∈ usen O c s n :=
         usen_mono (Nat.succ_le_succ <| le_max_left _ _) hk₁, _,
         usen_mono (Nat.succ_le_succ <| le_max_right _ _) hk₂, rfl⟩
   | comp cf cg hf hg =>
+    simp [use, usen, pure, PFun.pure, Seq.seq, Option.bind_eq_some_iff] at h ⊢
     rcases h with ⟨y, hy, ⟨hx1,⟨hx2,⟨hx3,⟨hx4,hx5⟩⟩⟩⟩⟩
     -- rcases h with ⟨y, hy, ⟨hx1,hx2⟩⟩
     rcases hg hy with ⟨k₁, hk₁⟩; rcases hf hx4 with ⟨k₂, hk₂⟩
@@ -1285,6 +1289,7 @@ theorem usen_complete {c n x} : x ∈ use O c n ↔ ∃ s, x ∈ usen O c s n :=
       refine ⟨_,usen_mono (Nat.succ_le_succ <| le_max_right _ _) hk₂,
       (by subst hx5; exact Nat.max_comm hx3 y) ⟩
   | prec cf cg hf hg =>
+    simp [use, usen, pure, PFun.pure, Seq.seq, Option.bind_eq_some_iff] at h ⊢
     revert h
     generalize n.l = n₁; generalize n.r = n₂
     -- induction' n₂ with m IH generalizing x n <;> simp [Option.bind_eq_some_iff]
@@ -1359,7 +1364,65 @@ theorem usen_complete {c n x} : x ∈ use O c n ↔ ∃ s, x ∈ usen O c s n :=
 
 
   | rfind' cf hf =>
+    -- #check use_rfind'_
+    simp [use] at h
+    rcases h with ⟨h1,h2,h3⟩
+    rw [show h1=h1-n.r+n.r from by simp [eval_rfind_prop5 h2]] at h2
+    #check usen_rfind_prop2.mpr
+    revert h3
+    revert h2
+    induction h1-n.r with
+    | zero =>
+      simp_all
+      intro h2
+      intro h4
+      intro h5
+      intro h6
+      intro h7
+      intro h8
+      -- rcases hf h6 with ⟨h9,h10⟩
+      -- rcases evaln_complete.mp h2 with ⟨h11,h12⟩
+      rcases evaln_complete.mp h2 with ⟨h9,h10⟩
+      rcases hf h6 with ⟨h14,h15⟩
+      rcases usen_dom_iff_evaln_dom.mp ⟨h5,h15⟩ with ⟨h16,h17⟩
+      use Nat.max (h9-1) (h14+1)
+      -- use h9-1
+      simp [usen]
+      simp_all
+      have : n≤h9-1 := by
+        -- have := usen_bound h10
+        have := evaln_bound h10
+        exact le_sub_one_of_lt this
+        -- exact le_of_lt this
+        -- exact le_of_lt_add_one this
+      rcases usen_dom_iff_evaln_dom.mpr ⟨n.r,h10⟩ with ⟨h12,h13⟩
+      have hh9 : h9 - 1 + 1 = h9 := by
+        suffices h9≠0 from by grind
+        contrapose h10
+        simp at h10
+        rw [h10]
+        simp [evaln]
+      -- simp [hh9]
+      simp [this]
+      have aux0 := usen_mono (show (h14 + 1) ≤ (h9 - 1).max (h14 + 1) + 1 from by grind) h15
+      simp at aux0
+      simp [aux0]
+      have aux1 := evaln_mono (show (h14 + 1) ≤ (h9 - 1).max (h14 + 1) + 1 from by grind) h17
+      simp at aux1
+      simp [aux1]
+      have aux2: 0+n.r ∈ evaln O (h9-1+1) cf.rfind' n := by
+        grind
+      have aux3:= (evaln_rfind_prop.mp aux2).left
+      clear aux2
+      simp at aux3
+      simp [evaln_sing h17 aux3]
 
+    | succ nn ih => sorry
+    -- rw [usen_rfind_prop2]
+    sorry
+  
+  
+    
     have auxdom1 : (use O cf.rfind' n).Dom := by exact Part.dom_iff_mem.mpr (Exists.intro x h)
     have : use O cf.rfind' n = some x := Part.eq_some_iff.mpr h
 
@@ -1372,6 +1435,7 @@ theorem usen_complete {c n x} : x ∈ use O c n ↔ ∃ s, x ∈ usen O c s n :=
     simp [use_rfind_rec] at this
     simp [use] at h
     -- rcases h with ⟨h1,h2,h3⟩
+    sorry
 
 
 
