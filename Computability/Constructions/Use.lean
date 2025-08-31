@@ -11,6 +11,9 @@ import Mathlib.Algebra.Order.BigOperators.Group.Finset
 open Nat.RecursiveIn.Code
 namespace Nat.RecursiveIn.Code
 
+theorem listrwgen (n): (List.range (n + 1)).reverse = n :: (List.range n).reverse := by
+  simp
+  exact List.range_succ
 
 theorem ne_of_mem_imp_not_mem {y:Part ℕ} (h:x∈y) (h2:x≠z) : z∉y := by
   have aux: y=Part.some x := by exact Part.eq_some_iff.mpr h
@@ -573,23 +576,29 @@ lemma evaln_sing (h1:a∈(evaln O s1 c x)) (h2:b∈(evaln O s2 c x)): a=b := by
   | inr h =>
     have := evaln_mono (Nat.le_of_not_ge h) h2
     simp_all only [Option.mem_def, Option.some.injEq]
-theorem evaln_rfind_prop :
-y+x.r∈evaln O (k+1) cf.rfind' x
-↔
-0∈(evaln O (k+1-y) cf (Nat.pair x.l (y+x.r)))
-∧ (∀ j ≤ y, ∃z,z∈(evaln O (k+1-j) cf (Nat.pair x.l (j+x.r))))
-∧ (∀ j < y, ¬0∈(evaln O (k+1-j) cf (Nat.pair x.l (j+x.r))))
-:= by
-  suffices ¬ y + x.r ∈ evaln O (k + 1) cf.rfind' x ↔
+lemma evaln_rfind_prop_aux :
+(∃y,y+x.r∈evaln O (k+1) (rfind' cf) x)
+↔  ¬ (evaln O (k+1) (rfind' cf) x=Option.none) := by
+  constructor
+  intro h
+  grind
+  intro h
+  rcases Option.ne_none_iff_exists'.mp h with ⟨h1,h2⟩
+  rw [show x=Nat.pair x.l x.r from by simp] at h2
+  have := evaln_rfind_prop5 h2
+  use h1-x.r
+  simp [this]
+  simp at h2
+  exact h2
+  
+theorem evaln_rfind_prop_not' :
+
+¬ y + x.r ∈ evaln O (k + 1) cf.rfind' x ↔
   (¬0 ∈ evaln O (k + 1 - y) cf (Nat.pair x.l (y + x.r))) ∨
     ((∃ j ≤ y, evaln O (k + 1 - j) cf (Nat.pair x.l (j + x.r))=Option.none) ) ∨
-    (¬ ∀ j < y, 0 ∉ evaln O (k + 1 - j) cf (Nat.pair x.l (j + x.r))) from by
-      apply Iff.not at this
-      simp
-      simp [Option.ne_none_iff_exists'] at this
-      assumption
-      -- exact this
-      -- assumption
+    (¬ ∀ j < y, 0 ∉ evaln O (k + 1 - j) cf (Nat.pair x.l (j + x.r)))
+:= by
+
   induction y generalizing x k with
   | zero =>
     simp_all
@@ -827,6 +836,38 @@ y+x.r∈evaln O (k+1) cf.rfind' x
     exact ih1.mpr (Or.inr (Or.inr this))
 
 
+theorem evaln_rfind_prop :
+y+x.r∈evaln O (k+1) cf.rfind' x
+↔
+0∈(evaln O (k+1-y) cf (Nat.pair x.l (y+x.r)))
+∧ (∀ j ≤ y, ∃z,z∈(evaln O (k+1-j) cf (Nat.pair x.l (j+x.r))))
+∧ (∀ j < y, ¬0∈(evaln O (k+1-j) cf (Nat.pair x.l (j+x.r)))) := by
+  suffices ¬ y + x.r ∈ evaln O (k + 1) cf.rfind' x ↔
+  (¬0 ∈ evaln O (k + 1 - y) cf (Nat.pair x.l (y + x.r))) ∨
+    ((∃ j ≤ y, evaln O (k + 1 - j) cf (Nat.pair x.l (j + x.r))=Option.none) ) ∨
+    (¬ ∀ j < y, 0 ∉ evaln O (k + 1 - j) cf (Nat.pair x.l (j + x.r))) from by
+      apply Iff.not at this
+      simp
+      simp [Option.ne_none_iff_exists'] at this
+      assumption
+  exact evaln_rfind_prop_not'
+      -- exact this
+      -- assumption
+      -- apply Iff.not at this
+      -- simp
+      -- simp [Option.ne_none_iff_exists'] at this
+      -- assumption
+-- theorem evaln_rfind_prop_not :
+
+-- (evaln O (k + 1) cf.rfind' x=Option.none) ↔
+--   (¬0 ∈ evaln O (k + 1 - y) cf (Nat.pair x.l (y + x.r))) ∨
+--     ((∃ j ≤ y, evaln O (k + 1 - j) cf (Nat.pair x.l (j + x.r))=Option.none) ) ∨
+--     (¬ ∀ j < y, 0 ∉ evaln O (k + 1 - j) cf (Nat.pair x.l (j + x.r)))
+-- := by
+--   suffices ¬ y + x.r ∈ evaln O (k + 1) cf.rfind' x ↔
+--   (¬0 ∈ evaln O (k + 1 - y) cf (Nat.pair x.l (y + x.r))) ∨
+--     ((∃ j ≤ y, evaln O (k + 1 - j) cf (Nat.pair x.l (j + x.r))=Option.none) ) ∨
+--     (¬ ∀ j < y, 0 ∉ evaln O (k + 1 - j) cf (Nat.pair x.l (j + x.r))) from by
 
 
 
@@ -835,8 +876,8 @@ theorem usen_rfind_prop_aux0 {cf:Code} :
 →
 ∃y,y∈evaln O (k+1) cf.rfind' n
 := by
-  simp [usen]
-  simp [evaln]
+  -- simp [usen]
+  -- simp [evaln]
 
   -- we should show that there exists some number ro s.t.
   /-
@@ -848,13 +889,21 @@ theorem usen_rfind_prop_aux0 {cf:Code} :
 
   -- need to show that
   -- evaln cf is defined for all (n.l, n.r+i)
-
+  
   contrapose
   simp
   intro h
   have : evaln O (k+1) cf.rfind' n = Option.none := by
     exact Option.eq_none_iff_forall_ne_some.mpr h
-  simp [evaln] at this
+  clear h
+
+  -- have := @evaln_rfind_prop_aux.mpr 
+  have : ¬¬ evaln O (k + 1) cf.rfind' n = Option.none := by simpa
+  #check evaln_rfind_prop_aux.not.mpr this
+  have := evaln_rfind_prop_aux.not.mpr this
+
+  
+  -- simp [evaln] at this
   simp [usen]
   sorry
 theorem usen_rfind_prop_aux {cf:Code} :
@@ -874,17 +923,30 @@ theorem usen_rfind_prop_aux {cf:Code} :
     sorry
   simp [usen] at h
   sorry
-theorem usen_rfind_prop :
-x ∈ usen O cf.rfind' (k + 1) n
-↔
-∀j≤rfind'_obtain (sorry), ∃y∈ (usen O cf (k + 1 - j) (Nat.pair n.l (n.r+j)))
+theorem usen_rfind_prop (h:x ∈ usen O cf.rfind' (k + 1) n):
+
+
+∀j≤rfind'_obtain (usen_rfind_prop_aux h),
+  ∃y,y∈ (usen O cf (k + 1 - j) (Nat.pair n.l (n.r+j)))
+  -- and also the maximum of these is equal to the usen.
 := by
   sorry
+theorem usen_rfind_prop2 (h:y ∈ usen O cf.rfind' (k + 1) x):
+y∈(do
+  let guard ← evaln O (k+1) (rfind' cf) x;
+  let ro := guard - x.r
+  let mut max := 0
+  for i in List.reverse (List.range (ro+1)) do
+    let usen_i ← (usen O cf (k+1-i) (Nat.pair x.l (i+x.r)))
+    max := Nat.max max usen_i
+  max :Option ℕ)
+  := by
+    sorry
 
 theorem usen_sound : ∀ {c s n x}, x ∈ usen O c s n → x ∈ use O c n
 | _, 0, n, x, h => by simp [usen] at h
 | c, k + 1, n, x, h => by
-  induction' c with cf cg hf hg cf cg hf hg cf cg hf hg cf hf generalizing x n
+  induction' c with cf cg hf hg cf cg hf hg cf cg hf hg cf hf generalizing x n k
   -- <;>
       -- simp [use, usen, Option.bind_eq_some_iff, Seq.seq] at h ⊢ <;>
     -- obtain ⟨_, h⟩ := h
@@ -960,38 +1022,81 @@ theorem usen_sound : ∀ {c s n x}, x ∈ usen O c s n → x ∈ use O c n
           · exact h9
 
   · -- rfind' cf
-    -- #check usen_dom_iff_evaln_dom.mp ⟨x,h⟩
-    #check use_rfind_eq_use_rfind_rec
 
+    simp [use]
+    #check usen_rfind_prop2 h
+    have := usen_rfind_prop2 h
+    have urop1 := usen_rfind_prop h
+    -- have urop11 := urop1 1
+    rcases urop1 0 (zero_le (rfind'_obtain (usen_rfind_prop_aux h))) with ⟨h1,h2⟩
+    simp at h2
+    
     rcases usen_dom_iff_evaln_dom.mp ⟨x,h⟩ with ⟨h7,h8⟩
-    simp [use, usen, Option.bind_eq_some_iff, Seq.seq] at h ⊢
-    -- obtain ⟨_, h⟩ := h
-    rcases h with ⟨h1,h2,h3,h4,h5,h6⟩
+    have h145: rfind'_obtain (usen_rfind_prop_aux h) = h7 - n.r := by
+      simp [rfind'_obtain]
+      simp [Part.eq_some_iff.mpr (evaln_sound h8)]
+    simp [h145] at *
+
+    -- simp [h8] at this
+    simp_all
     use h7
     constructor
-    ·
-      exact evaln_sound h8
+    exact evaln_sound h8
 
-    ·
-      simp [usen] at h6
-      sorry
-    sorry
+    -- let asd := h7 - n.r
+    -- have rwasd : h7 - n.r = asd := rfl
+    -- rw [rwasd]
+    -- rw [rwasd] at this
+    revert this
+    revert urop1
+    generalize 0=a
+    -- revert 0
+    induction h7 - n.r generalizing a with
+    | zero =>
+      -- simp [hind] at this
+      simp
+      intro h3 h4 this
+      use (ForInStep.yield (a.max h1))
+      constructor
+      use h1
+      constructor
+      exact hf k n h1 h2
+      rfl
+      simp_all
+    | succ nn ih =>
+      simp (config:={singlePass:=true}) [listrwgen]
+      simp
+      intro urop1
+      have aux0 : (∀ j ≤ nn, ∃ y, usen O cf (k + 1 - j) (Nat.pair n.l (n.r + j)) = some y) := by
+        intro j jnn
+        have := urop1 j (le_add_right_of_le jnn)
+        exact this
+      
+      rcases urop1 (nn+1) (Nat.le_refl (nn + 1)) with ⟨h3,h4⟩
+      simp at h4
+      rw (config:={occs:=.pos [1]}) [add_comm] at h4
+      simp [h4]
+      have hknn : k-nn-1+1=k-nn := by
+        contrapose h4
+        simp at h4
+        have : k-nn=0 := by grind
+        simp [this,usen]
+      have := hf (k-nn-1) (Nat.pair n.l (nn + 1 + n.r)) h3 
+      simp [hknn] at this
+      have hf2 := this h4
+
+      intro h5
+      use (ForInStep.yield (a.max h3))
+      constructor
+      use h3
+      simp
+      have ih1 := ih (a.max h3) aux0
+      clear ih
+      have ih2 := ih1 h5
+      clear ih1
+      exact ih2
 
 
-    rcases h with ⟨m, h₁, h₂⟩
-    by_cases m0 : m = 0 <;> simp [m0] at h₂
-    · exact
-        ⟨0, ⟨by simpa [m0] using hf _ _ h₁, fun {m} => (Nat.not_lt_zero _).elim⟩, by simp [h₂]⟩
-    · have := usen_sound h₂
-      simp [eval] at this
-      rcases this with ⟨y, ⟨hy₁, hy₂⟩, rfl⟩
-      refine
-        ⟨y + 1, ⟨by simpa [add_comm, add_left_comm] using hy₁, fun {i} im => ?_⟩, by
-          simp [add_comm, add_left_comm]⟩
-      rcases i with - | i
-      · exact ⟨m, by simpa using hf _ _ h₁, m0⟩
-      · rcases hy₂ (Nat.lt_of_succ_lt_succ im) with ⟨z, hz, z0⟩
-        exact ⟨z, by simpa [add_comm, add_left_comm] using hz, z0⟩
 theorem usen_complete {c n x} : x ∈ use O c n ↔ ∃ s, x ∈ usen O c s n := by
   refine ⟨fun h => ?_, fun ⟨k, h⟩ => usen_sound h⟩
   rsuffices ⟨k, h⟩ : ∃ k, x ∈ usen O  c (k + 1) n
@@ -1474,9 +1579,7 @@ theorem clause_mono_2
 
 theorem le_of_le_sub {a b :ℕ}(h:a≤b-c): a≤b := by
   grind
-theorem listrwgen (n): (List.range (n + 1)).reverse = n :: (List.range n).reverse := by
-  simp
-  exact List.range_succ
+
 lemma listrevlem (h:∃ l'':List ℕ, l'' ++ l' = (List.range x).reverse) : ∃ y, l'=(List.range y).reverse∧y≤x := by
   rcases h with ⟨h1,h2⟩
   induction h1 generalizing x with
