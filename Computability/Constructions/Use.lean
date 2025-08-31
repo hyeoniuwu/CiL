@@ -152,7 +152,7 @@ match c with
 | succ        => 0
 | left        => 0
 | right       => 0
-| oracle      => x
+| oracle      => x+1
 | pair cf cg  => Nat.max <$> (use O cf x) <*> (use O cg x)
 | comp cf cg  => Nat.max <$> (use O cg x) <*> (eval O cg x >>= use O cf)
 | prec cf cg  =>
@@ -254,6 +254,133 @@ theorem test (h:∀ (a : ℕ), ¬x = some a) : x=Option.none := by exact Option.
 -- #check Nat.le_induction
 -- #check induct
 
+-- namespace CodeNatK
+
+-- Custom induction principle
+def CodeNatK.induction
+  {motive : ℕ → Code → Prop}
+  -- base case: k = 0, c arbitrary
+  (h0 : ∀ c, motive 0 c)
+
+  -- step case: k+1
+  (hzero   : ∀ k, motive (k+1) .zero)
+  (hsucc   : ∀ k, motive (k+1) .succ)
+  (hleft   : ∀ k, motive (k+1) .left)
+  (hright  : ∀ k, motive (k+1) .right)
+  (horacle : ∀ k, motive (k+1) .oracle)
+
+  (hpair : ∀ k cf cg,
+    motive (k+1) cf →
+    motive (k+1) cg →
+    motive (k+1) (.pair cf cg))
+
+  (hcomp : ∀ k cf cg,
+    motive (k+1) cf →
+    motive (k+1) cg →
+    motive (k+1) (.comp cf cg))
+
+  (hprec : ∀ k cf cg,
+    motive (k+1) cf →
+    motive (k+1) cg →
+    motive k (.prec cf cg) →
+    motive (k+1) (.prec cf cg))
+
+  (hrfind : ∀ k cf,
+    (∀ x' ≤ k+1, motive x' cf) →
+    motive (k+1) (.rfind' cf))
+
+  : ∀ k c, motive k c := by
+  intro k
+  induction k using Nat.strongRecOn with
+  | ind k ih =>
+    intro c
+    -- induction c with
+    -- | zero =>
+    --   cases k with
+    --   | zero   => exact h0 .zero
+    --   | succ k => exact hzero k
+    -- | succ => sorry
+    -- | left => sorry
+    -- | right => sorry
+    -- | oracle => sorry
+    -- | pair _ _ _ _ => sorry
+    -- | comp _ _ _ _ => sorry
+    -- | prec _ _ _ _ => sorry
+    -- | rfind' _ _ => sorry
+    
+    -- cases c with
+    induction c with
+    | zero   =>
+      cases k with
+      | zero   => exact h0 .zero
+      | succ k => exact hzero k
+    | succ   =>
+      cases k with
+      | zero   => exact h0 .succ
+      | succ k => exact hsucc k
+    | left   =>
+      cases k with
+      | zero   => exact h0 .left
+      | succ k => exact hleft k
+    | right  =>
+      cases k with
+      | zero   => exact h0 .right
+      | succ k => exact hright k
+    | oracle =>
+      cases k with
+      | zero   => exact h0 .oracle
+      | succ k => exact horacle k
+    | pair cf cg hcf hcg =>
+      cases k with
+      | zero   => exact h0 (.pair cf cg)
+      | succ k =>
+        exact hpair k cf cg hcf hcg
+    | comp cf cg hcf hcg =>
+      cases k with
+      | zero   => exact h0 (.comp cf cg)
+      | succ k =>
+        exact hcomp k cf cg hcf hcg
+    | prec cf cg hcf hcg =>
+      cases k with
+      | zero   => exact h0 (.prec cf cg)
+      | succ k =>
+        apply hprec k cf cg
+        exact hcf
+        exact hcg
+        exact ih k (Nat.lt_succ_self _) (.prec cf cg)
+    | rfind' cf hcf =>
+      cases k with
+      | zero   => exact h0 (.rfind' cf)
+      | succ k =>
+        apply hrfind k cf
+        intro x' hle
+        grind only
+
+-- end CodeNatK
+private def ind0 : ℕ → Code → ℕ
+| 0, _ => 0
+| s+1, zero => 0
+| s+1, succ => 0
+| s+1, left => 0
+| s+1, right => 0
+| s+1, oracle => 0
+| s+1, pair cf cg => ind0 (s+1) cf + ind0 (s+1) cg
+| s+1, comp cf cg => ind0 (s+1) cf + ind0 (s+1) cg
+-- | 0, prec cf cg => ind0 0 cf + ind0 0 cg
+| s+1, prec cf cg =>
+  -- ∑ i ∈ Finset.range (s+1),
+  -- (ind0 i cf + ind0 i cg)
+  ind0 (s+1) cf
+  + ind0 (s+1) cg
+  + ind0 s (prec cf cg)
+  -- +
+  -- ind0 s cf +
+  -- ind0 s cg
+-- | 0, rfind' cf => 0
+| s+1, rfind' cf =>
+  ind0 (s+1) cf +
+  ind0 (s) cf
+  -- + ind0 s (rfind' cf)
 private def ind : ℕ → Code → ℕ
 | 0, _ => 0
 | s+1, zero => 0
@@ -942,26 +1069,42 @@ y∈(do
   max :Option ℕ)
   := by
     sorry
-
+lemma part_add {x y : ℕ}: Part.some x + Part.some y = Part.some (x+y) := by
+  exact Part.some_add_some x y
 theorem usen_sound : ∀ {c s n x}, x ∈ usen O c s n → x ∈ use O c n
-| _, 0, n, x, h => by simp [usen] at h
-| c, k + 1, n, x, h => by
-  induction' c with cf cg hf hg cf cg hf hg cf cg hf hg cf hf generalizing x n k
-  -- <;>
-      -- simp [use, usen, Option.bind_eq_some_iff, Seq.seq] at h ⊢ <;>
-    -- obtain ⟨_, h⟩ := h
-  -- iterate 5 simpa [pure, PFun.pure, eq_comm] using h
-  · simp [use, usen, Option.bind_eq_some_iff, Seq.seq] at h ⊢
+:= by
+-- | _, 0, n, x, h => by simp [usen] at h
+-- | c, k + 1, n, x, h => by
+  intro c k n x h
+  induction k,c using CodeNatK.induction generalizing x n with
+  | h0 c => simp [usen] at h
+  | hzero k =>
+    simp [use, usen, Option.bind_eq_some_iff] at h ⊢
     obtain ⟨_, h⟩ := h
     exact (Part.get_eq_iff_mem trivial).mp h
-    -- simpa [pure, PFun.pure, eq_comm] using h
-  · simp [use, usen, Option.bind_eq_some_iff, Seq.seq] at h ⊢
+  | hsucc k =>
+    simp [use, usen, Option.bind_eq_some_iff] at h ⊢
     obtain ⟨_, h⟩ := h
     exact (Part.get_eq_iff_mem trivial).mp h
-  · sorry
-  · sorry
-  · sorry
-  · -- pair cf cg
+  | hleft k =>
+    simp [use, usen, Option.bind_eq_some_iff] at h ⊢
+    obtain ⟨_, h⟩ := h
+    exact (Part.get_eq_iff_mem trivial).mp h
+  | hright k =>
+    simp [use, usen, Option.bind_eq_some_iff] at h ⊢
+    obtain ⟨_, h⟩ := h
+    exact (Part.get_eq_iff_mem trivial).mp h
+  | horacle k =>
+    simp [use, usen, Option.bind_eq_some_iff] at h ⊢
+    obtain ⟨_, h⟩ := h
+    simp [←h]
+    suffices Part.some (n+1) = @HAdd.hAdd (Part ℕ) (Part ℕ) (Part ℕ) instHAdd (Part.some n) 1 from by
+      rw [←this]
+      exact Part.mem_some_iff.mpr rfl
+    have := Part.some_add_some n 1
+    rw [←this]
+    exact rfl
+  | hpair k cf cg hf hg =>
     simp [use, usen, Option.bind_eq_some_iff, Seq.seq] at h ⊢
     obtain ⟨_, h⟩ := h
     rcases h with ⟨y, ef, z, eg, rfl⟩
@@ -975,20 +1118,19 @@ theorem usen_sound : ∀ {c s n x}, x ∈ usen O c s n → x ∈ use O c n
         }
         · simp_all only
         · simp_all only
-    -- exact ⟨_, hf _ _ ef, _, hg _ _ eg, rfl⟩
-  · --comp hf hg
+  | hcomp k cf cg hf hg =>
     simp [use, usen, Option.bind_eq_some_iff, Seq.seq] at h ⊢
     -- obtain ⟨_, h⟩ := h
     -- rcases h with ⟨y, eg, ef⟩
     rcases h with ⟨h1, h2, h3, h4, h5, h6, h7, h8⟩
-    refine ⟨h2,hg n h2 h3,
+    -- #check @hg h2 h3
+    refine ⟨h2,@hg n h2 h3,
             h4,evaln_sound h5,
-            h6,hf h4 h6 h7,
+            h6,@hf h4 h6 h7,
             ?_⟩
     subst h8
     exact Nat.max_comm h2 h6
-
-  · -- prec cf cg
+  | hprec k cf cg hf hg ih =>
     simp [use, usen, Option.bind_eq_some_iff, Seq.seq] at h ⊢
     -- obtain ⟨_, h⟩ := h
     revert h
@@ -1013,16 +1155,17 @@ theorem usen_sound : ∀ {c s n x}, x ∈ usen O c s n → x ∈ use O c n
       · use hh
         constructor
         ·
-          have main := usen_sound h3
+          -- #check 
+          -- have main := usen_sound h3
+          have main := ih h3
           simp [use] at main
           exact main
         · use h7
           constructor
-          · exact hg (Nat.pair n.l (Nat.pair m h4)) h7 h8
+          · exact @hg (Nat.pair n.l (Nat.pair m h4)) h7 h8
           · exact h9
-
-  · -- rfind' cf
-
+  | hrfind k cf hfih =>
+    -- have hf := hfih (k+1) (le_rfl)
     simp [use]
     #check usen_rfind_prop2 h
     have := usen_rfind_prop2 h
@@ -1060,7 +1203,7 @@ theorem usen_sound : ∀ {c s n x}, x ∈ usen O c s n → x ∈ use O c n
       constructor
       use h1
       constructor
-      exact hf k n h1 h2
+      exact @hfih (k+1) (le_rfl) n h1 h2
       rfl
       simp_all
     | succ nn ih =>
@@ -1081,7 +1224,10 @@ theorem usen_sound : ∀ {c s n x}, x ∈ usen O c s n → x ∈ use O c n
         simp at h4
         have : k-nn=0 := by grind
         simp [this,usen]
-      have := hf (k-nn-1) (Nat.pair n.l (nn + 1 + n.r)) h3 
+      
+
+      -- hfih (k+1) (le_rfl)
+      have := @hfih (k-nn) (by grind) (Nat.pair n.l (nn + 1 + n.r)) h3 
       simp [hknn] at this
       have hf2 := this h4
 
@@ -1095,6 +1241,7 @@ theorem usen_sound : ∀ {c s n x}, x ∈ usen O c s n → x ∈ use O c n
       have ih2 := ih1 h5
       clear ih1
       exact ih2
+
 
 
 theorem usen_complete {c n x} : x ∈ use O c n ↔ ∃ s, x ∈ usen O c s n := by
