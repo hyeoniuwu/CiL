@@ -1149,6 +1149,7 @@ y∈(do
     sorry
 lemma part_add {x y : ℕ}: Part.some x + Part.some y = Part.some (x+y) := by
   exact Part.some_add_some x y
+
 theorem usen_sound : ∀ {c s n x}, x ∈ usen O c s n → x ∈ use O c n
 := by
 -- | _, 0, n, x, h => by simp [usen] at h
@@ -1319,8 +1320,113 @@ theorem usen_sound : ∀ {c s n x}, x ∈ usen O c s n → x ∈ use O c n
       clear ih1
       exact ih2
 
+lemma lemlemlem
+{a n:ℕ}
+(h6:h5 ∈ use O cf (Nat.pair n.l (nn + 1 + n.r)))
+(rop3:∀ j ≤ nn + 1, (use O cf (Nat.pair n.l (n.r + j))).Dom)
+(h57dom:(use O cf n).Dom)
+(h57def:h57=(use O cf n).get h57dom)
+:
+(forIn (List.range (nn + 1)).reverse (a.max h5) fun i r ↦
+    (use O cf (Nat.pair n.l (i + n.r))).bind fun use_i ↦ Part.some (ForInStep.yield (r.max use_i)))
+    =
+(  forIn (List.range (nn + 1)).reverse (a.max (h57)) fun i r ↦
+    (use O cf (Nat.pair n.l (i + (1 + n.r)))).bind fun use_i ↦ Part.some (ForInStep.yield (r.max use_i)))
+ := by
+  revert h6
+  induction nn generalizing h5 n a with
+  | zero =>
+    simp
+    intro h6
+    -- intro h81
+    -- intro h82
+    -- intro h83
+    -- intro h84
+    -- intro h85
+    have : use O cf n = Part.some h57 := by
+      exact Part.get_eq_iff_eq_some.mp (_root_.id (Eq.symm h57def))
+    simp_all
+    have := rop3 1 (le_rfl)
+    rw [add_comm] at this
+    #check Part.Dom.bind this
+    simp [Part.Dom.bind this]
+    have : h5 = ((use O cf (Nat.pair n.l (1 + n.r))).get this) := by
+      exact (Part.eq_get_iff_mem this).mpr h6
+    simp [←this]
+    rw (config:={occs:=.pos [2]}) [Nat.max_comm]
+    
+  | succ nnn iihh =>
+    
+    intro h6
+    -- intro h81
+    -- intro h82
+    -- lift_lets at iihh
+    simp (config:={singlePass:=true}) [listrwgen]
+    simp
+
+    have dom1 : (use O cf (Nat.pair n.l (nnn + 1 + n.r))).Dom := by
+      have := rop3 (nnn+1) (le_add_right (nnn + 1) 1)
+      rw [show n.r + (nnn + 1) = nnn + 1 + n.r from by grind] at this
+      exact this
+    simp [Part.Dom.bind dom1]
+    have dom2 : (use O cf (Nat.pair n.l (nnn + 1 + (1 + n.r)))).Dom := by
+      rw [show (nnn + 1 + (1 + n.r)) = nnn + 1 + 1 + n.r from by grind]
+      exact Part.dom_iff_mem.mpr ⟨h5,h6⟩
+    simp [Part.Dom.bind dom2]
+
+
+    
+
+    -- use ForInStep.yield (max a (max h6 h5))
+    -- constructor
+    -- use h5
+    -- constructor
+    -- rw [show (nnn + 1 + (1 + n.r)) = nnn + 1 + 1 + n.r from by grind]
+    -- exact h81
+    -- rfl
+
+    -- simp
+
+    -- have iihh1 := @iihh (Nat.pair n.l (n.r)) (a.max h5) ?_
+    have iihh1 := @iihh ((use O cf (Nat.pair n.l (nnn + 1 + n.r))).get dom1) (a.max h5) (Nat.pair n.l (n.r)) ?_
+    simp at iihh1
+    clear iihh
+    rotate_right
+    · 
+      intro j hj
+      have := rop3 j (le_add_right_of_le hj)
+      simpa
+    
+
+    -- have retain1 : (use O cf (Nat.pair n.l (nnn + 1 + n.r))).Dom := by
+    --   have := rop3 (nnn+1) (le_add_right (nnn + 1) 1)
+    --   rw [show n.r + (nnn + 1) = nnn + 1 + n.r from by grind] at this
+    --   exact this
+
+    have iihh2 := iihh1 h57dom ?_ ?_
+    clear iihh1
+    rotate_left
+    · 
+      exact h57def
+    · exact Part.get_mem dom1
+    
+    rw [iihh2]
+
+
+    have : (use O cf (Nat.pair n.l (nnn + 1 + (1 + n.r)))).get dom2 = h5 := by
+      simp [show (nnn + 1 + (1 + n.r)) = nnn + 1 + 1 + n.r from by grind]
+      exact
+        Part.get_eq_of_mem h6
+          (congrArg (fun x ↦ use O cf (Nat.pair n.l x))
+              (have this := lemlemlem._proof_1_5 nnn rop3 h57dom h57def h6 dom1 dom2 iihh2;
+              this) ▸
+            dom2)
+    rw [this]
+    rw (config:={occs:=.pos [2]}) [Nat.max_comm]
 
 -- set_option diagnostics true in
+set_option maxHeartbeats 1000000 in
+-- set_option maxHeartbeats 50000 in
 theorem usen_complete {c n x} : x ∈ use O c n ↔ ∃ s, x ∈ usen O c s n := by
   refine ⟨fun h => ?_, fun ⟨k, h⟩ => usen_sound h⟩
   rsuffices ⟨k, h⟩ : ∃ k, x ∈ usen O  c (k + 1) n
@@ -1504,6 +1610,7 @@ theorem usen_complete {c n x} : x ∈ use O c n ↔ ∃ s, x ∈ usen O c s n :=
 
     induction h1-n.r generalizing a n with
     | zero =>
+      sorry
       simp_all
       intro urop1
       intro rop1
@@ -1552,9 +1659,12 @@ theorem usen_complete {c n x} : x ∈ use O c n ↔ ∃ s, x ∈ usen O c s n :=
       have rop41 := e2u rop40
 
 
+      have h57dom := rop3 0 (le_add_left 0 (nn + 1))
+      simp at h57dom
+      let h57 := (use O cf n).get h57dom
 
-
-      have ih1 := @ih (Nat.pair n.l (1 + n.r)) (a.max h5) (rop40) rop41 ?_ ?_ ?_ ?_ ?_
+      -- have ih1 := @ih (Nat.pair n.l (1 + n.r)) (a.max h5) (rop40) rop41 ?_ ?_ ?_ ?_ ?_
+      have ih1 := @ih (Nat.pair n.l (1 + n.r)) (a.max h57) (rop40) rop41 ?_ ?_ ?_ ?_ ?_
       clear ih
       rotate_right 5
       -- rotate_right
@@ -1591,14 +1701,98 @@ theorem usen_complete {c n x} : x ∈ use O c n ↔ ∃ s, x ∈ usen O c s n :=
         exact rop6 (1) (le_add_left 1 nn)
 
       simp_all
-
+      #check @lemlemlem O cf nn h5 h57 a n h6 rop3 (h57dom) (rfl)
+      have lemlem := @lemlemlem O cf nn h5 h57 a n h6 rop3 (h57dom) (rfl)
+      
       have : (x ∈
-    forIn (List.range (nn + 1)).reverse (a.max h5) fun i r ↦
+    forIn (List.range (nn + 1)).reverse (a.max h57) fun i r ↦
       (use O cf (Nat.pair n.l (i + (1 + n.r)))).bind fun use_i ↦ Part.some (ForInStep.yield (r.max use_i))) := by
+          rw [lemlem] at h8
+          exact h8
           clear ih1
-          have aux : x ∈ forIn (List.range (nn + 1 + 1)).reverse (a.max h5) fun i r ↦
-    (use O cf (Nat.pair n.l (i + n.r))).bind fun use_i ↦ Part.some (ForInStep.yield (r.max use_i)) := by sorry
-          sorry
+          -- have retain1 := rop3 nn (le_add_right nn 1)
+          clear rop1 rop2 rop4 urop1 rop6
+          clear h2 h7
+          clear rop11 rop41
+          clear hdom1 hdom
+          clear hf
+
+          revert h8 h6
+          revert h57
+          -- clear h57dom
+          induction nn generalizing h5 n a with
+          | zero =>
+            simp
+            intro h6
+            intro h81
+            intro h82
+            intro h83
+            intro h84
+            intro h85
+            simp_all
+            
+            use h81
+            constructor
+            use h5
+            constructor
+            exact h6
+            rw [h84]
+            rw [Part.get_eq_of_mem h83 h57dom]
+            rw (config:={occs:=.pos [2]}) [Nat.max_comm]
+            simp_all
+          | succ nnn iihh =>
+            
+            intro h6
+            intro h81
+            intro h82
+            -- lift_lets at iihh
+            simp (config:={singlePass:=true}) [listrwgen]
+            simp
+
+            use ForInStep.yield (max a (max h6 h5))
+            constructor
+            use h5
+            constructor
+            rw [show (nnn + 1 + (1 + n.r)) = nnn + 1 + 1 + n.r from by grind]
+            exact h81
+            rfl
+
+            simp
+
+            have iihh1 := @iihh (Nat.pair n.l (n.r)) (a.max h5) ?_
+            simp at iihh1
+            clear iihh
+            rotate_right
+            · 
+              intro j hj
+              have := rop3 j (le_add_right_of_le hj)
+              simpa
+            
+
+            have retain1 : (use O cf (Nat.pair n.l (nnn + 1 + n.r))).Dom := by
+              have := rop3 (nnn+1) (le_add_right (nnn + 1) 1)
+              rw [show n.r + (nnn + 1) = nnn + 1 + n.r from by grind] at this
+              exact this
+
+            have iihh2 := iihh1 ((use O cf (Nat.pair n.l (nnn + 1 + n.r))).get retain1) h57dom ?_
+            clear iihh1
+            rotate_right
+            · 
+              exact Part.get_mem retain1
+
+            simp (config:={singlePass:=true}) [listrwgen] at h82
+            simp at h82
+            rcases h82 with ⟨g1,⟨g2,g3,g4⟩,g5⟩
+            simp_all
+            
+            have : (use O cf (Nat.pair n.l (nnn + 1 + n.r))).get retain1 = g2 := by
+              exact Part.get_eq_of_mem g3 retain1
+            simp [this,g5] at iihh2
+            simp [show (use O cf n).get h57dom = h6 from rfl] at iihh2
+            rw (config:={occs:=.pos [2]}) [Nat.max_comm]
+            exact iihh2
+
+
       simp [this] at ih1
       rcases ih1 with ⟨kk,hkk⟩
 
@@ -1619,6 +1813,7 @@ theorem usen_complete {c n x} : x ∈ use O c n ↔ ∃ s, x ∈ usen O c s n :=
         simp at hkk
         have := Option.eq_none_iff_forall_ne_some.mpr hkk
         simp [this]
+      -- simp?
       rcases this with ⟨h21,h22⟩
       clear this
 
@@ -1629,9 +1824,8 @@ theorem usen_complete {c n x} : x ∈ use O c n ↔ ∃ s, x ∈ usen O c s n :=
       simp at h22
       rw [h22] at hkk
       rw [hh22] at hkk
-      clear hh22
 
-      simp at hkk
+      simp [-ge_iff_le,-le_of_subsingleton,-le_refl,-Nat.le_refl] at hkk
       have : nn + 1 + n.r - (1 + n.r) + 1 = nn + 1 := by
         rw [add_assoc]
         rw [Nat.add_sub_cancel_right nn (1+n.r)]
@@ -1653,15 +1847,14 @@ theorem usen_complete {c n x} : x ∈ use O c n ↔ ∃ s, x ∈ usen O c s n :=
       -- simp only [Option.bind]
 
       have : (evaln O (kk + 1) cf.rfind' n) = some (nn + 1 + n.r) := by sorry
-      simp only [this]
-      simp only [Option.bind_some]
-      have : (nn + 1 + n.r - n.r + n.r) = nn +1 +n.r := by sorry
-      -- rw [show (nn + 1 + n.r - n.r + n.r) = nn +1 +n.r from by sorry]
-      -- rw [Nat.add_sub_cancel_right]
+      simp [this]
 
-      have : (usen O cf (kk + 1 - (a_1 - n.r)) (Nat.pair n.l (a_1 - n.r + n.r))) = some h5 := by sorry
+      have : (usen O cf (kk - nn) (Nat.pair n.l (nn + 1 + n.r))) = some h5 := by sorry
+      simp [this]
 
-      simp only [Option.bind_some]
+      rw [lemlem]
+      exact hkk
+
       -- simp only []
       have aux0 := usen_mono (show (h14 + 1) ≤ (h9 - 1).max (h14 + 1) from by grind) h15
       simp at aux0
