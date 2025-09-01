@@ -362,21 +362,6 @@ def CodeNatK.induction
   induction k using Nat.strongRecOn with
   | ind k ih =>
     intro c
-    -- induction c with
-    -- | zero =>
-    --   cases k with
-    --   | zero   => exact h0 .zero
-    --   | succ k => exact hzero k
-    -- | succ => sorry
-    -- | left => sorry
-    -- | right => sorry
-    -- | oracle => sorry
-    -- | pair _ _ _ _ => sorry
-    -- | comp _ _ _ _ => sorry
-    -- | prec _ _ _ _ => sorry
-    -- | rfind' _ _ => sorry
-
-    -- cases c with
     induction c with
     | zero   =>
       cases k with
@@ -425,30 +410,7 @@ def CodeNatK.induction
         grind only
 
 -- end CodeNatK
-private def ind0 : ℕ → Code → ℕ
-| 0, _ => 0
-| s+1, zero => 0
-| s+1, succ => 0
-| s+1, left => 0
-| s+1, right => 0
-| s+1, oracle => 0
-| s+1, pair cf cg => ind0 (s+1) cf + ind0 (s+1) cg
-| s+1, comp cf cg => ind0 (s+1) cf + ind0 (s+1) cg
--- | 0, prec cf cg => ind0 0 cf + ind0 0 cg
-| s+1, prec cf cg =>
-  -- ∑ i ∈ Finset.range (s+1),
-  -- (ind0 i cf + ind0 i cg)
-  ind0 (s+1) cf
-  + ind0 (s+1) cg
-  + ind0 s (prec cf cg)
-  -- +
-  -- ind0 s cf +
-  -- ind0 s cg
--- | 0, rfind' cf => 0
-| s+1, rfind' cf =>
-  ind0 (s+1) cf +
-  ind0 (s) cf
-  -- + ind0 s (rfind' cf)
+
 private def ind : ℕ → Code → ℕ
 | 0, _ => 0
 | s+1, zero => 0
@@ -718,14 +680,22 @@ theorem usen_mono_contra : ∀ {k₁ k₂ c n}, k₁ ≤ k₂ → usen O c k₂ 
 theorem Part.dom_imp_some {x:Part ℕ} (h:x.Dom) : x=Part.some (x.get h) := by
   exact Part.get_eq_iff_eq_some.mp rfl
 
-
+lemma part_add {x y : ℕ}: Part.some x + Part.some y = Part.some (x+y) := by
+  exact Part.some_add_some x y
 theorem use_dom_iff_eval_dom : (use O c x).Dom ↔ (eval O c x).Dom := by
   induction c generalizing x with
   | zero => exact Eq.to_iff rfl
   | succ => exact Eq.to_iff rfl
   | left => exact Eq.to_iff rfl
   | right => exact Eq.to_iff rfl
-  | oracle => exact Eq.to_iff rfl
+  | oracle =>
+    simp [use,eval]
+    suffices Part.some (x+1) = @HAdd.hAdd (Part ℕ) (Part ℕ) (Part ℕ) instHAdd (Part.some x) 1 from by
+      rw [←this]
+      exact trivial
+    have := Part.some_add_some x 1
+    rw [←this]
+    exact rfl
   | pair cf cg hcf hcg =>
     simp [use,eval]
     simp [Seq.seq]
@@ -735,12 +705,61 @@ theorem use_dom_iff_eval_dom : (use O c x).Dom ↔ (eval O c x).Dom := by
     simp [Seq.seq]
     simp_all only [and_exists_self]
   | prec cf cg hcf hcg =>
-    sorry
-  | rfind' _ _ => sorry
+    simp [use,eval]
+    simp [Seq.seq]
+    induction x.r with
+    | zero => simp_all
+    | succ xrM1 ih => simp_all
+  | rfind' cf hcf =>
+    constructor
+    · simp [use]
+      intro x_1 h
+      exact x_1
 
-  sorry
+    intro h
+    have rop := rfind'_obtain_prop h
+    let ro := rfind'_obtain h
+    have rwro : rfind'_obtain h = ro := rfl
+    simp [rwro] at rop ⊢
+    have rop1 := rop.left
+    have rop2 := rop.right.left
+    have rop3 := rop.right.right
+    have rop4 := rfind'_obtain_prop_4 h
+    have rop5 := rfind'_obtain_prop_5 h
+    simp [rwro] at rop5 rop4
+    simp [use]
+    use h
+    have rwro2 : (eval O (rfind' cf) x).get h - x.r = ro := rfl
+    simp [rwro2]
+    generalize 0=a at h ⊢
+    revert rop2
+    induction ro generalizing a with
+    | zero =>
+      simp_all
+      intro rop2
+      -- have := rop2 0 (zero_le ro)
+      have := rop2
+      aesop? says
+        simp_all only [le_refl, ro]
+        split
+        next x_1 b heq => simp_all only [le_refl, Part.some_dom]
+        next x_1 b heq => simp_all only [le_refl, Part.some_dom]
+    | succ n ih =>
+      simp (config:={singlePass:=true}) [listrwgen]
+      simp
+      intro rop2
+      have := rop2 (n+1) (le_rfl)
+      have := hcf.mpr this
+      simp [Part.Dom.bind this]
+      use this
+      have ih1 := ih (a.max ((use O cf (Nat.pair x.l (n + 1 + x.r))).get this)) ?_
+      rotate_left
+      · 
+        intro j hj
+        have := rop2 (j) (le_add_right_of_le hj)
+        exact this
+      exact ih1
 
-#check use_dom_iff_eval_dom.mpr
 abbrev e2u : (eval O c x).Dom → (use O c x).Dom := use_dom_iff_eval_dom.mpr
 abbrev u2e : (use O c x).Dom → (eval O c x).Dom := use_dom_iff_eval_dom.mp
 
@@ -1147,6 +1166,7 @@ theorem usen_rfind_prop (h:x ∈ usen O cf.rfind' (k + 1) n):
   ∃y,y∈ (usen O cf (k + 1 - j) (Nat.pair n.l (n.r+j)))
   -- and also the maximum of these is equal to the usen.
 := by
+
   sorry
 theorem usen_rfind_prop2 :
 (y ∈ usen O cf.rfind' (k + 1) x)
@@ -1161,8 +1181,7 @@ y∈(do
   max :Option ℕ)
   := by
     sorry
-lemma part_add {x y : ℕ}: Part.some x + Part.some y = Part.some (x+y) := by
-  exact Part.some_add_some x y
+
 
 theorem usen_sound : ∀ {c s n x}, x ∈ usen O c s n → x ∈ use O c n
 := by
@@ -1718,13 +1737,7 @@ theorem usen_complete {c n x} : x ∈ use O c n ↔ ∃ s, x ∈ usen O c s n :=
       -- have := rfind'_geq_xr hdom1
     rw [show h1=h1-n.r+n.r from by simp [rogeq]] at h2
     clear rogeq
-    -- generalize h1-n.r=asd at h3
-    -- rcases evaln_complete.mp h2 with ⟨kk,hkk⟩
-    -- use kk-1
-    -- have : kk-1+1=kk:= by sorry
-    -- simp [this]
-    -- simp at hkk
-    -- simp [hkk]
+
 
 
     have hdom1 := Part.dom_iff_mem.mpr ⟨h1-n.r+n.r,h2⟩
@@ -1758,7 +1771,7 @@ theorem usen_complete {c n x} : x ∈ use O c n ↔ ∃ s, x ∈ usen O c s n :=
 
     induction h1-n.r generalizing a n with
     | zero =>
-      sorry
+      -- sorry
       simp_all
       intro urop1
       intro rop1
