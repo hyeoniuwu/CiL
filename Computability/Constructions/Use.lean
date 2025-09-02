@@ -255,18 +255,18 @@ theorem evaln_rfind_as_eval_rfind
         rw (config:={occs:=.pos [3]}) [add_comm]
         exact this
   exact this
-
+  all_goals
+    have halt_base := evaln_rfind_base h
+    let base_val := (evaln O (s + 1) c x).get halt_base
+    have rwasd : (evaln O (s + 1) c x).get halt_base =base_val := rfl
   ·
     intro j hj
 
     clear h2
-
-    induction j generalizing x s with
+    -- clear h4
+    induction j generalizing x s h1 with
     | zero =>
       simp
-      have halt_base := evaln_rfind_base h
-      let base_val := (evaln O (s + 1) c x).get halt_base
-      have rwasd : (evaln O (s + 1) c x).get halt_base =base_val := rfl
       use base_val
       constructor
       exact Option.eq_some_of_isSome halt_base
@@ -283,28 +283,63 @@ theorem evaln_rfind_as_eval_rfind
       exact g3
     | succ jM1 ih =>
       -- have ih1 := @ih (s-1) (Nat.pair x.l (1+x.r)) ?_ ?_ ?_ ?_ ?_
-      have ih1 := @ih (s-1) (Nat.pair x.l (1+x.r)) ?_ ?_ ?_ ?_
+      have ih_aux_0 : (evaln O (s - 1 + 1) c.rfind' (Nat.pair x.l (1 + x.r))).isSome = true := by
+        -- why is this true?
+        -- because h1 (=ro) is >1 so the next step must be defined
+        -- so h1 is at least 2
+        simp [evaln] at h4
+        simp [rwasd] at h4
+        cases hb:base_val with
+        | zero =>
+          simp [hb] at h4
+          simp_all only [zero_add, not_lt_zero', not_isEmpty_of_nonempty, IsEmpty.exists_iff, implies_true]
+        | succ base_valM1 =>
+          simp [hb] at h4
+          have halt2 := evaln_rfind_indt h halt_base (by simp_all)
+          cases s with
+          | zero =>
+            simp [evaln] at halt2
+          | succ sM1 =>
+            simp_all
+            rw (config:={occs:=.pos [2]}) [add_comm]
+
+            have : evaln O (sM1 + 1) c.rfind' (Nat.pair x.l (x.r+1)) = some (h1+x.r) := by
+              simp_all
+            exact Option.isSome_of_mem this
+      have ih_aux_1 : h1 + x.r = (evaln O (s - 1 + 1) c.rfind' (Nat.pair x.l (1 + x.r))).get ih_aux_0 := by
+
+        -- rw [h4]
+        simp [evaln] at h4
+        simp [rwasd] at h4
+        -- simp [rwasd]
+        if hb:base_val=0 then
+          simp [hb] at h4
+          rw [h4] at hj
+          contradiction
+        else
+          simp [hb] at h4
+          have halt2 := evaln_rfind_indt h halt_base (by simp_all)
+          cases s with
+          | zero => simp [evaln] at halt2
+          | succ sM1 => simpa [add_comm]
+      have ih1 := @ih (s-1) (Nat.pair x.l (1+x.r)) ?_ (h1-1) ?_ ?_ ?_ ?_ ?_
+
       clear ih
       -- clear ih
+
       rotate_left
+      · exact ih_aux_0
+      · simp
+        rw [show h1 - 1 + (1 + x.r) = h1+x.r from by grind]
+        exact ih_aux_1
       ·
-        have halt_base := evaln_rfind_base h
-        let base_val := (evaln O (s + 1) c x).get halt_base
-        have rwasd : (evaln O (s + 1) c x).get halt_base =base_val := rfl
-
-
-        cases s with
-        | zero =>
-          simp [evaln] at ⊢
-
-          -- simp_all
-        | succ n => sorry
-        sorry
-      ·
-        sorry
-      ·
-        sorry
-      · exact lt_of_succ_lt hj
+        intro j hjro
+        simp
+        rw [←add_assoc]
+        exact @h3 (j+1) (add_lt_of_lt_sub hjro)
+      · exact evaln_rfind_base ih_aux_0
+      · exact rfl
+      · exact lt_sub_of_add_lt hj
       simp at ih1
       simp
 
@@ -315,26 +350,7 @@ theorem evaln_rfind_as_eval_rfind
         simp at g2
         rw [add_assoc]
         aesop? says simp_all only [Option.some.injEq, exists_eq_left', not_false_eq_true]
-  -- sorry
-
   simp_all only
-
-
-
-
-
-  sorry
-  obtain ⟨w, h_1⟩ := this
-  obtain ⟨left, right⟩ := h_1
-  obtain ⟨left, right_1⟩ := left
-  simp_all only
-
-  sorry
-  have wrap : unpaired
-    (fun a m ↦ Part.map (fun x ↦ x + m) (Nat.rfind fun n ↦ (fun x ↦ decide (x = 0)) <$> eval O c (Nat.pair a (n + m))))
-    x = (eval O (rfind' c) x) := by simp only [eval]
-  rw [wrap]
-  exact evaln_sound (Option.get_mem h)
 
 theorem n_rfind'_obtain_prop
 (h:(evaln O (s+1) (rfind' cf)  x).isSome) :
