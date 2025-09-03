@@ -599,7 +599,7 @@ theorem nrfind'_obtain_prop
     rcases rrr hja with ⟨witness,⟨hwitness_1,hwitness_2⟩⟩
 
     exact opt_ne_of_mem_imp_not_mem hwitness_1 hwitness_2
-theorem n_rfind'_obtain_prop'
+theorem nrfind'_obtain_prop'
 (h:(evaln O (s+1) (rfind' cf) x).isSome) :
 0∈(evaln O (s+1-(rfind'_obtain (en2e h))) cf (Nat.pair x.l (rfind'_obtain (en2e h)+x.r)))
 ∧ (∀ j ≤ rfind'_obtain (en2e h), (evaln O (s+1-j) cf  (Nat.pair x.l (j+x.r))).isSome)
@@ -731,6 +731,15 @@ theorem nrfind'_obtain_prop_6 (h:(evaln O (s+1) (rfind' cf) x).isSome) :
   have rop3' := rop3 (j2+j) (add_lt_of_lt_sub hj2)
   rwa [show s + 1 - j - j2=s + 1 - (j2 + j) from Eq.symm (Simproc.sub_add_eq_comm (s + 1) j2 j)]
 
+theorem nrfind'_obtain_prop_4' (h:(evaln O (s+1) (rfind' cf) x).isSome) :
+∀ j ≤ rfind'_obtain (en2e h), (evaln O (s+1-j) (rfind' cf) (Nat.pair x.l (j+x.r))).isSome := by
+  rw [←nrop_eq_rop h]
+  exact fun j a ↦ nrfind'_obtain_prop_4 h j a
+theorem nrfind'_obtain_prop_6' (h:(evaln O (s+1) (rfind' cf) x).isSome) :
+∀ j ≤ rfind'_obtain (en2e h),
+(rfind'_obtain (en2e h))+x.r ∈ (evaln O (s+1-j) (rfind' cf) (Nat.pair x.l (j+x.r)))  := by
+  rw [←nrop_eq_rop h]
+  exact fun j a ↦ nrfind'_obtain_prop_6 h j a
 
 -- /--
 -- we define the use `max(all naturals queried to the oracle)+1`
@@ -894,11 +903,11 @@ def CodeNatK.induction
 -- TODO: replace ind with an explicit induction scheme
 private def ind : ℕ → Code → ℕ
 | 0, _ => 0
-| s+1, zero => 0
-| s+1, succ => 0
-| s+1, left => 0
-| s+1, right => 0
-| s+1, oracle => 0
+| _+1, zero => 0
+| _+1, succ => 0
+| _+1, left => 0
+| _+1, right => 0
+| _+1, oracle => 0
 | s+1, pair cf cg => ind (s+1) cf + ind (s+1) cg
 | s+1, comp cf cg => ind (s+1) cf + ind (s+1) cg
 -- | 0, prec cf cg => ind 0 cf + ind 0 cg
@@ -1169,6 +1178,9 @@ theorem usen_mono_contra : ∀ {k₁ k₂ c n}, k₁ ≤ k₂ → usen O c k₂ 
 theorem usen_mono_dom : ∀ {k₁ k₂ c n}, k₁ ≤ k₂ → (usen O c k₁ n).isSome → (usen O c k₂ n).isSome := by
   intro k1 k2 c n k1k2 h1
   exact Option.isSome_of_mem (usen_mono k1k2 (Option.get_mem h1))
+theorem evaln_mono_dom : ∀ {k₁ k₂ c n}, k₁ ≤ k₂ → (evaln O k₁ c n).isSome → (evaln O k₂ c n).isSome := by
+  intro k1 k2 c n k1k2 h1
+  exact Option.isSome_of_mem (evaln_mono k1k2 (Option.get_mem h1))
 -- theorem Part.dom_imp_ex_some {x:Part ℕ} (h:x.Dom) : ∃ y, x=Part.some y := by
 --   have h0 := Part.dom_iff_mem.mp h
 --   rcases h0 with ⟨y,hy⟩
@@ -1236,10 +1248,10 @@ theorem use_dom_iff_eval_dom : (use O c x).Dom ↔ (eval O c x).Dom := by
       -- have := rop2 0 (zero_le ro)
       have := rop2
       aesop? says
-        simp_all only [le_refl, ro]
+        simp_all only [ro]
         split
-        next x_1 b heq => simp_all only [le_refl, Part.some_dom]
-        next x_1 b heq => simp_all only [le_refl, Part.some_dom]
+        next x_1 b heq => simp_all only [Part.some_dom]
+        next x_1 b heq => simp_all only [Part.some_dom]
     | succ n ih =>
       simp (config:={singlePass:=true}) [listrwgen]
       simp
@@ -1288,6 +1300,18 @@ lemma usen_sing (h1:a∈(usen O c s1 x)) (h2:b∈(usen O c s2 x)): a=b := by
     have := usen_mono (Nat.le_of_not_ge h) h2
     simp_all only [Option.mem_def, Option.some.injEq]
 lemma usen_sing' : (usen O c s1 x).get h1 = (usen O c s2 x).get h2 := usen_sing (Option.get_mem h1) (Option.get_mem h2)
+lemma usen_mono'
+(h1:(usen O c s1 x).isSome)
+(h2:s1≤s2)
+: (usen O c s2 x) = (usen O c s1 x) := by
+  have := usen_mono h2 (Option.get_mem h1)
+  simp_all only [Option.mem_def, Option.some_get]
+lemma evaln_mono'
+(h1:(evaln O s1 c x).isSome)
+(h2:s1≤s2)
+: (evaln O s2 c x) = (evaln O s1 c x) := by
+  have := evaln_mono h2 (Option.get_mem h1)
+  simp_all only [Option.mem_def, Option.some_get]
 lemma evaln_rfind_prop_aux :
 (∃y,y+x.r∈evaln O (k+1) (rfind' cf) x)
 ↔  ¬ (evaln O (k+1) (rfind' cf) x=Option.none) := by
@@ -1634,7 +1658,7 @@ theorem usen_rfind_prop' (hu:(usen O (rfind' cf) (k + 1) n).isSome):
 := by
   intro j hjro
   rw (config:={occs:=.pos [2]}) [add_comm]
-  exact en2un ((n_rfind'_obtain_prop (un2en hu)).right.left j hjro)
+  exact en2un ((nrfind'_obtain_prop' (un2en hu)).right.left j hjro)
 theorem usen_rfind_prop (h:x ∈ usen O cf.rfind' (k + 1) n):
 ∀j≤rfind'_obtain (usen_rfind_prop_aux h),
   ∃y,y∈ (usen O cf (k + 1 - j) (Nat.pair n.l (n.r+j)))
@@ -1728,7 +1752,7 @@ lemma unrpeq2 :
 ((evaln O (k + 1) cf x).get evalnbasedom = 0)
 ↔
 ((evaln O (k + 1) cf.rfind' x).get evaln_ver_dom - x.r=0) := by
-  have h1 := n_rfind'_obtain_prop evaln_ver_dom
+  have h1 := nrfind'_obtain_prop' evaln_ver_dom
   have h2 := h1.left
   have h4 := h1.right.right
 
@@ -1772,6 +1796,9 @@ lemma unrpeq0 :
   constructor
 -- mp
   intro h
+  have evaln_ver_dom:(evaln O (k + 1) cf.rfind' x).isSome := by
+    have : (usen O cf.rfind' (k + 1) x).isSome := by exact Option.isSome_of_mem h
+    exact un2en this
   simp [usen] at h
   have xlek : x≤k := by
     contrapose h;
@@ -1783,35 +1810,36 @@ lemma unrpeq0 :
   have evaln_base_dom : (evaln O (k+1) cf x).isSome := by contrapose h; simp at h; simp [h]
   simp [isSome.bind evaln_base_dom] at h ⊢
   simp [evaln_base_dom]
-  have evaln_ver_dom:(evaln O (k + 1) cf.rfind' x).isSome := by
-    simp [evaln]
-    simp [xlek]
-    simp [isSome.bind evaln_base_dom] at ⊢
 
-    contrapose h; simp at h;
-    simp [evaln] at h
-    simp [xlek] at h
+    -- contrapose h; simp at h;
+    -- simp [evaln] at h
+    -- simp [xlek] at h
+  use evaln_ver_dom
+  -- unrpeq2
+  simp_all [@unrpeq2 O k cf x evaln_base_dom evaln_ver_dom]
+    -- simp [h]
+  -- simp [isSome.bind evaln_ver_dom] at h ⊢
+  -- simp [evaln_base_dom]
 
-    simp [h]
-  simp [isSome.bind evaln_base_dom] at h ⊢
-  simp [evaln_base_dom]
-
-  have evalnbasedom : (evaln O (k + 1) cf x).isSome := by
-    contrapose h; simp at h; simp [h]
-    simp_all only [Option.isSome_none, Bool.false_eq_true]
-  exact h
+  -- have evalnbasedom : (evaln O (k + 1) cf x).isSome := by
+  --   contrapose h; simp at h; simp [h]
+  --   simp_all only [Option.isSome_none, Bool.false_eq_true]
+  -- exact h
 
 
 -- mpr
   intro h
-  rcases h with ⟨h1,h2⟩
+  rcases h with ⟨h1,h2,h3⟩
+  simp at h3
   simp [usen]
   -- #check
   have xlek : x≤k := le_of_lt_succ (evaln_bound (Option.get_mem h1))
   simp [xlek]
   simp [isSome.bind (en2un h1)]
   simp [isSome.bind (h1)]
-  exact h2
+
+  -- #check @unrpeq2 O k cf x h1 h2
+  simp_all [@unrpeq2 O k cf x h1 h2]
 
 lemma unrpeq1 : (y∈(do
   guard (x≤k);
@@ -1845,11 +1873,16 @@ lemma unrpeq1 : (y∈(do
   have evaln_ver_dom : (evaln O (k+1) (rfind' cf) x).isSome := by contrapose h; simp at h; simp [h]
   simp [isSome.bind evaln_ver_dom] at h
   use evaln_ver_dom
+
   intro h
-  rcases h with ⟨h1,h2,h3⟩
-  simp [h1]
-  simp [isSome.bind h2]
-  exact h3
+  rcases h with ⟨h1,h2⟩
+  have xlek : x≤k := by
+    simp [evaln] at h1
+    contrapose h1;
+    simp [h1]
+  simp [xlek]
+  simp [isSome.bind h1]
+  exact h2
 lemma lemlemlem2
 (a:ℕ)
 (h1 : (evaln O (k + 1) cf x).isSome)
@@ -1869,8 +1902,10 @@ lemma lemlemlem2
 -- (hkk : (forIn (List.range (nn + 1)).reverse (a.max h57) fun i r ↦
 --     (usen O cf (kk + 1 - i) (Nat.pair n.l (i + (1 + n.r)))).bind fun a ↦ some (ForInStep.yield (r.max a))) =
 --   some x)
-(hkk:(forIn (List.range (roM1 + 1)).reverse (a.max ((usen O cf (k + 1) x).get (en2un h1))) fun i r ↦
-    (usen O cf (k + 1 - i) (Nat.pair x.l (i + (x.r + 1)))).bind fun a ↦ some (ForInStep.yield (r.max a)))=some y)
+-- (hkk:(forIn (List.range (roM1 + 1)).reverse (a.max ((usen O cf (k + 1) x).get (en2un h1))) fun i r ↦
+--     (usen O cf (k + 1 - i) (Nat.pair x.l (i + (x.r + 1)))).bind fun a ↦ some (ForInStep.yield (r.max a)))=some y)
+-- (hkk:(forIn (List.range (roM1 + 1)).reverse (a.max ((usen O cf (k + 1) x).get (en2un h1))) fun i r ↦
+--     (usen O cf (k + 1 - i) (Nat.pair x.l (i + (x.r + 1)))).bind fun a ↦ some (ForInStep.yield (r.max a)))=some y)
 :
 (forIn (List.range (roM1 + 1)).reverse (a.max ((usen O cf (k + 1) x).get (en2un h1))) fun i r ↦
     (usen O cf (k + 1 - i) (Nat.pair x.l (i + (x.r + 1)))).bind fun a ↦ some (ForInStep.yield (r.max a)))
@@ -1900,8 +1935,8 @@ lemma lemlemlem2
     -- intro h6
 
     simp (config:={singlePass:=true}) [listrwgen]
-    simp (config:={singlePass:=true}) [listrwgen] at hkk
-    simp at hkk
+    -- simp (config:={singlePass:=true}) [listrwgen] at hkk
+    -- simp at hkk
     simp
 
     have urom:(usen O cf (k +1 - (roM2+1)) (Nat.pair x.l ((roM2+1) + 1 + x.r))).isSome := by
@@ -1912,15 +1947,18 @@ lemma lemlemlem2
     simp at urom
     rw [add_assoc] at urom
     rw (config:={occs:=.pos [3]}) [add_comm] at urom
-    simp [isSome.bind urom] at hkk ⊢
+    -- simp [isSome.bind urom] at hkk ⊢
+    simp [isSome.bind urom]
 
     have urom2:(usen O cf (k +1 - (roM2+1)) (Nat.pair x.l ((roM2+1) + x.r))).isSome := nrop2 (roM2+1) (le_add_right (roM2 + 1) 1)
     simp at urom2
-    simp [isSome.bind urom2] at hkk ⊢
+    -- simp [isSome.bind urom2] at hkk ⊢
+    simp [isSome.bind urom2]
 
 
 
-    have iihh1 := @iihh urom2 (a.max ((usen O cf (k - roM2) (Nat.pair x.l (roM2 + 1 + (x.r + 1)))).get urom)) ?_ ?_
+    -- have iihh1 := @iihh urom2 (a.max ((usen O cf (k - roM2) (Nat.pair x.l (roM2 + 1 + (x.r + 1)))).get urom)) ?_ ?_
+    have iihh1 := @iihh urom2 (a.max ((usen O cf (k - roM2) (Nat.pair x.l (roM2 + 1 + (x.r + 1)))).get urom)) ?_
     -- have iihh1 := @iihh ?_ ((use O cf (Nat.pair x.l (nnn + 1 + x.r))).get dom1) (a.max h5) ?_
     simp at iihh1
     rotate_left
@@ -1929,10 +1967,10 @@ lemma lemlemlem2
       intro j hj
       have := nrop2 j (le_add_right_of_le hj)
       exact this
-    ·
-      simp
-      simp [Nat.max_comm] at hkk
-      exact hkk
+    -- ·
+    --   simp
+    --   simp [Nat.max_comm] at hkk
+    --   exact hkk
 
 
 
@@ -1993,7 +2031,7 @@ y∈(do
   generalize base'=base
   clear base'
 
-  induction (evaln O (k + 1) cf.rfind' x).get h2 - x.r generalizing y base h2 x with
+  induction (evaln O (k + 1) cf.rfind' x).get h2 - x.r generalizing base h2 x with
   | zero =>
     simp
     simp [isSome.bind $ en2un h1]
@@ -2010,8 +2048,9 @@ y∈(do
     have evalnindtdom := un2en usenindtdom
     have nrfindt := nrf usenindtdom
 
-    have nrop := n_rfind'_obtain_prop h2
-    rw [asd] at nrop
+    have nrop := nrfind'_obtain_prop' h2
+    have nrop6 := nrfind'_obtain_prop_6' h2
+    rw [asd] at nrop nrop6
     have nrop2 : (∀ j ≤ roM1 + 1, (usen O cf (k + 1 - j) (Nat.pair x.l (j + x.r))).isSome) := fun j a ↦ en2un (nrop.right.left j a)
     have asddom : (usen O cf (k - roM1) (Nat.pair x.l (roM1 + 1 + x.r))).isSome := by
       have := nrop2 (roM1+1) (le_rfl)
@@ -2025,7 +2064,6 @@ y∈(do
     have ih1 := @ih
       (Nat.pair x.l (x.r+1))
       -- (if roM1 = 0 then (base.max ((usen O cf (k + 1) x).get (en2un h1))) else (((usen O cf (k + 1) x).get (en2un h1)).max ((usen O cf.rfind' k (Nat.pair x.l (x.r + 1))).get usenindtdom)))
-      (y)
       ?_
       ?_
       ?_
@@ -2055,8 +2093,18 @@ y∈(do
     ·
       rw [←h]
       if hroM1:roM1=0 then
-        simp [hroM1]
-        have : ((usen O cf.rfind' k (Nat.pair x.l (x.r + 1))).get usenindtdom) = ((usen O cf (k + 1) (Nat.pair x.l (x.r + 1))).get (en2un aux0)) := by sorry
+        simp [hroM1] at ⊢ nrop6 nrop
+        have nropleft := nrop.left
+        rw [add_comm] at nropleft
+        have : ((usen O cf.rfind' k (Nat.pair x.l (x.r + 1))).get usenindtdom) = ((usen O cf (k + 1) (Nat.pair x.l (x.r + 1))).get (en2un aux0)) := by
+          have := nrop6 1 (le_rfl)
+          simp at this
+          have : k=k-1+1 := by exact nrf_aux usenindtdom
+          simp (config:={singlePass:=true}) [this]
+          simp [usen]
+          simp [←this]
+          simp [nropleft]
+          exact usen_sing'
         rw [this]
       else
         clear ih
@@ -2066,21 +2114,52 @@ y∈(do
         have : (usen O cf.rfind' k (Nat.pair x.l (x.r + 1 + 1))).isSome := by
           have := nrop2 2 (le_add_left 2 (roM1 - 1))
           have := usen_mono_dom (show k + 1 - 2 ≤ k from by grind) this
-
+          have := nrop6 (1+1) (le_add_left (1 + 1) (roM1 - 1))
+          simp only [reduceSubDiff] at this
+          have := Option.isSome_of_mem this
+          simp at this
+          rw [add_assoc]
+          simp
+          rw [add_comm]
+          have := en2un this
+          have := usen_mono_dom (show k-1≤k from sub_le k 1) this
           exact this
-          sorry
         simp [isSome.bind this]
         apply congrArg
         apply congrArg
 
-        have : k=k-1+1 := by sorry
-        simp (config:={singlePass:=true}) [this]
-        rw [usen.eq_10]
+        have kkk : k=k-1+1 := by exact nrf_aux usenindtdom
+        simp [show (usen O cf.rfind' k (Nat.pair x.l (x.r + 1))) = (usen O cf.rfind' (k-1+1) (Nat.pair x.l (x.r + 1))) from congrFun
+          (congrArg (usen O cf.rfind') kkk) (Nat.pair x.l (x.r + 1))]
 
-        sorry
+        -- rw [this]
+        -- simp (config:={singlePass:=true}) [this]
+        simp [usen]
+
+        have auxdom1 : (evaln O k cf (Nat.pair x.l (x.r + 1))).isSome := by
+          have := nrop.right.left 1 (le_add_left 1 (roM1 - 1 + 1))
+          simp at this
+          rwa [add_comm]
+        have r1 : (evaln O k cf (Nat.pair x.l (x.r + 1))).get auxdom1 ≠ 0 := by
+          have := nrop.right.right 1 (one_lt_succ_succ (roM1 - 1))
+          simp at this
+          rw [add_comm] at this
+          contrapose this
+          simp at this ⊢
+          rw [←this]
+          simp
+        simp at this
+        rw [add_comm] at this
+        simp [←kkk]
+        simp [r1]
+        apply congr
+        apply congr
+        exact rfl
+        exact usen_sing'
+        exact usen_sing'
 
     simp at ih1
-    have := @lemlemlem2 O k cf x roM1 y (asddom) base h1 (en2un h1) (en2un aux0) (fun j a ↦ nrop2 j a) ih1
+    have := @lemlemlem2 O k cf x roM1 (asddom) base h1 (en2un h1) (en2un aux0) (fun j a ↦ nrop2 j a)
     rw [this] at ih1
     rw [ih1]
 
@@ -2091,423 +2170,198 @@ y∈(do
   use h1
   use h2
 
+  let base' := 0
+  rw [show 0=base' from rfl] at h3
+  have :
+  (if (evaln O (k + 1) cf.rfind' x).get h2 - x.r = 0 then (usen O cf (k + 1) x) else
+    (usen O cf.rfind' (k + 1 - 1) (Nat.pair x.l (x.r + 1))).bind fun usen_indt ↦
+      some (((usen O cf (k + 1) x).get (en2un h1)).max usen_indt))
+    =
+  (if (evaln O (k + 1) cf.rfind' x).get h2 - x.r = 0 then (some (base'.max ((usen O cf (k + 1) x).get (en2un h1)))) else
+    (usen O cf.rfind' (k + 1 - 1) (Nat.pair x.l (x.r + 1))).bind fun usen_indt ↦
+      some (base'.max $ ((usen O cf (k + 1) x).get (en2un h1)).max usen_indt))
+  := by
+    simp [show base'=0 from rfl]
+  rw [this]
+  clear this
+
+  have asd : rfind'_obtain (en2e h2) = (evaln O (k + 1) cf.rfind' x).get h2 - x.r := by
+    simp [rfind'_obtain]
+    rw [evaln_eq_eval h2]
+
+
   revert h3
-  induction (evaln O (k + 1) cf.rfind' x).get h2 - x.r generalizing y with
+  revert asd
+  generalize base'=base
+  clear base'
+
+  induction (evaln O (k + 1) cf.rfind' x).get h2 - x.r generalizing base h2 x with
   | zero =>
     simp
     simp [isSome.bind $ en2un h1]
   | succ roM1 ih =>
     simp
     simp at ih
+    intro asd
     intro h
     simp (config:={singlePass:=true}) [listrwgen] at h
     simp at h
 
-    have asddom : (usen O cf (k - roM1) (Nat.pair x.l (roM1 + 1 + x.r))).isSome := by sorry
+
+
+    -- have asddom : (usen O cf (k - roM1) (Nat.pair x.l (roM1 + 1 + x.r))).isSome := by sorry
+    -- simp [isSome.bind asddom] at h
+    have nrop := nrfind'_obtain_prop' h2
+    have nrop4 := nrfind'_obtain_prop_4' h2
+    have nrop6 := nrfind'_obtain_prop_6' h2
+    rw [asd] at nrop nrop6 nrop4
+    have nrop2 : (∀ j ≤ roM1 + 1, (usen O cf (k + 1 - j) (Nat.pair x.l (j + x.r))).isSome) := fun j a ↦ en2un (nrop.right.left j a)
+    have asddom : (usen O cf (k - roM1) (Nat.pair x.l (roM1 + 1 + x.r))).isSome := by
+      have := nrop2 (roM1+1) (le_rfl)
+      simp at this
+      exact this
     simp [isSome.bind asddom] at h
 
-    sorry
-
-
-
-
-
-
-
-
-
--- att4
-  sorry
-
-
-
-
-    constructor
-    simp
-
-    intro h
-    have hdom : (usen O (rfind' cf) (k + 1) x).isSome := by exact Option.isSome_of_mem h
-    have h_og := h
-    rcases nrf hdom with ⟨xlek,usen_base_dom,evaln_base_dom⟩
-    have h := nrfh h
-
-
-    -- simp at ⊢
-    -- have : (usen O cf.rfind' (k + 1) x).isSome := by exact
-    have evaln_ver_dom := un2en $ Option.isSome_of_mem h_og
-    -- #check
-    simp [isSome.bind evaln_ver_dom]
-    -- let h7 := (evaln O (k + 1) cf.rfind' x).get evaln_ver_dom
-    -- rw [show (evaln O (k + 1) cf.rfind' x).get evaln_ver_dom = h7 from rfl]
-    -- simp [usen] at h
-    -- have xlek : x≤k := by contrapose h; simp [h, Option.bind]
-    -- simp [xlek] at h ⊢
-    -- have usen_base_dom := nrf_usen_base_dom hdom
-    -- simp [isSome.bind usen_base_dom] at h
-    -- have evaln_base_dom : (evaln O (k + 1) cf x).isSome := by contrapose h; simp at h; simp [h]
-    -- simp [isSome.bind evaln_base_dom] at h ⊢
-    simp [show x≤k from sorry]
-    -- att3
-    expose_names
-    let base:=0
-    have rwbase : 0=base := rfl
-    have : (if (evaln O (k + 1) cf x).get ((nrf (Option.isSome_of_mem h_1)).right.right) = 0 then usen O cf (k + 1) x else (usen O cf.rfind' (k + 1 - 1) (Nat.pair x.l (x.r + 1))).bind fun usen_indt ↦ some (((usen O cf (k + 1) x).get ((nrf (Option.isSome_of_mem h_1)).right.left)).max usen_indt))
-      =
-      Nat.max <$> some base <*>  (if (evaln O (k + 1) cf x).get ((nrf (Option.isSome_of_mem h_1)).right.right) = 0 then usen O cf (k + 1) x else (usen O cf.rfind' (k + 1 - 1) (Nat.pair x.l (x.r + 1))).bind fun usen_indt ↦ some (((usen O cf (k + 1) x).get ((nrf (Option.isSome_of_mem h_1)).right.left)).max usen_indt)) := by sorry
-    rw [this] at h
-    clear this
-
-    have h :
-    Nat.max <$> some base <*>  (if(evaln O (k + 1) cf.rfind' x).get evaln_ver_dom -x.r=0 then usen O cf (k + 1) x else (usen O cf.rfind' (k + 1 - 1) (Nat.pair x.l (x.r + 1))).bind fun usen_indt ↦ some (((usen O cf (k + 1) x).get ((nrf (Option.isSome_of_mem h_1)).right.left)).max usen_indt)) =some y := by sorry
-    -- have h2 : (some y)= (some y).max 0 := by
-    -- generalize 0=base at ⊢
-    rw [rwbase]
-    -- rw [show (evaln O (k + 1) cf.rfind' x).get evaln_ver_dom -x.r = (evaln O (k + 1) cf.rfind' x).get evaln_ver_dom -x.r-1+1 from by grind]
-    -- revert contra_for_base_case
-    revert h
-    have basecaseaux (next_halt:(evaln O k cf.rfind' (Nat.pair x.l (x.r + 1))).isSome): ((evaln O (k + 1) cf.rfind' x).get evaln_ver_dom -x.r=0)→ (evaln O (k + 1) cf  x).get evaln_base_dom =0 := by
-      contrapose
-
-      intro h
-      simp [evaln]
-      simp [h]
-      have := nrfind'_geq_xr (next_halt)
+    have usenindtdom : (usen O cf.rfind' k (Nat.pair x.l (x.r + 1))).isSome := by
+      have := nrop4 1 (le_add_left 1 roM1)
       simp at this
-      -- grind -- this works
-      sorry
-    -- revert basecaseaux
-    generalize base=gbase at h ⊢
-    -- induction (evaln O (k + 1) cf.rfind' x).get evaln_ver_dom -x.r-1 generalizing base with
-    induction (evaln O (k + 1) cf.rfind' x).get evaln_ver_dom -x.r generalizing gbase with
-    | zero =>
-      -- intro contra_for_base_case
-      simp (config:={singlePass:=true}) [listrwgen]
-      simp
+      rw [add_comm]
+      exact en2un this
+    have evalnindtdom := un2en usenindtdom
+    have nrfindt := nrf usenindtdom
 
-      -- non 2 version
-      simp [isSome.bind usen_base_dom]
-      intro basecaseaux
-      -- simp [basecaseaux]
-
-      simp_all
-
-      -- problem is max includes indt in h, while goal doesnt
-      -- non 2 version
-
-
-      have usen_nextbase_dom : (usen O cf k (Nat.pair x.l (1 + x.r))).isSome := by
-        rw [add_comm]
-        exact usen_nextbase_dom
-      simp [isSome.bind usen_nextbase_dom]
-      simp [isSome.bind usen_base_dom]
-      simp (config:={singlePass:=true}) [nrf_aux usen_indt_dom ] at *
-
-      simp [usen] at h
-      have evaln_nextbase_dom := un2en usen_nextbase_dom
-      have evaln_nextbase_zero : (evaln O (k-1 + 1) cf (Nat.pair x.l (x.r+1))).get evaln_nextbase_dom = 0 := by
-        contrapose contra_for_base_case
-        simp
-        simp (config:={singlePass:=true}) [nrf_aux usen_indt_dom ] at evaln_ver_dom evaln_base_dom
-        simp (config:={singlePass:=true}) [evaln] at evaln_ver_dom
-        simp [xlek] at evaln_ver_dom
-        simp [isSome.bind evaln_base_dom] at evaln_ver_dom
-
-
-        have : evaln O (k - 1 + 1 + 1) cf.rfind' x = some x.r := by
-          simp (config:={singlePass:=true}) [evaln]
-          simp [xlek]
-          simp [isSome.bind evaln_base_dom]
-          intro h1
-          contradiction
-        sorry
-      -- simp [add_comm] at evaln_nextbase_zero
-
-      simp [evaln_nextbase_zero] at h
-      -- sorry
-      rw [←h]
-      rw [←Nat.max_assoc]
-      rw [Nat.max_comm]
-      rw (config:={occs:=.pos [2]}) [Nat.max_comm]
-      simp [add_comm]
-
-    | succ roM1 ih =>
-      simp (config:={singlePass:=true}) [listrwgen]
-      simp
-
-
-
-      have hehe_dom : (usen O cf (k - roM1) (Nat.pair x.l (roM1 + 1 + x.r))).isSome := by
-      -- have hehe_dom : (usen O cf (k - (roM1 + 1)) (Nat.pair x.l (roM1 + 2 + x.r))).isSome := by
-
-        sorry
-      simp [isSome.bind hehe_dom] at h ⊢
-      -- intro hhh
-      simp at ih
-
-      -- sorry
-      have := ih (gbase.max ((usen O cf (k - roM1) (Nat.pair x.l (roM1 + 1 + x.r))).get hehe_dom)) ?_ ?_
-      -- have := ih (base.max ((usen O cf (k - (roM1 + 1)) (Nat.pair x.l (roM1 + 2 + x.r))).get hehe_dom)) ?_
-      -- have := ih (h_og) (base.max ((usen O cf (k - (roM1 + 1)) (Nat.pair x.l (roM1 + 2 + x.r))).get hehe_dom)) ?_
-      rotate_left
-      ·
-        -- aesop
-        sorry
-      ·
-
-        intro g1
-        intro g2
-
-        sorry
-      exact fun h ↦ this
-      -- problem with non2: need to show rom1≠0,
-      -- exact this
-      exact this
-      -- exact this hhh
-      sorry
-
-      exact fun contra_for_base_case ↦
-        ih (base.max ((usen O cf (k - (roM1 + 1)) (Nat.pair x.l (roM1 + 2 + x.r))).get hehe_dom))
-          contra_for_base_case
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    sorry
-    -- att2
-    cases hevaln_base:(evaln O (k + 1) cf x).get evaln_base_dom with
-    | zero =>
-      have : (evaln O (k + 1) cf.rfind' x).get evaln_ver_dom = 0 := by sorry
-      simp [this, isSome.bind usen_base_dom]
-      simp [hevaln_base] at h
-      simp [usen] at h_og
-      sorry
-      simp_all [hevaln_base, this]
-      -- simp_all [this, isSome.bind usen_base_dom]
-
-      sorry
-      simp_all only [↓reduceIte]
-    | succ _ =>
-    simp [hevaln_base] at h ⊢
-    have usen_indt_dom : ((usen O cf.rfind' k (Nat.pair x.l (x.r + 1)))).isSome := by contrapose h; simp at h; simp [h]
-
-    -- have nrf2 := @nrf O cf k (Nat.pair x.l (x.r + 1)) exact?%
-    have nrf2 := nrf (usen_indt_dom)
-    have nrf2_aux := nrf_aux (usen_indt_dom)
-
-    have usen_nextbase_dom : (usen O cf k (Nat.pair x.l ( x.r+1))).isSome := by
-      exact nrf2.right.left
-    simp [isSome.bind usen_indt_dom] at h ⊢
-    -- simp (config:={singlePass:=true}) [listrwgen]
-    -- simp
-
-    have contra_for_base_case : (evaln O (k + 1) cf.rfind' x).get evaln_ver_dom -x.r ≠ 0 := by
-      simp [evaln]
-      simp [hevaln_base]
-      have := nrfind'_geq_xr (un2en usen_indt_dom)
+    have aux0 : (evaln O (k + 1) cf (Nat.pair x.l (x.r + 1))).isSome := by
+      have := nrop.right.left 1 (le_add_left 1 roM1)
       simp at this
-      exact Nat.sub_ne_zero_iff_lt.mpr this
+      rw [add_comm] at this
+      exact evaln_mono_dom (show k≤k+1 from le_add_right k 1) this
 
-    -- cases hevaln_base2:(evaln O (k + 1) cf x).get evaln_base_dom with
-    -- | zero =>
-    --   have : (evaln O (k + 1) cf.rfind' x).get evaln_ver_dom = 0 := by sorry
-    --   simp [this, isSome.bind usen_base_dom]
-    --   simp [hevaln_base] at h
-    --   simp [usen] at h_og
-    --   sorry
-    --   simp_all [hevaln_base, this]
-    --   -- simp_all [this, isSome.bind usen_base_dom]
-
-    --   sorry
-    --   simp_all only [↓reduceIte]
-    -- | succ _ =>
-    -- have contra_for_base_case2 : (evaln O (k + 1) cf.rfind' x).get evaln_ver_dom -x.r -1 ≠ 0 := by
-    --   simp [evaln]
-    --   simp [hevaln_base]
-    --   simp (config:={singlePass:=true}) [nrf2_aux]
-    --   simp [evaln]
-
-    --   have
-    --   have := nrfind'_geq_xr (un2en usen_indt_dom)
-    --   simp at this
-
-      -- exact Nat.sub_ne_zero_iff_lt.mpr this
-
-    rw [show ((usen O cf (k + 1) x).get usen_base_dom).max ((usen O cf.rfind' k (Nat.pair x.l (x.r + 1))).get usen_indt_dom)= (((usen O cf (k + 1) x).get usen_base_dom).max ((usen O cf.rfind' k (Nat.pair x.l (x.r + 1))).get usen_indt_dom)).max 0 from by simp ] at h
-    generalize 0=base at h ⊢
-    -- rw [show (evaln O (k + 1) cf.rfind' x).get evaln_ver_dom -x.r = (evaln O (k + 1) cf.rfind' x).get evaln_ver_dom -x.r-1+1 from by grind]
-    revert contra_for_base_case
-
-    -- induction (evaln O (k + 1) cf.rfind' x).get evaln_ver_dom -x.r-1 generalizing base with
-    induction (evaln O (k + 1) cf.rfind' x).get evaln_ver_dom -x.r generalizing base with
-    | zero =>
-      -- intro contra_for_base_case
-      simp (config:={singlePass:=true}) [listrwgen]
+    have ih1 := @ih
+      (Nat.pair x.l (x.r+1))
+      ?_
+      ?_
+      (base.max ((usen O cf (k+1) x).get (en2un h1)))
+      ?_
+      ?_
+      -- ?_
+      -- -- (base.max ((usen O cf (k - roM1) (Nat.pair x.l (roM1 + 1 + x.r))).get asddom))
+      -- ?_
+      -- ?_
+    rotate_left
+    ·
+      exact Option.isSome_of_mem (evaln_mono (show k≤k+1 from le_add_right k 1) (Option.get_mem evalnindtdom))
+    ·
+      exact aux0
+    ·
+-- DUPLICATED
+      simp [rfind'_obtain] at asd ⊢
+      have := rfind'_obtain_prop_6 (en2e h2)
+      simp [rfind'_obtain] at this
+      rw [asd] at this
+      have := this 1 (le_add_left 1 roM1)
+      simp [Nat.add_comm] at this
+      have := (Part.eq_get_iff_mem (en2e evalnindtdom)).mpr this
+      rw [← this]
+      rw [←add_assoc]
+      simp only [reduceSubDiff, add_tsub_cancel_left]
+    ·
+      -- have := @lemlemlem2 O k cf x roM1 y (asddom) base h1 (en2un h1) (en2un aux0) (fun j a ↦ nrop2 j a) h
       simp
+      -- simp at ih1
+      have := @lemlemlem2 O k cf x roM1 (asddom) base h1 (en2un h1) (en2un aux0) (fun j a ↦ nrop2 j a)
+      -- rw [this] at ih1
+      rw [this]
+      exact h
+      -- rw [ih1]
 
-      -- non 2 version
-      simp [isSome.bind usen_base_dom]
-      -- problem is max includes indt in h, while goal doesnt
-      -- non 2 version
+    simp at ih1
+    -- have := @lemlemlem2 O k cf x roM1 y (asddom) base h1 (en2un h1) (en2un aux0) (fun j a ↦ nrop2 j a) h
+    -- rw [this] at ih1
+    -- rw [←this]
+    -- rw [←ih1] at h
+    rw [←ih1]
 
+    -- sorry
+    have usenindtdom : (usen O cf.rfind' k (Nat.pair x.l (x.r + 1))).isSome := by
+      have := nrop4 1 (le_add_left 1 roM1)
+      rw [add_comm]
+      exact en2un this
+    simp [isSome.bind usenindtdom]
+-- TODO:DUPLICATED (the below is duplciated from above)
+    if hroM1:roM1=0 then
+      simp [hroM1]
 
-      have usen_nextbase_dom : (usen O cf k (Nat.pair x.l (1 + x.r))).isSome := by
+      simp [hroM1] at ⊢ nrop6 nrop
+      have nropleft := nrop.left
+      rw [add_comm] at nropleft
+      have : ((usen O cf.rfind' k (Nat.pair x.l (x.r + 1))).get usenindtdom) = ((usen O cf (k + 1) (Nat.pair x.l (x.r + 1))).get (en2un aux0)) := by
+        have := nrop6 1 (le_rfl)
+        simp at this
+        have : k=k-1+1 := by exact nrf_aux usenindtdom
+        simp (config:={singlePass:=true}) [this]
+        simp [usen]
+        simp [←this]
+        simp [nropleft]
+        exact usen_sing'
+      rw [this]
+    else
+      clear ih
+      simp [hroM1]
+      have roM1M1: roM1 = roM1-1+1 := by exact Eq.symm (succ_pred_eq_of_ne_zero hroM1)
+      simp (config:={singlePass:=true}) [roM1M1] at *
+      have : (usen O cf.rfind' k (Nat.pair x.l (x.r + 1 + 1))).isSome := by
+        have := nrop2 2 (le_add_left 2 (roM1 - 1))
+        have := usen_mono_dom (show k + 1 - 2 ≤ k from by grind) this
+        have := nrop6 (1+1) (le_add_left (1 + 1) (roM1 - 1))
+        simp only [reduceSubDiff] at this
+        have := Option.isSome_of_mem this
+        simp at this
+        rw [add_assoc]
+        simp
         rw [add_comm]
-        exact usen_nextbase_dom
-      simp [isSome.bind usen_nextbase_dom]
-      simp [isSome.bind usen_base_dom]
-      simp (config:={singlePass:=true}) [nrf_aux usen_indt_dom ] at *
+        have := en2un this
+        have := usen_mono_dom (show k-1≤k from sub_le k 1) this
+        exact this
+      simp [isSome.bind this]
+      apply congrArg
+      apply congrArg
 
-      simp [usen] at h
-      have evaln_nextbase_dom := un2en usen_nextbase_dom
-      have evaln_nextbase_zero : (evaln O (k-1 + 1) cf (Nat.pair x.l (x.r+1))).get evaln_nextbase_dom = 0 := by
-        contrapose contra_for_base_case
+      have kkk : k=k-1+1 := by exact nrf_aux usenindtdom
+      simp [show (usen O cf.rfind' k (Nat.pair x.l (x.r + 1))) = (usen O cf.rfind' (k-1+1) (Nat.pair x.l (x.r + 1))) from congrFun
+        (congrArg (usen O cf.rfind') kkk) (Nat.pair x.l (x.r + 1))]
+
+      -- rw [this]
+      -- simp (config:={singlePass:=true}) [this]
+      simp [usen]
+
+      have auxdom1 : (evaln O k cf (Nat.pair x.l (x.r + 1))).isSome := by
+        have := nrop.right.left 1 (le_add_left 1 (roM1 - 1 + 1))
+        simp at this
+        rwa [add_comm]
+      have r1 : (evaln O k cf (Nat.pair x.l (x.r + 1))).get auxdom1 ≠ 0 := by
+        have := nrop.right.right 1 (one_lt_succ_succ (roM1 - 1))
+        simp at this
+        rw [add_comm] at this
+        contrapose this
+        simp at this ⊢
+        rw [←this]
         simp
-        simp (config:={singlePass:=true}) [nrf_aux usen_indt_dom ] at evaln_ver_dom evaln_base_dom
-        simp (config:={singlePass:=true}) [evaln] at evaln_ver_dom
-        simp [xlek] at evaln_ver_dom
-        simp [isSome.bind evaln_base_dom] at evaln_ver_dom
+      simp at this
+      rw [add_comm] at this
+      simp [←kkk]
+      simp [r1]
+      apply congr
+      apply congr
+      exact rfl
+      exact usen_sing'
+      exact usen_sing'
 
 
-        have : evaln O (k - 1 + 1 + 1) cf.rfind' x = some x.r := by
-          simp (config:={singlePass:=true}) [evaln]
-          simp [xlek]
-          simp [isSome.bind evaln_base_dom]
-          intro h1
-          contradiction
-        sorry
-      -- simp [add_comm] at evaln_nextbase_zero
-
-      simp [evaln_nextbase_zero] at h
-      -- sorry
-      rw [←h]
-      rw [←Nat.max_assoc]
-      rw [Nat.max_comm]
-      rw (config:={occs:=.pos [2]}) [Nat.max_comm]
-      simp [add_comm]
-
-    | succ roM1 ih =>
-      simp (config:={singlePass:=true}) [listrwgen]
-      simp
+    -- rw [←h]
+    -- rw [h]
 
 
 
-      have hehe_dom : (usen O cf (k - roM1) (Nat.pair x.l (roM1 + 1 + x.r))).isSome := by
-      -- have hehe_dom : (usen O cf (k - (roM1 + 1)) (Nat.pair x.l (roM1 + 2 + x.r))).isSome := by
-
-        sorry
-      simp [isSome.bind hehe_dom] at h ⊢
-      -- intro hhh
-
-      have := ih (base.max ((usen O cf (k - roM1) (Nat.pair x.l (roM1 + 1 + x.r))).get hehe_dom)) ?_
-      -- have := ih (base.max ((usen O cf (k - (roM1 + 1)) (Nat.pair x.l (roM1 + 2 + x.r))).get hehe_dom)) ?_
-      -- have := ih (h_og) (base.max ((usen O cf (k - (roM1 + 1)) (Nat.pair x.l (roM1 + 2 + x.r))).get hehe_dom)) ?_
-      rotate_left
-      ·
-
-        sorry
-      -- problem with non2: need to show rom1≠0,
-      -- exact this
-      exact this hhh
-      sorry
-
-      exact fun contra_for_base_case ↦
-        ih (base.max ((usen O cf (k - (roM1 + 1)) (Nat.pair x.l (roM1 + 2 + x.r))).get hehe_dom))
-          contra_for_base_case
-
-
-    simp [usen] at h
-    have xlek : x≤k := by contrapose h; simp [h, Option.bind]
-    simp [xlek] at h ⊢
-    have usen_base_dom : (usen O cf (k + 1) x).isSome := by contrapose h; simp at h; simp [h]
-    simp [isSome.bind usen_base_dom] at h
-    have evaln_base_dom : (evaln O (k + 1) cf x).isSome := by contrapose h; simp at h; simp [h]
-    simp [isSome.bind evaln_base_dom] at h ⊢
-
-    cases hevaln_base:(evaln O (k + 1) cf x).get evaln_base_dom with
-    | zero =>
-      have : (evaln O (k + 1) cf.rfind' x).get evaln_ver_dom = 0 := by sorry
-      simp [this, isSome.bind usen_base_dom]
-      simp_all only [↓reduceIte]
-    | succ _ =>
-      simp [hevaln_base] at h ⊢
-      have usen_indt_dom : ((usen O cf.rfind' k (Nat.pair x.l (x.r + 1)))).isSome := by contrapose h; simp at h; simp [h]
-      simp [isSome.bind usen_indt_dom] at h ⊢
-      simp (config:={singlePass:=true}) [listrwgen]
-      simp
-
-
-      have hehe_dom : (usen O cf (k + 1 - ((evaln O (k + 1) cf.rfind' x).get evaln_ver_dom - x.r))
-          (Nat.pair x.l ((evaln O (k + 1) cf.rfind' x).get evaln_ver_dom - x.r + x.r))).isSome := by sorry
-      simp [isSome.bind hehe_dom] at h ⊢
-
-
-    -- simp
-    induction k+1 generalizing x with
-    | zero => simp [usen,evaln]
-    | succ k ih =>
-      constructor
-      intro h
-      have h_og := h
-
-      simp at ih ⊢
-      -- have : (usen O cf.rfind' (k + 1) x).isSome := by exact
-      have evaln_ver_dom := un2en $ Option.isSome_of_mem h
-      -- #check
-      simp [isSome.bind evaln_ver_dom]
-      simp [usen] at h ih
-
-      have xlek : x≤k := by contrapose h; simp [h, Option.bind]
-      simp [xlek] at h ⊢
-      have usen_base_dom : (usen O cf (k + 1) x).isSome := by contrapose h; simp at h; simp [h]
-      simp [isSome.bind usen_base_dom] at h
-      have evaln_base_dom : (evaln O (k + 1) cf x).isSome := by contrapose h; simp at h; simp [h]
-      simp [isSome.bind evaln_base_dom] at h ⊢
-
-      cases hevaln_base:(evaln O (k + 1) cf x).get evaln_base_dom with
-      | zero =>
-        have : (evaln O (k + 1) cf.rfind' x).get evaln_ver_dom = 0 := by sorry
-        simp [this, isSome.bind usen_base_dom]
-        simp_all only [↓reduceIte]
-      | succ _ =>
-        simp [hevaln_base] at h ⊢
-        have usen_indt_dom : ((usen O cf.rfind' k (Nat.pair x.l (x.r + 1)))).isSome := by contrapose h; simp at h; simp [h]
-        simp [isSome.bind usen_indt_dom] at h ⊢
-        simp (config:={singlePass:=true}) [listrwgen]
-        simp
-
-
-        have hehe_dom : (usen O cf (k + 1 - ((evaln O (k + 1) cf.rfind' x).get evaln_ver_dom - x.r))
-            (Nat.pair x.l ((evaln O (k + 1) cf.rfind' x).get evaln_ver_dom - x.r + x.r))).isSome := by sorry
-        simp [isSome.bind hehe_dom] at h ⊢
-
-
-
-
-        have usen_indt_dom : ((usen O cf.rfind' k (Nat.pair n.l (n.r + 1)))).isSome := by contrapose h; simp at h; simp [h]
-        clear h
-        exact ih usen_indt_dom
-
-
-      sorry
-
-
-    sorry
 
 
 theorem usen_sound : ∀ {c s n x}, x ∈ usen O c s n → x ∈ use O c n
@@ -2764,14 +2618,16 @@ lemma lemlemlem
             dom2)
     rw [this]
     rw (config:={occs:=.pos [2]}) [Nat.max_comm]
-lemma lemlemlem2
-{a n:ℕ}
+lemma lemlemlem3
+{a n use_steps:ℕ}
 (h6:h5 ∈ use O cf (Nat.pair n.l (nn + 1 + n.r)))
 (rop3:∀ j ≤ nn + 1, (use O cf (Nat.pair n.l (n.r + j))).Dom)
 (h57dom:(use O cf n).Dom)
 (h57def:h57=(use O cf n).get h57dom)
 (aux123 : (use O cf n).Dom)
-(i2 : usen O cf (i1 + 1) n = some ((use O cf n).get aux123))
+-- (i2 : usen O cf (i1 + 1) n = some ((use O cf n).get aux123))
+(i2' : usen O cf (use_steps + 1) n = some ((use O cf n).get aux123))
+(lolineq : kk + 1 ≤ use_steps )
 (hf : ∀ {n x : ℕ}, x ∈ use O cf n → ∃ k, usen O cf (k + 1) n = some x)
 (hkk : (forIn (List.range (nn + 1)).reverse (a.max h57) fun i r ↦
     (usen O cf (kk + 1 - i) (Nat.pair n.l (i + (1 + n.r)))).bind fun a ↦ some (ForInStep.yield (r.max a))) =
@@ -2781,7 +2637,7 @@ lemma lemlemlem2
     (usen O cf (kk+1-i) (Nat.pair n.l (i + (1 + n.r)))).bind fun use_i ↦ some (ForInStep.yield (r.max use_i)))
     =
 ((forIn (List.range (nn + 1)).reverse (a.max h5) fun i r ↦
-    (usen O cf (kk.max i1 + 1 + 1 - i) (Nat.pair n.l (i + n.r))).bind fun usen_i ↦
+    (usen O cf (use_steps + 1 - i) (Nat.pair n.l (i + n.r))).bind fun usen_i ↦
       some (ForInStep.yield (r.max usen_i))))
  := by
   revert h6
@@ -2796,10 +2652,11 @@ lemma lemlemlem2
     -- have : h57 ∈ (use O cf n) := by exact
     --   (Part.get_eq_iff_mem h57dom).mp (_root_.id (Eq.symm h57def))
     -- rcases hf this with ⟨g1,g2⟩
-    have : i1+1≤ kk.max i1 + 1 + 1 := by grind
-    have := usen_mono this i2
-    simp at this
-    simp [this]
+-- have : i1+1≤ kk.max i1 + 1 + 1 := by grind
+-- have := usen_mono this i2
+-- simp at this
+-- simp [this]
+    -- simp [
 
 
     rcases hf h6 with ⟨g3,g4⟩
@@ -2844,7 +2701,7 @@ lemma lemlemlem2
     simp [lmao4]
     rw [add_assoc] at g4
     -- rw [show ( nnn + 1 + 1 + n.r )= nnn + 1 + (1 + n.r)) from by grind] at g4
-    #check usen_sing lmao4 g4
+
     simp [usen_sing lmao4 g4] at *
 
 
@@ -2853,7 +2710,18 @@ lemma lemlemlem2
     let rtval := (use O cf (Nat.pair n.l (nnn + 1 + n.r))).get rtdom
     -- have : use O cf (Nat.pair n.l (nnn + 1 + n.r)) = Part.some h57 := by
     --   exact Part.get_eq_iff_eq_some.mp (_root_.id (Eq.symm h57def))
-    have : ∃z,z∈(usen O cf (kk.max i1 + 1 - nnn) (Nat.pair n.l (nnn + 1 + n.r))) := by
+-- have : ∃z,z∈(usen O cf (kk.max i1 + 1 - nnn) (Nat.pair n.l (nnn + 1 + n.r))) := by
+--   contrapose hkk
+--   simp at hkk
+--   have := Option.eq_none_iff_forall_ne_some.mpr hkk
+--   simp (config:={singlePass:=true}) [listrwgen]
+--   have : (usen O cf (kk + 1 - nnn) (Nat.pair n.l (nnn + (1 + n.r)))) = Option.none := by
+--     rw [add_assoc] at this
+
+--     have ineq1: kk + 1 - nnn ≤ kk.max i1 + 1 - nnn := by grind
+--     simp [usen_mono_contra ineq1 this]
+--   simp [this]
+    have : ∃z,z∈(usen O cf (use_steps - nnn) (Nat.pair n.l (nnn + 1 + n.r))) := by
       contrapose hkk
       simp at hkk
       have := Option.eq_none_iff_forall_ne_some.mpr hkk
@@ -2861,7 +2729,7 @@ lemma lemlemlem2
       have : (usen O cf (kk + 1 - nnn) (Nat.pair n.l (nnn + (1 + n.r)))) = Option.none := by
         rw [add_assoc] at this
 
-        have ineq1: kk + 1 - nnn ≤ kk.max i1 + 1 - nnn := by grind
+        have ineq1: kk + 1 - nnn ≤ use_steps - nnn := by grind only [cases Or]
         simp [usen_mono_contra ineq1 this]
       simp [this]
     -- simp [this]
@@ -2906,7 +2774,7 @@ lemma lemlemlem2
     ·
       exact h57def
     · exact h57dom
-    · exact i2
+    · exact i2'
     ·
       rw (config:={occs:=.pos [2]}) [Nat.max_comm]
       exact hkk
@@ -2935,7 +2803,7 @@ theorem usen_complete {c n x} : x ∈ use O c n ↔ ∃ s, x ∈ usen O c s n :=
   induction c generalizing n x with
       -- simp [use, usen, pure, PFun.pure, Seq.seq, Option.bind_eq_some_iff] at h ⊢
   | pair cf cg hf hg =>
-    simp [use, usen, pure, PFun.pure, Seq.seq, Option.bind_eq_some_iff] at h ⊢
+    simp [use, usen, pure, Seq.seq, Option.bind_eq_some_iff] at h ⊢
     rcases h with ⟨x, hx, y, hy, rfl⟩
     rcases hf hx with ⟨k₁, hk₁⟩; rcases hg hy with ⟨k₂, hk₂⟩
     refine ⟨max k₁ k₂, ?_⟩
@@ -2946,7 +2814,7 @@ theorem usen_complete {c n x} : x ∈ use O c n ↔ ∃ s, x ∈ usen O c s n :=
         usen_mono (Nat.succ_le_succ <| le_max_left _ _) hk₁, _,
         usen_mono (Nat.succ_le_succ <| le_max_right _ _) hk₂, rfl⟩
   | comp cf cg hf hg =>
-    simp [use, usen, pure, PFun.pure, Seq.seq, Option.bind_eq_some_iff] at h ⊢
+    simp [use, usen, pure, Seq.seq, Option.bind_eq_some_iff] at h ⊢
     rcases h with ⟨y, hy, ⟨hx1,⟨hx2,⟨hx3,⟨hx4,hx5⟩⟩⟩⟩⟩
     -- rcases h with ⟨y, hy, ⟨hx1,hx2⟩⟩
     rcases hg hy with ⟨k₁, hk₁⟩; rcases hf hx4 with ⟨k₂, hk₂⟩
@@ -2971,7 +2839,7 @@ theorem usen_complete {c n x} : x ∈ use O c n ↔ ∃ s, x ∈ usen O c s n :=
       refine ⟨_,usen_mono (Nat.succ_le_succ <| le_max_right _ _) hk₂,
       (by subst hx5; exact Nat.max_comm hx3 y) ⟩
   | prec cf cg hf hg =>
-    simp [use, usen, pure, PFun.pure, Seq.seq, Option.bind_eq_some_iff] at h ⊢
+    simp [use, usen, pure, Seq.seq, Option.bind_eq_some_iff] at h ⊢
     revert h
     generalize n.l = n₁; generalize n.r = n₂
     -- induction' n₂ with m IH generalizing x n <;> simp [Option.bind_eq_some_iff]
@@ -3036,7 +2904,6 @@ theorem usen_complete {c n x} : x ∈ use O c n ↔ ∃ s, x ∈ usen O c s n :=
       have aux0 : h1 ∈ (evaln O (max k₁ k₂ + 1) (cf.prec cg) (Nat.pair n₁ m)) := by
         rcases usen_dom_iff_evaln_dom.mp ⟨h3, aux2⟩ with ⟨hh1,hh2⟩
         rcases evaln_complete.mp h2 with ⟨hh3,hh4⟩
-        #check evaln_sing hh2 hh4
         rwa [evaln_sing hh2 hh4] at hh2
       rw [aux2]
       rw [aux0]
@@ -3076,7 +2943,6 @@ theorem usen_complete {c n x} : x ∈ use O c n ↔ ∃ s, x ∈ usen O c s n :=
 
     have hdom1 := Part.dom_iff_mem.mpr ⟨h1-n.r+n.r,h2⟩
     have hdom : (use O cf.rfind' n).Dom := use_dom_iff_eval_dom.mpr hdom1
-    #check rfind'_obtain_prop hdom1
     have rop := rfind'_obtain_prop hdom1
     have rop4 := rfind'_obtain_prop_4 hdom1
     have rop6 := rfind'_obtain_prop_6 hdom1
@@ -3139,13 +3005,18 @@ theorem usen_complete {c n x} : x ∈ use O c n ↔ ∃ s, x ∈ usen O c s n :=
       -- simp [nlek]
       simp_all
       rcases usen_dom_iff_evaln_dom.mpr ⟨n.r,h10⟩ with ⟨h12,h13⟩
-      have aux2 := evaln_mono (show (h9) ≤ (h9 - 1).max (h14 + 1) + 1 from by grind) h10
+      have : (h9) ≤ (h9 - 1).max (h14 + 1) + 1 := le_add_of_sub_le (Nat.le_max_left (h9 - 1) (h14 + 1))
+      have aux2 := evaln_mono this h10
+      clear this
       simp at aux2
       simp [aux2]
-      have aux0 := usen_mono (show (h14 + 1) ≤ (h9 - 1).max (h14 + 1) + 1 from by grind) h15
+      have : (h14 + 1) ≤ (h9 - 1).max (h14 + 1) + 1 := by
+        simp only [add_le_add_iff_right, le_sup_iff, le_add_iff_nonneg_right, _root_.zero_le,
+          or_true]
+
+      have aux0 := usen_mono this h15
       simp at aux0
       simp [aux0]
-
 
 
     | succ nn ih =>
@@ -3230,35 +3101,6 @@ theorem usen_complete {c n x} : x ∈ use O c n ↔ ∃ s, x ∈ usen O c s n :=
       rcases (hf aux124) with ⟨i1,i2⟩
 
 
-      -- use kk
-      have nlek : (n ≤ kk.max i1 + 1) := by
-        contrapose i2
-        simp at i2
-        have : i1+1<n := by grind
-
-        intro h16
-        have contra := usen_bound h16
-        have : n<n := by
-          exact Nat.lt_trans contra this
-        simp at this
-      have nlek2 : (Nat.pair n.l (1 + n.r) ≤ kk) := by
-        contrapose hkk
-        simp [hkk,Option.bind]
-
-      use (Nat.max kk (i1))+1
-      simp [nlek] at ⊢
-      simp [nlek2] at hkk
-      -- rcases evaln_complete.mp (h2)
-      -- have hh22 := evaln_sing h22 h20
-      -- simp at h22
-      -- rw [h22] at hkk
-      -- rw [hh22] at hkk
-
-
-
-
-
-
 
       -- simp
       have : ∃z,z∈ (evaln O (kk + 1) cf.rfind' (Nat.pair n.l (1 + n.r))) := by
@@ -3271,14 +3113,49 @@ theorem usen_complete {c n x} : x ∈ use O c n ↔ ∃ s, x ∈ usen O c s n :=
       clear this
 
 
-
       rcases evaln_complete.mp (rop6 1 (le_add_left 1 nn)) with ⟨h19,h20⟩
       have hh22 := evaln_sing h22 h20
       simp at h22
       rw [h22] at hkk
       rw [hh22] at hkk
 
-      simp [-ge_iff_le,-le_of_subsingleton,-le_refl,-Nat.le_refl] at hkk
+
+
+
+
+
+      rcases evaln_complete.mp h2 with ⟨h9,h10⟩
+      rcases hf h6 with ⟨h14,h15⟩
+      rcases usen_dom_iff_evaln_dom.mp ⟨h5,h15⟩ with ⟨h16,h17⟩
+
+
+      -- use (Nat.max kk (i1))+1
+      -- let use_steps := (Nat.max (h9) (h14+1) + nn)
+      let use_steps := (Nat.max (Nat.max (h9) (h14+1) + nn) (Nat.max (kk+1) (i1))).max n
+      use use_steps
+            -- use kk
+
+      have nlek : (n ≤ use_steps) := by
+        exact Nat.le_max_right _ _
+
+      have nlek2 : (Nat.pair n.l (1 + n.r) ≤ kk) := by
+        contrapose hkk
+        simp [hkk,Option.bind]
+
+      simp [nlek] at ⊢
+      simp [nlek2] at hkk
+
+
+
+      -- rcases evaln_complete.mp (h2)
+      -- have hh22 := evaln_sing h22 h20
+      -- simp at h22
+      -- rw [h22] at hkk
+      -- rw [hh22] at hkk
+
+
+
+      -- simp [-ge_iff_le,-le_of_subsingleton,-le_refl,-Nat.le_refl] at hkk
       have : nn + 1 + n.r - (1 + n.r) + 1 = nn + 1 := by
         rw [add_assoc]
         rw [Nat.add_sub_cancel_right nn (1+n.r)]
@@ -3288,10 +3165,6 @@ theorem usen_complete {c n x} : x ∈ use O c n ↔ ∃ s, x ∈ usen O c s n :=
 
 
 
-      rcases evaln_complete.mp h2 with ⟨h9,h10⟩
-      rcases hf h6 with ⟨h14,h15⟩
-      rcases usen_dom_iff_evaln_dom.mp ⟨h5,h15⟩ with ⟨h16,h17⟩
-
       -- use (Nat.max (h9-1) (h14+1)+nn)
       -- rcases usen_dom_iff_evaln_dom.mpr ⟨nn + 1 + n.r,h10⟩ with ⟨h12,h13⟩
       -- have aux2 := evaln_mono (show (h9) ≤ (h9 - 1).max (h14 + 1) + nn + 1 from by grind) h10
@@ -3299,14 +3172,28 @@ theorem usen_complete {c n x} : x ∈ use O c n ↔ ∃ s, x ∈ usen O c s n :=
       -- simp [aux2]
       -- simp only [Option.bind]
 
-      have : (evaln O (kk.max i1 + 1 + 1) cf.rfind' n) = some (nn + 1 + n.r) := by sorry
+      have : (evaln O ((use_steps)+1) cf.rfind' n) = some (nn + 1 + n.r) := by
+        simp at h10
+        rw [←h10]
+        apply evaln_mono' (Option.isSome_of_mem h10) _
+        grind
       simp [this]
 
-      have : (usen O cf (kk.max i1 +1 - nn) (Nat.pair n.l (nn + 1 + n.r))) = some h5 := by sorry
+      have : (usen O cf (use_steps-nn) (Nat.pair n.l (nn + 1 + n.r))) = some h5 := by
+        rw [←h15]
+        apply usen_mono' (Option.isSome_of_mem h15) _
+        grind
       simp [this]
 
 
-      have lemlem2 := @lemlemlem2 O cf nn h5 h57 i1 kk x a n (h6) (fun j a ↦ rop3 j a) (h57dom) rfl h57dom i2 (fun a ↦ hf a) (hkk)
+      -- have lemlem2 := @lemlemlem3 O cf nn h5 h57 i1 kk x a n (h6) (fun j a ↦ rop3 j a) (h57dom) rfl h57dom i2 (fun a ↦ hf a) (hkk)
+      have aux1 : usen O cf (use_steps + 1) n = some ((use O cf n).get h57dom) := by
+        rw [←i2]
+        apply usen_mono' (Option.isSome_of_mem i2) _
+        grind
+      have aux2 :  kk + 1 ≤ use_steps := by
+        grind
+      have lemlem2 := @lemlemlem3 O cf nn h5 h57 kk x a n use_steps (h6) (fun j a ↦ rop3 j a) (h57dom) rfl h57dom aux1 aux2 (fun a ↦ hf a) (hkk)
       simp_all only [Option.mem_def]
 
   | oracle =>
@@ -3762,8 +3649,7 @@ theorem use_mono_rfind'
           exact h
       have := @ih (base.max ((use O cf (Nat.pair x.l (n + x.r))).get auxdom4)) (le_of_succ_le h)
       aesop? says
-        simp_all only [implies_true, not_false_eq_true, and_self, and_true, List.mem_range'_1, and_imp, forIn'_eq_forIn,
-        List.mem_reverse, List.mem_range, ro]
+        simp_all only [implies_true, not_false_eq_true, and_self,List.mem_reverse, List.mem_range, ro]
 
   have auxdom5:(use O cf (Nat.pair x.l (j + x.r))).Dom:= by (expose_names; exact use_rfind'_dom hh j hjro_1)
   have auxdom8 (k:ℕ):(use O cf (Nat.pair x.l (ro - k + x.r))).Dom:= use_rfind'_dom hh (ro-k) (sub_le ro k)
@@ -3827,7 +3713,6 @@ theorem use_mono_rfind'
           simp [ronrw0]
           have ronrw : ro-n = ro-n-1+1 := by exact Eq.symm (Nat.sub_add_cancel hh)
           simp (config := { singlePass := true }) [ronrw] at ih
-          #check listrwgen (ro-n-1)
           simp [listrwgen (ro-n-1)] at ih
 
           have domaux10 : (use O cf (Nat.pair x.l (ro - n - 1 + 1 + x.r))).Dom := by
@@ -3871,9 +3756,7 @@ theorem use_mono_rfind'
   apply le_trans main2 this
 
 
-#check Option
-theorem up_to_usen (hh:y∈(evaln O₁ s c x)) (hO: ∀ i≤(usen O₁ c s x).getD 0, O₁ i = O₂ i) : evaln O₁ s c x = evaln O₂ s c x := by
-  sorry
+
 -- Custom strong induction principle
 def CodeNat.induction
   {motive : Code → ℕ → Prop}
@@ -3919,14 +3802,10 @@ def CodeNat.induction
       intro x' hlt
       apply @Nat.strongRecOn (fun n => motive (.rfind' cf ) n) x' (fun n ih => ?_)
       exact hrfind' cf ihcf n ih
+theorem up_to_usen (hh:(evaln O₁ s c x).isSome) (hO: ∀ i≤(usen O₁ c s x).getD 0, O₁ i = O₂ i) : evaln O₁ s c x = evaln O₂ s c x := by
 
+  sorry
 theorem up_to_use (hh:(eval O₁ c x).Dom) (hO: ∀ i≤(use O₁ c x).get (e2u hh), O₁ i = O₂ i) : eval O₁ c x = eval O₂ c x := by
-  -- have h:x≤use O₁ c x
-  -- induction x using Nat.strong_induction_on with
-  -- | h x ih =>
-  -- induction c×x with
-
-    -- sorry
   induction c,x using CodeNat.induction with
   | hzero x => simp [eval]
   | hsucc x => simp [eval]
