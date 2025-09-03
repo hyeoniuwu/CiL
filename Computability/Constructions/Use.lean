@@ -3270,7 +3270,40 @@ theorem eval_pair_dom (h:(eval O (pair cf cg) x).Dom) : (eval O cf x).Dom ∧ (e
   by_cases hh:(eval O cf x).Dom
   · exact fun a ↦ h hh
   · simp [Part.eq_none_iff'.mpr hh]
+theorem evaln_comp_dom_aux (h:(evaln O (s+1) (comp cf cg) x).isSome) : (evaln O (s+1) cg x).isSome := by
+  have h':= h
+  simp [evaln] at h'
+  simp [evaln_xles h] at h'
+  contrapose h'
+  simp at h'
+  simp [h']
 theorem eval_comp_dom_aux (h:(eval O (comp cf cg) x).Dom) : (eval O cg x).Dom := by exact Part.Dom.of_bind h
+theorem evaln_comp_dom
+(h:(evaln O (s+1) (comp cf cg) x).isSome)
+:
+(evaln O (s+1) cg x).isSome
+∧
+(evaln O (s+1) cf ((evaln O (s+1) cg x).get (evaln_comp_dom_aux h))).isSome
+:= by
+  constructor
+  · 
+    have hog := h
+    contrapose h
+    simp at h
+    simp [evaln]
+    simp [evaln_xles hog]
+    intro h1 h2
+    rw [h] at h2
+    contradiction
+  · 
+    
+    have h' := h
+    simp [evaln] at h'
+    contrapose h'
+    simp at h'
+    simp [evaln_xles h]
+    intro h1 h2
+    simp_all only [Option.get_some]
 theorem eval_comp_dom
 (h:(eval O (comp cf cg) x).Dom)
 :
@@ -3334,8 +3367,7 @@ let evaln_prev := (evaln O s (prec cf cg) (Nat.pair x i)).get (evaln_prec_dom_au
 (evaln O (s+1) cg (Nat.pair x (Nat.pair i (evaln_prev)))).isSome
 )
 := by
-  -- sorry
-  induction i with
+  induction i generalizing s with
   | zero =>
     have h':=h
     simp [evaln] at h' ⊢
@@ -3355,40 +3387,26 @@ let evaln_prev := (evaln O s (prec cf cg) (Nat.pair x i)).get (evaln_prec_dom_au
     have h':=h
     simp [evaln] at h'
     simp [evaln_xles h] at h'
-    simp []
-    have aux0 := evaln_prec_dom_aux h
-    have aux1 := evaln_mono_dom (show s≤s+1 from le_add_right s 1) aux0
-    have ih1 := ih aux1
-    clear ih
-    have sG1 := evaln_sG1 aux0
-    simp (config:={singlePass:=true}) [sG1] at h'
-    simp (config:={singlePass:=true}) [sG1]
-    simp [evaln] at h'
-    simp [evaln]
-    simp [evaln_xles' aux0] at h'
-    simp [← sG1] at h'
-    simp [← sG1]
-    
+    constructor
+    · 
+      have aux0 := evaln_prec_dom_aux h
+      have sG1 := evaln_sG1 aux0
+      have aux1 := evaln_mono_dom (show s≤s+1 from le_add_right s 1) aux0
+      have ih1 := @ih (s-1) ?_
+      rotate_left
+      · 
+        rw [←sG1]
+        exact aux0
+      have : s - (iM1 + 1) = s - 1 - iM1 := by exact Simproc.sub_add_eq_comm s iM1 1
+      rw [this]
+      exact ih1.left
 
-    contrapose h'
-    simp
-    simp at h'
-    intro h1 h2
-    -- aesop [-sG1]
-    simp_all [-sG1]
+    · 
+      simp
 
-    have ih1 := ih ?_
-    rotate_left
-    · sorry
-
-    
-    sorry
-    simp_all only
-    obtain ⟨w, h⟩ := h
-    obtain ⟨w, h⟩ := w
-    simp_all only [and_true]
-    have : (eval O (cf.prec cg) (Nat.pair x (n + 1))).Dom := by (expose_names; exact eval_prec_dom_aux h_1)
-    exact (ih this).left
+      have aux0 := evaln_prec_dom_aux h
+      simp [isSome.bind aux0] at h'
+      exact h'
 theorem eval_prec_dom
 (h:(eval O (prec cf cg) (Nat.pair x (i+1))).Dom)
 :
@@ -3423,11 +3441,29 @@ theorem usen_pair_dom (h:(usen O (pair cf cg) (s+1) x).isSome) : (usen O cf (s+1
   aesop
 theorem use_pair_dom (h:(use O (pair cf cg) x).Dom) : (use O cf x).Dom ∧ (use O cg x).Dom := by
   exact exists_prop.mp h
+theorem usen_comp_dom_aux (h:(usen O (comp cf cg) (s+1) x).isSome) : (evaln O (s+1) cg x).isSome := by
+  have hog := h
+  simp [usen] at h
+  simp [usen_xles hog] at h
+  
+  contrapose h
+  simp at h
+  simp [h]
 theorem use_comp_dom_aux (h:(use O (comp cf cg) x).Dom) : (eval O cg x).Dom := by
   simp [use] at h
   contrapose h
   simp [Seq.seq]
   exact fun a x_1 a ↦ h x_1
+theorem usen_comp_dom (h:(usen O (comp cf cg) (s+1) x).isSome) : (usen O cg (s+1) x).isSome ∧ (usen O cf (s+1) ((evaln O (s+1) cg x).get (usen_comp_dom_aux h))).isSome := by
+  have hog := h
+  simp [usen] at h
+  simp [usen_xles hog] at h
+  
+  contrapose h
+  simp at h
+  simp
+  intro a b c d e
+  simp_all only [Option.isSome_some, Option.get_some, forall_const, reduceCtorEq, not_false_eq_true]
 theorem use_comp_dom (h:(use O (comp cf cg) x).Dom) : (use O cg x).Dom ∧ (use O cf ((eval O cg x).get (use_comp_dom_aux h))).Dom := by
   simp [use,Seq.seq] at h
   aesop? says
@@ -3476,14 +3512,14 @@ theorem use_prec_dom'
 theorem usen_prec_dom
 (h:(usen O (prec cf cg) (s+1) (Nat.pair x (i+1))).isSome)
 :
-(usen O cf (s+1) x).isSome
+(usen O cf (s-i) x).isSome
 ∧
 (
 let eval_prev := (evaln O s (prec cf cg) (Nat.pair x i)).get (usen_prec_dom_aux h)
 (usen O cg (s+1) (Nat.pair x (Nat.pair i eval_prev))).isSome)
 := by
   have h':=h
-  simp [usen,Seq.seq] at h'
+  simp [usen] at h'
   simp [usen_xles h] at h'
   simp [isSome.bind (en2un $ usen_prec_dom_aux h)] at h'
   simp [isSome.bind (usen_prec_dom_aux h)] at h'
@@ -3491,29 +3527,65 @@ let eval_prev := (evaln O s (prec cf cg) (Nat.pair x i)).get (usen_prec_dom_aux 
   -- simp [isSome.bind this] at h'
   simp []
 
-  have := evaln_sG1 $ usen_prec_dom_aux h
-  induction i with
+  -- have := evaln_sG1 $ usen_prec_dom_aux h
+  induction i generalizing s with
   | zero =>
-    simp (config:={singlePass:=true}) [this]
-    simp [evaln]
-    
-    -- simp_all [-this]
-    -- aesop
-    -- simp
-    -- aesop? says
-    --   simp_all only [rec_zero, eval_prec_zero, true_and]
-    --   obtain ⟨left, right⟩ := h
-    --   obtain ⟨w, h⟩ := right
-    --   simp_all only
-  | succ n ih =>
-    
-    obtain ⟨left, right⟩ := h
-    obtain ⟨left, right_1⟩ := left
-    obtain ⟨w, h⟩ := right
-    obtain ⟨w_1, h_2⟩ := right_1
-    simp_all only [and_true]
-    simp at ih
-    exact (ih (e2u w) h_2).left
+    have h':=h
+    simp [usen] at h' ⊢
+    simp [usen_xles h] at h'
+    have eprev := usen_prec_dom_aux h
+    have uprev := en2un eprev
+    have sG1 := evaln_sG1 eprev
+    simp (config:={singlePass:=true}) [sG1] at eprev
+    have := evaln_prec_dom' eprev
+    rw [←sG1] at this eprev
+
+    constructor
+    · exact en2un this
+
+    simp [isSome.bind uprev] at h'
+    simp [isSome.bind eprev] at h'
+
+    contrapose h'
+    simp at h'
+    simp [h']
+
+  | succ iM1 ih =>
+    have h':=h
+    simp [usen] at h'
+    simp [usen_xles h] at h'
+    have eprev := usen_prec_dom_aux h
+    have uprev := en2un eprev
+    have sG1 := evaln_sG1 eprev
+    -- simp (config:={singlePass:=true}) [sG1] at eprev
+    -- have := evaln_prec_dom' eprev
+    -- rw [←sG1] at this eprev
+    constructor
+    · 
+      have ih1 := @ih (s-1) ?_ ?_
+      rotate_left
+      · 
+        rwa [←sG1]
+      · 
+        rw [sG1] at uprev
+        let u:=uprev
+        simp [usen] at uprev
+        simp [usen_xles u] at uprev
+        have eprev2 := usen_prec_dom_aux u
+        have uprev2 := en2un eprev2
+        simp [isSome.bind uprev2] at uprev
+        simp [isSome.bind eprev2] at uprev
+        exact uprev
+      have : s - (iM1 + 1) = s - 1 - iM1 := by exact Simproc.sub_add_eq_comm s iM1 1
+      rw [this]
+      exact ih1.left
+    · 
+      simp [isSome.bind uprev] at h'
+      simp [isSome.bind eprev] at h'
+      contrapose h'
+      simp at h'
+      simp [h']
+
 theorem use_prec_dom
 (h:(use O (prec cf cg) (Nat.pair x (i+1))).Dom)
 :
@@ -3571,6 +3643,12 @@ theorem use_mono_pair (hh:(use O (pair cf cg) x).Dom):
   := by
     simp only [use, Seq.seq]
     simp [Part.Dom.bind ((use_pair_dom hh).left)]
+theorem usen_mono_comp (hh:(usen O (comp cf cg) (s+1) x).isSome):
+  ((usen O cg (s+1) x).get ((usen_comp_dom hh).left) ≤ (usen O (comp cf cg) (s+1) x).get hh)
+  ∧
+  ((usen O cf (s+1) ((evaln O (s+1) cg x).get (usen_comp_dom_aux hh))).get ((usen_comp_dom hh).right) ≤ (usen O (comp cf cg) (s+1) x).get hh)
+  := by
+    simp [usen]
 theorem use_mono_comp (hh:(use O (comp cf cg) x).Dom):
   ((use O cg x).get ((use_comp_dom hh).left) ≤ (use O (comp cf cg) x).get hh)
   ∧
@@ -3605,14 +3683,50 @@ theorem use_mono_prec_1 (hh:(use O (prec cf cg) (Nat.pair x (i+1))).Dom):
     simp [Part.bind, Part.assert]
 -- todo: simplify below proof
 theorem usen_mono_prec (hh:(usen O (prec cf cg) (s+1) (Nat.pair x (i+1))).isSome):
-((usen O cf (s+1) x).get ((usen_prec_dom hh).left) ≤ (usen O (prec cf cg) (s+1) (Nat.pair x (i+1))).get hh)
+((usen O cf (s-i) x).get ((usen_prec_dom hh).left) ≤ (usen O (prec cf cg) (s+1) (Nat.pair x (i+1))).get hh)
 ∧
 let eval_prev := (evaln O s (prec cf cg) (Nat.pair x i)).get (usen_prec_dom_aux hh)
 (
 (usen O cg (s+1) (Nat.pair x (Nat.pair i eval_prev))).get ((usen_prec_dom hh).right) ≤ (usen O (prec cf cg) (s+1) (Nat.pair x (i+1))).get hh
 )
   := by
-    sorry
+  induction i generalizing s with
+  | zero =>
+    simp only [usen]
+    simp
+
+
+    have h':=hh
+    simp [usen] at h' ⊢
+    simp [usen_xles hh] at h'
+    have eprev := usen_prec_dom_aux hh
+    have uprev := en2un eprev
+    have sG1 := evaln_sG1 eprev
+
+
+
+    apply Or.inl
+    simp (config:={singlePass:=true}) [sG1]
+    simp [usen]
+  | succ n ih =>
+    have h':=hh
+    simp [usen] at h' ⊢
+    simp [usen_xles hh] at h'
+    have eprev := usen_prec_dom_aux hh
+    have uprev := en2un eprev
+    have sG1 := evaln_sG1 eprev
+
+    have ih1 := @ih (s-1) ?_
+    rotate_left
+    · 
+      rw [←sG1]
+      exact uprev
+    simp at ih1
+    have : s - (n + 1) = s-1-n := by exact Simproc.sub_add_eq_comm s n 1
+    simp [this]
+    simp [←sG1] at ih1
+    apply Or.inl
+    exact ih1.left
 theorem use_mono_prec (hh:(use O (prec cf cg) (Nat.pair x (i+1))).Dom):
 ((use O cf x).get ((use_prec_dom hh).left) ≤ (use O (prec cf cg) (Nat.pair x (i+1))).get hh)
 ∧
@@ -4314,15 +4428,14 @@ def up_to_usen.induction
     (motive cg s x) →
     (∀ x', motive cf s x') →
     motive (.comp cf cg) s x)
-  (hprec : ∀ cf cg,
-    (∀ s x, motive cf s x) →
-    (∀ s x, motive cg s x) →
-    (∀ s x, (∀ s', ∀ x' < x, motive (.prec cf cg) s' x') → motive (.prec cf cg) s x))
+  (hprec : ∀ cf cg s,
+    (∀ x, motive cf s x) →
+    (∀ x, motive cg s x) →
+    (∀ x, ( ∀ s' ≤ s, ∀ x' < x, motive (.prec cf cg) s' x') → motive (.prec cf cg) s x))
+    -- (∀ x, ( ∀ s' < s, ∀ x' < x, motive (.prec cf cg) s' x') → motive (.prec cf cg) s x))
   (hrfind' : ∀ cf s x,
-    -- (∀ x', motive cf s x') →
     (∀ x' s', motive cf s' x') →
     motive (.rfind' cf) s x
-    -- (∀ x, (∀ x' < x, motive (.rfind' cf) s x') → motive (.rfind' cf) s x))
     )
   : ∀ c s x, motive c s x := by
     intro c
@@ -4335,14 +4448,16 @@ def up_to_usen.induction
     | pair cf cg ihcf ihcg => exact fun s x ↦ hpair cf cg s x (ihcf s x) (ihcg s x)
     | comp cf cg ihcf ihcg => exact fun s x ↦ hcomp cf cg x s (ihcg s x) (ihcf s)
     | prec cf cg ihcf ihcg  =>
-      intro s x
-
-      sorry
-      intro x
-      apply hprec cf cg ihcf ihcg x
-      intro x' hlt
-      apply @Nat.strongRecOn (fun n => motive (.prec cf cg) n) x' (fun n ih => ?_)
-      exact hprec cf cg ihcf ihcg n ih
+      -- intro s
+      -- apply @Nat.strongRecOn (fun s' => ∀ x, motive (.prec cf cg) s' x) s
+      --   (fun s' ih_s' =>
+      --     fun x =>
+      --       hprec cf cg s' (ihcf s') (ihcg s') x (fun s'' hs'' x'' hx'' => ih_s' s'' hs'' x''))
+  intro s x
+  apply @Nat.strongRecOn (fun x' => ∀ s, motive (.prec cf cg) s x') x
+    (fun x' ih_x' =>
+      fun s =>
+        hprec cf cg s (ihcf s) (ihcg s) x' (fun s' hle x'' hx'' => ih_x' x'' hx'' s'))
     | rfind' cf ihcf => exact fun s x ↦ hrfind' cf s x fun x' s' ↦ ihcf s' x'
 theorem up_to_usen (hh:(evaln O₁ s c x).isSome) (hO: ∀ i≤(usen O₁ c s x).get (en2un hh), O₁ i = O₂ i) : evaln O₁ (s) c x = evaln O₂ (s) c x := by
   -- have : s=s-1+1 := by
@@ -4390,8 +4505,51 @@ theorem up_to_usen (hh:(evaln O₁ s c x).isSome) (hO: ∀ i≤(usen O₁ c s x)
       exact hO xx hxx2
     rw [hcf (evaln_pair_dom hh).left h1]
     rw [hcg (evaln_pair_dom hh).right h2]
-  | hcomp cf cg x s _ _ => sorry
-  | hprec cf cg hcf hcg s x ih =>
+  | hcomp cf cg x s hcg hcf =>
+    simp only [evaln]
+    if hhhhh:¬x≤s-1 then
+    simp [hhhhh,Option.bind]
+    else
+    simp at hhhhh
+    simp [hhhhh]
+    have h1:
+    (∀ i ≤ (usen O₁ cg (s-1+1) x).get (en2un (evaln_comp_dom hh).left), O₁ i = O₂ i)
+    :=by
+      intro xx
+      intro hxx
+      have hxx2 := le_trans hxx (usen_mono_comp (en2un hh)).left
+      exact hO xx hxx2
+    have ih1 := hcg (evaln_comp_dom hh).left h1
+    rw [ih1]
+
+    have h2:
+    (∀ i ≤ (usen O₁ cf (s-1+1) ((evaln O₁ (s-1+1) cg x).get (evaln_comp_dom_aux hh))).get (en2un (evaln_comp_dom hh).right), O₁ i = O₂ i)
+    :=by
+      intro xx
+      intro hxx
+      have hxx2 := le_trans hxx (usen_mono_comp (en2un hh)).right
+
+      exact hO xx hxx2
+
+    have aux0 : (evaln O₂ (s-1+1) cg x).isSome := by
+      have aux00 := evaln_comp_dom_aux hh
+      rwa [ih1] at aux00
+    have aux1 : ((evaln O₁ (s-1+1) cg x).get (evaln_comp_dom_aux hh)) = (evaln O₂ (s-1+1) cg x).get aux0 := by simp_all only [implies_true]
+    have aux2 : (evaln O₁ (s-1+1) cf ((evaln O₂ (s-1+1) cg x).get aux0)).isSome := by
+      have aux10 :=(evaln_comp_dom hh).right
+      rwa [aux1] at aux10
+    have aux4 :(usen O₁ cf ((s-1+1)) ((evaln O₁ (s-1+1) cg x).get (evaln_comp_dom_aux hh))).get (en2un (evaln_comp_dom hh).right) = (usen O₁ cf ((s-1+1)) ((evaln O₂ (s-1+1) cg x).get aux0)).get (en2un aux2) := by
+      simp_all only [implies_true]
+    have h3:
+    (∀ i ≤ (usen O₁ cf ((s-1+1)) ((evaln O₂ (s-1+1) cg x).get aux0)).get (en2un aux2), O₁ i = O₂ i)
+    := by
+      have aux := h2
+      rwa [aux4] at aux
+
+    have ih2 := hcf ((evaln O₂ (s-1+1) cg x).get aux0) aux2 h3
+    simpa [isSome.bind aux0]
+
+  | hprec cf cg s hcf hcg x ih =>
     rw [evaln]
     rw [evaln]
     -- simp only [prec_alt]
@@ -4421,7 +4579,7 @@ theorem up_to_usen (hh:(evaln O₁ s c x).isSome) (hO: ∀ i≤(usen O₁ c s x)
         intro hxx
         have hxx2 := le_trans hxx (usen_mono_prec' (en2un hh))
         exact hO xx hxx2
-      simp [hcf s x.l aux0 aux2]
+      simp [hcf x.l aux0 aux2]
     | succ xrM1 =>
 
       rw [hxr] at hh ih
@@ -4458,7 +4616,13 @@ theorem up_to_usen (hh:(evaln O₁ s c x).isSome) (hO: ∀ i≤(usen O₁ c s x)
       --   exact hO xx hxx2
       have : s-1-1+1=s-1 := by exact Eq.symm (evaln_sG1 aux00)
       simp (config:={singlePass:=true}) [←this] at aux00 aux02
-      have aux03 := ih (s-1) (Nat.pair x.l xrM1) (pair_lt_pair_right x.l (lt_add_one xrM1)) aux00 aux02
+      have aux03 := ih (s-1) (sub_le s 1) (Nat.pair x.l xrM1) (pair_lt_pair_right x.l (lt_add_one xrM1)) aux00 aux02
+      -- rotate_left
+      -- expose_names
+
+      
+      -- have : s  ≠ 0 := by exact?
+      -- have : s=s-1+1 := by exact?
       simp [this] at aux03 aux00 aux02
       -- have aux01 : (evaln O₂ (s-1+1) (cf.prec cg) (Nat.pair x.l xrM1)).isSome := by rwa [aux03] at aux00'
 
@@ -4470,7 +4634,7 @@ theorem up_to_usen (hh:(evaln O₁ s c x).isSome) (hO: ∀ i≤(usen O₁ c s x)
         intro hxx
         have hxx2 := le_trans hxx (usen_mono_prec (en2un hh)).right
         exact hO xx hxx2
-      have aux13 := hcg s (Nat.pair x.l (Nat.pair xrM1 ((evaln O₁ (s-1) (cf.prec cg) (Nat.pair x.l xrM1)).get (aux00)))) aux10 aux12
+      have aux13 := hcg (Nat.pair x.l (Nat.pair xrM1 ((evaln O₁ (s-1) (cf.prec cg) (Nat.pair x.l xrM1)).get (aux00)))) aux10 aux12
 
       rw [←aux03]
 
@@ -4550,65 +4714,7 @@ theorem up_to_usen (hh:(evaln O₁ s c x).isSome) (hO: ∀ i≤(usen O₁ c s x)
     · intro j hjro
       rw [←ihAll j (le_of_succ_le hjro)]
       exact nrop3 j hjro
-    sorry
 
-
-  induction c,x using CodeNat.induction with
-  | hzero x => simp [evaln]
-  | hsucc x => simp [evaln]
-  | hleft x => simp [evaln]
-  | hright x => simp [evaln]
-  | horacle x => sorry
-  | hpair cf cg hcf hcg x => sorry
-  | hcomp cf cg hcf hcg x =>
-    simp only [eval]
-    have h1:
-    (∀ i ≤ (use O₁ cg x).get (e2u (eval_comp_dom hh).left), O₁ i = O₂ i)
-    :=by
-      intro xx
-      intro hxx
-      have hxx2 := le_trans hxx (use_mono_comp (e2u hh)).left
-      exact hO xx hxx2
-    have ih1 := hcg x (eval_comp_dom hh).left h1
-    rw [ih1]
-
-    have h2:
-    (∀ i ≤ (use O₁ cf ((eval O₁ cg x).get (eval_comp_dom_aux hh))).get (e2u (eval_comp_dom hh).right), O₁ i = O₂ i)
-    :=by
-      intro xx
-      intro hxx
-      have hxx2 := le_trans hxx (use_mono_comp (e2u hh)).right
-
-      exact hO xx hxx2
-
-    have aux0 : (eval O₂ cg x).Dom := by
-      have aux00 := eval_comp_dom_aux hh
-      rwa [ih1] at aux00
-    have aux1 : ((eval O₁ cg x).get (eval_comp_dom_aux hh)) = (eval O₂ cg x).get aux0 := by simp_all only [implies_true]
-    have aux2 : (eval O₁ cf ((eval O₂ cg x).get aux0)).Dom := by
-      have aux10 :=(eval_comp_dom hh).right
-      rwa [aux1] at aux10
-    have aux4 :(use O₁ cf ((eval O₁ cg x).get (eval_comp_dom_aux hh))).get (e2u (eval_comp_dom hh).right) = (use O₁ cf ((eval O₂ cg x).get aux0)).get (e2u aux2) := by
-      simp_all only [implies_true]
-    have h3:
-    (∀ i ≤ (use O₁ cf ((eval O₂ cg x).get aux0)).get (e2u aux2), O₁ i = O₂ i)
-    := by
-      have aux := h2
-      rwa [aux4] at aux
-
-    have ih2 := hcf ((eval O₂ cg x).get aux0) aux2 h3
-
-    simp
-    [
-      Part.bind_eq_bind,
-      Part.bind,
-      ih2,
-    ]
-  | hprec cf cg hcf hcg x ih =>
-    sorry
-  | hrfind' cf  hcf x ih =>
-
-  sorry
 theorem up_to_use (hh:(eval O₁ c x).Dom) (hO: ∀ i≤(use O₁ c x).get (e2u hh), O₁ i = O₂ i) : eval O₁ c x = eval O₂ c x := by
   induction c,x using CodeNat.induction with
   | hzero x => simp [eval]
