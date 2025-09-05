@@ -1,4 +1,4 @@
-import Computability.Constructions
+import Computability.Constructions.Basic
 import Computability.Basic
 -- import Computability.Encoding
 import Mathlib.Computability.Reduce

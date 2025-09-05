@@ -1,4 +1,5 @@
-import Computability.Constructions.CovRec
+-- import Computability.Constructions.CovRec
+import Computability.RecursiveInTheorems
 
 open Nat.RecursiveIn.Code
 namespace Nat.RecursiveIn.Code

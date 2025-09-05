@@ -436,13 +436,13 @@ theorem rfind'_eqv_rfind : ((Nat.unpaired fun a m => (Nat.rfind fun n => (fun m 
 
 
 /--`[code_rfind c](x)=smallest n s.t. [c](x,n)=0.`-/
-def code_rfind : ℕ→ℕ := fun c => comp (rfind' c) (pair Nat.RecursiveIn.Code.id zero)
+def c_rfind : ℕ→ℕ := fun c => comp (rfind' c) (pair Nat.RecursiveIn.Code.id zero)
 
 
 /-- Given a code `c` -/
 @[simp] abbrev rfind (O:ℕ→ℕ) : ℕ→ℕ→.ℕ := fun c => fun a=> Nat.rfind fun n => (fun m => m = 0) <$> eval O c (Nat.pair a n)
-theorem code_rfind_prop : eval O (code_rfind c) a = (rfind O c a) := by
-  unfold code_rfind
+theorem c_rfind_prop : eval O (c_rfind c) a = (rfind O c a) := by
+  unfold c_rfind
   unfold rfind
   rw [←rfind'_eqv_rfind]
   simp? says simp only [decodeCode_encodeCode, Nat.unpaired, Nat.unpair_pair, add_zero, Part.map_eq_map]
@@ -475,11 +475,11 @@ ran_to_dom c = code_for
   rfind_config (evaln c config=y)
 -/
 -- noncomputable def ran_to_dom (O:Set ℕ) : (ℕ→ℕ) := fun c => curry (code_rfind (c_ifevaleq (χ O) (c_evalnSet₁ O))) c
-noncomputable def ran_to_dom (O:Set ℕ) : (ℕ→ℕ) := fun c => curry (code_rfind (c_ran_to_dom_aux O)) c
-theorem code_rfind_imp_ex : (∃ y, y ∈ eval O (code_rfind c) x) → (∃ y, eval O c (Nat.pair x y)=0) := by
+noncomputable def ran_to_dom (O:Set ℕ) : (ℕ→ℕ) := fun c => curry (c_rfind (c_ran_to_dom_aux O)) c
+theorem code_rfind_imp_ex : (∃ y, y ∈ eval O (c_rfind c) x) → (∃ y, eval O c (Nat.pair x y)=0) := by
   intro h
   rcases h with ⟨y,hy⟩
-  rw [code_rfind_prop] at hy
+  rw [c_rfind_prop] at hy
   simp at hy
   use y
   apply Part.eq_some_iff.mpr
@@ -524,7 +524,7 @@ We know that [e'](xs)↓, because the search procedure will stop at or before di
     simp [W]
     rw [ran_to_dom]
     simp only [decodeCode_encodeCode, eval_curry]
-    rw [code_rfind_prop]
+    rw [c_rfind_prop]
     -- simp [c_ifevaleq_ev]
     -- simp [c_ran_to_dom_aux]
     simp [rfind]
@@ -557,7 +557,7 @@ We know that [e'](xs)↓, because the search procedure will stop at or before di
 
     rw [ran_to_dom] at hy
     simp only [decodeCode_encodeCode, eval_curry] at hy
-    rw [code_rfind_prop] at hy
+    rw [c_rfind_prop] at hy
     simp [c_ran_to_dom_aux_ev] at hy
     simp [helper1] at hy
     simp [helper2] at hy
@@ -578,7 +578,7 @@ We know that [e'](xs)↓, because the search procedure will stop at or before di
 
 theorem Nat.PrimrecIn.prim_ran_to_dom : Nat.PrimrecIn (χ O) (ran_to_dom O) := by
   unfold ran_to_dom
-  have rw1 : (fun c ↦ ((decodeCode (code_rfind (c_ran_to_dom_aux O).encodeCode)).curry c).encodeCode : ℕ → ℕ) = (curry ((code_rfind (c_ran_to_dom_aux O)))) := by exact
+  have rw1 : (fun c ↦ ((decodeCode (c_rfind (c_ran_to_dom_aux O).encodeCode)).curry c).encodeCode : ℕ → ℕ) = (curry ((c_rfind (c_ran_to_dom_aux O)))) := by exact
     rfl
   rw [rw1]
   refine PrimrecIn.nat_iff.mp ?_
@@ -620,27 +620,54 @@ theorem c_eval_pr_oracle₁_ev_aux : eval_prim O c_eval_custom_oracle₁_aux oe 
   sorry
 
 end Nat.RecursiveIn.Code
-theorem asdasd : Primrec c_eval_custom_oracle
+-- theorem asdasd : Primrec c_eval_custom_oracle
 
 -- def D : ℕ→Finset ℕ := fun a => {x | (BSMem (Nat.pair a x))=1}
 -- def D : ℕ→Set ℕ := fun a => {x | (BSMem (Nat.pair a x))=1}
+set_option linter.dupNamespace false
 namespace KP54
 
 #check Finset
 -- χ (SetJump ∅)
+
+
+
+#check List.Vector
 open Nat in
+-- bsunion doesnt work bc it changes prev values
+-- it should actually just be... join!
+/--
+Input: stage `s`
+Output: (code for `Aₛ`, code for `Bₛ`)
+-/
 noncomputable def KP54 : ℕ→ℕ := fun s =>
   let i:=s.div2
-
   if s=0 then Nat.pair 0 0
   else if s%2=0 then
-    let n:=BSSize (KP54 s-1).r
-    -- ask ∅' if there exists a n s.t. a:=BSUnion n (KP54 s-1).l satisfies (eval (D a) i n).Dom.
-    -- for this, define c s.t. [c](n)= if (eval (D $ BSUnion n (KP54 s-1).l) i n).Dom then 0 else 1.
+    let Aₚ := (KP54 s-1).l
+    let Bₚ := (KP54 s-1).r
+    let n  := BSSize Bₚ
+    let c_asd := Nat.RecursiveIn.Code.zero
+    -- if (Nat.pair (c_rfind c_asd) 17) ∈ ∅⌜ then
+    if halts:(evalSet ∅ (c_rfind c_asd) 17).Dom then
+      let rf := (evalSet ∅ (c_rfind c_asd) 17).get halts
+      let Aₛ := BSUnion rf Aₚ
+      let A_result := evalo (Aₛ) i n
+      Nat.pair Aₛ (Bₚ ++ (¬A_result))
+    else
+      Nat.pair Aₛ (Bₚ ++ 0)
+    -- ∅⌜
+    -- ask ∅' if there exists a `ext` s.t. a:=BSUnion ext Aₚ satisfies (eval (D a) i n).Dom.
+    -- for this, define c s.t. [c](_,x)= if (eval (D $ BSUnion x Aₚ) i n).Dom then 0 else 1.
     -- NOTE. the computation should diverge if queries are made beyond the size of the binary string.
-    -- then ask if (rfind c, n)∈K₀.
-    -- if so then return (a, )
-    Nat.pair 0 0
+    -- then ask if (rfind c, _)∈K₀.
+    -- if so then:
+    -- let rf := rfind c, _
+    -- Then, we know that (eval (D $ BSUnion rf Aₚ) i n).Dom.
+    -- let A_res := eval (D $ BSUnion rf Aₚ) i n.
+    -- So return Aₛ = BSUnion rf Aₚ, and
+    --           Bₛ = Bₚ ++ (not A_res).
+    -- Otherwise return (Aₚ,Bₚ++(anything)).
   else Nat.pair 0 0
 -- how will we prove that extending A_s maintains the halting status?
 -- need to show that extending string oracles will not change already halting computations.
@@ -771,7 +798,7 @@ theorem c_simple_aux_ev : eval (χ O) (c_simple_aux O) ab = if (Nat.succ ab.l.r=
   rw [←@eval_prim_eq_eval (c_simple_aux O) (χ O) c_simple_aux_ev_pr]
   simp only [PFun.coe_val, c_simple_aux_evp]
   exact apply_ite Part.some (ab.l.r.succ = evalnSet₁ O (Nat.pair ab.l.l ab.r)) 0 1
-def f_simple_ran (O:Set ℕ) : ℕ→ℕ := fun c => curry (code_rfind (c_ifevaleq (ef $ c_evalnSet₁ O))) c
+def f_simple_ran (O:Set ℕ) : ℕ→ℕ := fun c => curry (c_rfind (c_ifevaleq (ef $ c_evalnSet₁ O))) c
 #check c_ef
 /-
 rfind $ code for function that when given input (e,config):
