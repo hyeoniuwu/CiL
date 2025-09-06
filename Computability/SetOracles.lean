@@ -1,4 +1,5 @@
 import Computability.Jump
+import Computability.Constructions.Eval
 import Mathlib.Order.Basic
 
 open scoped Computability
@@ -633,29 +634,37 @@ namespace KP54
 
 
 #check List.Vector
-open Nat in
--- bsunion doesnt work bc it changes prev values
--- it should actually just be... join!
+#check List.concat
+/-
+bsunion doesnt work bc it changes prev values
+it should actually just be... join!
+so itd be convenient to use lists of bool
+but i defined c_list functions for list of naturals...
+which is fine. (i think i remember doing that on purpose, because you can interpret the natural that you get from the list afterwards.)
+and here i can just directly work with a list of nat anyways, interpreting 0 as false and anything else as true.
+-/
+open Nat List in
 /--
 Input: stage `s`
 Output: (code for `Aₛ`, code for `Bₛ`)
 -/
 noncomputable def KP54 : ℕ→ℕ := fun s =>
-  let i:=s.div2
+  -- let i:=s.div2
   if s=0 then Nat.pair 0 0
   else if s%2=0 then
-    let Aₚ := (KP54 s-1).l
-    let Bₚ := (KP54 s-1).r
-    let n  := BSSize Bₚ
+    let Aₚ := (KP54 (s-1)).l
+    let Bₚ := (KP54 (s-1)).r
+    let n  := List.length (n2l Bₚ)
     let c_asd := Nat.RecursiveIn.Code.zero
     -- if (Nat.pair (c_rfind c_asd) 17) ∈ ∅⌜ then
     if halts:(evalSet ∅ (c_rfind c_asd) 17).Dom then
       let rf := (evalSet ∅ (c_rfind c_asd) 17).get halts
-      let Aₛ := BSUnion rf Aₚ
-      let A_result := evalo (Aₛ) i n
-      Nat.pair Aₛ (Bₚ ++ (¬A_result))
+      let Aₛ := (n2l Aₚ) ++ (n2l rf) 
+      -- let A_result := evalo Aₛ i n
+      let A_result := (eval fzero c_asd n).get (sorry)
+      Nat.pair Aₛ ((n2l Bₚ).concat (Nat.sg' A_result))
     else
-      Nat.pair Aₛ (Bₚ ++ 0)
+      Nat.pair Aₚ (l2n $ (n2l Bₚ).concat 0)
     -- ∅⌜
     -- ask ∅' if there exists a `ext` s.t. a:=BSUnion ext Aₚ satisfies (eval (D a) i n).Dom.
     -- for this, define c s.t. [c](_,x)= if (eval (D $ BSUnion x Aₚ) i n).Dom then 0 else 1.
@@ -681,9 +690,21 @@ We note that:
 
 -- private def A := {x | x ∈ D (KP54 (2*x+1)).l}
 -- private def B := {x | x ∈ D (KP54 (2*x)).r}
-private def A := {x | Nat.BSMem (Nat.pair x (KP54 (2*x+1)).l) = 1}
-private def B := {x | Nat.BSMem (Nat.pair x (KP54 (2*x)).r)   = 1}
-private theorem R (i:ℕ) : evalSet A i ≠ χ B := by sorry
+-- private def A := {x | Nat.BSMem (Nat.pair x (KP54 (2*x+1)).l) = 1}
+-- private def B := {x | Nat.BSMem (Nat.pair x (KP54 (2*x)).r)   = 1}
+private def A := {x | (n2l (KP54 (2*x+1)).l)[x]? = some 1}
+private def B := {x | (n2l (KP54 (2*x  )).r)[x]? = some 1}
+private theorem R (i:ℕ) : evalSet A i ≠ χ B := by
+  unfold B
+  -- unfold A
+  unfold χ
+  unfold KP54
+  -- use 1
+  simp
+  -- intro h
+
+  
+  sorry
 private theorem S (i:ℕ) : evalSet B i ≠ χ A := by sorry
 
 theorem ex_incomparable_sets : ∃ A B:Set ℕ, A|ᵀB := by
