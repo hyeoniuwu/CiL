@@ -441,7 +441,7 @@ def c_rfind : ℕ→ℕ := fun c => comp (rfind' c) (pair Nat.RecursiveIn.Code.i
 
 
 /-- Given a code `c` -/
-@[simp] abbrev rfind (O:ℕ→ℕ) : ℕ→ℕ→.ℕ := fun c => fun a=> Nat.rfind fun n => (fun m => m = 0) <$> eval O c (Nat.pair a n)
+abbrev rfind (O:ℕ→ℕ) : ℕ→ℕ→.ℕ := fun c => fun a=> Nat.rfind fun n => (fun m => m = 0) <$> eval O c (Nat.pair a n)
 theorem c_rfind_prop : eval O (c_rfind c) a = (rfind O c a) := by
   unfold c_rfind
   unfold rfind
@@ -643,43 +643,43 @@ but i defined c_list functions for list of naturals...
 which is fine. (i think i remember doing that on purpose, because you can interpret the natural that you get from the list afterwards.)
 and here i can just directly work with a list of nat anyways, interpreting 0 as false and anything else as true.
 -/
+-- /mnt/Q/Mathematics/LaTeX/Writings/Computability.pdf
+
+def c_kp54_aux (A i n:ℕ) := zero
+theorem c_kp54_aux_evp : evalSet ∅ (c_kp54_aux A i n) x = if (eval ((n2l A) ++ (n2l x.r)) i n).Dom then 0 else 1 := by sorry
+
 open Nat List in
 /--
 Input: stage `s`
 Output: (code for `Aₛ`, code for `Bₛ`)
 -/
-noncomputable def KP54 : ℕ→ℕ := fun s =>
-  -- let i:=s.div2
-  if s=0 then Nat.pair 0 0
-  else if s%2=0 then
-    let Aₚ := (KP54 (s-1)).l
-    let Bₚ := (KP54 (s-1)).r
-    let n  := List.length (n2l Bₚ)
-    let c_asd := Nat.RecursiveIn.Code.zero
-    -- if (Nat.pair (c_rfind c_asd) 17) ∈ ∅⌜ then
-    if halts:(evalSet ∅ (c_rfind c_asd) 17).Dom then
-      let rf := (evalSet ∅ (c_rfind c_asd) 17).get halts
-      let Aₛ := (n2l Aₚ) ++ (n2l rf) 
-      -- let A_result := evalo Aₛ i n
-      let A_result := (eval fzero c_asd n).get (sorry)
+noncomputable def KP54 : ℕ→ℕ := λ s ↦
+  if s=0 then Nat.pair 0 0 else
+
+  let i:=s.div2
+  let Aₚ := (KP54 (s-1)).l
+  let Bₚ := (KP54 (s-1)).r
+  let lb := List.length (n2l Bₚ)
+  let la := List.length (n2l Aₚ)
+
+  if s%2=0 then
+    if halts:(rfind fzero (c_kp54_aux Aₚ i lb) 17).Dom then
+      let rf := (rfind fzero (c_kp54_aux Aₚ i lb) 17).get halts
+      let Aₛ := (n2l Aₚ) ++ (n2l rf)
+      let A_result := (eval fzero (c_kp54_aux Aₚ i lb) rf).get (sorry)
       Nat.pair Aₛ ((n2l Bₚ).concat (Nat.sg' A_result))
     else
       Nat.pair Aₚ (l2n $ (n2l Bₚ).concat 0)
-    -- ∅⌜
-    -- ask ∅' if there exists a `ext` s.t. a:=BSUnion ext Aₚ satisfies (eval (D a) i n).Dom.
-    -- for this, define c s.t. [c](_,x)= if (eval (D $ BSUnion x Aₚ) i n).Dom then 0 else 1.
-    -- NOTE. the computation should diverge if queries are made beyond the size of the binary string.
-    -- then ask if (rfind c, _)∈K₀.
-    -- if so then:
-    -- let rf := rfind c, _
-    -- Then, we know that (eval (D $ BSUnion rf Aₚ) i n).Dom.
-    -- let A_res := eval (D $ BSUnion rf Aₚ) i n.
-    -- So return Aₛ = BSUnion rf Aₚ, and
-    --           Bₛ = Bₚ ++ (not A_res).
-    -- Otherwise return (Aₚ,Bₚ++(anything)).
-  else Nat.pair 0 0
--- how will we prove that extending A_s maintains the halting status?
--- need to show that extending string oracles will not change already halting computations.
+
+  else
+    if halts:(rfind fzero (c_kp54_aux Bₚ i la) 17).Dom then
+      let rf := (rfind fzero (c_kp54_aux Bₚ i la) 17).get halts
+      let Bₛ := (n2l Bₚ) ++ (n2l rf)
+      let B_result := (eval fzero (c_kp54_aux Bₚ i la) rf).get (sorry)
+      Nat.pair Bₛ ((n2l Bₚ).concat (Nat.sg' B_result))
+    else
+      Nat.pair Bₚ (l2n $ (n2l Bₚ).concat 0)
+    -- Nat.pair 0 0
 
 /-
 `KP54(s)=(a,b)` where `D a, D b` correspond to sets `A` and `B` at stage `s`.
@@ -694,16 +694,42 @@ We note that:
 -- private def B := {x | Nat.BSMem (Nat.pair x (KP54 (2*x)).r)   = 1}
 private def A := {x | (n2l (KP54 (2*x+1)).l)[x]? = some 1}
 private def B := {x | (n2l (KP54 (2*x  )).r)[x]? = some 1}
+-- R i is satisfied at stage 2i.
 private theorem R (i:ℕ) : evalSet A i ≠ χ B := by
-  unfold B
-  -- unfold A
-  unfold χ
-  unfold KP54
-  -- use 1
-  simp
-  -- intro h
+  apply Function.ne_iff.mpr
+  use 2*i
+  if h1:(evalSet A i (2*i)).Dom then
+    -- simp at *
+    suffices (evalSet A (decodeCode i) (2 * i)).get h1 ≠ (χ B (2 * i)) from sorry
+    unfold B
+    unfold χ
+    unfold KP54
+    -- simp
+    cases i with
+    | zero =>
+      simp [eval, decodeCode]
+      exact rfl
+    | succ n =>
+    simp (config := { zeta := false })
+    lift_lets
+    extract_lets
+    expose_names
+    simp [-Nat.rfind_dom]
+    if halts:(rfind Nat.fzero (c_kp54_aux Aₚ i lb).encodeCode 17).Dom then
+    simp only [halts]
+    simp
+    -- some sort of induction?
+    -- if 2*n+1 points to something in B_p, then use IH.
+    -- otherwise, as the size of Bp is ≥ 2*n+1, it must be the alst eleemnt
+    sorry
+    else
 
-  
+    sorry
+
+  else
+    aesop
+
+
   sorry
 private theorem S (i:ℕ) : evalSet B i ≠ χ A := by sorry
 

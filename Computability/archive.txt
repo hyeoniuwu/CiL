@@ -1,0 +1,12 @@
+-- ∅⌜
+-- ask ∅' if there exists a `ext` s.t. a:=BSUnion ext Aₚ satisfies (eval (D a) i n).Dom.
+-- for this, define c s.t. [c](_,x)= if (eval (D $ BSUnion x Aₚ) i n).Dom then 0 else 1.
+-- NOTE. the computation should diverge if queries are made beyond the size of the binary string.
+-- then ask if (rfind c, _)∈K₀.
+-- if so then:
+-- let rf := rfind c, _
+-- Then, we know that (eval (D $ BSUnion rf Aₚ) i n).Dom.
+-- let A_res := eval (D $ BSUnion rf Aₚ) i n.
+-- So return Aₛ = BSUnion rf Aₚ, and
+--           Bₛ = Bₚ ++ (not A_res).
+-- Otherwise return (Aₚ,Bₚ++(anything)).
