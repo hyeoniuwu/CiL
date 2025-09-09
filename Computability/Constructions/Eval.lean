@@ -982,8 +982,12 @@ theorem c_evaln_evp_aux_nMod4 :
           | inr h =>
             simp [h,Option.bind]
 
--- @[simp] theorem c_evaln_ev: eval O c_evaln (Nat.pair x (Nat.pair code s)) = o2n (evaln O s code x) := by
---   rw [← eval_prim_eq_eval c_evaln_ev_pr];
+@[simp] theorem c_evaln_ev_pr:code_prim (c_evaln) := by
+  -- unfold c_evaln_aux;+
+  sorry
+@[simp] theorem c_evaln_ev: eval O c_evaln (Nat.pair x (Nat.pair code s)) = o2n (evaln O s code x) := by
+  rw [← eval_prim_eq_eval c_evaln_ev_pr];
+  simp only [PFun.coe_val, c_evaln_evp, Part.coe_some]
 --   simp? says simp only [PFun.coe_val, c_evaln_evp, Part.coe_some]
 end Nat.RecursiveIn.Code
 -- theorem Nat.PrimrecIn.evaln:Nat.PrimrecIn O (unpaired evaln) := by rw [← c_evaln_evp]; apply code_prim_prop c_evaln_ev_pr
