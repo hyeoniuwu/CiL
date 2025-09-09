@@ -620,25 +620,51 @@ theorem c_eval_pr_oracle₁_ev (h:code_prim oex.l) : eval O c_eval_custom_oracle
 theorem c_eval_pr_oracle₁_ev_aux : eval_prim O c_eval_custom_oracle₁_aux oe = encodeCode_oraclereplacement oe.l oe.r := by
   unfold c_eval_custom_oracle₁_aux
   sorry
-def eval_clamped (O : ℕ → ℕ)  (use:ℕ) : Code → ℕ →. ℕ
+-- eval. but ensures that every query to the oracle is strictly below `use`
+-- def eval_clamped
+-- (use:ℕ)
+-- (O : (n:ℕ) → (n<use) → ℕ)
+-- : Code → ℕ →. ℕ
+-- | zero => pure 0
+-- | succ => fun n => some (n + 1)
+-- | left => fun n => some (Nat.unpair n).1
+-- | right => fun n => some (Nat.unpair n).2
+-- | oracle => fun n => if h:n<use then O n h else Part.none
+-- | pair cf cg =>
+--     fun n => Nat.pair <$> eval_clamped use O cf n <*> eval_clamped use O cg n
+-- | comp cf cg =>
+--     fun n => eval_clamped use O cg n >>= eval_clamped use O cf
+-- | prec cf cg =>
+--     Nat.unpaired fun a n =>
+--       n.rec (eval_clamped use O cf a) fun y IH => do
+--         let i ← IH
+--         eval_clamped use O cg (Nat.pair a (Nat.pair y i))
+-- | rfind' cf =>
+--     Nat.unpaired fun a m =>
+--       (Nat.rfind fun n => (fun x => x = 0) <$> eval_clamped use O cf (Nat.pair a (n + m))).map (· + m)
+def eval_clamped
+(O : ℕ  → ℕ)
+(use:ℕ)
+: Code → ℕ →. ℕ
 | zero => pure 0
 | succ => fun n => some (n + 1)
 | left => fun n => some (Nat.unpair n).1
 | right => fun n => some (Nat.unpair n).2
-| oracle => fun n => if n≤use+1 then O n else Part.none
+| oracle => fun n => if n<use then O n else Part.none
 | pair cf cg =>
-    fun n => Nat.pair <$> eval O cf n <*> eval O cg n
+    fun n => Nat.pair <$> eval_clamped O use cf n <*> eval_clamped O use cg n
 | comp cf cg =>
-    fun n => eval O cg n >>= eval O cf
+    fun n => eval_clamped O use cg n >>= eval_clamped O use cf
 | prec cf cg =>
     Nat.unpaired fun a n =>
-      n.rec (eval O cf a) fun y IH => do
+      n.rec (eval_clamped O use cf a) fun y IH => do
         let i ← IH
-        eval O cg (Nat.pair a (Nat.pair y i))
+        eval_clamped O use cg (Nat.pair a (Nat.pair y i))
 | rfind' cf =>
     Nat.unpaired fun a m =>
-      (Nat.rfind fun n => (fun x => x = 0) <$> eval O cf (Nat.pair a (n + m))).map (· + m)
-
+      (Nat.rfind fun n => (fun x => x = 0) <$> eval_clamped O use cf (Nat.pair a (n + m))).map (· + m)
+def n2b (n:ℕ) : Bool := if n=0 then false else true
+def b2n (b:Bool) : ℕ := if b then 1 else 0
 theorem Part.eq_some_imp_dom {p:Part ℕ} : p=Part.some x → p.Dom := by
   intro a
   subst a
@@ -649,7 +675,9 @@ theorem eval_clamped_prop': eval_clamped O u c x=Part.some y → eval O c x=Part
 theorem eval_clamped_prop''_aux (h:eval_clamped O u c x=Part.some y): (use O c x).Dom := e2u (Part.eq_some_imp_dom (eval_clamped_prop' h))
 -- theorem eval_clamped_prop''_aux' (h:y∈eval_clamped O u c x): (use O c x).Dom := e2u (Part.mem_imp_dom (eval_clamped_prop' h))
 theorem eval_clamped_prop'' (h:eval_clamped O u c x=Part.some y): y∈eval O c x ∧ (use O c x).get (eval_clamped_prop''_aux h)≤u := by sorry
-def eval_string (σ:List ℕ) (c:Code) (x:ℕ):= eval_clamped (fun e=> σ.getD e 999) σ.length c x
+-- def eval_string (σ:List ℕ) (c:Code) (x:ℕ):= eval_clamped (fun e=> σ.getD e 999) σ.length c x
+-- def eval_string (σ:List ℕ) (c:Code) (x:ℕ):= eval_clamped (fun e=> Nat.sg $ σ.getD e 999) σ.length c x
+def eval_string (σ:List ℕ) (c:Code) (x:ℕ):= eval_clamped (fun e=> b2n $ n2b $ σ.getD e 999) σ.length c x
 end Nat.RecursiveIn.Code
 -- theorem asdasd : Primrec c_eval_custom_oracle
 
@@ -673,6 +701,7 @@ but i defined c_list functions for list of naturals...
 which is fine. (i think i remember doing that on purpose, because you can interpret the natural that you get from the list afterwards.)
 and here i can just directly work with a list of nat anyways, interpreting 0 as false and anything else as true.
 -/
+-- the proofs later however are simplified if A_s,B_s are treated as List Bool...
 -- /mnt/Q/Mathematics/LaTeX/Writings/Computability.pdf
 -- c_kp54_aux check if x.r+1 is a finite extension to A for the computation [i](n).
 def c_kp54_aux (A i n:ℕ) := zero
@@ -691,6 +720,7 @@ theorem c_kp54_aux_2 (halts:(rfind fzero (c_kp54_aux Aₚ i lb) 17).Dom) :
 
     sorry
 
+
 open Nat List in
 /--
 Input: stage `s`
@@ -699,13 +729,14 @@ Output: (code for `Aₛ`, code for `Bₛ`)
 noncomputable def KP54 : ℕ→ℕ := λ s ↦
   if s=0 then Nat.pair 0 0 else
 
-  let i:=s.div2
+  let i:=(s-1).div2
   let Aₚ := (KP54 (s-1)).l
   let Bₚ := (KP54 (s-1)).r
   let lb := List.length (n2l Bₚ)
   let la := List.length (n2l Aₚ)
 
   if s%2=0 then
+    -- then s=2i+2, and we will work on Rᵢ.
     if halts:(rfind fzero (c_kp54_aux Aₚ i lb) 17).Dom then
       let rf := (rfind fzero (c_kp54_aux Aₚ i lb) 17).get halts
       -- rf is the smallest natural such that
@@ -721,6 +752,7 @@ noncomputable def KP54 : ℕ→ℕ := λ s ↦
       Nat.pair (l2n $ (n2l Aₚ).concat 0) (l2n $ (n2l Bₚ).concat 0)
 
   else
+    -- then s=2i+1, and we will work on Sᵢ.
     if halts:(rfind fzero (c_kp54_aux Bₚ i la) 17).Dom then
       let rf := (rfind fzero (c_kp54_aux Bₚ i la) 17).get halts
       let Bₛ := (n2l Bₚ) ++ (n2l (rf+1))
@@ -762,6 +794,8 @@ private noncomputable def Bs (s:ℕ) := n2l (KP54 (s)).r
 -- private def A := {x | (As x)[x]? = some 1}
 
 
+
+
 theorem Agetsextended : (As i) <+: (As (i+1)) := by
   unfold As
   rw (config:={occs:=.pos [2]}) [KP54]
@@ -775,6 +809,28 @@ theorem Agetsextended : (As i) <+: (As (i+1)) := by
   else
     simp [h0,-Nat.rfind_dom]
     aesop
+theorem Agetsextended2 : (As i) <+: (As (i+j)) := by
+  induction j with
+  | zero => simp_all
+  | succ jM1 ihj =>
+    rw [←add_assoc]
+    have := @Agetsextended (i + jM1)
+    exact List.IsPrefix.trans ihj this
+theorem Agetsextended3 (h:i≤j) : (As i) <+: (As j) := by
+  rw [Eq.symm (Nat.add_sub_of_le h)]
+  exact Agetsextended2
+theorem Agetsextended4 
+(hi:k<(As i).length)
+(hh:k<(As j).length)
+: (As i)[k] = (As j)[k] := by
+  cases Classical.em (i≤j) with
+  | inl h =>
+    have := Agetsextended3 h
+    exact List.IsPrefix.getElem this hi
+  | inr h =>
+    simp at h
+    have := Agetsextended3 (Nat.le_of_succ_le h)
+    exact Eq.symm (List.IsPrefix.getElem this hh)
 theorem AsBsSize2 : (Bs (2*i+2)).length = (Bs (2*i+1)).length + 1 := by
   induction i with
   | zero =>
@@ -803,7 +859,13 @@ theorem AsBsSize2 : (Bs (2*i+2)).length = (Bs (2*i+1)).length + 1 := by
     else
     simp [h0,-Nat.rfind_dom]
     exact rfl
--- theorem AsBsSize2': (Bs (2*i+2)).length -1 = (Bs (2*i+1)).length + 1 := by sorry
+theorem AsBsSize2': (Bs (2 * (i + 1) - 1)).length < (Bs (2 * (i + 1))).length := by
+  have : 2 * (i + 1) - 1 = 2*i+1 := by exact rfl
+  rw [this]
+  have : 2*(i+1) = 2*i + 2:= by exact rfl
+  rw [this]
+  have := @AsBsSize2 i
+  simp_all only [Nat.add_one_sub_one, lt_add_iff_pos_right, zero_lt_one]
 theorem AsBsSize : i≤(As i).length ∧ i≤(Bs i).length := by
   induction i with
   | zero => exact ⟨Nat.zero_le (As 0).length, Nat.zero_le (Bs 0).length⟩
@@ -839,7 +901,8 @@ theorem AsBsSize : i≤(As i).length ∧ i≤(Bs i).length := by
         exact ih
 theorem AsSize : i<(As (i+1)).length := (@AsBsSize (i+1)).left
 theorem BsSize : i<(Bs (i+1)).length := (@AsBsSize (i+1)).right
-private def A := {x | (As (x+1))[x]'AsSize≠0}
+-- private def A := {x | (As (x+1))[x]'AsSize≠0}
+private def A := {x | n2b $ (As (x+1))[x]'AsSize}
 private def B := {x | (Bs (x+1))[x]'BsSize≠0}
 private def Atest := {x | (n2l (KP54 (x)).l)[x]? = some 1}
 
@@ -925,8 +988,78 @@ let k := (n2l (Bs (2*i-1))).length
   sorry
 
 
+private theorem Rasd2 (i:ℕ) (h:(eval_string (As (2*(i+1))) i ((n2l (Bs (2*(i+1)-1))).length)).Dom):
+-- let k := (n2l (Bs (2*(i)))).length-1
+let k := (n2l (Bs (2*(i+1)-1))).length
+(eval_string (As (2*(i+1))) i k).get h ≠ (Bs (2*(i+1)))[k]'(by
+  -- unfold Bsize
+  rw [show k=(n2l (l2n (Bs (2 * (i + 1) - 1)))).length from rfl]
+  -- rw [show k=(n2l (l2n (Bs (2 * i - 1)))).length from rfl]
+  simp only [Denumerable.ofNat_encode]
+  exact AsBsSize2'
+  ) := by
+  extract_lets
+  expose_names
+  
+  unfold Bs
+  unfold As
+  -- unfold χ
+  unfold KP54
+  simp (config := { zeta := false }) [-Nat.rfind_dom]
+  lift_lets
+  extract_lets
+  expose_names
+  -- have i_1_simp: i_1 = i := by exact Nat.div2_bit0 i
+  have i_1_simp: i_1 = i := by
+    rw [show i_1=(2 * (i + 1) - 1).div2 from rfl]
+    exact Nat.div2_bit1 i
+  simp (config := { zeta := false }) only [i_1_simp]
+  -- cases i with
+  -- | zero => contradiction
+  -- | succ i =>
+  -- sorry
+  -- use lb
+  -- simp (config := { zeta := false }) [-Nat.rfind_dom]
+  -- have h0:2 * (i + 1) % 2 = 0 := by exact Nat.mul_mod_right 2 (i + 1)
+  -- if h0:(Bsize i + 1) % 2 = 0 then
+  -- simp (config := { zeta := false }) [h0, -Nat.rfind_dom]
+  -- if h1: (rfind Nat.fzero (c_kp54_aux Aₚ (i_1) lb).encodeCode 17).Dom then
+  if h1: (rfind Nat.fzero (c_kp54_aux Aₚ i lb).encodeCode 17).Dom then
+  simp (config := { zeta := false }) [h1, -Nat.rfind_dom]
+  -- simp (config := { zeta := false })
+  lift_lets
+  extract_lets
+  expose_names
+  have : k=lb := by
+    rw [show k=(n2l (l2n (Bs (2 * (i+1) - 1)))).length from rfl]
+    simp
+    rw [show lb=(n2l Bₚ).length from rfl]
+    unfold Bs
+    rw [show Bₚ=(KP54 (2 * (i + 1) - 1)).r from rfl]
+  simp [this]
+  have lbrw : lb = (n2l Bₚ).length := rfl
 
+  simp only [lbrw]
+  simp
+  have aaa : A_result = (eval_string (n2l Aₚ ++ n2l (rf + 1)) (decodeCode i_1) lb).get (c_kp54_aux_2
+    (Eq.mpr_prop (Eq.refl (rfind Nat.fzero (c_kp54_aux Aₚ i_1 lb).encodeCode 17).Dom)
+      (Eq.mpr_prop
+        (congrArg (fun x ↦ (rfind Nat.fzero (c_kp54_aux Aₚ x lb).encodeCode 17).Dom) i_1_simp)
+        (of_eq_true (eq_true h1))))) := rfl
+  
+  simp [-Denumerable.list_ofNat_succ] at aaa
+  have : (n2l Aₚ ++ n2l (rf + 1))=Aₛ:= rfl
+  simp only [this] at aaa
+  simp (config := { zeta := false }) only [i_1_simp] at aaa
+  simp only [←lbrw]
+  have Aresrw : eval_string Aₛ (decodeCode (i)) lb = Part.some A_result := by
+    rw [aaa]
+    simp
+  simp [Aresrw]
+  cases A_result <;> simp
+  else
 
+  sorry
 
   -- apply Function.ne_iff.mpr
 -- proof by the use principle.
@@ -941,7 +1074,7 @@ theorem part_ineq {p1 p2 : Part ℕ} (h1:p1.Dom) (h2:p2.Dom) : p1 ≤ p2 ↔ (p1
   
   
   #check Part
-theorem Aextends : eval_string (As (2*(i+1))) i k=Part.some y → evalSet A i k=Part.some y := by
+theorem Aextends : eval_string (As (2*i)) i k=Part.some y → evalSet A i k=Part.some y := by
   unfold A
   
   simp
@@ -960,25 +1093,30 @@ theorem Aextends : eval_string (As (2*(i+1))) i k=Part.some y → evalSet A i k=
   rotate_left
   exact Part.eq_some_imp_dom h2
 
-  suffices ∀ i_1≤ (As (2 * (i + 1))).length, (As (2 * (i + 1)))[i_1]?.getD 999 = if (As (i_1 + 1))[i_1]'AsSize = 0 then 0 else 1 from by
+  suffices ∀ i_1 < (As (2 * i)).length,
+  b2n (n2b ((As (2 * i))[i_1]?.getD 999)) = if n2b ((As (i_1 + 1))[i_1]'AsSize) = true then 1 else 0
+    from by
     intro h3 h4
     have h5 := this h3 (Nat.le_trans h4 h1)
     simp only [h5, ite_eq_ite]
   
   intro ii hii
-
-  
-  -- trivial sorry.
-  sorry
+  have asz := @AsSize ii
+  have : ((As (2 * i))[ii]?.getD 999) = (As (ii + 1))[ii] := by
+    have : (As (2 * i))[ii]?.getD 999 = (As (2 * i))[ii] := by simp_all only [getElem?_pos, Option.getD_some]
+    rw [this]
+    exact Agetsextended4 hii asz
+  rw [this]
+  rfl
   
 
   -- have := eval_clamped_prop
   
-  sorry
-theorem Aextends' : ¬((eval_string (KP54 (2*(i+1))).l i) (k)).Dom → ¬(evalSet A i (k)).Dom := by sorry
-theorem Aextends'' : (eval_string (KP54 (2*(i+1))).l i) (k)=Part.some y ↔  evalSet A i (k)=Part.some y := by sorry
-theorem Aextends'''_aux (h:( evalSet A i k).Dom): (eval_string (As (2*(i+1))) i k).Dom := by sorry
-theorem Aextends''' {i:ℕ} (h:(evalSet A i k).Dom): evalSet A i k= eval_string (As (2*(i+1))) i k:= by sorry
+-- theorem Aextends' : ¬((eval_string (KP54 (2*(i+1))).l i) (k)).Dom → ¬(evalSet A i (k)).Dom := by sorry
+-- theorem Aextends'' : (eval_string (KP54 (2*(i+1))).l i) (k)=Part.some y ↔  evalSet A i (k)=Part.some y := by sorry
+-- theorem Aextends'''_aux (h:( evalSet A i k).Dom): (eval_string (As (2*(i+1))) i k).Dom := by sorry
+-- theorem Aextends''' {i:ℕ} (h:(evalSet A i k).Dom): evalSet A i k=eval_string (As (2*i)) i k:= by sorry
+theorem Aextends''' {i:ℕ} (h:(evalSet A i k).Dom): evalSet A i k=eval_string (As (2*(i+1))) i k:= by sorry
 
 -- R i is satisfied at stage 2i.
 theorem Part.get_eq_some {p:Part ℕ} (h:p.Dom) : p=Part.some (p.get h) := by exact Part.dom_imp_some h
@@ -986,15 +1124,22 @@ private theorem R (i:ℕ) : evalSet A i ≠ χ B := by
   apply Function.ne_iff.mpr
   -- the thing happens at the lb := List.length (n2l Bₚ).
   -- use Bsize i
-  cases i with
-  | zero => simp; sorry
-  | succ i =>
-  have main := Rasd (i+1) (Nat.zero_lt_succ i)
+  -- cases i with
+  -- | zero =>
+  --   simp
+  --   simp [decodeCode,eval,pure,PFun.pure]
+  --   unfold B
+  --   unfold χ
+  --   simp
+  --   unfold Bs
+  --   sorry
+  -- | succ i =>
+  have main := Rasd2 i
   extract_lets at main
   expose_names
   use k
-  if h0:(evalSet A (decodeCode (i+1)) (k)).Dom then
-  suffices (evalSet A (decodeCode (i+1)) k).get h0 ≠ (χ B) k from by
+  if h0:(evalSet A (decodeCode i) (k)).Dom then
+  suffices (evalSet A (decodeCode i) k).get h0 ≠ (χ B) k from by
     simp
     contrapose this
     simp
@@ -1004,7 +1149,15 @@ private theorem R (i:ℕ) : evalSet A i ≠ χ B := by
   -- have := Aextends''.mpr (Part.get_eq_some h0)
   have := Aextends''' h0
   simp only [this]
-  
+  -- simp at main
+  have main1 := main (this ▸ h0)
+  clear main
+  have : χ B k = (Bs (2 * (i + 1)))[k]'(sorry) := by
+    unfold B
+    unfold χ
+    simp
+    sorry
+  exact Ne.symm (ne_of_eq_of_ne this (id (Ne.symm main1)))
 
   
   sorry
