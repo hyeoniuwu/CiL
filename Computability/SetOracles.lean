@@ -934,6 +934,30 @@ theorem AsSize_e2o : (As (2*i+1)).length < (As (2*i+2)).length:= by
   rw [show As (2*i+1) = n2l Aₚ from rfl]
   if h0:(dvt).Dom then simp [h0]
   else simp [h0]
+-- theorem asd : i=(i/2)*2 ∨ i=(i/2)*2+1 := by
+--   #check Nat.even_or_odd
+--   #check Odd
+--   omega
+  -- grind
+theorem AsSize_mono' : (As i).length < (As (i+1)).length := by
+  cases Nat.even_or_odd i with
+  | inl h =>
+    rcases h with ⟨h1,h2⟩
+    have := @AsSize_o2e h1
+    have a0 : i=2*h1 := by
+      rw [h2]
+      exact Eq.symm (Nat.two_mul h1)
+    rw [a0]
+    simp_all only [lt_add_iff_pos_right, zero_lt_one]
+  | inr h =>
+    rcases h with ⟨h1,h2⟩
+    have := @AsSize_e2o h1
+    rw [h2]
+    simp_all only []
+theorem AsSize_mono (hij:i<j) : (As i).length < (As j).length := by
+  have a0 := @AsSize_mono' i
+  have a1 := (@ABgetsextended3 (i+1) j (hij)).left
+  exact Nat.lt_of_lt_of_le a0 (List.IsPrefix.length_le a1)
 theorem BsSize_o2e : (Bs (2*i+2)).length = (Bs (2*i+1)).length + 1 := by
   rw [Bs, KP54]
   simp (config := { zeta := false })
@@ -955,13 +979,16 @@ theorem BsSize_o2e': (Bs (2 * (i + 1) - 1)).length < (Bs (2 * (i + 1))).length :
   rw [this]
   have := @BsSize_o2e i
   simp_all only [Nat.add_one_sub_one, lt_add_iff_pos_right, zero_lt_one]
-theorem Asexext: ∃ lM1, (As i)++(n2l (lM1+1))=As (i+1) := by
-  have a0 := (@ABgetsextended i).left
-  have a1 : (As i).length < (As (i+1)).length := by sorry
+theorem Asexext (hij:i<j): ∃ lM1, (As i)++(n2l (lM1+1))=As j := by
+  have a0 := (@ABgetsextended3 i j (Nat.le_of_succ_le hij)).left
+  have a1 : (As i).length < (As j).length := by exact AsSize_mono hij
   rcases a0 with ⟨h1,h2⟩
-  have a2 : h1.length > 0 := by sorry
-  have a3 : l2n h1 > 0 := by sorry
-  have a4 : (l2n h1)-1+1=l2n h1 := by sorry
+  have a2 : h1.length > 0 := by grind
+  have a3 : l2n h1 ≠ 0 := by
+    contrapose a2
+    simp at a2 ⊢
+    apply Encodable.encode_inj.mp a2
+  have a4 : (l2n h1)-1+1=l2n h1 := by exact Nat.succ_pred_eq_of_ne_zero a3
   use (l2n h1)-1
   simp [a4]
   exact h2
@@ -1013,6 +1040,7 @@ noncomputable def Bsize (i:ℕ) := (Bs i).length
 
 -- use (n2l ((KP54 (2 * (i + 1) - 1)).r)).length
 -- private theorem Rasd (i:ℕ) : ∃ k,(eval_string (As (2*i)) i (k)) ≠ (Bs (2*i))[k]'(by
+-- DELETE THE BELOW
 private theorem Rasd (i:ℕ) (hi:0<i):
 -- let k := (n2l (Bs (2*(i)))).length-1
 let k := (n2l (Bs (2*i-1))).length
@@ -1107,9 +1135,6 @@ let k := (n2l (Bs (2*(i+1)-1))).length
   extract_lets
   expose_names
   have i_1_simp: i_1 = i := Nat.div2_bit1 i
-  -- simp (config := { zeta := false }) only [i_1_simp]
-
-
   have keqlb : k=lb := by
     rw [show k=(n2l (l2n (Bs (2 * (i+1) - 1)))).length from rfl]
     simp
@@ -1161,7 +1186,8 @@ let k := (n2l (Bs (2*(i+1)-1))).length
   rw [Aprw] at this
   have aux0 : 2*(i+1) = 2*i+2 := rfl
   rw [aux0] at h
-  have := @Asexext (2*i+1)
+  -- have := @Asexext' (2*i+1)
+  have := @Asexext (2*i+1) (2*i+2) (Nat.lt_add_one (2 * i + 1))
   rcases this with ⟨h1,h2⟩
   have := this h1
   rw [h2] at this
@@ -1216,16 +1242,63 @@ let k:=(n2l (Bs (2*(i+1)-1))).length
   -- intro h
   unfold As
   unfold KP54
-  simp (config := { zeta := false }) [-Nat.rfind_dom]
+  simp (config := { zeta := false })
   lift_lets
   extract_lets
   expose_names
-  if h0:(rfind Nat.fzero (c_kp54_aux Aₚ i_1 lb).encodeCode 17).Dom then
-  simp (config := { zeta := false }) [h0, -Nat.rfind_dom]
-  sorry
+  have i_1_simp: i_1 = i := Nat.div2_bit1 i
+  have keqlb : k=lb := by
+    rw [show k=(n2l (l2n (Bs (2 * (i+1) - 1)))).length from rfl]
+    simp
+    rw [show lb=(n2l Bₚ).length from rfl]
+    unfold Bs
+    rw [show Bₚ=(KP54 (2 * (i + 1) - 1)).r from rfl]
+  
+  if h0:(dvt).Dom then
+  simp (config := { zeta := false }) [h0]
+  lift_lets
+  extract_lets
+  expose_names
+  simp
+  intro h
+  exfalso
+  have := c_kp54_aux_2 h0
+  simp [-Denumerable.list_ofNat_succ] at this
+  rw [i_1_simp] at this
+  have a0 : (n2l Aₚ ++ n2l ((eval Nat.fzero (c_kp54_aux Aₚ i lb).dovetail 17).get h0 + 1)) = Aₛ := by exact rfl
+  rw [a0] at this
+  rw [keqlb] at h
+  exact h this
+
+
+
   else
   simp at h0
-  simp (config := { zeta := false }) [h0, -Nat.rfind_dom]
+  simp (config := { zeta := false }) [h0]
+  have a0 : eval Nat.fzero (c_kp54_aux Aₚ i_1 lb).dovetail 17 = Part.none := by exact Part.eq_none_iff'.mpr h0
+  
+  have a1 := dovetail_ev_1.mp a0; clear a0
+  simp [c_kp54_aux_evp, -Denumerable.list_ofNat_succ] at a1
+  intro h; clear h
+  contrapose a1
+  simp at a1
+  simp [-Denumerable.list_ofNat_succ]
+  
+  rw [i_1_simp]
+  
+
+  unfold A at a1
+  unfold χ at a1
+  simp at a1
+  simp only [eval_string]
+
+  let compl := (eval (fun x ↦ if n2b ((As (x + 1))[x]'(AsSize)) = true then 1 else 0) (decodeCode i) k)
+  have a2 := e2u a1
+  -- use reverse of eval_clamped_prop'' to rephrase the eval_clamped in the goal to just eval.
+  -- then, use the extension that will get the oracle string to As (use).
+  -- the inequality will be satisfies as the list as size greater than use.
+
+
   sorry
 theorem Aextends' : ¬(eval_string (As (2*i)) i k).Dom → ¬(evalSet A i k).Dom := by
   unfold A
