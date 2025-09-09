@@ -1,5 +1,6 @@
 import Computability.Jump
 import Computability.Constructions.Eval
+import Computability.Use
 import Mathlib.Order.Basic
 
 open scoped Computability
@@ -619,7 +620,36 @@ theorem c_eval_pr_oracle₁_ev (h:code_prim oex.l) : eval O c_eval_custom_oracle
 theorem c_eval_pr_oracle₁_ev_aux : eval_prim O c_eval_custom_oracle₁_aux oe = encodeCode_oraclereplacement oe.l oe.r := by
   unfold c_eval_custom_oracle₁_aux
   sorry
+def eval_clamped (O : ℕ → ℕ)  (use:ℕ) : Code → ℕ →. ℕ
+| zero => pure 0
+| succ => fun n => some (n + 1)
+| left => fun n => some (Nat.unpair n).1
+| right => fun n => some (Nat.unpair n).2
+| oracle => fun n => if n≤use+1 then O n else Part.none
+| pair cf cg =>
+    fun n => Nat.pair <$> eval O cf n <*> eval O cg n
+| comp cf cg =>
+    fun n => eval O cg n >>= eval O cf
+| prec cf cg =>
+    Nat.unpaired fun a n =>
+      n.rec (eval O cf a) fun y IH => do
+        let i ← IH
+        eval O cg (Nat.pair a (Nat.pair y i))
+| rfind' cf =>
+    Nat.unpaired fun a m =>
+      (Nat.rfind fun n => (fun x => x = 0) <$> eval O cf (Nat.pair a (n + m))).map (· + m)
 
+theorem Part.eq_some_imp_dom {p:Part ℕ} : p=Part.some x → p.Dom := by
+  intro a
+  subst a
+  exact trivial
+theorem Part.mem_imp_dom {p:Part ℕ} : x∈p → p.Dom := λ h ↦ Part.eq_some_imp_dom (Part.eq_some_iff.mpr h)
+-- theorem eval_clamped_prop': y∈eval_clamped O u c x → y∈eval O c x := by sorry
+theorem eval_clamped_prop': eval_clamped O u c x=Part.some y → eval O c x=Part.some y := by sorry
+theorem eval_clamped_prop''_aux (h:eval_clamped O u c x=Part.some y): (use O c x).Dom := e2u (Part.eq_some_imp_dom (eval_clamped_prop' h))
+-- theorem eval_clamped_prop''_aux' (h:y∈eval_clamped O u c x): (use O c x).Dom := e2u (Part.mem_imp_dom (eval_clamped_prop' h))
+theorem eval_clamped_prop'' (h:eval_clamped O u c x=Part.some y): y∈eval O c x ∧ (use O c x).get (eval_clamped_prop''_aux h)≤u := by sorry
+def eval_string (σ:List ℕ) (c:Code) (x:ℕ):= eval_clamped (fun e=> σ.getD e 999) σ.length c x
 end Nat.RecursiveIn.Code
 -- theorem asdasd : Primrec c_eval_custom_oracle
 
@@ -644,9 +674,14 @@ which is fine. (i think i remember doing that on purpose, because you can interp
 and here i can just directly work with a list of nat anyways, interpreting 0 as false and anything else as true.
 -/
 -- /mnt/Q/Mathematics/LaTeX/Writings/Computability.pdf
-
+-- c_kp54_aux check if x.r+1 is a finite extension to A for the computation [i](n).
 def c_kp54_aux (A i n:ℕ) := zero
-theorem c_kp54_aux_evp : evalSet ∅ (c_kp54_aux A i n) x = if (eval ((n2l A) ++ (n2l x.r)) i n).Dom then 0 else 1 := by sorry
+theorem c_kp54_aux_evp :
+  evalSet ∅ (c_kp54_aux A i n) x
+    =
+  if (eval_string ((n2l A) ++ (n2l (x.r+1))) i n).Dom then 0 else 1
+:= by
+  sorry
 
 open Nat List in
 /--
@@ -665,51 +700,208 @@ noncomputable def KP54 : ℕ→ℕ := λ s ↦
   if s%2=0 then
     if halts:(rfind fzero (c_kp54_aux Aₚ i lb) 17).Dom then
       let rf := (rfind fzero (c_kp54_aux Aₚ i lb) 17).get halts
-      let Aₛ := (n2l Aₚ) ++ (n2l rf)
+      -- rf is the smallest natural such that
+      -- (eval_string ((n2l A) ++ (n2l rf)) i n).Dom
+      -- if such rf doesn't exist, that means that there is no (finite) extension of A s.t.
+      -- the computation [i](n) halts with use ≰ n.
+      let Aₛ := (n2l Aₚ) ++ (n2l (rf+1))
       let A_result := (eval fzero (c_kp54_aux Aₚ i lb) rf).get (sorry)
       Nat.pair Aₛ ((n2l Bₚ).concat (Nat.sg' A_result))
     else
-      Nat.pair Aₚ (l2n $ (n2l Bₚ).concat 0)
+      -- Nat.pair Aₚ (l2n $ (n2l Bₚ).concat 0)
+      Nat.pair (l2n $ (n2l Aₚ).concat 0) (l2n $ (n2l Bₚ).concat 0)
 
   else
     if halts:(rfind fzero (c_kp54_aux Bₚ i la) 17).Dom then
       let rf := (rfind fzero (c_kp54_aux Bₚ i la) 17).get halts
-      let Bₛ := (n2l Bₚ) ++ (n2l rf)
+      let Bₛ := (n2l Bₚ) ++ (n2l (rf+1))
       let B_result := (eval fzero (c_kp54_aux Bₚ i la) rf).get (sorry)
-      Nat.pair Bₛ ((n2l Bₚ).concat (Nat.sg' B_result))
+      Nat.pair ((n2l Aₚ).concat (Nat.sg' B_result)) Bₛ
     else
-      Nat.pair Bₚ (l2n $ (n2l Bₚ).concat 0)
+      -- Nat.pair Bₚ (l2n $ (n2l Bₚ).concat 0)
+      Nat.pair (l2n $ (n2l Aₚ).concat 0) (l2n $ (n2l Bₚ).concat 0)
     -- Nat.pair 0 0
+/-
+so we can assert that
+A=(KP54 2i).l
+B=(KP54 2i).r
+Then 
+evalSet A i ≠ χ B, by using lb
+Also remark that the use of evalSet A is below lb
+-/
+
+
 
 /-
 `KP54(s)=(a,b)` where `D a, D b` correspond to sets `A` and `B` at stage `s`.
 We note that:
  · by stage 2n,   `χ_B(n)` is bound to be defined.
  · by stage 2n+1, `χ_A(n)` is bound to be defined.
+
+actually now i changed it so that i think
+ · by stage n,   `χ_B(n)` is bound to be defined.
+ · by stage n,   `χ_A(n)` is bound to be defined.
 -/
 
 -- private def A := {x | x ∈ D (KP54 (2*x+1)).l}
 -- private def B := {x | x ∈ D (KP54 (2*x)).r}
 -- private def A := {x | Nat.BSMem (Nat.pair x (KP54 (2*x+1)).l) = 1}
 -- private def B := {x | Nat.BSMem (Nat.pair x (KP54 (2*x)).r)   = 1}
-private def A := {x | (n2l (KP54 (2*x+1)).l)[x]? = some 1}
-private def B := {x | (n2l (KP54 (2*x  )).r)[x]? = some 1}
+private noncomputable def As (s:ℕ) := n2l (KP54 (s)).l
+private noncomputable def Bs (s:ℕ) := n2l (KP54 (s)).r
+-- private def A := {x | (As x)[x]? = some 1}
+
+
+theorem Agetsextended : (As i) <+: (As (i+1)) := by
+  unfold As
+  rw (config:={occs:=.pos [2]}) [KP54]
+  simp (config := { zeta := false })
+  lift_lets
+  extract_lets
+  expose_names
+  if h0:(i + 1) % 2 = 0 then
+    simp [h0,-Nat.rfind_dom]
+    aesop
+  else
+    simp [h0,-Nat.rfind_dom]
+    aesop
+theorem AsBsSize : i≤(As i).length ∧ i≤(Bs i).length := by
+  induction i with
+  | zero => exact ⟨Nat.zero_le (As 0).length, Nat.zero_le (Bs 0).length⟩
+  | succ i ih =>
+    unfold As
+    unfold Bs
+    unfold KP54
+    simp (config := { zeta := false })
+    lift_lets
+    extract_lets
+    expose_names
+    if h0:(i + 1) % 2 = 0 then
+      simp [h0,-Nat.rfind_dom]
+      if h1 : (rfind Nat.fzero (c_kp54_aux Aₚ i_1 lb).encodeCode 17).Dom  then
+        simp [h1,-Nat.rfind_dom]
+        constructor
+        refine Nat.add_le_add ih.left ?_
+        exact Nat.le_add_left 1 _
+        exact ih.right
+      else
+        simp [h1,-Nat.rfind_dom]
+        exact ih
+    else
+      simp [h0,-Nat.rfind_dom]
+      if h1 : (rfind Nat.fzero (c_kp54_aux Bₚ i_1 la).encodeCode 17).Dom  then
+        simp [h1,-Nat.rfind_dom]
+        constructor
+        exact ih.left
+        refine Nat.add_le_add ih.right ?_
+        exact Nat.le_add_left 1 _
+      else
+        simp [h1,-Nat.rfind_dom]
+        exact ih
+theorem AsSize : i<(As (i+1)).length := (@AsBsSize (i+1)).left
+theorem BsSize : i<(Bs (i+1)).length := (@AsBsSize (i+1)).right
+private def A := {x | (As (x+1))[x]'AsSize≠0}
+private def B := {x | (Bs (x+1))[x]'BsSize≠0}
+private def Atest := {x | (n2l (KP54 (x)).l)[x]? = some 1}
+
+noncomputable def Bsize (i:ℕ) := (Bs i).length
+private theorem Rasd (i:ℕ) : eval_string (As (2*(i+1))) i (Bsize i) ≠ (n2l (KP54 (2*(i+1))).r)[Bsize i]'(by sorry) := by
+
+  sorry
+  -- apply Function.ne_iff.mpr
+-- proof by the use principle.
+
+theorem part_ineq {p1 p2 : Part ℕ} (h1:p1.Dom) (h2:p2.Dom) : p1 ≤ p2 ↔ (p1.get h1) ≤ (p2.get h2) := by
+  constructor
+  intro h
+
+  sorry
+  intro h
+  intro h3 h4
+  
+  
+  #check Part
+theorem Aextends : eval_string (As (2*(i+1))) i (Bsize i)=Part.some y → evalSet A i (Bsize i)=Part.some y := by
+  unfold A
+  
+  simp
+  unfold χ
+  simp
+  unfold eval_string
+  simp
+  intro h
+  rcases eval_clamped_prop'' h with ⟨h0,h1⟩
+  -- apply Part.eq_some_iff.mp
+  have h2 := Part.eq_some_iff.mpr h0
+  clear h0
+  rw [←h2]
+  apply Eq.symm
+  apply up_to_use
+  rotate_left
+  exact Part.eq_some_imp_dom h2
+
+  suffices ∀ i_1≤ (As (2 * (i + 1))).length, (As (2 * (i + 1)))[i_1]?.getD 999 = if (As (i_1 + 1))[i_1]'AsSize = 0 then 0 else 1 from by
+    intro h3 h4
+    have h5 := this h3 (Nat.le_trans h4 h1)
+    simp only [h5, ite_eq_ite]
+  
+  intro ii hii
+  -- trivial sorry.
+  sorry
+  
+
+  -- have := eval_clamped_prop
+  
+  sorry
+theorem Aextends' : ¬((eval_string (KP54 (2*(i+1))).l i) (Bsize i)).Dom → ¬(evalSet A i (Bsize i)).Dom := by sorry
+theorem Aextends'' : (eval_string (KP54 (2*(i+1))).l i) (Bsize i)=Part.some y ↔  evalSet A i (Bsize i)=Part.some y := by sorry
+
 -- R i is satisfied at stage 2i.
+theorem Part.get_eq_some {p:Part ℕ} (h:p.Dom) : p=Part.some (p.get h) := by exact Part.dom_imp_some h
 private theorem R (i:ℕ) : evalSet A i ≠ χ B := by
   apply Function.ne_iff.mpr
-  use 2*i
-  if h1:(evalSet A i (2*i)).Dom then
+  -- the thing happens at the lb := List.length (n2l Bₚ).
+  use Bsize i
+  if h0:(evalSet A i (Bsize i)).Dom then
+  -- #check Part.get_eq_iff_eq_some
+  
+  #check Aextends''.mpr (Part.get_eq_some h0)
+  have := Aextends''.mpr (Part.get_eq_some h0)
+  suffices (evalSet A (decodeCode i) (Bsize i)).get h0 ≠ (χ B) (Bsize i) from by sorry
+
+  simp [-evalSet] at this
+  simp only [←this]
+
+  
+  sorry
+  else
+  aesop
+  
+  sorry
+  cases i with
+  | zero =>
+    simp [decodeCode,eval]
+    sorry
+  | succ i =>
+    
+    sorry
+  
+  sorry
+  use Bsize (i-1)
+  -- sorry
+  -- use 2*i
+  if h1:(evalSet A i (Bsize (i-1))).Dom then
     -- simp at *
-    suffices (evalSet A (decodeCode i) (2 * i)).get h1 ≠ (χ B (2 * i)) from sorry
+    suffices (evalSet A (decodeCode i) (Bsize (i-1))).get h1 ≠ (χ B (Bsize (i-1))) from sorry
     unfold B
     unfold χ
     unfold KP54
     -- simp
     cases i with
     | zero =>
-      simp [eval, decodeCode]
+      simp [evalSet, eval, decodeCode]
       exact rfl
-    | succ n =>
+    | succ iM1 =>
     simp (config := { zeta := false })
     lift_lets
     extract_lets
@@ -717,7 +909,23 @@ private theorem R (i:ℕ) : evalSet A i ≠ χ B := by
     simp [-Nat.rfind_dom]
     if halts:(rfind Nat.fzero (c_kp54_aux Aₚ i lb).encodeCode 17).Dom then
     simp only [halts]
-    simp
+    simp [-Nat.rfind_dom]
+    unfold Bsize
+    simp [-Nat.rfind_dom]
+    if h0:n2l (KP54 iM1).r = [] then
+    simp [h0, -Nat.rfind_dom]
+    sorry
+    else
+    simp [h0, -Nat.rfind_dom]
+    if h2:(n2l (KP54 iM1).r).length % 2 = 0 then
+    simp [h2, -Nat.rfind_dom]
+    -- unfold Bsize at Bₚ
+    have htest : Bₚ=(KP54 (Bsize iM1 - 1)).r := by exact rfl
+    unfold Bsize at htest
+    sorry
+    else
+
+    sorry
     -- some sort of induction?
     -- if 2*n+1 points to something in B_p, then use IH.
     -- otherwise, as the size of Bp is ≥ 2*n+1, it must be the alst eleemnt
