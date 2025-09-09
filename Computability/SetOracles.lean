@@ -465,81 +465,73 @@ Given a code `c`, `dovetail c` gives the code to the function which, on input n,
 returns `y` s.t. `[c](n,y)=0`.
 -/
 -- noncomputable def dovetail_aux (c:Code) : Code := c_evaln.comp₃ (left) c right
-noncomputable def dovetail (c:Code) : Code := (c_rfind (c_evaln.comp₃ (pair left (left.comp right)) (c_const c) (right.comp right)))
+-- noncomputable def dovetail (c:Code) : Code := (c_rfind (c_evaln.comp₃ (pair left (left.comp right)) (c_const c) (right.comp right)))
+noncomputable def dovetail (c:Code) : Code :=
+  c_rfind $
+  c_if_eq'.comp₂
+  (c_evaln.comp₃ (pair left (left.comp right)) (c_const c) (right.comp right))
+  (c_const 1)
 -- noncomputable def dovetail (c:Code) : Code := (rfind' (c_evaln.comp₃ (pair left (right.comp left)) (c_const c) (right.comp right))).comp₂ c_id zero
 -- theorem dovetail_evp_0 (hc:code_prim c) : y∈eval O (dovetail c) x → eval O c (Nat.pair x y)=0 := by sorry
 -- theorem dovetail_evp_0' (hc:code_prim c) (h:(eval O (dovetail c) x).Dom) : eval_prim O c (Nat.pair x ((eval O (dovetail c) x).get h))=0 := by sorry
 -- theorem dovetail_evp_1 (hc:code_prim c) : eval O (dovetail c) x=Part.none ↔ ∀ y, eval_prim O c (Nat.pair x y)=0 := by sorry
 -- theorem dovetail_ev_0 : y∈eval O (dovetail c) x → eval O c (Nat.pair x y)=0 := by sorry
+theorem o2ntest: o2n x = o2n y ↔ x = y := by
+  exact Encodable.encode_inj
 theorem dovetail_ev_0' (h:(eval O (dovetail c) x).Dom) :
 let dvt := (eval O (dovetail c) x).get h
 evaln O dvt.r c (Nat.pair x (dvt.l))=Option.some 0 := by
-  -- unfold dovetail
-  -- simp only [eval]
-  -- simp [c_rfind_prop]
-  -- simp
-  unfold dovetail at h
-  simp [] at h
-
-  -- simp [c_rfind_prop] at h
-  -- simp [eval] at h
-  -- rcases h with ⟨h1,⟨h2,h3,h4⟩,h5⟩
-  -- simp [Seq.seq] at h3
-  -- rw [h3] at h4
-
-  have := Part.get_mem h
-  simp [c_rfind_prop] at this
-  simp [eval] at this
-  rcases this with ⟨⟨h2,h3,h4⟩,h5⟩
-  clear h5
-  simp [Seq.seq] at h3
-  rcases h3 with ⟨h6,⟨h11,⟨h14,h15⟩,h13⟩,h8,⟨h16,h17⟩,h10⟩
-  -- clear h17 h15
-  rw [h10] at h4
-  clear h10
-  rw [h13] at h4
-  clear h13
-
-  simp [] at h4
-  rw [h4]
   extract_lets
   expose_names
 
-  have := @c_rfind_prop O ((c_evaln.comp ((left.pair (left.comp right)).pair ((c_const c.encodeCode).pair (right.comp right))))) x
+  unfold dovetail at h
+  simp [] at h
+
+  have dvtrw : (eval O
+    (c_rfind
+      (c_if_eq'.comp
+        ((c_evaln.comp ((left.pair (left.comp right)).pair ((c_const c.encodeCode).pair (right.comp right)))).pair
+          (c_const 1))))
+    x) = (eval O c.dovetail x) := by rfl
+  let temprw := (eval O
+    (c_rfind
+      (c_if_eq'.comp
+        ((c_evaln.comp ((left.pair (left.comp right)).pair ((c_const c.encodeCode).pair (right.comp right)))).pair
+          (c_const 1))))
+    x).get
+    h
+  have temprwrw : (eval O
+    (c_rfind
+      (c_if_eq'.comp
+        ((c_evaln.comp ((left.pair (left.comp right)).pair ((c_const c.encodeCode).pair (right.comp right)))).pair
+          (c_const 1))))
+    x).get
+    h = temprw := rfl
+
+  have := Part.get_mem h
+  rw [temprwrw] at this
+  simp [c_rfind_prop] at this
+  simp [eval] at this
+
+  rcases this with ⟨⟨h2,h3,h4⟩,h5⟩; clear h5
+  simp [Seq.seq] at h3
+  rw [h3] at h4; clear h3
+  simp at h4
+  have temprw_eq_dvt : temprw = dvt := by exact temprwrw
+  rw [temprw_eq_dvt] at h4
+  have := Part.eq_some_iff.mpr h4; clear h4
   simp at this
-  -- have : h11=dvt := by
-
-
-
-
-  simp only [eval] at h1
-  simp at h1
-  simp [eval, -c_const_ev] at h1
-
-  apply Part.eq_some_iff.mpr
-  unfold dovetail
-  simp
-
-  #check Part.eq_some_iff
-
-  sorry
-  simp only [eval.eq_7] at h
-  rcases h with ⟨h1,h2,h3⟩
-  unfold _root_.rfind at h
-  simp at h
-
-
-  sorry
+  simp [o2n] at this
+  apply Encodable.encode_inj.mp
+  exact this
+  
 -- theorem dovetail_ev_0'' (h:(eval O (dovetail c) x).Dom) : ∃ y, eval O c (Nat.pair x y)=Part.some 0 := by sorry
 theorem dovetail_ev_1 : eval O (dovetail c) x=Part.none ↔ ∀ y, eval O c (Nat.pair x y)≠Part.some 0 := by sorry
 theorem dovetail_ev_2 : (eval O (dovetail c) x).Dom ↔ ∃ y, eval O c (Nat.pair x y)=Part.some 0 := by
   have := (@dovetail_ev_1 O c x).not
   simp at this
   exact Iff.trans (Iff.symm Part.not_none_iff_dom) this
--- theorem dovetail_code_total : (eval O (dovetail_code e)).Dom = ℕ := by sorry
--- theorem dovetail_eq : eval O (dovetail_code e) ≡ᵀᶠ eval O e := by sorry
-
--- #check Nat.RecursiveIn.Code.c_if_eq
+  
 theorem Part.eq_some_imp_dom {p:Part ℕ} : p=Part.some x → p.Dom := by
   intro a
   subst a
