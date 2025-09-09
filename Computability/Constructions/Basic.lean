@@ -51,6 +51,9 @@ def c_const:ℕ→Code
 @[simp] theorem c_const_evp: ∀ n m, eval_prim O (c_const n) m = n
 | 0, _ => rfl
 | n+1, m => by simp! [c_const_evp n m]
+@[simp] theorem c_const_ev: ∀ n m, eval O (c_const n) m = n
+| 0, _ => rfl
+| n+1, m => by simp! [c_const_ev n m]
 end Nat.RecursiveIn.Code
 -- theorem Nat.PrimrecIn.const:Nat.PrimrecIn O Nat.const := by ...
 -- theorem Nat.Primrec.const:Nat.Primrec Nat.const := by ...
@@ -247,7 +250,7 @@ namespace Nat.RecursiveIn.Code
 def c_if_eq' := c_sg.comp c_dist
 @[simp, aesop safe] theorem c_if_eq'_ev_pr:code_prim c_if_eq' := by unfold c_if_eq'; repeat (first|assumption|simp|constructor)
 @[simp] theorem c_if_eq'_evp:eval_prim O c_if_eq' = fun ab => if ab.l=ab.r then 0 else 1 := by simp [c_if_eq',eval_prim];
-@[simp] theorem c_if_eq'_ev:eval O c_if_eq' = fun ab => if ab.l=ab.r then 0 else 1 := by
+@[simp] theorem c_if_eq'_ev:eval O c_if_eq' = fun ab => if ab.l=ab.r then Part.some 0 else Part.some 1 := by
   rw [← eval_prim_eq_eval c_if_eq'_ev_pr]; simp only [c_if_eq'_evp]; funext xs; exact apply_ite Part.some (xs.l = xs.r) 0 1
 end Nat.RecursiveIn.Code
 -- theorem Nat.PrimrecIn.if_eq':Nat.PrimrecIn O Nat.if_eq' := by ...

@@ -438,7 +438,8 @@ theorem rfind'_eqv_rfind : ((Nat.unpaired fun a m => (Nat.rfind fun n => (fun m 
 
 
 /--`[code_rfind c](x)=smallest n s.t. [c](x,n)=0.`-/
-def c_rfind : ℕ→ℕ := fun c => comp (rfind' c) (pair Nat.RecursiveIn.Code.id zero)
+-- def c_rfind : ℕ→ℕ := fun c => comp (rfind' c) (pair Nat.RecursiveIn.Code.id zero)
+def c_rfind : Nat.RecursiveIn.Code→Nat.RecursiveIn.Code := fun c => comp (rfind' c) (pair Nat.RecursiveIn.Code.id zero)
 
 
 /-- Given a code `c` -/
@@ -457,6 +458,106 @@ theorem c_rfind_prop : eval O (c_rfind c) a = (rfind O c a) := by
 
 
 section ran_to_dom
+namespace Nat.RecursiveIn.Code
+-- #check evaln₁
+/--
+Given a code `c`, `dovetail c` gives the code to the function which, on input n,
+returns `y` s.t. `[c](n,y)=0`.
+-/
+-- noncomputable def dovetail_aux (c:Code) : Code := c_evaln.comp₃ (left) c right
+-- noncomputable def dovetail (c:Code) : Code := (c_rfind (c_evaln.comp₃ (pair left (right.comp left)) (c_const c) (right.comp right)))
+noncomputable def dovetail (c:Code) : Code := (rfind' (c_evaln.comp₃ (pair left (right.comp left)) (c_const c) (right.comp right))).comp₂ c_id zero
+-- theorem dovetail_evp_0 (hc:code_prim c) : y∈eval O (dovetail c) x → eval O c (Nat.pair x y)=0 := by sorry
+-- theorem dovetail_evp_0' (hc:code_prim c) (h:(eval O (dovetail c) x).Dom) : eval_prim O c (Nat.pair x ((eval O (dovetail c) x).get h))=0 := by sorry
+-- theorem dovetail_evp_1 (hc:code_prim c) : eval O (dovetail c) x=Part.none ↔ ∀ y, eval_prim O c (Nat.pair x y)=0 := by sorry
+-- theorem dovetail_ev_0 : y∈eval O (dovetail c) x → eval O c (Nat.pair x y)=0 := by sorry
+theorem dovetail_ev_0' (h:(eval O (dovetail c) x).Dom) : eval O c (Nat.pair x ((eval O (dovetail c) x).get h))=Part.some 0 := by
+  -- unfold dovetail
+  -- simp only [eval]
+  -- simp [c_rfind_prop]
+  -- simp
+  unfold dovetail at h
+  simp [] at h
+  simp only [eval.eq_7] at h
+  rcases h with ⟨h1,h2,h3⟩
+  unfold _root_.rfind at h
+  simp at h
+  
+
+  sorry
+-- theorem dovetail_ev_0'' (h:(eval O (dovetail c) x).Dom) : ∃ y, eval O c (Nat.pair x y)=Part.some 0 := by sorry
+theorem dovetail_ev_1 : eval O (dovetail c) x=Part.none ↔ ∀ y, eval O c (Nat.pair x y)≠Part.some 0 := by sorry
+theorem dovetail_ev_2 : (eval O (dovetail c) x).Dom ↔ ∃ y, eval O c (Nat.pair x y)=Part.some 0 := by
+  have := (@dovetail_ev_1 O c x).not
+  simp at this
+  exact Iff.trans (Iff.symm Part.not_none_iff_dom) this
+-- theorem dovetail_code_total : (eval O (dovetail_code e)).Dom = ℕ := by sorry
+-- theorem dovetail_eq : eval O (dovetail_code e) ≡ᵀᶠ eval O e := by sorry
+
+-- #check Nat.RecursiveIn.Code.c_if_eq
+theorem Part.eq_some_imp_dom {p:Part ℕ} : p=Part.some x → p.Dom := by
+  intro a
+  subst a
+  exact trivial
+theorem Part.mem_imp_dom {p:Part ℕ} : x∈p → p.Dom := λ h ↦ Part.eq_some_imp_dom (Part.eq_some_iff.mpr h)
+noncomputable def ran_to_dom2 (O:ℕ→ℕ) : (ℕ→Code) := fun c => dovetail (c_if_eq'.comp₂ left ((c_eval₁ O).comp₂ (c_const c) right))
+
+theorem ran_to_dom2_ev : (eval O (ran_to_dom2 O c) y).Dom ↔ ∃x,y∈eval O c x := by
+  constructor
+  · 
+    intro h
+    -- unfold ran_to_dom2 at h
+    have := dovetail_ev_0' h
+    -- rcases this with ⟨dvt,this⟩
+    let dvt := ((eval O (c_if_eq'.comp₂ left ((c_eval₁ O).comp₂ (c_const c) right)).dovetail y).get h)
+    rw [show ((eval O (c_if_eq'.comp₂ left ((c_eval₁ O).comp₂ (c_const c) right)).dovetail y).get h) = dvt from rfl] at this
+    -- rotate_left
+    -- · 
+    --   repeat (first|assumption|simp|constructor)
+    simp at this
+    simp [eval] at this
+    simp [Seq.seq] at this
+    have s1 : ((eval₁ O (Nat.pair c dvt))).Dom := by sorry
+    simp [Part.Dom.bind s1] at this
+    simp [eval₁] at this s1
+    use dvt
+    suffices y = (eval O (decodeCode c) dvt).get s1 from by
+      exact (Part.get_eq_iff_mem s1).mp (_root_.id (Eq.symm this))
+    exact this
+  
+  · 
+    intro h
+    rcases h with ⟨h1,h2⟩
+    unfold ran_to_dom2
+    apply dovetail_ev_2.mpr
+    use h1
+    simp [eval, Seq.seq, eval₁]
+    simp [Part.bind_of_mem h2]
+
+    
+theorem ran_to_dom_prop : (WR O e) = (W O (ran_to_dom2 (χ O) e)) := by
+  ext xs
+  constructor
+
+  · intro h
+    simp at h
+    rcases h with ⟨y,hy⟩
+    rw [W]
+    have := ran_to_dom2_ev.mpr (Exists.intro y hy)
+    exact this
+  · 
+    intro h
+    simp at h
+    rcases h with ⟨y,hy⟩
+    rw [WR]
+    have := ran_to_dom2_ev.mp (Part.mem_imp_dom hy)
+    exact this
+
+end Nat.RecursiveIn.Code
+#exit
+-- `[ran_to_dom c](x)=dovetail c, and see if x is generated`
+-- we want to dovetail a value z which will satisfy
+-- `[c](z)=x`
 /--`[c_ran_to_dom_aux](x)=0 if x.1.2+1=[x.1.1:O,x.2.2](x.2.1) else 0`-/
 noncomputable def c_ran_to_dom_aux (O:Set ℕ) := c_if_eq'.comp (pair (succ.comp $ right.comp left) ((c_evalnSet₁ O).comp (pair (left.comp left) right)))
 @[simp] theorem c_ran_to_dom_aux_evp (O:Set ℕ) : eval_prim (χ O) (c_ran_to_dom_aux O) ab = if (Nat.succ ab.l.r=evalnSet₁ O (Nat.pair ab.l.l ab.r)) then 0 else 1 := by
@@ -665,11 +766,7 @@ def eval_clamped
       (Nat.rfind fun n => (fun x => x = 0) <$> eval_clamped O use cf (Nat.pair a (n + m))).map (· + m)
 def n2b (n:ℕ) : Bool := if n=0 then false else true
 def b2n (b:Bool) : ℕ := if b then 1 else 0
-theorem Part.eq_some_imp_dom {p:Part ℕ} : p=Part.some x → p.Dom := by
-  intro a
-  subst a
-  exact trivial
-theorem Part.mem_imp_dom {p:Part ℕ} : x∈p → p.Dom := λ h ↦ Part.eq_some_imp_dom (Part.eq_some_iff.mpr h)
+
 -- theorem eval_clamped_prop': y∈eval_clamped O u c x → y∈eval O c x := by sorry
 theorem eval_clamped_prop': eval_clamped O u c x=Part.some y → eval O c x=Part.some y := by sorry
 theorem eval_clamped_prop''_aux (h:eval_clamped O u c x=Part.some y): (use O c x).Dom := e2u (Part.eq_some_imp_dom (eval_clamped_prop' h))
@@ -737,15 +834,16 @@ noncomputable def KP54 : ℕ→ℕ := λ s ↦
 
   if s%2=0 then
     -- then s=2i+2, and we will work on Rᵢ.
+    -- shouldnt be rfind, but dovetail!!!
     if halts:(rfind fzero (c_kp54_aux Aₚ i lb) 17).Dom then
       let rf := (rfind fzero (c_kp54_aux Aₚ i lb) 17).get halts
       -- rf is the smallest natural such that
       -- (eval_string ((n2l A) ++ (n2l rf)) i n).Dom
       -- if such rf doesn't exist, that means that there is no (finite) extension of A s.t.
-      -- the computation [i](n) halts with use ≰ n.
+      -- the computation `[i](n)` halts with use ≰ n.
       let Aₛ := (n2l Aₚ) ++ (n2l (rf+1))
       -- let A_result := (eval fzero (c_kp54_aux Aₚ i lb) (Nat.pair 999 rf)).get (sorry)
-      let A_result := (eval_string ((n2l Aₚ) ++ (n2l (rf+1))) i lb).get (c_kp54_aux_2 halts)
+      let A_result := (eval_string (Aₛ) i lb).get (c_kp54_aux_2 halts)
       Nat.pair Aₛ ((n2l Bₚ).concat (Nat.sg' A_result))
     else
       -- Nat.pair Aₚ (l2n $ (n2l Bₚ).concat 0)
@@ -756,7 +854,7 @@ noncomputable def KP54 : ℕ→ℕ := λ s ↦
     if halts:(rfind fzero (c_kp54_aux Bₚ i la) 17).Dom then
       let rf := (rfind fzero (c_kp54_aux Bₚ i la) 17).get halts
       let Bₛ := (n2l Bₚ) ++ (n2l (rf+1))
-      let B_result := (eval_string ((n2l Bₚ) ++ (n2l (rf+1))) i la).get (c_kp54_aux_2 halts)
+      let B_result := (eval_string (Bₛ) i la).get (c_kp54_aux_2 halts)
       -- let B_result := (eval fzero (c_kp54_aux Bₚ i la) rf).get (sorry)
       Nat.pair ((n2l Aₚ).concat (Nat.sg' B_result)) Bₛ
     else
@@ -1009,47 +1107,36 @@ private theorem Rasd2 (i:ℕ) (h:(eval_string (As (2*(i+1))) i ((n2l (Bs (2*(i+1
 -- let k := (n2l (Bs (2*(i)))).length-1
 let k := (n2l (Bs (2*(i+1)-1))).length
 (eval_string (As (2*(i+1))) i k).get h ≠ b2n (n2b $ (Bs (2*(i+1)))[k]'(Rasd2_aux)) := by
+  -- unfolding
   extract_lets
   expose_names
-  
   unfold Bs
   unfold As
-  -- unfold χ
   unfold KP54
   simp (config := { zeta := false }) [-Nat.rfind_dom]
   lift_lets
   extract_lets
   expose_names
-  -- have i_1_simp: i_1 = i := by exact Nat.div2_bit0 i
-  have i_1_simp: i_1 = i := by
-    rw [show i_1=(2 * (i + 1) - 1).div2 from rfl]
-    exact Nat.div2_bit1 i
+  have i_1_simp: i_1 = i := Nat.div2_bit1 i
   simp (config := { zeta := false }) only [i_1_simp]
-  -- cases i with
-  -- | zero => contradiction
-  -- | succ i =>
-  -- sorry
-  -- use lb
-  -- simp (config := { zeta := false }) [-Nat.rfind_dom]
-  -- have h0:2 * (i + 1) % 2 = 0 := by exact Nat.mul_mod_right 2 (i + 1)
-  -- if h0:(Bsize i + 1) % 2 = 0 then
-  -- simp (config := { zeta := false }) [h0, -Nat.rfind_dom]
-  -- if h1: (rfind Nat.fzero (c_kp54_aux Aₚ (i_1) lb).encodeCode 17).Dom then
-  if h1: (rfind Nat.fzero (c_kp54_aux Aₚ i lb).encodeCode 17).Dom then
-  simp (config := { zeta := false }) [h1, -Nat.rfind_dom]
-  -- simp (config := { zeta := false })
-  lift_lets
-  extract_lets
-  expose_names
-  have : k=lb := by
+  
+  
+  have keqlb : k=lb := by
     rw [show k=(n2l (l2n (Bs (2 * (i+1) - 1)))).length from rfl]
     simp
     rw [show lb=(n2l Bₚ).length from rfl]
     unfold Bs
     rw [show Bₚ=(KP54 (2 * (i + 1) - 1)).r from rfl]
-  simp [this]
-  have lbrw : lb = (n2l Bₚ).length := rfl
+  
 
+  if h1: (rfind Nat.fzero (c_kp54_aux Aₚ i lb).encodeCode 17).Dom then
+  simp (config := { zeta := false }) [h1, -Nat.rfind_dom]
+  lift_lets
+  extract_lets
+  expose_names
+
+  simp [keqlb]
+  have lbrw : lb = (n2l Bₚ).length := rfl
   simp only [lbrw]
   simp
   have aaa : A_result = (eval_string (n2l Aₚ ++ n2l (rf + 1)) (decodeCode i_1) lb).get (c_kp54_aux_2
@@ -1069,7 +1156,9 @@ let k := (n2l (Bs (2*(i+1)-1))).length
   simp [Aresrw]
   cases A_result <;> simp [n2b,b2n]
   else
-
+  have keqlb_2 : (n2l (l2n (Bs (2 * (i + 1) - 1)))).length = lb := by exact keqlb
+  rw [keqlb_2] at h
+  simp at h1
   sorry
 
   -- apply Function.ne_iff.mpr
@@ -1110,15 +1199,69 @@ theorem Aextends : eval_string (As (2*i)) i k=Part.some y → evalSet A i k=Part
     exact Agetsextended4 hii asz
   rw [this]
   rfl
-  
+
 
   -- have := eval_clamped_prop
   
--- theorem Aextends' : ¬((eval_string (KP54 (2*(i+1))).l i) (k)).Dom → ¬(evalSet A i (k)).Dom := by sorry
+theorem Aextends''''' :
+let k:=(n2l (Bs (2*(i+1)-1))).length
+¬(eval_string (As (2*(i+1))) i k).Dom → ¬(evalSet A i k).Dom := by
+  extract_lets
+  expose_names
+  -- intro h
+  unfold As
+  unfold KP54
+  simp (config := { zeta := false }) [-Nat.rfind_dom]
+  lift_lets
+  extract_lets
+  expose_names
+  if h0:(rfind Nat.fzero (c_kp54_aux Aₚ i_1 lb).encodeCode 17).Dom then
+  simp (config := { zeta := false }) [h0, -Nat.rfind_dom]
+  sorry
+  else
+  simp at h0
+  simp (config := { zeta := false }) [h0, -Nat.rfind_dom]
+  sorry
+theorem Aextends' : ¬(eval_string (As (2*i)) i k).Dom → ¬(evalSet A i k).Dom := by
+  unfold A
+  
+  simp
+  unfold χ
+  simp
+  unfold eval_string
+  simp
+  intro h
+  rcases eval_clamped_prop'' h with ⟨h0,h1⟩
+  -- apply Part.eq_some_iff.mp
+  have h2 := Part.eq_some_iff.mpr h0
+  clear h0
+  rw [←h2]
+  apply Eq.symm
+  apply up_to_use
+  rotate_left
+  exact Part.eq_some_imp_dom h2
+
+  suffices ∀ i_1 < (As (2 * i)).length,
+  b2n (n2b ((As (2 * i))[i_1]?.getD 999)) = if n2b ((As (i_1 + 1))[i_1]'AsSize) = true then 1 else 0
+    from by
+    intro h3 h4
+    have h5 := this h3 (Nat.le_trans h4 h1)
+    simp only [h5, ite_eq_ite]
+  
+  intro ii hii
+  have asz := @AsSize ii
+  have : ((As (2 * i))[ii]?.getD 999) = (As (ii + 1))[ii] := by
+    have : (As (2 * i))[ii]?.getD 999 = (As (2 * i))[ii] := by simp_all only [getElem?_pos, Option.getD_some]
+    rw [this]
+    exact Agetsextended4 hii asz
+  rw [this]
+  rfl
+  sorry
 -- theorem Aextends'' : (eval_string (KP54 (2*(i+1))).l i) (k)=Part.some y ↔  evalSet A i (k)=Part.some y := by sorry
 -- theorem Aextends'''_aux (h:( evalSet A i k).Dom): (eval_string (As (2*(i+1))) i k).Dom := by sorry
 -- theorem Aextends''' {i:ℕ} (h:(evalSet A i k).Dom): evalSet A i k=eval_string (As (2*i)) i k:= by sorry
 theorem Aextends''' {i:ℕ} (h:(evalSet A i k).Dom): evalSet A i k=eval_string (As (2*(i+1))) i k:= by sorry
+-- theorem Aextends'''' {i:ℕ} (h:(evalSet A i k).Dom): evalSet A i k=eval_string (As (2*(i+1))) i k:= by sorry
 
 -- R i is satisfied at stage 2i.
 theorem Part.get_eq_some {p:Part ℕ} (h:p.Dom) : p=Part.some (p.get h) := by exact Part.dom_imp_some h
@@ -1200,25 +1343,7 @@ fun s =>
   return null
 -/
 
-/--
-Given a code "e", dovetail_code e gives the code to the function which, on input n:
 
-runs [e](0) for 1 step (i.e. evaln O 1 e 0)
-
-runs [e](0) for 2 steps
-runs [e](1) for 1 step
-
-runs [e](0) for 3 steps
-runs [e](1) for 2 steps
-runs [e](2) for 1 step
-
-...
-
-until it finds the n^th input to [e] that halts.
--/
-def dovetail_code (e:ℕ) : ℕ := 0
-theorem dovetail_code_total : (eval O (dovetail_code e)).Dom = ℕ := by sorry
--- theorem dovetail_eq : eval O (dovetail_code e) ≡ᵀᶠ eval O e := by sorry
 
 def PFun.nat_graph (f : ℕ→.ℕ) : Set ℕ := { xy | xy.unpair.2 ∈ f xy.unpair.1 }
 def total_graph (f : ℕ → ℕ) : Set ℕ := { xy | xy.unpair.2 = f xy.unpair.1 }

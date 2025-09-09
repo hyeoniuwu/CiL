@@ -946,6 +946,23 @@ lemma isSome_iff_not_none : (¬o=Option.none)↔(o.isSome) := by
     intro a_1
     subst a_1
     simp_all only [Option.isSome_none, Bool.false_eq_true]
+lemma Part.eq_none_iff_forall_ne_some : o = Part.none ↔ ∀ a, o ≠ Part.some a := by
+  have := (@Part.ne_none_iff _ o).not
+  simp at this
+  exact this
+  -- cases o <;> simp
+lemma Part.not_none_iff_dom : (¬o=Part.none)↔(o.Dom) := by
+  apply Iff.intro
+  · intro a
+    simp [Part.eq_none_iff_forall_ne_some] at a
+    rcases a with ⟨h1,h2⟩
+    rw [h2]
+    exact trivial
+  · intro a
+    apply Aesop.BuiltinRules.not_intro
+    intro a_1
+    subst a_1
+    exact a
 theorem usen_dom_iff_evaln_dom' : ((usen O c s x).isSome) ↔ ((evaln O s c x).isSome) := by
   have := (@usen_none_iff_evaln_none O c s x).not
   simp at this
