@@ -796,10 +796,11 @@ private noncomputable def Bs (s:ℕ) := n2l (KP54 (s)).r
 
 
 
-theorem Agetsextended : (As i) <+: (As (i+1)) := by
+theorem ABgetsextended : (As i) <+: (As (i+1)) ∧ (Bs i) <+: (Bs (i+1)) := by
   unfold As
-  rw (config:={occs:=.pos [2]}) [KP54]
-  simp (config := { zeta := false })
+  unfold Bs
+  rw (config:={occs:=.pos [2,3]}) [KP54]
+  simp (config := { zeta := false }) [-Nat.rfind_dom]
   lift_lets
   extract_lets
   expose_names
@@ -809,27 +810,40 @@ theorem Agetsextended : (As i) <+: (As (i+1)) := by
   else
     simp [h0,-Nat.rfind_dom]
     aesop
-theorem Agetsextended2 : (As i) <+: (As (i+j)) := by
+theorem ABgetsextended2 : (As i) <+: (As (i+j)) ∧ (Bs i) <+: (Bs (i+j)) := by
   induction j with
   | zero => simp_all
   | succ jM1 ihj =>
     rw [←add_assoc]
-    have := @Agetsextended (i + jM1)
-    exact List.IsPrefix.trans ihj this
-theorem Agetsextended3 (h:i≤j) : (As i) <+: (As j) := by
+    constructor
+    exact List.IsPrefix.trans ihj.left (@ABgetsextended (i + jM1)).left
+    exact List.IsPrefix.trans ihj.right (@ABgetsextended (i + jM1)).right
+theorem ABgetsextended3 (h:i≤j) : (As i) <+: (As j) ∧ (Bs i) <+: (Bs j) := by
   rw [Eq.symm (Nat.add_sub_of_le h)]
-  exact Agetsextended2
+  exact ABgetsextended2
 theorem Agetsextended4 
 (hi:k<(As i).length)
 (hh:k<(As j).length)
 : (As i)[k] = (As j)[k] := by
   cases Classical.em (i≤j) with
   | inl h =>
-    have := Agetsextended3 h
+    have := (ABgetsextended3 h).left
     exact List.IsPrefix.getElem this hi
   | inr h =>
     simp at h
-    have := Agetsextended3 (Nat.le_of_succ_le h)
+    have := (ABgetsextended3 (Nat.le_of_succ_le h)).left
+    exact Eq.symm (List.IsPrefix.getElem this hh)
+theorem Bgetsextended4 
+(hi:k<(Bs i).length)
+(hh:k<(Bs j).length)
+: (Bs i)[k] = (Bs j)[k] := by
+  cases Classical.em (i≤j) with
+  | inl h =>
+    have := (ABgetsextended3 h).right
+    exact List.IsPrefix.getElem this hi
+  | inr h =>
+    simp at h
+    have := (ABgetsextended3 (Nat.le_of_succ_le h)).right
     exact Eq.symm (List.IsPrefix.getElem this hh)
 theorem AsBsSize2 : (Bs (2*i+2)).length = (Bs (2*i+1)).length + 1 := by
   induction i with
@@ -903,7 +917,8 @@ theorem AsSize : i<(As (i+1)).length := (@AsBsSize (i+1)).left
 theorem BsSize : i<(Bs (i+1)).length := (@AsBsSize (i+1)).right
 -- private def A := {x | (As (x+1))[x]'AsSize≠0}
 private def A := {x | n2b $ (As (x+1))[x]'AsSize}
-private def B := {x | (Bs (x+1))[x]'BsSize≠0}
+private def B := {x | n2b $ (Bs (x+1))[x]'BsSize}
+-- private def B := {x | (Bs (x+1))[x]'BsSize≠0}
 private def Atest := {x | (n2l (KP54 (x)).l)[x]? = some 1}
 
 noncomputable def Bsize (i:ℕ) := (Bs i).length
@@ -987,17 +1002,13 @@ let k := (n2l (Bs (2*i-1))).length
   simp (config := { zeta := false }) [h1, -Nat.rfind_dom]
   sorry
 
-
+theorem Rasd2_aux : (n2l (Bs (2*(i+1)-1))).length < (Bs (2*(i+1))).length := by
+  simp only [Denumerable.ofNat_encode]
+  exact AsBsSize2'
 private theorem Rasd2 (i:ℕ) (h:(eval_string (As (2*(i+1))) i ((n2l (Bs (2*(i+1)-1))).length)).Dom):
 -- let k := (n2l (Bs (2*(i)))).length-1
 let k := (n2l (Bs (2*(i+1)-1))).length
-(eval_string (As (2*(i+1))) i k).get h ≠ (Bs (2*(i+1)))[k]'(by
-  -- unfold Bsize
-  rw [show k=(n2l (l2n (Bs (2 * (i + 1) - 1)))).length from rfl]
-  -- rw [show k=(n2l (l2n (Bs (2 * i - 1)))).length from rfl]
-  simp only [Denumerable.ofNat_encode]
-  exact AsBsSize2'
-  ) := by
+(eval_string (As (2*(i+1))) i k).get h ≠ b2n (n2b $ (Bs (2*(i+1)))[k]'(Rasd2_aux)) := by
   extract_lets
   expose_names
   
@@ -1056,7 +1067,7 @@ let k := (n2l (Bs (2*(i+1)-1))).length
     rw [aaa]
     simp
   simp [Aresrw]
-  cases A_result <;> simp
+  cases A_result <;> simp [n2b,b2n]
   else
 
   sorry
@@ -1064,16 +1075,7 @@ let k := (n2l (Bs (2*(i+1)-1))).length
   -- apply Function.ne_iff.mpr
 -- proof by the use principle.
 
-theorem part_ineq {p1 p2 : Part ℕ} (h1:p1.Dom) (h2:p2.Dom) : p1 ≤ p2 ↔ (p1.get h1) ≤ (p2.get h2) := by
-  constructor
-  intro h
 
-  sorry
-  intro h
-  intro h3 h4
-  
-  
-  #check Part
 theorem Aextends : eval_string (As (2*i)) i k=Part.some y → evalSet A i k=Part.some y := by
   unfold A
   
@@ -1122,18 +1124,6 @@ theorem Aextends''' {i:ℕ} (h:(evalSet A i k).Dom): evalSet A i k=eval_string (
 theorem Part.get_eq_some {p:Part ℕ} (h:p.Dom) : p=Part.some (p.get h) := by exact Part.dom_imp_some h
 private theorem R (i:ℕ) : evalSet A i ≠ χ B := by
   apply Function.ne_iff.mpr
-  -- the thing happens at the lb := List.length (n2l Bₚ).
-  -- use Bsize i
-  -- cases i with
-  -- | zero =>
-  --   simp
-  --   simp [decodeCode,eval,pure,PFun.pure]
-  --   unfold B
-  --   unfold χ
-  --   simp
-  --   unfold Bs
-  --   sorry
-  -- | succ i =>
   have main := Rasd2 i
   extract_lets at main
   expose_names
@@ -1146,106 +1136,22 @@ private theorem R (i:ℕ) : evalSet A i ≠ χ B := by
     simp at this
     exact Part.get_eq_iff_eq_some.mpr this
 
-  -- have := Aextends''.mpr (Part.get_eq_some h0)
   have := Aextends''' h0
   simp only [this]
-  -- simp at main
   have main1 := main (this ▸ h0)
   clear main
-  have : χ B k = (Bs (2 * (i + 1)))[k]'(sorry) := by
+  have rasd2aux := @Rasd2_aux i
+
+  have : χ B k = b2n (n2b (Bs (2 * (i + 1)))[k]) := by
     unfold B
     unfold χ
     simp
-    sorry
+    have := Bgetsextended4 (@BsSize k) (rasd2aux)
+    simp [this]
+    exact rfl
   exact Ne.symm (ne_of_eq_of_ne this (id (Ne.symm main1)))
-
-  
-  sorry
   else
   aesop
-  sorry
-  simp at this
-  if h0:(evalSet A i (Bsize i)).Dom then
-  -- #check Part.get_eq_iff_eq_some
-  
-  #check Aextends''.mpr (Part.get_eq_some h0)
-  have := Aextends''.mpr (Part.get_eq_some h0)
-  suffices (evalSet A (decodeCode i) (Bsize i)).get h0 ≠ (χ B) (Bsize i) from by sorry
-
-  simp [-evalSet] at this
-  simp only [←this]
-  unfold χ
-  unfold B
-  simp
-  
-
-  
-  sorry
-  else
-  aesop
-  
-  sorry
-  cases i with
-  | zero =>
-    simp [decodeCode,eval]
-    sorry
-  | succ i =>
-    
-    sorry
-  
-  sorry
-  use Bsize (i-1)
-  -- sorry
-  -- use 2*i
-  if h1:(evalSet A i (Bsize (i-1))).Dom then
-    -- simp at *
-    suffices (evalSet A (decodeCode i) (Bsize (i-1))).get h1 ≠ (χ B (Bsize (i-1))) from sorry
-    unfold B
-    unfold χ
-    unfold KP54
-    -- simp
-    cases i with
-    | zero =>
-      simp [evalSet, eval, decodeCode]
-      exact rfl
-    | succ iM1 =>
-    simp (config := { zeta := false })
-    lift_lets
-    extract_lets
-    expose_names
-    simp [-Nat.rfind_dom]
-    if halts:(rfind Nat.fzero (c_kp54_aux Aₚ i lb).encodeCode 17).Dom then
-    simp only [halts]
-    simp [-Nat.rfind_dom]
-    unfold Bsize
-    simp [-Nat.rfind_dom]
-    if h0:n2l (KP54 iM1).r = [] then
-    simp [h0, -Nat.rfind_dom]
-    sorry
-    else
-    simp [h0, -Nat.rfind_dom]
-    if h2:(n2l (KP54 iM1).r).length % 2 = 0 then
-    simp [h2, -Nat.rfind_dom]
-    -- unfold Bsize at Bₚ
-    have htest : Bₚ=(KP54 (Bsize iM1 - 1)).r := by exact rfl
-    unfold Bsize at htest
-    sorry
-    else
-
-    sorry
-    -- some sort of induction?
-    -- if 2*n+1 points to something in B_p, then use IH.
-    -- otherwise, as the size of Bp is ≥ 2*n+1, it must be the alst eleemnt
-    sorry
-    else
-
-    sorry
-
-  else
-    aesop
-
-
-  sorry
 private theorem S (i:ℕ) : evalSet B i ≠ χ A := by sorry
 
 theorem ex_incomparable_sets : ∃ A B:Set ℕ, A|ᵀB := by
