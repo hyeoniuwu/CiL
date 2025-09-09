@@ -781,11 +781,11 @@ theorem c_kp54_aux_evp :
   -- evalSet ∅ (c_kp54_aux A i n) x
   eval fzero (c_kp54_aux A i n) x
     =
-  if (eval_string ((n2l A) ++ (n2l (x.r+1))) i n).Dom then 0 else 1
+  if (eval_string ((n2l A) ++ (n2l (x.r+1))) i n).Dom then Part.some 0 else Part.some 1
 := by
   sorry
-theorem c_kp54_aux_2 (halts:(rfind fzero (c_kp54_aux Aₚ i lb) 17).Dom) :
-  let rf := (rfind fzero (c_kp54_aux Aₚ i lb) 17).get halts
+theorem c_kp54_aux_2 (halts:(eval fzero (dovetail (c_kp54_aux Aₚ i lb)) 17).Dom) :
+  let rf := (eval fzero (dovetail (c_kp54_aux Aₚ i lb)) 17).get halts
   (eval_string ((n2l Aₚ) ++ (n2l (rf+1))) i lb).Dom := by
     extract_lets
     expose_names
@@ -810,8 +810,9 @@ noncomputable def KP54 : ℕ→ℕ := λ s ↦
   if s%2=0 then
     -- then s=2i+2, and we will work on Rᵢ.
     -- shouldnt be rfind, but dovetail!!!
-    if halts:(rfind fzero (c_kp54_aux Aₚ i lb) 17).Dom then
-      let rf := (rfind fzero (c_kp54_aux Aₚ i lb) 17).get halts
+    let dvt := eval fzero (dovetail (c_kp54_aux Aₚ i lb)) 17
+    if halts:dvt.Dom then
+      let rf := dvt.get halts
       -- rf is the smallest natural such that
       -- (eval_string ((n2l A) ++ (n2l rf)) i n).Dom
       -- if such rf doesn't exist, that means that there is no (finite) extension of A s.t.
@@ -826,8 +827,9 @@ noncomputable def KP54 : ℕ→ℕ := λ s ↦
 
   else
     -- then s=2i+1, and we will work on Sᵢ.
-    if halts:(rfind fzero (c_kp54_aux Bₚ i la) 17).Dom then
-      let rf := (rfind fzero (c_kp54_aux Bₚ i la) 17).get halts
+    let dvt := eval fzero (dovetail (c_kp54_aux Bₚ i la)) 17
+    if halts:dvt.Dom then
+      let rf := dvt.get halts
       let Bₛ := (n2l Bₚ) ++ (n2l (rf+1))
       let B_result := (eval_string (Bₛ) i la).get (c_kp54_aux_2 halts)
       -- let B_result := (eval fzero (c_kp54_aux Bₚ i la) rf).get (sorry)
@@ -862,13 +864,13 @@ actually now i changed it so that i think
 -- private def B := {x | x ∈ D (KP54 (2*x)).r}
 -- private def A := {x | Nat.BSMem (Nat.pair x (KP54 (2*x+1)).l) = 1}
 -- private def B := {x | Nat.BSMem (Nat.pair x (KP54 (2*x)).r)   = 1}
-private noncomputable def As (s:ℕ) := n2l (KP54 (s)).l
-private noncomputable def Bs (s:ℕ) := n2l (KP54 (s)).r
+private noncomputable def As (s:ℕ) := n2l (KP54 s).l
+private noncomputable def Bs (s:ℕ) := n2l (KP54 s).r
 -- private def A := {x | (As x)[x]? = some 1}
 
 
 
-
+#check List.IsPrefix
 theorem ABgetsextended : (As i) <+: (As (i+1)) ∧ (Bs i) <+: (Bs (i+1)) := by
   unfold As
   unfold Bs
@@ -918,41 +920,53 @@ theorem Bgetsextended4
     simp at h
     have := (ABgetsextended3 (Nat.le_of_succ_le h)).right
     exact Eq.symm (List.IsPrefix.getElem this hh)
-theorem AsBsSize2 : (Bs (2*i+2)).length = (Bs (2*i+1)).length + 1 := by
-  induction i with
-  | zero =>
-    rw [Bs]
-    unfold KP54
-    simp (config := { zeta := false }) [-Nat.rfind_dom]
-    lift_lets
-    extract_lets
-    expose_names
-    if h0:(rfind Nat.fzero (c_kp54_aux Aₚ i lb).encodeCode 17).Dom then
-    simp [h0,-Nat.rfind_dom]
-    exact rfl
-    else
-    simp [h0,-Nat.rfind_dom]
-    exact rfl
-  | succ i ih =>
-    rw [Bs]
-    unfold KP54
-    simp (config := { zeta := false }) [-Nat.rfind_dom]
-    lift_lets
-    extract_lets
-    expose_names
-    if h0 :(rfind Nat.fzero (c_kp54_aux Aₚ i_1 lb).encodeCode 17).Dom then
-    simp [h0,-Nat.rfind_dom]
-    exact rfl
-    else
-    simp [h0,-Nat.rfind_dom]
-    exact rfl
-theorem AsBsSize2': (Bs (2 * (i + 1) - 1)).length < (Bs (2 * (i + 1))).length := by
+theorem AsSize_o2e : (As (2*i+1)).length = (As (2*i)).length + 1 := by
+  rw [As, KP54]
+  simp (config := { zeta := false })
+  extract_lets; expose_names
+  if h0:(dvt).Dom then simp [h0]; rfl
+  else simp [h0]; rfl
+theorem AsSize_e2o : (As (2*i+1)).length < (As (2*i+2)).length:= by
+  rw (config:={occs:=.pos [2]}) [As]
+  unfold KP54
+  simp (config := { zeta := false })
+  extract_lets; expose_names
+  rw [show As (2*i+1) = n2l Aₚ from rfl]
+  if h0:(dvt).Dom then simp [h0]
+  else simp [h0]
+theorem BsSize_o2e : (Bs (2*i+2)).length = (Bs (2*i+1)).length + 1 := by
+  rw [Bs, KP54]
+  simp (config := { zeta := false })
+  extract_lets; expose_names
+  if h0:(dvt).Dom then simp [h0]; rfl
+  else simp [h0]; rfl
+theorem BsSize_e2o : (Bs (2*i)).length < (Bs (2*i+1)).length:= by
+  rw (config:={occs:=.pos [2]}) [Bs]
+  unfold KP54
+  simp (config := { zeta := false })
+  extract_lets; expose_names
+  rw [show Bs (2*i) = n2l Bₚ from rfl]
+  if h0:(dvt).Dom then simp [h0]
+  else simp [h0]
+theorem BsSize_o2e': (Bs (2 * (i + 1) - 1)).length < (Bs (2 * (i + 1))).length := by
   have : 2 * (i + 1) - 1 = 2*i+1 := by exact rfl
   rw [this]
   have : 2*(i+1) = 2*i + 2:= by exact rfl
   rw [this]
-  have := @AsBsSize2 i
+  have := @BsSize_o2e i
   simp_all only [Nat.add_one_sub_one, lt_add_iff_pos_right, zero_lt_one]
+theorem Asexext: ∃ lM1, (As i)++(n2l (lM1+1))=As (i+1) := by
+  have a0 := (@ABgetsextended i).left
+  have a1 : (As i).length < (As (i+1)).length := by sorry
+  rcases a0 with ⟨h1,h2⟩
+  have a2 : h1.length > 0 := by sorry
+  have a3 : l2n h1 > 0 := by sorry
+  have a4 : (l2n h1)-1+1=l2n h1 := by sorry
+  use (l2n h1)-1
+  simp [a4]
+  exact h2
+  
+  -- exact?
 theorem AsBsSize : i≤(As i).length ∧ i≤(Bs i).length := by
   induction i with
   | zero => exact ⟨Nat.zero_le (As 0).length, Nat.zero_le (Bs 0).length⟩
@@ -966,7 +980,7 @@ theorem AsBsSize : i≤(As i).length ∧ i≤(Bs i).length := by
     expose_names
     if h0:(i + 1) % 2 = 0 then
       simp [h0,-Nat.rfind_dom]
-      if h1 : (rfind Nat.fzero (c_kp54_aux Aₚ i_1 lb).encodeCode 17).Dom  then
+      if h1 : (dvt).Dom  then
         simp [h1,-Nat.rfind_dom]
         constructor
         refine Nat.add_le_add ih.left ?_
@@ -977,7 +991,7 @@ theorem AsBsSize : i≤(As i).length ∧ i≤(Bs i).length := by
         exact ih
     else
       simp [h0,-Nat.rfind_dom]
-      if h1 : (rfind Nat.fzero (c_kp54_aux Bₚ i_1 la).encodeCode 17).Dom  then
+      if h1 : (dvt_1).Dom  then
         simp [h1,-Nat.rfind_dom]
         constructor
         exact ih.left
@@ -1077,7 +1091,7 @@ let k := (n2l (Bs (2*i-1))).length
 
 theorem Rasd2_aux : (n2l (Bs (2*(i+1)-1))).length < (Bs (2*(i+1))).length := by
   simp only [Denumerable.ofNat_encode]
-  exact AsBsSize2'
+  exact BsSize_o2e'
 private theorem Rasd2 (i:ℕ) (h:(eval_string (As (2*(i+1))) i ((n2l (Bs (2*(i+1)-1))).length)).Dom):
 -- let k := (n2l (Bs (2*(i)))).length-1
 let k := (n2l (Bs (2*(i+1)-1))).length
@@ -1093,7 +1107,7 @@ let k := (n2l (Bs (2*(i+1)-1))).length
   extract_lets
   expose_names
   have i_1_simp: i_1 = i := Nat.div2_bit1 i
-  simp (config := { zeta := false }) only [i_1_simp]
+  -- simp (config := { zeta := false }) only [i_1_simp]
 
 
   have keqlb : k=lb := by
@@ -1104,7 +1118,7 @@ let k := (n2l (Bs (2*(i+1)-1))).length
     rw [show Bₚ=(KP54 (2 * (i + 1) - 1)).r from rfl]
 
 
-  if h1: (rfind Nat.fzero (c_kp54_aux Aₚ i lb).encodeCode 17).Dom then
+  if h1: (dvt).Dom then
   simp (config := { zeta := false }) [h1, -Nat.rfind_dom]
   lift_lets
   extract_lets
@@ -1115,9 +1129,9 @@ let k := (n2l (Bs (2*(i+1)-1))).length
   simp only [lbrw]
   simp
   have aaa : A_result = (eval_string (n2l Aₚ ++ n2l (rf + 1)) (decodeCode i_1) lb).get (c_kp54_aux_2
-    (Eq.mpr_prop (Eq.refl (rfind Nat.fzero (c_kp54_aux Aₚ i_1 lb).encodeCode 17).Dom)
+    (Eq.mpr_prop (Eq.refl (dvt).Dom)
       (Eq.mpr_prop
-        (congrArg (fun x ↦ (rfind Nat.fzero (c_kp54_aux Aₚ x lb).encodeCode 17).Dom) i_1_simp)
+        (congrArg (fun x ↦ (dvt).Dom) i_1_simp)
         (of_eq_true (eq_true h1))))) := rfl
 
   simp [-Denumerable.list_ofNat_succ] at aaa
@@ -1130,14 +1144,30 @@ let k := (n2l (Bs (2*(i+1)-1))).length
     simp
   simp [Aresrw]
   cases A_result <;> simp [n2b,b2n]
+
+
+  
   else
+  exfalso
   have keqlb_2 : (n2l (l2n (Bs (2 * (i + 1) - 1)))).length = lb := by exact keqlb
   rw [keqlb_2] at h
-  simp at h1
-  sorry
+  rw [show dvt = eval Nat.fzero (c_kp54_aux Aₚ i_1 lb).dovetail 17 from rfl] at h1
+  have := dovetail_ev_1.mp (Part.eq_none_iff'.mpr h1)
+  clear h1
+  -- simp? [c_kp54_aux_evp] at this
+  simp [c_kp54_aux_evp, -Denumerable.list_ofNat_succ] at this
 
-  -- apply Function.ne_iff.mpr
--- proof by the use principle.
+  have Aprw : n2l Aₚ = As (2*i+1) := rfl
+  rw [Aprw] at this
+  have aux0 : 2*(i+1) = 2*i+2 := rfl
+  rw [aux0] at h
+  have := @Asexext (2*i+1)
+  rcases this with ⟨h1,h2⟩
+  have := this h1
+  rw [h2] at this
+  rw [show 2 * i + 1 + 1= 2*i+2 from rfl] at this
+  rw [i_1_simp] at this
+  exact this h
 
 
 theorem Aextends : eval_string (As (2*i)) i k=Part.some y → evalSet A i k=Part.some y := by
