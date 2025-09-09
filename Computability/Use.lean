@@ -3580,11 +3580,11 @@ def up_to_usen.induction
       fun s =>
         hprec cf cg s (ihcf s) (ihcg s) x' (fun s' hle x'' hx'' => ih_x' x'' hx'' s'))
     | rfind' cf ihcf => exact fun s x ↦ hrfind' cf s x fun x' s' ↦ ihcf s' x'
-theorem up_to_usen (hh:(evaln O₁ s c x).isSome) (hO: ∀ i≤(usen O₁ c s x).get (en2un hh), O₁ i = O₂ i) : evaln O₁ (s) c x = evaln O₂ (s) c x := by
+theorem up_to_usen (hh:(evaln O₁ s c x).isSome) (hO: ∀ i<(usen O₁ c s x).get (en2un hh), O₁ i = O₂ i) : evaln O₁ (s) c x = evaln O₂ (s) c x := by
   have sG1 := evaln_sG1 hh
   have xles : x≤s-1 := evaln_xles' hh
   rw [sG1] at ⊢ hh
-  have hO: ∀ i≤(usen O₁ c (s-1+1) x).get (en2un hh), O₁ i = O₂ i := by
+  have hO: ∀ i<(usen O₁ c (s-1+1) x).get (en2un hh), O₁ i = O₂ i := by
     simp [←sG1]
     exact fun i a ↦ hO i a
 
@@ -3599,21 +3599,21 @@ theorem up_to_usen (hh:(evaln O₁ s c x).isSome) (hO: ∀ i≤(usen O₁ c s x)
   | hleft s x => simp [evaln]
   | hright s x => simp [evaln]
   | horacle s x =>
-    have h1:x≤(usen O₁ oracle (s-1+1) x).get (en2un hh) := by simp [usen]
+    have h1:x<(usen O₁ oracle (s-1+1) x).get (en2un hh) := by simp [usen]
     simp [evaln]
     simp [evaln_xles hh]
     exact hO x h1
   | hpair cf cg s x hcf hcg =>
     simp only [evaln]
     have h1:
-    (∀ i ≤ (usen O₁ cf (s-1+1) x).get (en2un (evaln_pair_dom hh).left), O₁ i = O₂ i)
+    (∀ i < (usen O₁ cf (s-1+1) x).get (en2un (evaln_pair_dom hh).left), O₁ i = O₂ i)
     :=by
       intro xx
       intro hxx
       have hxx2 := le_trans hxx (usen_mono_pair (en2un hh)).left
       exact hO xx hxx2
     have h2:
-    (∀ i ≤ (usen O₁ cg (s-1+1) x).get (en2un (evaln_pair_dom hh).right), O₁ i = O₂ i)
+    (∀ i < (usen O₁ cg (s-1+1) x).get (en2un (evaln_pair_dom hh).right), O₁ i = O₂ i)
     :=by
       intro xx
       intro hxx
@@ -3629,7 +3629,7 @@ theorem up_to_usen (hh:(evaln O₁ s c x).isSome) (hO: ∀ i≤(usen O₁ c s x)
     simp at hhhhh
     simp [hhhhh]
     have h1:
-    (∀ i ≤ (usen O₁ cg (s-1+1) x).get (en2un (evaln_comp_dom hh).left), O₁ i = O₂ i)
+    (∀ i < (usen O₁ cg (s-1+1) x).get (en2un (evaln_comp_dom hh).left), O₁ i = O₂ i)
     :=by
       intro xx
       intro hxx
@@ -3639,7 +3639,7 @@ theorem up_to_usen (hh:(evaln O₁ s c x).isSome) (hO: ∀ i≤(usen O₁ c s x)
     rw [ih1]
 
     have h2:
-    (∀ i ≤ (usen O₁ cf (s-1+1) ((evaln O₁ (s-1+1) cg x).get (evaln_comp_dom_aux hh))).get (en2un (evaln_comp_dom hh).right), O₁ i = O₂ i)
+    (∀ i < (usen O₁ cf (s-1+1) ((evaln O₁ (s-1+1) cg x).get (evaln_comp_dom_aux hh))).get (en2un (evaln_comp_dom hh).right), O₁ i = O₂ i)
     :=by
       intro xx
       intro hxx
@@ -3656,7 +3656,7 @@ theorem up_to_usen (hh:(evaln O₁ s c x).isSome) (hO: ∀ i≤(usen O₁ c s x)
     have aux4 :(usen O₁ cf ((s-1+1)) ((evaln O₁ (s-1+1) cg x).get (evaln_comp_dom_aux hh))).get (en2un (evaln_comp_dom hh).right) = (usen O₁ cf ((s-1+1)) ((evaln O₂ (s-1+1) cg x).get aux0)).get (en2un aux2) := by
       simp_all only [implies_true]
     have h3:
-    (∀ i ≤ (usen O₁ cf ((s-1+1)) ((evaln O₂ (s-1+1) cg x).get aux0)).get (en2un aux2), O₁ i = O₂ i)
+    (∀ i < (usen O₁ cf ((s-1+1)) ((evaln O₂ (s-1+1) cg x).get aux0)).get (en2un aux2), O₁ i = O₂ i)
     := by
       have aux := h2
       rwa [aux4] at aux
@@ -3685,7 +3685,7 @@ theorem up_to_usen (hh:(evaln O₁ s c x).isSome) (hO: ∀ i≤(usen O₁ c s x)
       have aux0 : (evaln O₁ (s-1+1) cf x.l).isSome := evaln_prec_dom' hh
       have aux1 : (usen O₁ cf (s-1+1) x.l).isSome := en2un aux0
       have aux3 := usen_mono_prec' (en2un hh)
-      have aux2 : (∀ i ≤ (usen O₁ cf (s-1+1) x.l).get aux1, O₁ i = O₂ i) := by
+      have aux2 : (∀ i < (usen O₁ cf (s-1+1) x.l).get aux1, O₁ i = O₂ i) := by
         intro xx
         intro hxx
         have hxx2 := le_trans hxx (usen_mono_prec' (en2un hh))
@@ -3700,7 +3700,7 @@ theorem up_to_usen (hh:(evaln O₁ s c x).isSome) (hO: ∀ i≤(usen O₁ c s x)
       have aux00 : (evaln O₁ (s-1) (cf.prec cg) (Nat.pair x.l xrM1)).isSome := by exact evaln_prec_dom_aux hh
       have aux00' : (evaln O₁ (s-1+1) (cf.prec cg) (Nat.pair x.l xrM1)).isSome := evaln_mono_dom (show s-1≤s-1+1 from le_add_right (s - 1) 1) aux00
 
-      have aux02 : (∀ i ≤ (usen O₁ (cf.prec cg) (s-1) (Nat.pair x.l xrM1)).get (en2un aux00), O₁ i = O₂ i) := by
+      have aux02 : (∀ i < (usen O₁ (cf.prec cg) (s-1) (Nat.pair x.l xrM1)).get (en2un aux00), O₁ i = O₂ i) := by
         intro xx
         intro hxx
         have hxx2 := le_trans hxx (usen_mono_prec_1 (en2un hh))
@@ -3732,7 +3732,7 @@ theorem up_to_usen (hh:(evaln O₁ s c x).isSome) (hO: ∀ i≤(usen O₁ c s x)
       have aux1 : (evaln O₁ (s-1+1-j-1+1) cf (Nat.pair x.l (j + x.r))).isSome := by
         rw [sG1j]
         exact nrop2 j hjro
-      have aux2 : (∀ i ≤ (usen O₁ cf (s-1+1-j-1+1) (Nat.pair x.l (j + x.r))).get (en2un aux1), O₁ i = O₂ i) := by
+      have aux2 : (∀ i < (usen O₁ cf (s-1+1-j-1+1) (Nat.pair x.l (j + x.r))).get (en2un aux1), O₁ i = O₂ i) := by
         simp [sG1j]
         intro xx
         intro hxx
@@ -3791,7 +3791,7 @@ lemma evaln_sound'
 eval O c x = Part.some ((evaln O s c x).get h) := by
   have := evaln_sound (Option.get_mem h)
   exact Part.eq_some_iff.mpr this
-theorem up_to_use (hh:(eval O₁ c x).Dom) (hO: ∀ i≤(use O₁ c x).get (e2u hh), O₁ i = O₂ i) : eval O₁ c x = eval O₂ c x := by
+theorem up_to_use (hh:(eval O₁ c x).Dom) (hO: ∀ i<(use O₁ c x).get (e2u hh), O₁ i = O₂ i) : eval O₁ c x = eval O₂ c x := by
   rcases evaln_complete.mp (Part.get_mem hh) with ⟨s,h1⟩
   have h3 := usen_dom_iff_evaln_dom'.mpr (Option.isSome_of_mem h1)
   have userepl : (use O₁ c x).get (e2u hh) = (usen O₁ c s x).get h3 := by exact Eq.symm usen_sing''
