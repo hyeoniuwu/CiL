@@ -662,11 +662,11 @@ theorem rfind'_obtain_prop_6 (h:(eval O (rfind' cf) x).Dom) :
 open Classical in
 noncomputable def use (O:ℕ→ℕ) (c:Code) (x:ℕ) : Part ℕ :=
 match c with
-| zero        => 0
-| succ        => 0
-| left        => 0
-| right       => 0
-| oracle      => x+1
+| zero        => Part.some (0)
+| succ        => Part.some (0)
+| left        => Part.some (0)
+| right       => Part.some (0)
+| oracle      => Part.some (x+1)
 | pair cf cg  => Nat.max <$> (use O cf x) <*> (use O cg x)
 | comp cf cg  => Nat.max <$> (use O cg x) <*> (eval O cg x >>= use O cf)
 | prec cf cg  =>
@@ -1095,15 +1095,7 @@ theorem use_dom_iff_eval_dom : (use O c x).Dom ↔ (eval O c x).Dom := by
   | succ => exact Eq.to_iff rfl
   | left => exact Eq.to_iff rfl
   | right => exact Eq.to_iff rfl
-  | oracle =>
--- TODO:simplify proof of oracle here
-    simp [use,eval]
-    suffices Part.some (x+1) = @HAdd.hAdd (Part ℕ) (Part ℕ) (Part ℕ) instHAdd (Part.some x) 1 from by
-      rw [←this]
-      exact trivial
-    have := Part.some_add_some x 1
-    rw [←this]
-    exact rfl
+  | oracle => simp [use,eval]
   | pair cf cg hcf hcg => simp [use,eval,Seq.seq]; simp_all only []
   | comp cf cg hcf hcg => simp [use,eval,Seq.seq]; simp_all only [and_exists_self]
   | prec cf cg hcf hcg =>
@@ -2143,30 +2135,20 @@ theorem usen_sound : ∀ {c s n x}, x ∈ usen O c s n → x ∈ use O c n
   | h0 c => simp [usen] at h
   | hzero k =>
     simp [use, usen, Option.bind_eq_some_iff] at h ⊢
-    obtain ⟨_, h⟩ := h
-    exact (Part.get_eq_iff_mem trivial).mp h
+    exact h.right.symm
   | hsucc k =>
     simp [use, usen, Option.bind_eq_some_iff] at h ⊢
-    obtain ⟨_, h⟩ := h
-    exact (Part.get_eq_iff_mem trivial).mp h
+    exact h.right.symm
   | hleft k =>
     simp [use, usen, Option.bind_eq_some_iff] at h ⊢
-    obtain ⟨_, h⟩ := h
-    exact (Part.get_eq_iff_mem trivial).mp h
+    exact h.right.symm
   | hright k =>
     simp [use, usen, Option.bind_eq_some_iff] at h ⊢
-    obtain ⟨_, h⟩ := h
-    exact (Part.get_eq_iff_mem trivial).mp h
+    exact h.right.symm
   | horacle k =>
     simp [use, usen, Option.bind_eq_some_iff] at h ⊢
     obtain ⟨_, h⟩ := h
     simp [←h]
-    suffices Part.some (n+1) = @HAdd.hAdd (Part ℕ) (Part ℕ) (Part ℕ) instHAdd (Part.some n) 1 from by
-      rw [←this]
-      exact Part.mem_some_iff.mpr rfl
-    have := Part.some_add_some n 1
-    rw [←this]
-    exact rfl
   | hpair k cf cg hf hg =>
     simp [use, usen, Option.bind_eq_some_iff, Seq.seq] at h ⊢
     obtain ⟨_, h⟩ := h
@@ -2879,15 +2861,12 @@ theorem usen_complete {c n x} : x ∈ use O c n ↔ ∃ s, x ∈ usen O c s n :=
     simp [use] at h
     use (n+1)
     simp [usen]
-    rw [show @OfNat.ofNat (Part ℕ) 1 One.toOfNat1 = Part.some 1 from rfl] at h
-    rw [Part.some_add_some n 1] at h
-    exact (Part.mem_some_iff.mp h).symm
+    exact h.symm
   | _ =>
     simp [use] at h
     use (n+1)
     simp [usen]
-    rw [show @OfNat.ofNat (Part ℕ) 0 Zero.toOfNat0 = Part.some 0 from rfl] at h
-    exact (Part.mem_some_iff.mp h).symm
+    exact h.symm
 
 theorem usen_xles (h:(usen O c (s+1) x).isSome) : x≤s :=le_of_lt_succ (usen_bound (Option.get_mem h))
 theorem evaln_pair_dom (h:(evaln O (s+1) (pair cf cg) x).isSome) : (evaln O (s+1) cf x).isSome ∧ (evaln O (s+1) cg x).isSome := by

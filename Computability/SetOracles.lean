@@ -799,7 +799,12 @@ theorem eval_clamped_prop''_aux (h:(eval_clamped O u c x).Dom): (use O c x).Dom 
 -- theorem eval_clamped_prop''_aux' (h:y∈eval_clamped O u c x): (use O c x).Dom := e2u (Part.mem_imp_dom (eval_clamped_prop' h))
 theorem eval_clamped_prop_1 (h:(eval_clamped O u c x).Dom): (use O c x).get (eval_clamped_prop''_aux h)≤u := by sorry
 theorem eval_clamped_prop''_rev (h:(eval O c x).Dom) (h0:(use O c x).get (e2u h)≤u): eval_clamped O u c x=Part.some ((eval O c x).get h) := by sorry
-theorem eval_clamped_prop''_rev2: (use O c x).get h≤u ↔ (eval_clamped O u c x).Dom := by sorry
+theorem eval_clamped_prop''_rev2: (use O c x).get h≤u ↔ (eval_clamped O u c x).Dom :=
+  ⟨
+    λ h0 ↦ Part.eq_some_imp_dom $ eval_clamped_prop''_rev (u2e h) h0
+    ,
+    λ h0 ↦ eval_clamped_prop_1 h0
+  ⟩
 -- theorem eval_clamped_prop''_rev3: (∀y,y∈(use O c x)→y≤u) ↔ (eval_clamped O u c x).Dom := by sorry
 -- def eval_string (σ:List ℕ) (c:Code) (x:ℕ):= eval_clamped (fun e=> σ.getD e 999) σ.length c x
 -- def eval_string (σ:List ℕ) (c:Code) (x:ℕ):= eval_clamped (fun e=> Nat.sg $ σ.getD e 999) σ.length c x
