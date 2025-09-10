@@ -345,8 +345,7 @@ theorem As_Uninjured_0' {i:ℕ} : ¬ (eval A i k).Dom → ¬ (evals (As (2*(i+1)
 /--
 If `[i:As](k)` diverges, then it will always diverge in subsequent steps.
 -/
-theorem As_Uninjured_1 :
-¬(evals (As (2*(i+1))) i (R_wt i)).Dom → ¬(eval A i (R_wt i)).Dom := by
+theorem As_Uninjured_1 : ¬(evals (As (2*(i+1))) i (R_wt i)).Dom → ¬(eval A i (R_wt i)).Dom := by
   unfold As
   unfold KP54
   simp (config := {zeta:=false})
@@ -382,10 +381,8 @@ theorem As_Uninjured_1 :
 
   simp only [evals]
 
-  let compl := ((eval (χ A) (decodeCode i) (R_wt i)))
-  let usecomp := (use (χ A) (decodeCode i) (R_wt i))
   have a2 := e2u a1
-  let usecn := usecomp.get a2
+  let usecn := (use (χ A) (decodeCode i) (R_wt i)).get a2
 
   have a4 := a2
   unfold A at a4
