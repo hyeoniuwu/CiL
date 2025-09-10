@@ -1209,7 +1209,7 @@ let k := (n2l (Bs (2*(i+1)-1))).length
   exact this h
 
 
-theorem Aextends : eval_string (As (2*i)) i k=Part.some y → evalSet A i k=Part.some y := by
+theorem Aextends : eval_string (As (2*(i+1))) i k=Part.some y → evalSet A i k=Part.some y := by
   unfold A
 
   simp
@@ -1228,8 +1228,8 @@ theorem Aextends : eval_string (As (2*i)) i k=Part.some y → evalSet A i k=Part
   rotate_left
   exact Part.eq_some_imp_dom h2
 
-  suffices ∀ i_1 < (As (2 * i)).length,
-  b2n (n2b ((As (2 * i))[i_1]?.getD 999)) = if n2b ((As (i_1 + 1))[i_1]'AsSize) = true then 1 else 0
+  suffices ∀ i_1 < (As (2*(i+1))).length,
+  b2n (n2b ((As (2*(i+1)))[i_1]?.getD 999)) = if n2b ((As (i_1 + 1))[i_1]'AsSize) = true then 1 else 0
     from by
     intro h3 h4
     have h5 := this h3 (Nat.le_trans h4 h1)
@@ -1237,12 +1237,12 @@ theorem Aextends : eval_string (As (2*i)) i k=Part.some y → evalSet A i k=Part
 
   intro ii hii
   have asz := @AsSize ii
-  rw [@Agetsextended5 ii (2*i) (ii + 1) 999 hii asz]
+  rw [@Agetsextended5 ii (2*(i+1)) (ii + 1) 999 hii asz]
   rfl
 
 
   -- have := eval_clamped_prop
-
+-- theorem : (a→b) ↔ (¬b→¬a) := by exact Iff.symm Decidable.not_imp_not
 theorem Aextends''''' :
 let k:=(n2l (Bs (2*(i+1)-1))).length
 ¬(eval_string (As (2*(i+1))) i k).Dom → ¬(evalSet A i k).Dom := by
@@ -1385,47 +1385,30 @@ let k:=(n2l (Bs (2*(i+1)-1))).length
   exact a5
   simp only [←mainrw]
   exact a2
-
-theorem Aextends' : ¬(eval_string (As (2*i)) i k).Dom → ¬(evalSet A i k).Dom := by
-  unfold A
-
-  simp
-  unfold χ
-  simp
-  unfold eval_string
-  simp
-  intro h
-  rcases eval_clamped_prop'' h with ⟨h0,h1⟩
-  -- apply Part.eq_some_iff.mp
-  have h2 := Part.eq_some_iff.mpr h0
-  clear h0
-  rw [←h2]
-  apply Eq.symm
-  apply up_to_use
-  rotate_left
-  exact Part.eq_some_imp_dom h2
-
-  suffices ∀ i_1 < (As (2 * i)).length,
-  b2n (n2b ((As (2 * i))[i_1]?.getD 999)) = if n2b ((As (i_1 + 1))[i_1]'AsSize) = true then 1 else 0
-    from by
-    intro h3 h4
-    have h5 := this h3 (Nat.le_trans h4 h1)
-    simp only [h5, ite_eq_ite]
-
-  intro ii hii
-  have asz := @AsSize ii
-  have : ((As (2 * i))[ii]?.getD 999) = (As (ii + 1))[ii] := by
-    have : (As (2 * i))[ii]?.getD 999 = (As (2 * i))[ii] := by simp_all only [getElem?_pos, Option.getD_some]
-    rw [this]
-    exact Agetsextended4 hii asz
-  rw [this]
-  rfl
-  sorry
+theorem Aextends' :
+let k:=(n2l (Bs (2*(i+1)-1))).length
+(evalSet A i k).Dom  → (eval_string (As (2*(i+1))) i k).Dom := by
+  have := @Aextends''''' i
+  extract_lets at this ⊢; expose_names
+  have := not_imp_not.mp this
+  exact this
 -- theorem Aextends'' : (eval_string (KP54 (2*(i+1))).l i) (k)=Part.some y ↔  evalSet A i (k)=Part.some y := by sorry
 -- theorem Aextends'''_aux (h:( evalSet A i k).Dom): (eval_string (As (2*(i+1))) i k).Dom := by sorry
 -- theorem Aextends''' {i:ℕ} (h:(evalSet A i k).Dom): evalSet A i k=eval_string (As (2*i)) i k:= by sorry
-theorem Aextends''' {i:ℕ} (h:(evalSet A i k).Dom): evalSet A i k=eval_string (As (2*(i+1))) i k:= by sorry
--- theorem Aextends'''' {i:ℕ} (h:(evalSet A i k).Dom): evalSet A i k=eval_string (As (2*(i+1))) i k:= by sorry
+-- theorem ppp : p=Part.some ()
+theorem Aextends''' {i:ℕ} :
+let k:=(n2l (Bs (2*(i+1)-1))).length
+(evalSet A i k).Dom →
+evalSet A i k=eval_string (As (2*(i+1))) i k:= by 
+  have := (@Aextends' i)
+
+  extract_lets at this ⊢; expose_names
+  intro h
+  have sdom := this h
+  -- #check Aextends
+  have := @Aextends (i) k (((eval_string (As (2 * (i + 1))) (decodeCode i) k)).get sdom) (Part.dom_imp_some sdom)
+  rw [this]
+  exact Part.some_get sdom
 
 -- R i is satisfied at stage 2i.
 theorem Part.get_eq_some {p:Part ℕ} (h:p.Dom) : p=Part.some (p.get h) := by exact Part.dom_imp_some h
@@ -1444,6 +1427,7 @@ private theorem R (i:ℕ) : evalSet A i ≠ χ B := by
     exact Part.get_eq_iff_eq_some.mpr this
 
   have := Aextends''' h0
+  rw [show (n2l (l2n (Bs (2 * (i + 1) - 1)))).length = k from rfl] at this
   simp only [this]
   have main1 := main (this ▸ h0)
   clear main
