@@ -259,10 +259,13 @@ theorem AsBsSize : i≤(As i).length ∧ i≤(Bs i).length := by
       else
         simp [h1,-Nat.rfind_dom]
         exact ih
-theorem AsSize : i<(As (i+1)).length := (@AsBsSize (i+1)).left
-theorem BsSize : i<(Bs (i+1)).length := (@AsBsSize (i+1)).right
 
-theorem BsSize_o2e': (Bs (2 * (i + 1) - 1)).length < (Bs (2 * (i + 1))).length := by
+@[simp] theorem AsSize : i<(As (i+1)).length := (@AsBsSize (i+1)).left
+@[simp] theorem BsSize : i<(Bs (i+1)).length := (@AsBsSize (i+1)).right
+
+private noncomputable def R_wt (i:ℕ) := (Bs (2*(i+1)-1)).length
+@[simp] theorem BsSize_o2e' : R_wt i < (Bs (2 * (i + 1))).length := by
+  rw [show R_wt i = (Bs (2*(i+1)-1)).length from rfl]
   have : 2 * (i + 1) - 1 = 2*i+1 := by exact rfl
   rw [this]
   have : 2*(i+1) = 2*i + 2:= by exact rfl
@@ -271,13 +274,11 @@ theorem BsSize_o2e': (Bs (2 * (i + 1) - 1)).length < (Bs (2 * (i + 1))).length :
   simp_all only [Nat.add_one_sub_one, lt_add_iff_pos_right, zero_lt_one]
 
 
-private def A := {x | n2b $ (As (x+1))[x]'AsSize}
-private def B := {x | n2b $ (Bs (x+1))[x]'BsSize}
+private def A := { x | n2b (As (x+1))[x] }
+private def B := { x | n2b (Bs (x+1))[x] }
 
-
-private noncomputable def R_wt (i:ℕ) := (Bs (2*(i+1)-1)).length
 private theorem R_aux_0 (i:ℕ) (h:(evals (As (2*(i+1))) i (R_wt i)).Dom):
-(evals (As (2*(i+1))) i (R_wt i)).get h ≠ b2n (n2b $ (Bs (2*(i+1)))[R_wt i]'(BsSize_o2e')) := by
+(evals (As (2*(i+1))) i (R_wt i)).get h ≠ b2n (n2b $ (Bs (2*(i+1)))[R_wt i]'BsSize_o2e') := by
   unfold Bs
   unfold As
   unfold KP54
@@ -319,43 +320,27 @@ theorem R_aux_χ: χ B (R_wt i) = b2n (n2b ((Bs (2 * (i + 1)))[(R_wt i)]'(@BsSiz
 If `[i:As](k)` halts, then its value will be unchanged in all subsequent steps.
 -/
 theorem As_Uninjured_0 (hh:(evals (As (2*(i+1))) i k).Dom): evals (As (2*(i+1))) i k = eval A i k := by
-  unfold A
-  simp [_root_.eval]
-  unfold χ
-  simp
-  unfold evals
-  simp
+  simp [A,_root_.eval]; unfold χ; simp [evals] -- unfold defns
 
   have h1 := eval_clamped_prop_0 hh
-  have h1r := eval_clamped_prop_1 hh
   simp at h1
   rw [h1]
 
   have hh2 := hh
-  unfold evals at hh2
-  simp at hh2
-  rw [h1] at hh2
-  apply use_principle_eval
-  rotate_left
-  exact hh2
+  simp [evals, h1] at hh2
 
-  suffices ∀ i_1 < (As (2*(i+1))).length,
-  b2n (n2b ((As (2*(i+1)))[i_1]?.getD 999)) = if n2b ((As (i_1 + 1))[i_1]'AsSize) = true then 1 else 0
-    from by
-    intro h3 h4
-    have h5 := this h3 (Nat.le_trans h4 h1r)
-    simp only [h5, ite_eq_ite]
+  apply use_principle_eval hh2
 
   intro ii hii
-  have asz := @AsSize ii
-  rw [@As_Mono_4 ii (2*(i+1)) (ii + 1) 999 hii asz]
-  rfl
+  rw [As_Mono_4 (Nat.lt_of_lt_of_le hii (eval_clamped_prop_1 hh)) AsSize]
+  split
+  next h => simp [b2n,h]
+  next h => simp [b2n,h]
 theorem As_Uninjured_0' {i:ℕ} : ¬ (eval A i k).Dom → ¬ (evals (As (2*(i+1))) i k).Dom := by
   contrapose
   simp only [Decidable.not_not]
   intro h
-  have := As_Uninjured_0 h
-  rw [←this]
+  rw [←As_Uninjured_0 h]
   exact h
 /--
 If `[i:As](k)` diverges, then it will always diverge in subsequent steps.
@@ -365,36 +350,27 @@ theorem As_Uninjured_1 :
   unfold As
   unfold KP54
   simp (config := {zeta:=false})
-  lift_lets
-  extract_lets
-  expose_names
+  lift_lets; extract_lets; expose_names
   have i_1_simp: i_1 = i := Nat.div2_bit1 i
-  have keqlb : R_wt i=lb := by
-    rw [show R_wt i=(Bs (2 * (i+1) - 1)).length from rfl]
-    rw [show lb=(n2l Bₚ).length from rfl]
-    unfold Bs
-    rw [show Bₚ=(KP54 (2 * (i + 1) - 1)).r from rfl]
+  have keqlb : R_wt i=lb := rfl
 
   if h0:dvt.Dom then
     simp (config := {zeta:=false}) [h0]
-    lift_lets
-    extract_lets
-    expose_names
-    simp
+    lift_lets; extract_lets; expose_names
+    simp only [List.concat_eq_append, pair_l, Denumerable.ofNat_encode]
     intro h
     exfalso
     have := c_kp54_aux_2 h0
-    simp [-Denumerable.list_ofNat_succ] at this
     rw [i_1_simp] at this
     exact h this
 
 
   else
+
   simp at h0
   simp (config := {zeta:=false}) [h0]
-  have a0 : eval Nat.fzero (c_kp54_aux Aₚ i_1 lb).dovetail 17 = Part.none := by exact Part.eq_none_iff'.mpr h0
 
-  have a1 := dovetail_ev_1.mp a0; clear a0
+  have a1 := dovetail_ev_1.mp (Part.eq_none_iff'.mpr h0)
   simp [c_kp54_aux_evp, -Denumerable.list_ofNat_succ] at a1
   intro h; clear h
   contrapose a1
@@ -404,15 +380,11 @@ theorem As_Uninjured_1 :
   rw [i_1_simp]
   rw [←keqlb]
 
-  -- unfold A at a1
-  -- unfold χ at a1
-  -- simp at a1
   simp only [evals]
 
   let compl := ((eval (χ A) (decodeCode i) (R_wt i)))
   let usecomp := (use (χ A) (decodeCode i) (R_wt i))
   have a2 := e2u a1
-  have : usecomp.Dom := by exact a2
   let usecn := usecomp.get a2
 
   have a4 := a2
@@ -423,11 +395,7 @@ theorem As_Uninjured_1 :
   -- use reverse of eval_clamped_prop'' to rephrase the eval_clamped in the goal to just eval.
   -- then, use the extension that will get the oracle string to As (use).
   -- the inequality will be satisfies as the list as size greater than use.
-  have := eval_clamped_prop''_rev (a1) (Nat.le_refl ((usecomp).get (e2u a1)))
-  have a3 : (eval_clamped (χ A) (usecn) (decodeCode i) (R_wt i)).Dom := by exact Part.eq_some_imp_dom this
-  unfold A at this
-  unfold χ at this
-  simp at this
+
   have Aprw : n2l Aₚ = As (2*i+1) := rfl
   rw [Aprw]
   if h0:2*i+1≤usecn then
@@ -451,6 +419,7 @@ theorem As_Uninjured_1 :
     exact Nat.le_of_succ_le (@AsSize usecn)
     simp only [←mainrw]
     exact a2
+
   else
 
   simp at h0
