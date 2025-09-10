@@ -48,7 +48,8 @@ lemma Part.not_none_iff_dom : (¬o=Part.none)↔(o.Dom) := by
     intro a_1
     subst a_1
     exact a
-
+lemma Part.ne_of_get_ne {p1 p2:Part ℕ} {h1:p1.Dom} {h2:p2.Dom} (h:p1.get h1≠p2.get h2) : (p1≠p2) := by aesop
+lemma Part.ne_of_get_ne' {p1:Part ℕ} {h1:p1.Dom} (h:p1.get h1≠x) : (p1≠Part.some x) := by aesop
 
 variable {α:Type*} {β:Type*} {σ:Type*}
 variable [Primcodable α] [Primcodable β] [Primcodable σ]

@@ -274,15 +274,10 @@ theorem BsSize_o2e': (Bs (2 * (i + 1) - 1)).length < (Bs (2 * (i + 1))).length :
 private def A := {x | n2b $ (As (x+1))[x]'AsSize}
 private def B := {x | n2b $ (Bs (x+1))[x]'BsSize}
 
-noncomputable def Bsize (i:ℕ) := (Bs i).length
 
-theorem R_aux' : (n2l (Bs (2*(i+1)-1))).length < (Bs (2*(i+1))).length := by
-  simp only [Denumerable.ofNat_encode]
-  exact BsSize_o2e'
-
-private noncomputable def R_wt (i:ℕ) := (n2l (Bs (2*(i+1)-1))).length
+private noncomputable def R_wt (i:ℕ) := (Bs (2*(i+1)-1)).length
 private theorem R_aux_0 (i:ℕ) (h:(evals (As (2*(i+1))) i (R_wt i)).Dom):
-(evals (As (2*(i+1))) i (R_wt i)).get h ≠ b2n (n2b $ (Bs (2*(i+1)))[R_wt i]'(R_aux')) := by
+(evals (As (2*(i+1))) i (R_wt i)).get h ≠ b2n (n2b $ (Bs (2*(i+1)))[R_wt i]'(BsSize_o2e')) := by
   unfold Bs
   unfold As
   unfold KP54
@@ -292,8 +287,7 @@ private theorem R_aux_0 (i:ℕ) (h:(evals (As (2*(i+1))) i (R_wt i)).Dom):
   expose_names
   have i_1_simp: i_1 = i := Nat.div2_bit1 i
   have keqlb : R_wt i=lb := by
-    rw [show R_wt i=(n2l (l2n (Bs (2 * (i+1) - 1)))).length from rfl]
-    simp
+    rw [show R_wt i=(Bs (2 * (i+1) - 1)).length from rfl]
     rw [show lb=(n2l Bₚ).length from rfl]
     unfold Bs
     rw [show Bₚ=(KP54 (2 * (i + 1) - 1)).r from rfl]
@@ -333,14 +327,10 @@ private theorem R_aux_0 (i:ℕ) (h:(evals (As (2*(i+1))) i (R_wt i)).Dom):
     rw [show dvt = eval Nat.fzero (c_kp54_aux Aₚ i_1 lb).dovetail 17 from rfl] at h1
     have := dovetail_ev_1.mp (Part.eq_none_iff'.mpr h1)
     clear h1
-    -- simp? [c_kp54_aux_evp] at this
     simp [c_kp54_aux_evp, -Denumerable.list_ofNat_succ] at this
 
-    have Aprw : n2l Aₚ = As (2*i+1) := rfl
-    rw [Aprw] at this
-    have aux0 : 2*(i+1) = 2*i+2 := rfl
-    rw [aux0] at h
-    -- have := @Asexext' (2*i+1)
+    rw [show n2l Aₚ = As (2*i+1) from rfl] at this
+    rw [show 2*(i+1) = 2*i+2 from rfl] at h
     have := @Asexext (2*i+1) (2*i+2) (Nat.lt_add_one (2 * i + 1))
     rcases this with ⟨h1,h2⟩
     have := this h1
@@ -349,23 +339,17 @@ private theorem R_aux_0 (i:ℕ) (h:(evals (As (2*(i+1))) i (R_wt i)).Dom):
     rw [i_1_simp] at this
     exact this h
 
-theorem R_aux_χ: χ B (R_wt i) = b2n (n2b ((Bs (2 * (i + 1)))[(R_wt i)]'(@R_aux' i))) := by
+theorem R_aux_χ: χ B (R_wt i) = b2n (n2b ((Bs (2 * (i + 1)))[(R_wt i)]'(@BsSize_o2e' i))) := by
   simp [B,χ]
-  simp [Bs_Mono_3 (@BsSize (R_wt i)) (@R_aux' i)]
+  simp [Bs_Mono_3 (@BsSize (R_wt i)) (@BsSize_o2e' i)]
   exact rfl
-
-theorem R_aux_1 : (eval A (decodeCode i) (R_wt i)) ≠ Part.some ((χ B) (R_wt i)) := by
-  if h0 : (eval A (decodeCode i) (R_wt i)).Dom then
-  sorry
-  else
-  simp [Part.eq_none_iff'.mpr h0]
 
 /--
 If `[i:As](k)` halts, then its value will be unchanged in all subsequent steps.
 -/
 theorem As_Uninjured_0 (hh:(evals (As (2*(i+1))) i k).Dom): evals (As (2*(i+1))) i k = eval A i k := by
   unfold A
-  simp
+  simp [_root_.eval]
   unfold χ
   simp
   unfold evals
@@ -395,7 +379,6 @@ theorem As_Uninjured_0 (hh:(evals (As (2*(i+1))) i k).Dom): evals (As (2*(i+1)))
   have asz := @AsSize ii
   rw [@As_Mono_4 ii (2*(i+1)) (ii + 1) 999 hii asz]
   rfl
-
 theorem As_Uninjured_0' {i:ℕ} : ¬ (eval A i k).Dom → ¬ (evals (As (2*(i+1))) i k).Dom := by
   contrapose
   simp only [Decidable.not_not]
@@ -403,7 +386,6 @@ theorem As_Uninjured_0' {i:ℕ} : ¬ (eval A i k).Dom → ¬ (evals (As (2*(i+1)
   have := As_Uninjured_0 h
   rw [←this]
   exact h
-
 /--
 If `[i:As](k)` diverges, then it will always diverge in subsequent steps.
 -/
@@ -417,8 +399,7 @@ theorem As_Uninjured_1 :
   expose_names
   have i_1_simp: i_1 = i := Nat.div2_bit1 i
   have keqlb : R_wt i=lb := by
-    rw [show R_wt i=(n2l (l2n (Bs (2 * (i+1) - 1)))).length from rfl]
-    simp
+    rw [show R_wt i=(Bs (2 * (i+1) - 1)).length from rfl]
     rw [show lb=(n2l Bₚ).length from rfl]
     unfold Bs
     rw [show Bₚ=(KP54 (2 * (i + 1) - 1)).r from rfl]
@@ -434,11 +415,7 @@ theorem As_Uninjured_1 :
     have := c_kp54_aux_2 h0
     simp [-Denumerable.list_ofNat_succ] at this
     rw [i_1_simp] at this
-    have a0 : (n2l Aₚ ++ n2l (((eval Nat.fzero (c_kp54_aux Aₚ i lb).dovetail 17).get h0).l + 1)) = Aₛ := by exact rfl
-    rw [a0] at this
-    rw [keqlb] at h
     exact h this
-
 
 
   else
@@ -491,9 +468,7 @@ theorem As_Uninjured_1 :
     have mainrw : (use (χ A) (decodeCode i) (R_wt i)) = (use (fun e ↦ b2n (n2b ((As (usecn + 1)).getD e 999))) (decodeCode i) (R_wt i)) := by
       refine use_principle_use a1 ?_
       intro i2 hi2
-      unfold χ
-      unfold A
-      simp
+      simp [χ,A]
       have hi3 : i2 < (As (usecn + 1)).length := calc
         i2 < usecn  := hi2
         usecn <  (As (usecn + 1)).length := AsSize
@@ -506,6 +481,7 @@ theorem As_Uninjured_1 :
     simp only [←mainrw]
     exact a2
   else
+  
   simp at h0
   use 0
 
@@ -533,23 +509,13 @@ theorem As_Uninjured_1 :
     have := @As_Mono_4 i2 (2*i+1) (i2 + 1) 999 (hi3) (AsSize)
     rw [this]
 
-    -- have : (n2b ((As (2 * i + 1) ++ [0])[i2]?.getD 999)) = n2b ((As (i2 + 1))[i2]'AsSize) := by
-
-    --   sorry
-    -- rw [this]
     simp only [b2n, ite_eq_ite]
   apply eval_clamped_prop''_rev2.mp
   simp only [←mainrw]
   exact a5
   simp only [←mainrw]
   exact a2
-
-theorem As_Uninjured_1' {i:ℕ} :
-(eval A i (R_wt i)).Dom  → (evals (As (2*(i+1))) i (R_wt i)).Dom := by
-  have := @As_Uninjured_1 i
-  have := not_imp_not.mp this
-  exact this
-
+theorem As_Uninjured_1' {i:ℕ} : (eval A i (R_wt i)).Dom  → (evals (As (2*(i+1))) i (R_wt i)).Dom := not_imp_not.mp (@As_Uninjured_1 i)
 theorem As_Uninjured (i:ℕ) : eval A i (R_wt i) = evals (As (2*(i+1))) i (R_wt i) := by
   if h:(eval A i (R_wt i)).Dom then
     rw [@As_Uninjured_0 (i) (R_wt i) (@As_Uninjured_1' i h)]
@@ -557,28 +523,15 @@ theorem As_Uninjured (i:ℕ) : eval A i (R_wt i) = evals (As (2*(i+1))) i (R_wt 
     rw [Part.eq_none_iff'.mpr h]
     rw [Part.eq_none_iff'.mpr (As_Uninjured_0' h)]
 
-private theorem R (i:ℕ) : eval A i ≠ χ B := by
-  apply Function.ne_iff.mpr
-  have main := R_aux_0 i
-  use (R_wt i)
-  if h0:(eval A (decodeCode i) (R_wt i)).Dom then
-
-  -- change goal from Part ℕ to ℕ
-  suffices (eval A (decodeCode i) (R_wt i)).get h0 ≠ (χ B) (R_wt i) from by
-    contrapose this
-    simp at this ⊢
-    exact Part.get_eq_iff_eq_some.mpr this
-
-  have := As_Uninjured i
-  simp only [this]
-  have main1 := main (this ▸ h0); clear main
-  have rasd2aux := @R_aux' i
-
-  have := @R_aux_χ i
-  
-  exact Ne.symm (ne_of_eq_of_ne this (id (Ne.symm main1)))
+theorem R_aux_1 (i:ℕ) : (eval A i (R_wt i)) ≠ Part.some ((χ B) (R_wt i)) := by
+  if h0 : (eval A i (R_wt i)).Dom then
+    rw [R_aux_χ] -- rw the rhs
+    simp only [As_Uninjured i] -- rw the lhs
+    exact Part.ne_of_get_ne' $ R_aux_0 i (As_Uninjured_1' h0)
   else
-  aesop
+    simp [Part.eq_none_iff'.mpr h0]
+
+private theorem R (i:ℕ) : eval A i ≠ χ B := Function.ne_iff.mpr ⟨R_wt i, R_aux_1 i⟩
 private theorem S (i:ℕ) : eval B i ≠ χ A := by sorry
 
 theorem ex_incomparable_sets : ∃ A B:Set ℕ, A|ᵀB := by
