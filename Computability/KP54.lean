@@ -95,7 +95,7 @@ actually now i changed it so that i think
 private noncomputable def As (s:ℕ) := n2l (KP54 s).l
 private noncomputable def Bs (s:ℕ) := n2l (KP54 s).r
 
-theorem ABgetsextended : (As i) <+: (As (i+1)) ∧ (Bs i) <+: (Bs (i+1)) := by
+theorem AsBs_Mono_0 : (As i) <+: (As (i+1)) ∧ (Bs i) <+: (Bs (i+1)) := by
   unfold As
   unfold Bs
   rw (config:={occs:=.pos [2,3]}) [KP54]
@@ -109,56 +109,68 @@ theorem ABgetsextended : (As i) <+: (As (i+1)) ∧ (Bs i) <+: (Bs (i+1)) := by
   else
     simp [h0,-Nat.rfind_dom]
     aesop
-theorem ABgetsextended2 : (As i) <+: (As (i+j)) ∧ (Bs i) <+: (Bs (i+j)) := by
+theorem AsBs_Mono_1 : (As i) <+: (As (i+j)) ∧ (Bs i) <+: (Bs (i+j)) := by
   induction j with
   | zero => simp_all
   | succ jM1 ihj =>
     rw [←add_assoc]
     constructor
-    exact List.IsPrefix.trans ihj.left (@ABgetsextended (i + jM1)).left
-    exact List.IsPrefix.trans ihj.right (@ABgetsextended (i + jM1)).right
-theorem ABgetsextended3 (h:i≤j) : (As i) <+: (As j) ∧ (Bs i) <+: (Bs j) := by
+    exact List.IsPrefix.trans ihj.left (@AsBs_Mono_0 (i + jM1)).left
+    exact List.IsPrefix.trans ihj.right (@AsBs_Mono_0 (i + jM1)).right
+theorem AsBs_Mono_2 (h:i≤j) : (As i) <+: (As j) ∧ (Bs i) <+: (Bs j) := by
   rw [Eq.symm (Nat.add_sub_of_le h)]
-  exact ABgetsextended2
-theorem Agetsextended4
+  exact AsBs_Mono_1
+
+theorem As_Mono_3
 (hi:k<(As i).length)
 (hh:k<(As j).length)
 : (As i)[k] = (As j)[k] := by
   cases Classical.em (i≤j) with
   | inl h =>
-    have := (ABgetsextended3 h).left
+    have := (AsBs_Mono_2 h).left
     exact List.IsPrefix.getElem this hi
   | inr h =>
     simp at h
-    have := (ABgetsextended3 (Nat.le_of_succ_le h)).left
+    have := (AsBs_Mono_2 (Nat.le_of_succ_le h)).left
     exact Eq.symm (List.IsPrefix.getElem this hh)
-theorem Bgetsextended4
+theorem Bs_Mono_3
 (hi:k<(Bs i).length)
 (hh:k<(Bs j).length)
 : (Bs i)[k] = (Bs j)[k] := by
   cases Classical.em (i≤j) with
   | inl h =>
-    have := (ABgetsextended3 h).right
+    have := (AsBs_Mono_2 h).right
     exact List.IsPrefix.getElem this hi
   | inr h =>
     simp at h
-    have := (ABgetsextended3 (Nat.le_of_succ_le h)).right
+    have := (AsBs_Mono_2 (Nat.le_of_succ_le h)).right
     exact Eq.symm (List.IsPrefix.getElem this hh)
-theorem Agetsextended5
-(hii : ii < (As (j)).length)
-(asz : ii < (As (k)).length)
+theorem As_Mono_4
+(hii : ii < (As j).length)
+(asz : ii < (As k).length)
 :
-((As (j))[ii]?.getD smth) = (As (k))[ii] := by
-  have : ((As (j))[ii]?.getD smth) = (As (k))[ii] := by
-    have : (As (j))[ii]?.getD smth = (As (j))[ii] := by simp only [getElem?_pos, Option.getD_some,hii]
+((As j)[ii]?.getD smth) = (As k)[ii] := by
+  have : (As j)[ii]?.getD smth = (As k)[ii] := by
+    have : (As j)[ii]?.getD smth = (As j)[ii] := by simp only [getElem?_pos, Option.getD_some,hii]
     rw [this]
-    exact Agetsextended4 hii asz
+    exact As_Mono_3 hii asz
   rw [this]
+theorem Bs_Mono_4
+(hii : ii < (Bs j).length)
+(asz : ii < (Bs k).length)
+:
+((Bs j)[ii]?.getD smth) = (Bs k)[ii] := by
+  have : (Bs j)[ii]?.getD smth = (Bs k)[ii] := by
+    have : (Bs j)[ii]?.getD smth = (Bs j)[ii] := by simp only [getElem?_pos, Option.getD_some,hii]
+    rw [this]
+    exact Bs_Mono_3 hii asz
+  rw [this]
+
 theorem AsSize_o2e : (As (2*i+1)).length = (As (2*i)).length + 1 := by
   rw [As, KP54]
   simp (config := { zeta := false })
   extract_lets; expose_names
-  if h0:(dvt).Dom then simp [h0]; rfl
+  if h0:dvt.Dom then simp [h0]; rfl
   else simp [h0]; rfl
 theorem AsSize_e2o : (As (2*i+1)).length < (As (2*i+2)).length:= by
   rw (config:={occs:=.pos [2]}) [As]
@@ -166,8 +178,23 @@ theorem AsSize_e2o : (As (2*i+1)).length < (As (2*i+2)).length:= by
   simp (config := { zeta := false })
   extract_lets; expose_names
   rw [show As (2*i+1) = n2l Aₚ from rfl]
-  if h0:(dvt).Dom then simp [h0]
+  if h0:dvt.Dom then simp [h0]
   else simp [h0]
+theorem BsSize_o2e : (Bs (2*i+2)).length = (Bs (2*i+1)).length + 1 := by
+  rw [Bs, KP54]
+  simp (config := { zeta := false })
+  extract_lets; expose_names
+  if h0:dvt.Dom then simp [h0]; rfl
+  else simp [h0]; rfl
+theorem BsSize_e2o : (Bs (2*i)).length < (Bs (2*i+1)).length:= by
+  rw (config:={occs:=.pos [2]}) [Bs]
+  unfold KP54
+  simp (config := { zeta := false })
+  extract_lets; expose_names
+  rw [show Bs (2*i) = n2l Bₚ from rfl]
+  if h0:dvt.Dom then simp [h0]
+  else simp [h0]
+
 theorem AsSize_mono' : (As i).length < (As (i+1)).length := by
   cases Nat.even_or_odd i with
   | inl h =>
@@ -185,31 +212,10 @@ theorem AsSize_mono' : (As i).length < (As (i+1)).length := by
     simp_all only []
 theorem AsSize_mono (hij:i<j) : (As i).length < (As j).length := by
   have a0 := @AsSize_mono' i
-  have a1 := (@ABgetsextended3 (i+1) j (hij)).left
+  have a1 := (@AsBs_Mono_2 (i+1) j (hij)).left
   exact Nat.lt_of_lt_of_le a0 (List.IsPrefix.length_le a1)
-theorem BsSize_o2e : (Bs (2*i+2)).length = (Bs (2*i+1)).length + 1 := by
-  rw [Bs, KP54]
-  simp (config := { zeta := false })
-  extract_lets; expose_names
-  if h0:(dvt).Dom then simp [h0]; rfl
-  else simp [h0]; rfl
-theorem BsSize_e2o : (Bs (2*i)).length < (Bs (2*i+1)).length:= by
-  rw (config:={occs:=.pos [2]}) [Bs]
-  unfold KP54
-  simp (config := { zeta := false })
-  extract_lets; expose_names
-  rw [show Bs (2*i) = n2l Bₚ from rfl]
-  if h0:(dvt).Dom then simp [h0]
-  else simp [h0]
-theorem BsSize_o2e': (Bs (2 * (i + 1) - 1)).length < (Bs (2 * (i + 1))).length := by
-  have : 2 * (i + 1) - 1 = 2*i+1 := by exact rfl
-  rw [this]
-  have : 2*(i+1) = 2*i + 2:= by exact rfl
-  rw [this]
-  have := @BsSize_o2e i
-  simp_all only [Nat.add_one_sub_one, lt_add_iff_pos_right, zero_lt_one]
 theorem Asexext (hij:i<j): ∃ lM1, (As i)++(n2l (lM1+1))=As j := by
-  have a0 := (@ABgetsextended3 i j (Nat.le_of_succ_le hij)).left
+  have a0 := (@AsBs_Mono_2 i j (Nat.le_of_succ_le hij)).left
   have a1 : (As i).length < (As j).length := by exact AsSize_mono hij
   rcases a0 with ⟨h1,h2⟩
   have a2 : h1.length > 0 := by grind
@@ -234,7 +240,7 @@ theorem AsBsSize : i≤(As i).length ∧ i≤(Bs i).length := by
     expose_names
     if h0:(i + 1) % 2 = 0 then
       simp [h0,-Nat.rfind_dom]
-      if h1 : (dvt).Dom  then
+      if h1 : dvt.Dom  then
         simp [h1,-Nat.rfind_dom]
         constructor
         refine Nat.add_le_add ih.left ?_
@@ -257,18 +263,27 @@ theorem AsBsSize : i≤(As i).length ∧ i≤(Bs i).length := by
 theorem AsSize : i<(As (i+1)).length := (@AsBsSize (i+1)).left
 theorem BsSize : i<(Bs (i+1)).length := (@AsBsSize (i+1)).right
 
+theorem BsSize_o2e': (Bs (2 * (i + 1) - 1)).length < (Bs (2 * (i + 1))).length := by
+  have : 2 * (i + 1) - 1 = 2*i+1 := by exact rfl
+  rw [this]
+  have : 2*(i+1) = 2*i + 2:= by exact rfl
+  rw [this]
+  have := @BsSize_o2e i
+  simp_all only [Nat.add_one_sub_one, lt_add_iff_pos_right, zero_lt_one]
+
+
 private def A := {x | n2b $ (As (x+1))[x]'AsSize}
 private def B := {x | n2b $ (Bs (x+1))[x]'BsSize}
 
 noncomputable def Bsize (i:ℕ) := (Bs i).length
 
-theorem Rasd2_aux : (n2l (Bs (2*(i+1)-1))).length < (Bs (2*(i+1))).length := by
+theorem R_aux' : (n2l (Bs (2*(i+1)-1))).length < (Bs (2*(i+1))).length := by
   simp only [Denumerable.ofNat_encode]
   exact BsSize_o2e'
-private theorem Rasd2 (i:ℕ) (h:(eval_string (As (2*(i+1))) i ((n2l (Bs (2*(i+1)-1))).length)).Dom):
+private theorem R_aux (i:ℕ) (h:(eval_string (As (2*(i+1))) i ((n2l (Bs (2*(i+1)-1))).length)).Dom):
 -- let k := (n2l (Bs (2*(i)))).length-1
 let k := (n2l (Bs (2*(i+1)-1))).length
-(eval_string (As (2*(i+1))) i k).get h ≠ b2n (n2b $ (Bs (2*(i+1)))[k]'(Rasd2_aux)) := by
+(eval_string (As (2*(i+1))) i k).get h ≠ b2n (n2b $ (Bs (2*(i+1)))[k]'(R_aux')) := by
   -- unfolding
   extract_lets
   expose_names
@@ -288,61 +303,61 @@ let k := (n2l (Bs (2*(i+1)-1))).length
     rw [show Bₚ=(KP54 (2 * (i + 1) - 1)).r from rfl]
 
 
-  if h1: (dvt).Dom then
-  simp (config := { zeta := false }) [h1, -Nat.rfind_dom]
-  lift_lets
-  extract_lets
-  expose_names
+  if h1: dvt.Dom then
+    simp (config := { zeta := false }) [h1, -Nat.rfind_dom]
+    lift_lets
+    extract_lets
+    expose_names
 
-  simp [keqlb]
-  have lbrw : lb = (n2l Bₚ).length := rfl
-  simp only [lbrw]
-  simp
-  have aaa : A_result = (eval_string (n2l Aₚ ++ n2l (rf + 1)) (decodeCode i_1) lb).get (c_kp54_aux_2
-    (Eq.mpr_prop (Eq.refl (dvt).Dom)
-      (Eq.mpr_prop
-        (congrArg (fun x ↦ (dvt).Dom) i_1_simp)
-        (of_eq_true (eq_true h1))))) := rfl
-
-  simp [-Denumerable.list_ofNat_succ] at aaa
-  have : (n2l Aₚ ++ n2l (rf + 1))=Aₛ:= rfl
-  simp only [this] at aaa
-  simp (config := { zeta := false }) only [i_1_simp] at aaa
-  simp only [←lbrw]
-  have Aresrw : eval_string Aₛ (decodeCode (i)) lb = Part.some A_result := by
-    rw [aaa]
+    simp [keqlb]
+    have lbrw : lb = (n2l Bₚ).length := rfl
+    simp only [lbrw]
     simp
-  simp [Aresrw]
-  cases A_result <;> simp [n2b,b2n]
+    have aaa : A_result = (eval_string (n2l Aₚ ++ n2l (rf + 1)) (decodeCode i_1) lb).get (c_kp54_aux_2
+      (Eq.mpr_prop (Eq.refl dvt.Dom)
+        (Eq.mpr_prop
+          (congrArg (fun x ↦ dvt.Dom) i_1_simp)
+          (of_eq_true (eq_true h1))))) := rfl
 
+    simp [-Denumerable.list_ofNat_succ] at aaa
+    have : (n2l Aₚ ++ n2l (rf + 1))=Aₛ:= rfl
+    simp only [this] at aaa
+    simp (config := { zeta := false }) only [i_1_simp] at aaa
+    simp only [←lbrw]
+    have Aresrw : eval_string Aₛ (decodeCode (i)) lb = Part.some A_result := by
+      rw [aaa]
+      simp
+    simp [Aresrw]
+    cases A_result <;> simp [n2b,b2n]
 
-  
   else
-  exfalso
-  have keqlb_2 : (n2l (l2n (Bs (2 * (i + 1) - 1)))).length = lb := by exact keqlb
-  rw [keqlb_2] at h
-  rw [show dvt = eval Nat.fzero (c_kp54_aux Aₚ i_1 lb).dovetail 17 from rfl] at h1
-  have := dovetail_ev_1.mp (Part.eq_none_iff'.mpr h1)
-  clear h1
-  -- simp? [c_kp54_aux_evp] at this
-  simp [c_kp54_aux_evp, -Denumerable.list_ofNat_succ] at this
+    exfalso
+    have keqlb_2 : (n2l (l2n (Bs (2 * (i + 1) - 1)))).length = lb := by exact keqlb
+    rw [keqlb_2] at h
+    rw [show dvt = eval Nat.fzero (c_kp54_aux Aₚ i_1 lb).dovetail 17 from rfl] at h1
+    have := dovetail_ev_1.mp (Part.eq_none_iff'.mpr h1)
+    clear h1
+    -- simp? [c_kp54_aux_evp] at this
+    simp [c_kp54_aux_evp, -Denumerable.list_ofNat_succ] at this
 
-  have Aprw : n2l Aₚ = As (2*i+1) := rfl
-  rw [Aprw] at this
-  have aux0 : 2*(i+1) = 2*i+2 := rfl
-  rw [aux0] at h
-  -- have := @Asexext' (2*i+1)
-  have := @Asexext (2*i+1) (2*i+2) (Nat.lt_add_one (2 * i + 1))
-  rcases this with ⟨h1,h2⟩
-  have := this h1
-  rw [h2] at this
-  rw [show 2 * i + 1 + 1= 2*i+2 from rfl] at this
-  rw [i_1_simp] at this
-  exact this h
+    have Aprw : n2l Aₚ = As (2*i+1) := rfl
+    rw [Aprw] at this
+    have aux0 : 2*(i+1) = 2*i+2 := rfl
+    rw [aux0] at h
+    -- have := @Asexext' (2*i+1)
+    have := @Asexext (2*i+1) (2*i+2) (Nat.lt_add_one (2 * i + 1))
+    rcases this with ⟨h1,h2⟩
+    have := this h1
+    rw [h2] at this
+    rw [show 2 * i + 1 + 1= 2*i+2 from rfl] at this
+    rw [i_1_simp] at this
+    exact this h
 
 
--- theorem Aextends : eval_string (As (2*(i+1))) i k=Part.some y → evalSet A i k=Part.some y := by
-theorem Aextends (hh:(eval_string (As (2*(i+1))) i k).Dom): eval_string (As (2*(i+1))) i k = evalSet A i k := by
+/--
+If `[i:As](k)` halts, then its value will be unchanged in all subsequent steps.
+-/
+theorem As_Uninjured_0 (hh:(eval_string (As (2*(i+1))) i k).Dom): eval_string (As (2*(i+1))) i k = evalSet A i k := by
   unfold A
   simp
   unfold χ
@@ -354,7 +369,7 @@ theorem Aextends (hh:(eval_string (As (2*(i+1))) i k).Dom): eval_string (As (2*(
   have h1r := eval_clamped_prop_1 hh
   simp at h1
   rw [h1]
-  
+
   have hh2 := hh
   unfold eval_string at hh2
   simp at hh2
@@ -372,13 +387,14 @@ theorem Aextends (hh:(eval_string (As (2*(i+1))) i k).Dom): eval_string (As (2*(
 
   intro ii hii
   have asz := @AsSize ii
-  rw [@Agetsextended5 ii (2*(i+1)) (ii + 1) 999 hii asz]
+  rw [@As_Mono_4 ii (2*(i+1)) (ii + 1) 999 hii asz]
   rfl
 
 
-  -- have := eval_clamped_prop
--- theorem : (a→b) ↔ (¬b→¬a) := by exact Iff.symm Decidable.not_imp_not
-theorem Aextends''''' :
+/--
+If `[i:As](k)` diverges, then it will always diverge in subsequent steps.
+-/
+theorem As_Uninjured_1 :
 let k:=(n2l (Bs (2*(i+1)-1))).length
 ¬(eval_string (As (2*(i+1))) i k).Dom → ¬(evalSet A i k).Dom := by
   extract_lets
@@ -397,22 +413,22 @@ let k:=(n2l (Bs (2*(i+1)-1))).length
     rw [show lb=(n2l Bₚ).length from rfl]
     unfold Bs
     rw [show Bₚ=(KP54 (2 * (i + 1) - 1)).r from rfl]
-  
-  if h0:(dvt).Dom then
-  simp (config := { zeta := false }) [h0]
-  lift_lets
-  extract_lets
-  expose_names
-  simp
-  intro h
-  exfalso
-  have := c_kp54_aux_2 h0
-  simp [-Denumerable.list_ofNat_succ] at this
-  rw [i_1_simp] at this
-  have a0 : (n2l Aₚ ++ n2l (((eval Nat.fzero (c_kp54_aux Aₚ i lb).dovetail 17).get h0).l + 1)) = Aₛ := by exact rfl
-  rw [a0] at this
-  rw [keqlb] at h
-  exact h this
+
+  if h0:dvt.Dom then
+    simp (config := { zeta := false }) [h0]
+    lift_lets
+    extract_lets
+    expose_names
+    simp
+    intro h
+    exfalso
+    have := c_kp54_aux_2 h0
+    simp [-Denumerable.list_ofNat_succ] at this
+    rw [i_1_simp] at this
+    have a0 : (n2l Aₚ ++ n2l (((eval Nat.fzero (c_kp54_aux Aₚ i lb).dovetail 17).get h0).l + 1)) = Aₛ := by exact rfl
+    rw [a0] at this
+    rw [keqlb] at h
+    exact h this
 
 
 
@@ -420,14 +436,14 @@ let k:=(n2l (Bs (2*(i+1)-1))).length
   simp at h0
   simp (config := { zeta := false }) [h0]
   have a0 : eval Nat.fzero (c_kp54_aux Aₚ i_1 lb).dovetail 17 = Part.none := by exact Part.eq_none_iff'.mpr h0
-  
+
   have a1 := dovetail_ev_1.mp a0; clear a0
   simp [c_kp54_aux_evp, -Denumerable.list_ofNat_succ] at a1
   intro h; clear h
   contrapose a1
   simp at a1
   simp [-Denumerable.list_ofNat_succ]
-  
+
   rw [i_1_simp]
   rw [←keqlb]
 
@@ -447,7 +463,7 @@ let k:=(n2l (Bs (2*(i+1)-1))).length
   unfold A at a4
   unfold χ at a4
   simp at a4
-  
+
   -- use reverse of eval_clamped_prop'' to rephrase the eval_clamped in the goal to just eval.
   -- then, use the extension that will get the oracle string to As (use).
   -- the inequality will be satisfies as the list as size greater than use.
@@ -463,7 +479,7 @@ let k:=(n2l (Bs (2*(i+1)-1))).length
     rcases @Asexext (2*i+1) (usecn+1) (Nat.add_lt_add_right h0 1) with ⟨x,hx⟩
     use x
     rw [hx]
-    
+
     have mainrw : (use (χ A) (decodeCode i) k) = (use (fun e ↦ b2n (n2b ((As (usecn + 1)).getD e 999))) (decodeCode i) k) := by
       refine use_principle_use a1 ?_
       intro i2 hi2
@@ -473,7 +489,7 @@ let k:=(n2l (Bs (2*(i+1)-1))).length
       have hi3 : i2 < (As (usecn + 1)).length := calc
         i2 < usecn  := hi2
         usecn <  (As (usecn + 1)).length := AsSize
-      have := @Agetsextended5 i2 (usecn+1) (i2 + 1) 999 hi3 (AsSize)
+      have := @As_Mono_4 i2 (usecn+1) (i2 + 1) 999 hi3 (AsSize)
       rw [this]
       simp only [b2n, ite_eq_ite]
     apply eval_clamped_prop''_rev2.mp
@@ -484,7 +500,7 @@ let k:=(n2l (Bs (2*(i+1)-1))).length
   else
   simp at h0
   use 0
-  
+
   -- have a7 := (@eval_clamped_prop''_rev2 (χ A) i k a2 usecn).mpr a3
   have a6 : usecn < (As (2 * i + 1)).length := calc
     usecn < 2 * i + 1 := h0
@@ -494,7 +510,7 @@ let k:=(n2l (Bs (2*(i+1)-1))).length
     _     ≤ (As (2 * i + 1)).length := AsSize
     _     ≤ (As (2 * i + 1) ++ n2l (0 + 1)).length := by
       simp only [zero_add, List.length_append, le_add_iff_nonneg_right, zero_le]
-    
+
   have mainrw : (use (χ A) (decodeCode i) k) = (use (fun e ↦ b2n (n2b ((As (2 * i + 1) ++ n2l (0 + 1)).getD e 999))) (decodeCode i) k):= by
     refine use_principle_use a1 ?_
     intro i2
@@ -507,9 +523,9 @@ let k:=(n2l (Bs (2*(i+1)-1))).length
       simp [hi3]
       grind
     rw [this]
-    have := @Agetsextended5 i2 (2*i+1) (i2 + 1) 999 (hi3) (AsSize)
+    have := @As_Mono_4 i2 (2*i+1) (i2 + 1) 999 (hi3) (AsSize)
     rw [this]
-    
+
     -- have : (n2b ((As (2 * i + 1) ++ [0])[i2]?.getD 999)) = n2b ((As (i2 + 1))[i2]'AsSize) := by
 
     --   sorry
@@ -520,21 +536,19 @@ let k:=(n2l (Bs (2*(i+1)-1))).length
   exact a5
   simp only [←mainrw]
   exact a2
+
 theorem Aextends' :
 let k:=(n2l (Bs (2*(i+1)-1))).length
 (evalSet A i k).Dom  → (eval_string (As (2*(i+1))) i k).Dom := by
-  have := @Aextends''''' i
+  have := @As_Uninjured_1 i
   extract_lets at this ⊢; expose_names
   have := not_imp_not.mp this
   exact this
--- theorem Aextends'' : (eval_string (KP54 (2*(i+1))).l i) (k)=Part.some y ↔  evalSet A i (k)=Part.some y := by sorry
--- theorem Aextends'''_aux (h:( evalSet A i k).Dom): (eval_string (As (2*(i+1))) i k).Dom := by sorry
--- theorem Aextends''' {i:ℕ} (h:(evalSet A i k).Dom): evalSet A i k=eval_string (As (2*i)) i k:= by sorry
--- theorem ppp : p=Part.some ()
+
 theorem Aextends''' {i:ℕ} :
 let k:=(n2l (Bs (2*(i+1)-1))).length
 (evalSet A i k).Dom →
-evalSet A i k=eval_string (As (2*(i+1))) i k:= by 
+evalSet A i k=eval_string (As (2*(i+1))) i k:= by
   have := (@Aextends' i)
 
   extract_lets at this ⊢; expose_names
@@ -542,14 +556,14 @@ evalSet A i k=eval_string (As (2*(i+1))) i k:= by
   have sdom := this h
   -- #check Aextends
   -- have := @Aextends (i) k (((eval_string (As (2 * (i + 1))) (decodeCode i) k)).get sdom) (Part.dom_imp_some sdom)
-  have := @Aextends (i) k (this h)
+  have := @As_Uninjured_0 (i) k (this h)
   rw [this]
   -- exact Part.some_get sdom
 
--- R i is satisfied at stage 2i.
+
 private theorem R (i:ℕ) : evalSet A i ≠ χ B := by
   apply Function.ne_iff.mpr
-  have main := Rasd2 i
+  have main := R_aux i
   extract_lets at main
   expose_names
   use k
@@ -566,13 +580,13 @@ private theorem R (i:ℕ) : evalSet A i ≠ χ B := by
   simp only [this]
   have main1 := main (this ▸ h0)
   clear main
-  have rasd2aux := @Rasd2_aux i
+  have rasd2aux := @R_aux' i
 
   have : χ B k = b2n (n2b (Bs (2 * (i + 1)))[k]) := by
     unfold B
     unfold χ
     simp
-    have := Bgetsextended4 (@BsSize k) (rasd2aux)
+    have := Bs_Mono_3 (@BsSize k) (rasd2aux)
     simp [this]
     exact rfl
   exact Ne.symm (ne_of_eq_of_ne this (id (Ne.symm main1)))
