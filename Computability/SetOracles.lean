@@ -923,6 +923,16 @@ theorem Bgetsextended4
     simp at h
     have := (ABgetsextended3 (Nat.le_of_succ_le h)).right
     exact Eq.symm (List.IsPrefix.getElem this hh)
+theorem Agetsextended5
+(hii : ii < (As (j)).length)
+(asz : ii < (As (k)).length)
+:
+((As (j))[ii]?.getD smth) = (As (k))[ii] := by
+  have : ((As (j))[ii]?.getD smth) = (As (k))[ii] := by
+    have : (As (j))[ii]?.getD smth = (As (j))[ii] := by simp only [getElem?_pos, Option.getD_some,hii]
+    rw [this]
+    exact Agetsextended4 hii asz
+  rw [this]
 theorem AsSize_o2e : (As (2*i+1)).length = (As (2*i)).length + 1 := by
   rw [As, KP54]
   simp (config := { zeta := false })
@@ -1214,7 +1224,7 @@ theorem Aextends : eval_string (As (2*i)) i k=Part.some y → evalSet A i k=Part
   clear h0
   rw [←h2]
   apply Eq.symm
-  apply up_to_use
+  apply use_principle_eval
   rotate_left
   exact Part.eq_some_imp_dom h2
 
@@ -1227,11 +1237,7 @@ theorem Aextends : eval_string (As (2*i)) i k=Part.some y → evalSet A i k=Part
 
   intro ii hii
   have asz := @AsSize ii
-  have : ((As (2 * i))[ii]?.getD 999) = (As (ii + 1))[ii] := by
-    have : (As (2 * i))[ii]?.getD 999 = (As (2 * i))[ii] := by simp_all only [getElem?_pos, Option.getD_some]
-    rw [this]
-    exact Agetsextended4 hii asz
-  rw [this]
+  rw [@Agetsextended5 ii (2*i) (ii + 1) 999 hii asz]
   rfl
 
 
@@ -1302,42 +1308,84 @@ let k:=(n2l (Bs (2*(i+1)-1))).length
   have : usecomp.Dom := by exact a2
   let usecn := usecomp.get a2
 
+  have a4 := a2
+  unfold A at a4
+  unfold χ at a4
+  simp at a4
+  
   -- use reverse of eval_clamped_prop'' to rephrase the eval_clamped in the goal to just eval.
   -- then, use the extension that will get the oracle string to As (use).
   -- the inequality will be satisfies as the list as size greater than use.
   have := eval_clamped_prop''_rev (a1) (Nat.le_refl ((usecomp).get (e2u a1)))
-  have : (eval_clamped (χ A) (usecn) (decodeCode i) k).Dom := by exact Part.eq_some_imp_dom this
+  have a3 : (eval_clamped (χ A) (usecn) (decodeCode i) k).Dom := by exact Part.eq_some_imp_dom this
   unfold A at this
   unfold χ at this
   simp at this
   have Aprw : n2l Aₚ = As (2*i+1) := rfl
   rw [Aprw]
-  if h0:2*i+1<usecn then
-  sorry
+  if h0:2*i+1≤usecn then
+    -- we want to make (As (2 * i + 1) ++ n2l (x + 1)) equal to (As (usecn + 1))
+    rcases @Asexext (2*i+1) (usecn+1) (Nat.add_lt_add_right h0 1) with ⟨x,hx⟩
+    use x
+    rw [hx]
+    
+    have mainrw : (use (χ A) (decodeCode i) k) = (use (fun e ↦ b2n (n2b ((As (usecn + 1)).getD e 999))) (decodeCode i) k) := by
+      refine use_principle_use a1 ?_
+      intro i2 hi2
+      unfold χ
+      unfold A
+      simp
+      have hi3 : i2 < (As (usecn + 1)).length := calc
+        i2 < usecn  := hi2
+        usecn <  (As (usecn + 1)).length := AsSize
+      have := @Agetsextended5 i2 (usecn+1) (i2 + 1) 999 hi3 (AsSize)
+      rw [this]
+      simp only [b2n, ite_eq_ite]
+    apply eval_clamped_prop''_rev2.mp
+    simp only [←mainrw]
+    exact Nat.le_of_succ_le (@AsSize usecn)
+    simp only [←mainrw]
+    exact a2
   else
   simp at h0
   use 0
+  
+  -- have a7 := (@eval_clamped_prop''_rev2 (χ A) i k a2 usecn).mpr a3
+  have a6 : usecn < (As (2 * i + 1)).length := calc
+    usecn < 2 * i + 1 := h0
+    _     ≤ (As (2 * i + 1)).length := AsSize
+  have a5 : usecn ≤ (As (2 * i + 1) ++ n2l (0 + 1)).length := calc
+    usecn ≤ 2 * i + 1 := Nat.le_of_succ_le h0
+    _     ≤ (As (2 * i + 1)).length := AsSize
+    _     ≤ (As (2 * i + 1) ++ n2l (0 + 1)).length := by
+      simp only [zero_add, List.length_append, le_add_iff_nonneg_right, zero_le]
+    
+  have mainrw : (use (χ A) (decodeCode i) k) = (use (fun e ↦ b2n (n2b ((As (2 * i + 1) ++ n2l (0 + 1)).getD e 999))) (decodeCode i) k):= by
+    refine use_principle_use a1 ?_
+    intro i2
+    intro hi2
+    have hi3 : i2 < (As (2 * i + 1)).length := by exact Nat.lt_trans hi2 a6
+    unfold χ
+    unfold A
+    simp
+    have : (As (2 * i + 1) ++ [0])[i2]? = (As (2 * i + 1))[i2]? := by
+      simp [hi3]
+      grind
+    rw [this]
+    have := @Agetsextended5 i2 (2*i+1) (i2 + 1) 999 (hi3) (AsSize)
+    rw [this]
+    
+    -- have : (n2b ((As (2 * i + 1) ++ [0])[i2]?.getD 999)) = n2b ((As (i2 + 1))[i2]'AsSize) := by
+
+    --   sorry
+    -- rw [this]
+    simp only [b2n, ite_eq_ite]
   apply eval_clamped_prop''_rev2.mp
-  
-  -- have := eval_clamped_prop''_rev3.mpr this
-  suffices (eval_clamped (fun x ↦ if n2b ((As (x + 1))[x]'AsSize) = true then 1 else 0) usecn (decodeCode i) k) = (eval_clamped (fun e ↦ b2n (n2b ((As (2 * i + 1) ++ n2l (0 + 1)).getD e 999))) (As (2 * i + 1) ++ n2l (0 + 1)).length
-    (decodeCode i) k) from by
-      sorry
-  
-  sorry
+  simp only [←mainrw]
+  exact a5
+  simp only [←mainrw]
+  exact a2
 
-  -- apply Exists.imp (λ x hx => 
-  -- match hx with
-  -- | ⟨h, h0⟩ => eval_clamped_prop''_rev2 h h0)
-  have := @eval_clamped_prop''_rev2 
-  #check Exists.imp
-  apply Exists.imp (eval_clamped_prop''_rev2)
-  · intro a
-  use 123
-  rw [eval_clamped_prop''_rev2]
-  simp [eval_clamped_prop''_rev2, -Denumerable.list_ofNat_succ]
-
-  sorry
 theorem Aextends' : ¬(eval_string (As (2*i)) i k).Dom → ¬(evalSet A i k).Dom := by
   unfold A
 
