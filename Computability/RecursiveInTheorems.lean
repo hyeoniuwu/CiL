@@ -6,6 +6,50 @@ import Mathlib.Data.Nat.Dist
 open Classical
 open Nat.RecursiveIn.Code
 
+
+-- helper functions for Part/Option
+theorem Part.eq_some_imp_dom {p:Part ℕ} : p=Part.some x → p.Dom := by
+  intro a
+  subst a
+  exact trivial
+theorem Part.mem_imp_dom {p:Part ℕ} : x∈p → p.Dom := λ h ↦ Part.eq_some_imp_dom (Part.eq_some_iff.mpr h)
+theorem Part.dom_imp_some {x:Part ℕ} (h:x.Dom) : x=Part.some (x.get h) := by
+  exact Part.get_eq_iff_eq_some.mp rfl
+theorem Option.dom_imp_some {x:Option ℕ} (h:x.isSome) : x=some (x.get h) := by
+  exact Option.eq_some_of_isSome h
+theorem Option.isSome_iff_mem {o:Option β}: o.isSome ↔ (∃z,z∈o) := by
+  have h1 := @Option.isSome_iff_exists β o
+  simp [h1]
+lemma isSome_iff_not_none : (¬o=Option.none)↔(o.isSome) := by
+  apply Iff.intro
+  · intro a
+    simp [Option.eq_none_iff_forall_ne_some] at a
+    rcases a with ⟨h1,h2⟩
+    exact Option.isSome_of_mem h2
+  · intro a
+    apply Aesop.BuiltinRules.not_intro
+    intro a_1
+    subst a_1
+    simp_all only [Option.isSome_none, Bool.false_eq_true]
+lemma Part.eq_none_iff_forall_ne_some : o = Part.none ↔ ∀ a, o ≠ Part.some a := by
+  have := (@Part.ne_none_iff _ o).not
+  simp at this
+  exact this
+  -- cases o <;> simp
+lemma Part.not_none_iff_dom : (¬o=Part.none)↔(o.Dom) := by
+  apply Iff.intro
+  · intro a
+    simp [Part.eq_none_iff_forall_ne_some] at a
+    rcases a with ⟨h1,h2⟩
+    rw [h2]
+    exact trivial
+  · intro a
+    apply Aesop.BuiltinRules.not_intro
+    intro a_1
+    subst a_1
+    exact a
+
+
 variable {α:Type*} {β:Type*} {σ:Type*}
 variable [Primcodable α] [Primcodable β] [Primcodable σ]
 
@@ -102,7 +146,7 @@ theorem prim_total (h:code_prim c):∀x,(eval O c x).Dom := by
 def code_total (O) (c:Code) := ∀x,(eval O c x).Dom
 def eval_total (O:ℕ→ℕ) (c:Code) {h:code_total O c}:ℕ→ℕ := fun x => (eval O c x).get (h x)
 @[simp] def eval_prim (O:ℕ→ℕ):Code→ℕ→ℕ
-| zero       => fun x=>0
+| zero       => fun _=>0
 | succ       => Nat.succ
 | left       => Nat.l
 | right      => Nat.r

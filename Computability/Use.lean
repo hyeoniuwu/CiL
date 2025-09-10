@@ -948,34 +948,6 @@ theorem usen_dom_iff_evaln_dom : (∃a,a∈(usen O c s x)) ↔ (∃b,b∈(evaln 
   have := (@usen_none_iff_evaln_none O c s x).not
   simp [Option.eq_none_iff_forall_ne_some] at this
   exact this
-lemma isSome_iff_not_none : (¬o=Option.none)↔(o.isSome) := by
-  apply Iff.intro
-  · intro a
-    simp [Option.eq_none_iff_forall_ne_some] at a
-    rcases a with ⟨h1,h2⟩
-    exact Option.isSome_of_mem h2
-  · intro a
-    apply Aesop.BuiltinRules.not_intro
-    intro a_1
-    subst a_1
-    simp_all only [Option.isSome_none, Bool.false_eq_true]
-lemma Part.eq_none_iff_forall_ne_some : o = Part.none ↔ ∀ a, o ≠ Part.some a := by
-  have := (@Part.ne_none_iff _ o).not
-  simp at this
-  exact this
-  -- cases o <;> simp
-lemma Part.not_none_iff_dom : (¬o=Part.none)↔(o.Dom) := by
-  apply Iff.intro
-  · intro a
-    simp [Part.eq_none_iff_forall_ne_some] at a
-    rcases a with ⟨h1,h2⟩
-    rw [h2]
-    exact trivial
-  · intro a
-    apply Aesop.BuiltinRules.not_intro
-    intro a_1
-    subst a_1
-    exact a
 theorem usen_dom_iff_evaln_dom' : ((usen O c s x).isSome) ↔ ((evaln O s c x).isSome) := by
   have := (@usen_none_iff_evaln_none O c s x).not
   simp at this
@@ -1082,10 +1054,7 @@ theorem usen_mono_dom : ∀ {k₁ k₂ c n}, k₁ ≤ k₂ → (usen O c k₁ n)
 theorem evaln_mono_dom : ∀ {k₁ k₂ c n}, k₁ ≤ k₂ → (evaln O k₁ c n).isSome → (evaln O k₂ c n).isSome := by
   intro k1 k2 c n k1k2 h1
   exact Option.isSome_of_mem (evaln_mono k1k2 (Option.get_mem h1))
-theorem Part.dom_imp_some {x:Part ℕ} (h:x.Dom) : x=Part.some (x.get h) := by
-  exact Part.get_eq_iff_eq_some.mp rfl
-theorem Option.dom_imp_some {x:Option ℕ} (h:x.isSome) : x=some (x.get h) := by
-  exact Option.eq_some_of_isSome h
+
 
 lemma part_add {x y : ℕ}: Part.some x + Part.some y = Part.some (x+y) := by
   exact Part.some_add_some x y
@@ -1473,9 +1442,6 @@ theorem use_rfind_prop (hu:(use O (rfind' cf) n).Dom):
   intro j hjro
   rw [add_comm]
   exact e2u ((rfind'_obtain_prop (u2e hu)).right.left j hjro)
-theorem Option.isSome_iff_mem {o:Option β}: o.isSome ↔ (∃z,z∈o) := by
-  have h1 := @Option.isSome_iff_exists β o
-  simp [h1]
 theorem usen_rfind_prop' (hu:(usen O (rfind' cf) (k + 1) n).isSome):
 ∀j≤rfind'_obtain (usen_rfind_prop_aux' hu),
   (usen O cf (k + 1 - j) (Nat.pair n.l (n.r+j))).isSome
@@ -3974,43 +3940,3 @@ So to calculate `rfind' cf x`, we will need to calculate
 `[cf]` on all inputs from `x` to `(x.l, rfind' cf x)`
 
 -/
--- def eval_clamped (O:Set ℕ) (u:ℕ) (c:Code) : ℕ→.ℕ :=
-def evaln_clamped (O:ℕ→ℕ) (use:ℕ) : ℕ→Code→ℕ→Option ℕ
-  | 0, _ => fun _ => Option.none
-  | k + 1, zero => fun n => do
-    guard (n ≤ k)
-    return 0
-  | k + 1, succ => fun n => do
-    guard (n ≤ k)
-    return (Nat.succ n)
-  | k + 1, left => fun n => do
-    guard (n ≤ k)
-    return n.unpair.1
-  | k + 1, right => fun n => do
-    guard (n ≤ k)
-    pure n.unpair.2
-  | k + 1, oracle => fun n => do
-    guard (n ≤ k)
-    guard (n ≤ use)
-    pure (O n)
-  | k + 1, pair cf cg => fun n => do
-    guard (n ≤ k)
-    Nat.pair <$> evaln O (k + 1) cf n <*> evaln O (k + 1) cg n
-  | k + 1, comp cf cg => fun n => do
-    guard (n ≤ k)
-    let x ← evaln O (k + 1) cg n
-    evaln O (k + 1) cf x
-  | k + 1, prec cf cg => fun n => do
-    guard (n ≤ k)
-    n.unpaired fun a n =>
-      n.casesOn (evaln O (k + 1) cf a) fun y => do
-        let i ← evaln O k (prec cf cg) (Nat.pair a y)
-        evaln O (k + 1) cg (Nat.pair a (Nat.pair y i))
-  | k + 1, rfind' cf => fun n => do
-    guard (n ≤ k)
-    n.unpaired fun a m => do
-      let x ← evaln O (k + 1) cf (Nat.pair a m)
-      if x = 0 then
-        pure m
-      else
-        evaln O k (rfind' cf) (Nat.pair a (m + 1))
