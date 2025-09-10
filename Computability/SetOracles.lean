@@ -17,12 +17,12 @@ theorem χsimp {O} : χ O = fun x ↦ if x ∈ O then 1 else 0 := by exact rfl
 @[simp] abbrev SetTuringReducible (A O:Set ℕ) : Prop := Nat.RecursiveIn (χ O) (χ A)
 @[simp] abbrev SetTuringReducibleStrict (A O:Set ℕ) : Prop := Nat.RecursiveIn (χ O) (χ A) ∧ ¬ Nat.RecursiveIn (χ A) (χ O)
 @[simp] abbrev SetTuringEquivalent (O A:Set ℕ) : Prop := AntisymmRel SetTuringReducible O A
-@[simp] noncomputable def evalSet (O:Set ℕ) : Nat.RecursiveIn.Code → ℕ→.ℕ := eval (χ O)
+@[simp] noncomputable def eval (O:Set ℕ) : Nat.RecursiveIn.Code → ℕ→.ℕ := Nat.RecursiveIn.Code.eval (χ O)
 @[simp] noncomputable def evalSet₁ (O:Set ℕ) : ℕ→.ℕ := eval₁ (χ O)
 @[simp] noncomputable def evalnSet₁ (O:Set ℕ) : ℕ→ℕ := evaln₁ (χ O)
 theorem prim_evalnSet₁:Nat.PrimrecIn (χ O) (evalnSet₁ O) := by simp only [evalnSet₁]; exact prim_evaln₁
-def SetK0 (A:Set ℕ) := {ex:ℕ | (evalSet A ex.unpair.1 ex.unpair.2).Dom}
-def SetK (A:Set ℕ) := {x:ℕ | (evalSet A x x).Dom}
+def SetK0 (A:Set ℕ) := {ex:ℕ | (eval A ex.unpair.1 ex.unpair.2).Dom}
+def SetK (A:Set ℕ) := {x:ℕ | (eval A x x).Dom}
 abbrev SetJump := SetK
 def jumpn : ℕ → Set ℕ → Set ℕ
 | 0 => id
@@ -61,21 +61,21 @@ notation:100 A"⌜" => SetJump A
 @[reducible,simp] scoped[Computability] infix:50 "|ᵀ" => SetTuringDegreeIN
 
 section evalSettheorems
-theorem exists_code_for_evalSet (O:Set ℕ) (f:ℕ→.ℕ) : SetRecursiveIn O f ↔ ∃ c:Nat.RecursiveIn.Code, evalSet O c = f := by exact exists_code
-private theorem exists_code_for_evalSet₁ : ∃ c:Nat.RecursiveIn.Code, evalSet O c = evalSet₁ O := by apply ((exists_code_for_evalSet O (evalSet₁ O)).mp) rec_eval₁
+theorem exists_code_for_evalSet (O:Set ℕ) (f:ℕ→.ℕ) : SetRecursiveIn O f ↔ ∃ c:Nat.RecursiveIn.Code, eval O c = f := by exact exists_code
+private theorem exists_code_for_evalSet₁ {O:Set ℕ} : ∃ c:Nat.RecursiveIn.Code, eval O c = evalSet₁ O := by apply ((exists_code_for_evalSet O (evalSet₁ O)).mp) rec_eval₁
 noncomputable def c_evalSet₁ (O:Set ℕ) := choose (@exists_code_for_evalSet₁ O)
-@[simp] theorem c_evalSet₁_ev : evalSet O (c_evalSet₁ O) = evalSet₁ O := by exact choose_spec exists_code_for_evalSet₁
+@[simp] theorem c_evalSet₁_ev : eval O (c_evalSet₁ O) = evalSet₁ O := by exact choose_spec exists_code_for_evalSet₁
 @[simp] theorem c_evalSet₁_ev2 : eval (χ O) (c_evalSet₁ O) = evalSet₁ O := by exact choose_spec exists_code_for_evalSet₁
 
-private theorem exists_code_for_evalnSet₁ : ∃ c:Nat.RecursiveIn.Code, evalSet O c = evalnSet₁ O := by apply ((exists_code_for_evalSet O (evalnSet₁ O)).mp) (Nat.RecursiveIn.of_primrecIn prim_evaln₁)
+private theorem exists_code_for_evalnSet₁ {O:Set ℕ} : ∃ c:Nat.RecursiveIn.Code, eval O c = evalnSet₁ O := by apply ((exists_code_for_evalSet O (evalnSet₁ O)).mp) (Nat.RecursiveIn.of_primrecIn prim_evaln₁)
 private theorem exists_prim_code_for_evalnSet₁ : ∃ c, c.code_prim ∧ evalnSet₁ O = eval_prim (χ O) c := by exact code_prim_of_primrecIn prim_evalnSet₁
 noncomputable def c_evalnSet₁ (O:Set ℕ) := choose (@exists_prim_code_for_evalnSet₁ O)
 @[simp] theorem c_evalnSet₁_evp : eval_prim (χ O) (c_evalnSet₁ O) = evalnSet₁ O := by exact (choose_spec exists_prim_code_for_evalnSet₁).right.symm
 @[simp] theorem c_evalnSet₁_ev_pr : code_prim (c_evalnSet₁ O) := by exact (choose_spec exists_prim_code_for_evalnSet₁).left
 @[simp] theorem c_evalnSet₁_ev2 : eval (χ O) (c_evalnSet₁ O) = evalnSet₁ O := by rw [←@eval_prim_eq_eval (c_evalnSet₁ O) (χ O) c_evalnSet₁_ev_pr]; simp
-@[simp] theorem c_evalnSet₁_ev : evalSet O (c_evalnSet₁ O) = evalnSet₁ O := by simp
+@[simp] theorem c_evalnSet₁_ev : eval O (c_evalnSet₁ O) = evalnSet₁ O := by simp
 
-private theorem exists_code_for_eval₁ : ∃ c:Nat.RecursiveIn.Code, eval O c = eval₁ O := by apply (exists_code.mp) rec_eval₁
+private theorem exists_code_for_eval₁ {O:ℕ→ℕ} : ∃ c:Nat.RecursiveIn.Code, eval O c = eval₁ O := by apply (exists_code.mp) rec_eval₁
 noncomputable def c_eval₁ (O:ℕ→ℕ) := choose (@exists_code_for_eval₁ O)
 @[simp] theorem c_eval₁_ev : eval O (c_eval₁ O) = eval₁ O := by exact choose_spec exists_code_for_eval₁
 -- @[simp] theorem eval₁_code_prop2 : eval (χ O) (eval₁_code O) = eval₁ O := by exact choose_spec exists_code_for_eval₁
@@ -320,26 +320,14 @@ end SetJumpTheorems
 
 
 /-- `W O e` := domain of e^th oracle program -/
-abbrev W (O:Set ℕ) (e : ℕ) := (evalSet O e).Dom
+abbrev W (O:Set ℕ) (e : ℕ) := (eval O e).Dom
 /-- `WR O e` := range of e^th oracle program -/
-abbrev WR (O:Set ℕ) (e : ℕ) := (evalSet O e).ran
+abbrev WR (O:Set ℕ) (e : ℕ) := (eval O e).ran
 
 section dom_to_ran
 
 
-theorem code_ef_dom_iff_code_dom : (eval O (c_ef c) x).Dom ↔ (eval O c x).Dom := by
-  constructor
-  · contrapose
-    simp [c_ef]
-    intro h
-    simp [eval]
-    simp [Seq.seq]
-    exact h
-  · simp [c_ef]
-    intro h
-    simp [eval]
-    simp [Seq.seq]
-    exact h
+
 /-- Given a code `e`, returns a code whose range is the domain of `e`. -/
 noncomputable def dom_to_ran (O:Set ℕ) : (ℕ→ℕ) := fun e => curry ((comp) (right.comp left) (c_ef (c_evalSet₁ O))) e
 -- the internal expression, (comp) (right.comp left) (code_to_code_ef (c_evalSet₁ O)), takes a pair ex as input.
@@ -368,7 +356,7 @@ theorem dom_to_ran_prop : (W O e) = (WR O (dom_to_ran O e)) := by
     rw [PFun.ran]
     simp only [eval_curry, Set.mem_setOf_eq]
     use xs
-    simp only [eval, Part.coe_some, Part.bind_eq_bind]
+    simp only [Nat.RecursiveIn.Code.eval, Part.coe_some, Part.bind_eq_bind]
     rw [c_ef_ev]
 
     apply Part.dom_iff_mem.mp at h5234
@@ -397,7 +385,7 @@ theorem dom_to_ran_prop : (W O e) = (WR O (dom_to_ran O e)) := by
     simp only [eval_curry, Set.mem_setOf_eq]
     simp
     intro x
-    simp only [eval, Part.coe_some, Part.bind_eq_bind]
+    simp only [Nat.RecursiveIn.Code.eval, Part.coe_some, Part.bind_eq_bind]
     rw [c_ef_ev]
 
     cases Classical.em ((eval (χ O) (decodeCode (c_evalSet₁ O)) (Nat.pair e x)).Dom) with
