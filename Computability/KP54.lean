@@ -98,7 +98,7 @@ theorem AsBs_Mono_0 : (As i) <+: (As (i+1)) ∧ (Bs i) <+: (Bs (i+1)) := by
   unfold As
   unfold Bs
   rw (config:={occs:=.pos [2,3]}) [KP54]
-  simp (config := { zeta := false }) [-Nat.rfind_dom]
+  simp (config := {zeta:=false}) [-Nat.rfind_dom]
   lift_lets
   extract_lets
   expose_names
@@ -167,28 +167,28 @@ theorem Bs_Mono_4
 
 theorem AsSize_o2e : (As (2*i+1)).length = (As (2*i)).length + 1 := by
   rw [As, KP54]
-  simp (config := { zeta := false })
+  simp (config := {zeta:=false})
   extract_lets; expose_names
   if h0:dvt.Dom then simp [h0]; rfl
   else simp [h0]; rfl
 theorem AsSize_e2o : (As (2*i+1)).length < (As (2*i+2)).length:= by
   rw (config:={occs:=.pos [2]}) [As]
   unfold KP54
-  simp (config := { zeta := false })
+  simp (config := {zeta:=false})
   extract_lets; expose_names
   rw [show As (2*i+1) = n2l Aₚ from rfl]
   if h0:dvt.Dom then simp [h0]
   else simp [h0]
 theorem BsSize_o2e : (Bs (2*i+2)).length = (Bs (2*i+1)).length + 1 := by
   rw [Bs, KP54]
-  simp (config := { zeta := false })
+  simp (config := {zeta:=false})
   extract_lets; expose_names
   if h0:dvt.Dom then simp [h0]; rfl
   else simp [h0]; rfl
 theorem BsSize_e2o : (Bs (2*i)).length < (Bs (2*i+1)).length:= by
   rw (config:={occs:=.pos [2]}) [Bs]
   unfold KP54
-  simp (config := { zeta := false })
+  simp (config := {zeta:=false})
   extract_lets; expose_names
   rw [show Bs (2*i) = n2l Bₚ from rfl]
   if h0:dvt.Dom then simp [h0]
@@ -233,7 +233,7 @@ theorem AsBsSize : i≤(As i).length ∧ i≤(Bs i).length := by
     unfold As
     unfold Bs
     unfold KP54
-    simp (config := { zeta := false }) [-Nat.rfind_dom]
+    simp (config := {zeta:=false}) [-Nat.rfind_dom]
     lift_lets
     extract_lets
     expose_names
@@ -283,13 +283,10 @@ theorem R_aux' : (n2l (Bs (2*(i+1)-1))).length < (Bs (2*(i+1))).length := by
 private noncomputable def R_wt (i:ℕ) := (n2l (Bs (2*(i+1)-1))).length
 private theorem R_aux (i:ℕ) (h:(evals (As (2*(i+1))) i (R_wt i)).Dom):
 (evals (As (2*(i+1))) i (R_wt i)).get h ≠ b2n (n2b $ (Bs (2*(i+1)))[R_wt i]'(R_aux')) := by
-  -- unfolding
-  -- extract_lets
-  -- expose_names
   unfold Bs
   unfold As
   unfold KP54
-  simp (config := { zeta := false }) [-Nat.rfind_dom]
+  simp (config := {zeta:=false})
   lift_lets
   extract_lets
   expose_names
@@ -303,7 +300,7 @@ private theorem R_aux (i:ℕ) (h:(evals (As (2*(i+1))) i (R_wt i)).Dom):
 
 
   if h1: dvt.Dom then
-    simp (config := { zeta := false }) [h1, -Nat.rfind_dom]
+    simp (config := {zeta:=false}) [h1]
     lift_lets
     extract_lets
     expose_names
@@ -321,7 +318,7 @@ private theorem R_aux (i:ℕ) (h:(evals (As (2*(i+1))) i (R_wt i)).Dom):
     simp [-Denumerable.list_ofNat_succ] at aaa
     have : (n2l Aₚ ++ n2l (rf + 1))=Aₛ:= rfl
     simp only [this] at aaa
-    simp (config := { zeta := false }) only [i_1_simp] at aaa
+    simp (config := {zeta:=false}) only [i_1_simp] at aaa
     simp only [←lbrw]
     have Aresrw : evals Aₛ (decodeCode (i)) lb = Part.some A_result := by
       rw [aaa]
@@ -388,19 +385,22 @@ theorem As_Uninjured_0 (hh:(evals (As (2*(i+1))) i k).Dom): evals (As (2*(i+1)))
   rw [@As_Mono_4 ii (2*(i+1)) (ii + 1) 999 hii asz]
   rfl
 
+theorem As_Uninjured_0' {i:ℕ} : ¬ (eval A i k).Dom → ¬ (evals (As (2*(i+1))) i k).Dom := by
+  contrapose
+  simp only [Decidable.not_not]
+  intro h
+  have := As_Uninjured_0 h
+  rw [←this]
+  exact h
 
 /--
 If `[i:As](k)` diverges, then it will always diverge in subsequent steps.
 -/
 theorem As_Uninjured_1 :
--- let k:=(n2l (Bs (2*(i+1)-1))).length
 ¬(evals (As (2*(i+1))) i (R_wt i)).Dom → ¬(eval A i (R_wt i)).Dom := by
-  -- extract_lets
-  -- expose_names
-  -- intro h
   unfold As
   unfold KP54
-  simp (config := { zeta := false })
+  simp (config := {zeta:=false})
   lift_lets
   extract_lets
   expose_names
@@ -413,7 +413,7 @@ theorem As_Uninjured_1 :
     rw [show Bₚ=(KP54 (2 * (i + 1) - 1)).r from rfl]
 
   if h0:dvt.Dom then
-    simp (config := { zeta := false }) [h0]
+    simp (config := {zeta:=false}) [h0]
     lift_lets
     extract_lets
     expose_names
@@ -432,7 +432,7 @@ theorem As_Uninjured_1 :
 
   else
   simp at h0
-  simp (config := { zeta := false }) [h0]
+  simp (config := {zeta:=false}) [h0]
   have a0 : eval Nat.fzero (c_kp54_aux Aₚ i_1 lb).dovetail 17 = Part.none := by exact Part.eq_none_iff'.mpr h0
 
   have a1 := dovetail_ev_1.mp a0; clear a0
@@ -533,45 +533,32 @@ theorem As_Uninjured_1 :
   simp only [←mainrw]
   exact a2
 
-theorem Aextends' :
+theorem As_Uninjured_1' {i:ℕ} :
 (eval A i (R_wt i)).Dom  → (evals (As (2*(i+1))) i (R_wt i)).Dom := by
   have := @As_Uninjured_1 i
   have := not_imp_not.mp this
-  simp only [decodeCode_encodeCode] at this
   exact this
 
-theorem Aextends''' {i:ℕ} :
-(eval A i (R_wt i)).Dom →
-eval A i (R_wt i)=evals (As (2*(i+1))) i (R_wt i):= by
-  have := (@Aextends' i)
-  simp only [encodeCode_decodeCode] at this
-  -- extract_lets at this ⊢; expose_names
-  intro h
-  have sdom := this h
-  -- #check Aextends
-  -- have := @Aextends (i) k (((eval_string (As (2 * (i + 1))) (decodeCode i) k)).get sdom) (Part.dom_imp_some sdom)
-  have := @As_Uninjured_0 (i) (R_wt i) (this h)
-  rw [this]
-  -- exact Part.some_get sdom
-
+theorem As_Uninjured (i:ℕ) : eval A i (R_wt i) = evals (As (2*(i+1))) i (R_wt i) := by
+  if h:(eval A i (R_wt i)).Dom then
+    rw [@As_Uninjured_0 (i) (R_wt i) (@As_Uninjured_1' i h)]
+  else
+    rw [Part.eq_none_iff'.mpr h]
+    rw [Part.eq_none_iff'.mpr (As_Uninjured_0' h)]
 
 private theorem R (i:ℕ) : eval A i ≠ χ B := by
   apply Function.ne_iff.mpr
   have main := R_aux i
-  -- extract_lets at main
-  -- expose_names
   use (R_wt i)
   if h0:(eval A (decodeCode i) (R_wt i)).Dom then
 
   -- change goal from Part ℕ to ℕ
   suffices (eval A (decodeCode i) (R_wt i)).get h0 ≠ (χ B) (R_wt i) from by
-    simp
     contrapose this
-    simp
-    simp at this
+    simp at this ⊢
     exact Part.get_eq_iff_eq_some.mpr this
 
-  have := Aextends''' h0
+  have := As_Uninjured i
   simp only [this]
   have main1 := main (this ▸ h0); clear main
   have rasd2aux := @R_aux' i
