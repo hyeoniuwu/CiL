@@ -2915,17 +2915,8 @@ theorem evaln_comp_dom
 (evaln O (s+1) cf ((evaln O (s+1) cg x).get (evaln_comp_dom_aux h))).isSome
 := by
   constructor
+  · exact evaln_comp_dom_aux h
   ·
-    have hog := h
-    contrapose h
-    simp at h
-    simp [evaln]
-    simp [evaln_xles hog]
-    intro h1 h2
-    rw [h] at h2
-    contradiction
-  ·
-
     have h' := h
     simp [evaln] at h'
     contrapose h'
