@@ -749,6 +749,7 @@ theorem eval_clamped_prop''_aux (h:eval_clamped O u c x=Part.some y): (use O c x
 theorem eval_clamped_prop'' (h:eval_clamped O u c x=Part.some y): y∈eval O c x ∧ (use O c x).get (eval_clamped_prop''_aux h)≤u := by sorry
 theorem eval_clamped_prop''_rev(h:(eval O c x).Dom) (h0:(use O c x).get (e2u h)≤u): eval_clamped O u c x=Part.some ((eval O c x).get h) := by sorry
 theorem eval_clamped_prop''_rev2: (use O c x).get h≤u ↔ (eval_clamped O u c x).Dom := by sorry
+theorem eval_clamped_prop''_rev3: (∀y,y∈(use O c x)→y≤u) ↔ (eval_clamped O u c x).Dom := by sorry
 -- def eval_string (σ:List ℕ) (c:Code) (x:ℕ):= eval_clamped (fun e=> σ.getD e 999) σ.length c x
 -- def eval_string (σ:List ℕ) (c:Code) (x:ℕ):= eval_clamped (fun e=> Nat.sg $ σ.getD e 999) σ.length c x
 def eval_string (σ:List ℕ) (c:Code) (x:ℕ):= eval_clamped (fun e=> b2n $ n2b $ σ.getD e 999) σ.length c x
@@ -1287,7 +1288,7 @@ let k:=(n2l (Bs (2*(i+1)-1))).length
   simp [-Denumerable.list_ofNat_succ]
   
   rw [i_1_simp]
-  
+  rw [←keqlb]
 
   -- unfold A at a1
   -- unfold χ at a1
@@ -1299,11 +1300,32 @@ let k:=(n2l (Bs (2*(i+1)-1))).length
   let usecomp := (use (χ A) (decodeCode i) k)
   have a2 := e2u a1
   have : usecomp.Dom := by exact a2
+  let usecn := usecomp.get a2
 
   -- use reverse of eval_clamped_prop'' to rephrase the eval_clamped in the goal to just eval.
   -- then, use the extension that will get the oracle string to As (use).
   -- the inequality will be satisfies as the list as size greater than use.
   have := eval_clamped_prop''_rev (a1) (Nat.le_refl ((usecomp).get (e2u a1)))
+  have : (eval_clamped (χ A) (usecn) (decodeCode i) k).Dom := by exact Part.eq_some_imp_dom this
+  unfold A at this
+  unfold χ at this
+  simp at this
+  have Aprw : n2l Aₚ = As (2*i+1) := rfl
+  rw [Aprw]
+  if h0:2*i+1<usecn then
+  sorry
+  else
+  simp at h0
+  use 0
+  apply eval_clamped_prop''_rev2.mp
+  
+  -- have := eval_clamped_prop''_rev3.mpr this
+  suffices (eval_clamped (fun x ↦ if n2b ((As (x + 1))[x]'AsSize) = true then 1 else 0) usecn (decodeCode i) k) = (eval_clamped (fun e ↦ b2n (n2b ((As (2 * i + 1) ++ n2l (0 + 1)).getD e 999))) (As (2 * i + 1) ++ n2l (0 + 1)).length
+    (decodeCode i) k) from by
+      sorry
+  
+  sorry
+
   -- apply Exists.imp (λ x hx => 
   -- match hx with
   -- | ⟨h, h0⟩ => eval_clamped_prop''_rev2 h h0)
