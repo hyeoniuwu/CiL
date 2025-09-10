@@ -17,7 +17,7 @@ theorem χsimp {O} : χ O = fun x ↦ if x ∈ O then 1 else 0 := by exact rfl
 @[simp] abbrev SetTuringReducible (A O:Set ℕ) : Prop := Nat.RecursiveIn (χ O) (χ A)
 @[simp] abbrev SetTuringReducibleStrict (A O:Set ℕ) : Prop := Nat.RecursiveIn (χ O) (χ A) ∧ ¬ Nat.RecursiveIn (χ A) (χ O)
 @[simp] abbrev SetTuringEquivalent (O A:Set ℕ) : Prop := AntisymmRel SetTuringReducible O A
-@[simp] noncomputable def eval (O:Set ℕ) : Nat.RecursiveIn.Code → ℕ→.ℕ := Nat.RecursiveIn.Code.eval (χ O)
+noncomputable def eval (O:Set ℕ) : Nat.RecursiveIn.Code → ℕ→.ℕ := Nat.RecursiveIn.Code.eval (χ O)
 @[simp] noncomputable def evalSet₁ (O:Set ℕ) : ℕ→.ℕ := eval₁ (χ O)
 @[simp] noncomputable def evalnSet₁ (O:Set ℕ) : ℕ→ℕ := evaln₁ (χ O)
 theorem prim_evalnSet₁:Nat.PrimrecIn (χ O) (evalnSet₁ O) := by simp only [evalnSet₁]; exact prim_evaln₁
@@ -73,7 +73,7 @@ noncomputable def c_evalnSet₁ (O:Set ℕ) := choose (@exists_prim_code_for_eva
 @[simp] theorem c_evalnSet₁_evp : eval_prim (χ O) (c_evalnSet₁ O) = evalnSet₁ O := by exact (choose_spec exists_prim_code_for_evalnSet₁).right.symm
 @[simp] theorem c_evalnSet₁_ev_pr : code_prim (c_evalnSet₁ O) := by exact (choose_spec exists_prim_code_for_evalnSet₁).left
 @[simp] theorem c_evalnSet₁_ev2 : eval (χ O) (c_evalnSet₁ O) = evalnSet₁ O := by rw [←@eval_prim_eq_eval (c_evalnSet₁ O) (χ O) c_evalnSet₁_ev_pr]; simp
-@[simp] theorem c_evalnSet₁_ev : eval O (c_evalnSet₁ O) = evalnSet₁ O := by simp
+@[simp] theorem c_evalnSet₁_ev : eval O (c_evalnSet₁ O) = evalnSet₁ O := by simp [_root_.eval]
 
 private theorem exists_code_for_eval₁ {O:ℕ→ℕ} : ∃ c:Nat.RecursiveIn.Code, eval O c = eval₁ O := by apply (exists_code.mp) rec_eval₁
 noncomputable def c_eval₁ (O:ℕ→ℕ) := choose (@exists_code_for_eval₁ O)
@@ -339,9 +339,9 @@ theorem dom_to_ran_prop : (W O e) = (WR O (dom_to_ran O e)) := by
   ext xs
   constructor
   · intro h
-    simp at h
+    simp [_root_.eval] at h
     rcases h with ⟨y,hy⟩
-    simp [WR]
+    simp [WR, _root_.eval]
     simp only [dom_to_ran]
     simp only [decodeCode_encodeCode]
     have h0 : (eval (χ O) e xs).Dom := by
@@ -370,7 +370,7 @@ theorem dom_to_ran_prop : (W O e) = (WR O (dom_to_ran O e)) := by
     intro h
     simp at h
     -- rcases h with ⟨y,hy⟩
-    simp [WR]
+    simp [WR, _root_.eval]
     simp only [dom_to_ran]
     simp only [decodeCode_encodeCode]
     have h0 : ¬(eval (χ O) e xs).Dom := by

@@ -281,7 +281,7 @@ theorem R_aux' : (n2l (Bs (2*(i+1)-1))).length < (Bs (2*(i+1))).length := by
   exact BsSize_o2e'
 
 private noncomputable def R_wt (i:ℕ) := (n2l (Bs (2*(i+1)-1))).length
-private theorem R_aux (i:ℕ) (h:(evals (As (2*(i+1))) i (R_wt i)).Dom):
+private theorem R_aux_0 (i:ℕ) (h:(evals (As (2*(i+1))) i (R_wt i)).Dom):
 (evals (As (2*(i+1))) i (R_wt i)).get h ≠ b2n (n2b $ (Bs (2*(i+1)))[R_wt i]'(R_aux')) := by
   unfold Bs
   unfold As
@@ -348,6 +348,17 @@ private theorem R_aux (i:ℕ) (h:(evals (As (2*(i+1))) i (R_wt i)).Dom):
     rw [show 2 * i + 1 + 1= 2*i+2 from rfl] at this
     rw [i_1_simp] at this
     exact this h
+
+theorem R_aux_χ: χ B (R_wt i) = b2n (n2b ((Bs (2 * (i + 1)))[(R_wt i)]'(@R_aux' i))) := by
+  simp [B,χ]
+  simp [Bs_Mono_3 (@BsSize (R_wt i)) (@R_aux' i)]
+  exact rfl
+
+theorem R_aux_1 : (eval A (decodeCode i) (R_wt i)) ≠ Part.some ((χ B) (R_wt i)) := by
+  if h0 : (eval A (decodeCode i) (R_wt i)).Dom then
+  sorry
+  else
+  simp [Part.eq_none_iff'.mpr h0]
 
 /--
 If `[i:As](k)` halts, then its value will be unchanged in all subsequent steps.
@@ -548,7 +559,7 @@ theorem As_Uninjured (i:ℕ) : eval A i (R_wt i) = evals (As (2*(i+1))) i (R_wt 
 
 private theorem R (i:ℕ) : eval A i ≠ χ B := by
   apply Function.ne_iff.mpr
-  have main := R_aux i
+  have main := R_aux_0 i
   use (R_wt i)
   if h0:(eval A (decodeCode i) (R_wt i)).Dom then
 
@@ -563,10 +574,7 @@ private theorem R (i:ℕ) : eval A i ≠ χ B := by
   have main1 := main (this ▸ h0); clear main
   have rasd2aux := @R_aux' i
 
-  have : χ B (R_wt i) = b2n (n2b (Bs (2 * (i + 1)))[(R_wt i)]) := by
-    simp [B,χ]
-    simp [Bs_Mono_3 (@BsSize (R_wt i)) (rasd2aux)]
-    exact rfl
+  have := @R_aux_χ i
   
   exact Ne.symm (ne_of_eq_of_ne this (id (Ne.symm main1)))
   else
