@@ -286,57 +286,28 @@ private theorem R_aux_0 (i:ℕ) (h:(evals (As (2*(i+1))) i (R_wt i)).Dom):
   extract_lets
   expose_names
   have i_1_simp: i_1 = i := Nat.div2_bit1 i
-  have keqlb : R_wt i=lb := by
-    rw [show R_wt i=(Bs (2 * (i+1) - 1)).length from rfl]
-    rw [show lb=(n2l Bₚ).length from rfl]
-    unfold Bs
-    rw [show Bₚ=(KP54 (2 * (i + 1) - 1)).r from rfl]
-
 
   if h1: dvt.Dom then
     simp (config := {zeta:=false}) [h1]
-    lift_lets
-    extract_lets
-    expose_names
+    lift_lets; extract_lets; expose_names
 
-    simp [keqlb]
-    have lbrw : lb = (n2l Bₚ).length := rfl
-    simp only [lbrw]
-    simp
-    have aaa : A_result = (evals (n2l Aₚ ++ n2l (rf + 1)) (decodeCode i_1) lb).get (c_kp54_aux_2
-      (Eq.mpr_prop (Eq.refl dvt.Dom)
-        (Eq.mpr_prop
-          (congrArg (fun x ↦ dvt.Dom) i_1_simp)
-          (of_eq_true (eq_true h1))))) := rfl
+    have lbrw : R_wt i = (n2l Bₚ).length := rfl
+    simp [lbrw]; simp only [←lbrw]
 
-    simp [-Denumerable.list_ofNat_succ] at aaa
-    have : (n2l Aₚ ++ n2l (rf + 1))=Aₛ:= rfl
-    simp only [this] at aaa
+    have aaa : A_result = (evals (Aₛ) i_1 (R_wt i)).get (c_kp54_aux_2 (of_eq_true (eq_true h1))) := rfl
     simp (config := {zeta:=false}) only [i_1_simp] at aaa
-    simp only [←lbrw]
-    have Aresrw : evals Aₛ (decodeCode (i)) lb = Part.some A_result := by
-      rw [aaa]
-      simp
-    simp [Aresrw]
+    simp [←aaa]
+
     cases A_result <;> simp [n2b,b2n]
 
   else
     exfalso
-    have keqlb_2 : R_wt i = lb := by exact keqlb
-    rw [keqlb_2] at h
-    rw [show dvt = eval Nat.fzero (c_kp54_aux Aₚ i_1 lb).dovetail 17 from rfl] at h1
-    have := dovetail_ev_1.mp (Part.eq_none_iff'.mpr h1)
-    clear h1
-    simp [c_kp54_aux_evp, -Denumerable.list_ofNat_succ] at this
-
-    rw [show n2l Aₚ = As (2*i+1) from rfl] at this
-    rw [show 2*(i+1) = 2*i+2 from rfl] at h
     have := @Asexext (2*i+1) (2*i+2) (Nat.lt_add_one (2 * i + 1))
-    rcases this with ⟨h1,h2⟩
-    have := this h1
-    rw [h2] at this
-    rw [show 2 * i + 1 + 1= 2*i+2 from rfl] at this
-    rw [i_1_simp] at this
+    rcases this with ⟨h3,h2⟩
+
+    have := dovetail_ev_1.mp (Part.eq_none_iff'.mpr h1) h3
+    simp [c_kp54_aux_evp, -Denumerable.list_ofNat_succ] at this
+    rw [show n2l Aₚ = As (2*i+1) from rfl, h2, i_1_simp] at this
     exact this h
 
 theorem R_aux_χ: χ B (R_wt i) = b2n (n2b ((Bs (2 * (i + 1)))[(R_wt i)]'(@BsSize_o2e' i))) := by
@@ -481,7 +452,7 @@ theorem As_Uninjured_1 :
     simp only [←mainrw]
     exact a2
   else
-  
+
   simp at h0
   use 0
 
@@ -518,7 +489,7 @@ theorem As_Uninjured_1 :
 theorem As_Uninjured_1' {i:ℕ} : (eval A i (R_wt i)).Dom  → (evals (As (2*(i+1))) i (R_wt i)).Dom := not_imp_not.mp (@As_Uninjured_1 i)
 theorem As_Uninjured (i:ℕ) : eval A i (R_wt i) = evals (As (2*(i+1))) i (R_wt i) := by
   if h:(eval A i (R_wt i)).Dom then
-    rw [@As_Uninjured_0 (i) (R_wt i) (@As_Uninjured_1' i h)]
+    rw [@As_Uninjured_0 (i) (R_wt i) (As_Uninjured_1' h)]
   else
     rw [Part.eq_none_iff'.mpr h]
     rw [Part.eq_none_iff'.mpr (As_Uninjured_0' h)]
