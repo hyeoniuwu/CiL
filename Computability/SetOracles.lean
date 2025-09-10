@@ -750,7 +750,12 @@ theorem eval_clamped_prop_0 (h:(eval_clamped O u c x).Dom): eval_clamped O u c x
   | succ => simp_all [eval,eval_clamped]
   | left => simp_all [eval,eval_clamped]
   | right => simp_all [eval,eval_clamped]
-  | oracle => simp_all [eval,eval_clamped]
+  | oracle =>
+    simp_all [eval,eval_clamped]
+    aesop? says
+      split at h
+      next h_1 => simp_all only [Part.some_dom]
+      next h_1 => simp_all only [not_lt, Part.not_none_dom]
   | pair cf cg hcf hcg =>
     simp only [eval,eval_clamped]
     rw [hcf (Part.left_dom_of_sub_dom h)]
@@ -797,8 +802,56 @@ theorem eval_clamped_prop''_aux (h:(eval_clamped O u c x).Dom): (use O c x).Dom 
   exact h
   -- have := e2u (Part.eq_some_imp_dom (eval_clamped_prop' h))
 -- theorem eval_clamped_prop''_aux' (h:y∈eval_clamped O u c x): (use O c x).Dom := e2u (Part.mem_imp_dom (eval_clamped_prop' h))
-theorem eval_clamped_prop_1 (h:(eval_clamped O u c x).Dom): (use O c x).get (eval_clamped_prop''_aux h)≤u := by sorry
-theorem eval_clamped_prop''_rev (h:(eval O c x).Dom) (h0:(use O c x).get (e2u h)≤u): eval_clamped O u c x=Part.some ((eval O c x).get h) := by sorry
+theorem eval_clamped_prop_1 (h:(eval_clamped O u c x).Dom): (use O c x).get (eval_clamped_prop''_aux h)≤u := by
+  induction c with
+  | zero => simp [use]
+  | succ => simp [use]
+  | left => simp [use]
+  | right => simp [use]
+  | oracle =>
+    simp [use]
+    simp [eval_clamped] at h
+    aesop? says
+      split at h
+      next h_1 =>
+        simp_all only [Part.some_dom]
+        exact h_1
+      next h_1 => simp_all only [not_lt, Part.not_none_dom]
+  | pair cf cg hcf hcg =>
+    simp [use]
+    have d1 := Part.left_dom_of_sub_dom h
+    have d2 := Part.right_dom_of_sub_dom h
+    simp [Seq.seq]
+    simp [Part.Dom.bind $ eval_clamped_prop''_aux d1]
+    exact ⟨hcf d1, hcg d2⟩
+  | comp cf cg hcf hcg => sorry
+  | prec cf cg hcf hcg => sorry
+  | rfind' _ _ => sorry
+theorem eval_clamped_prop''_rev_aux (h:(eval O c x).Dom) (h0:(use O c x).get (e2u h)≤u): (eval_clamped O u c x).Dom := by
+  induction c with
+  | zero => exact h
+  | succ => exact h
+  | left => exact h
+  | right => exact h
+  | oracle =>
+    simp [eval_clamped]
+    simp [use] at h0
+    have : x < u := by exact h0
+    simp [this]
+  | pair cf cg hcf hcg =>
+    simp [eval_clamped]
+    have d1 := Part.left_dom_of_sub_dom h
+    have d2 := Part.right_dom_of_sub_dom h
+    simp [Seq.seq]
+    constructor
+    exact hcf d1 (le_of_max_le_left h0)
+    exact hcg d2 (le_of_max_le_right h0)
+  | comp _ _ _ _ => sorry
+  | prec _ _ _ _ => sorry
+  | rfind' _ _ => sorry
+theorem eval_clamped_prop''_rev (h:(eval O c x).Dom) (h0:(use O c x).get (e2u h)≤u): eval_clamped O u c x=Part.some ((eval O c x).get h) := by
+  sorry
+#exit
 theorem eval_clamped_prop''_rev2: (use O c x).get h≤u ↔ (eval_clamped O u c x).Dom :=
   ⟨
     λ h0 ↦ Part.eq_some_imp_dom $ eval_clamped_prop''_rev (u2e h) h0
