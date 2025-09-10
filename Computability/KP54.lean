@@ -15,7 +15,6 @@ def b2n (b:Bool) : ℕ := if b then 1 else 0
 def eval_string (σ:List ℕ) (c:Code) (x:ℕ):= eval_clamped (fun e=> b2n $ n2b $ σ.getD e 999) σ.length c x
 end Nat.RecursiveIn.Code
 
-
 set_option linter.dupNamespace false
 namespace KP54
 
@@ -32,19 +31,21 @@ and here i can just directly work with a list of nat anyways, interpreting 0 as 
 -- c_kp54_aux check if x.r+1 is a finite extension to A for the computation [i](n).
 def c_kp54_aux (A i n:ℕ) := zero
 theorem c_kp54_aux_evp :
-  -- evalSet ∅ (c_kp54_aux A i n) x
   eval fzero (c_kp54_aux A i n) x
     =
   if (eval_string ((n2l A) ++ (n2l (x.r+1))) i n).Dom then Part.some 0 else Part.some 1
 := by
   sorry
 theorem c_kp54_aux_2 (halts:(eval fzero (dovetail (c_kp54_aux Aₚ i lb)) 17).Dom) :
-  let rf := (eval fzero (dovetail (c_kp54_aux Aₚ i lb)) 17).get halts
-  (eval_string ((n2l Aₚ) ++ (n2l (rf+1))) i lb).Dom := by
-    extract_lets
+  let dvt := (eval fzero (dovetail (c_kp54_aux Aₚ i lb)) 17).get halts
+  (eval_string ((n2l Aₚ) ++ (n2l (dvt.l+1))) i lb).Dom := by
+    have := dovetail_ev_0' halts
+    extract_lets at this ⊢
     expose_names
-
-    sorry
+    simp only [c_kp54_aux_evp] at this
+    contrapose this
+    simp [-Denumerable.list_ofNat_succ]
+    exact this
 
 
 open Nat List in
@@ -61,46 +62,24 @@ noncomputable def KP54 : ℕ→ℕ := λ s ↦
   let lb := List.length (n2l Bₚ)
   let la := List.length (n2l Aₚ)
 
-  if s%2=0 then
-    -- then s=2i+2, and we will work on Rᵢ.
-    -- shouldnt be rfind, but dovetail!!!
+  if s%2=0 then -- then s=2i+2, and we will work on Rᵢ.
     let dvt := eval fzero (dovetail (c_kp54_aux Aₚ i lb)) 17
     if halts:dvt.Dom then
-      let rf := dvt.get halts
-      -- rf is the smallest natural such that
-      -- (eval_string ((n2l A) ++ (n2l rf)) i n).Dom
-      -- if such rf doesn't exist, that means that there is no (finite) extension of A s.t.
-      -- the computation `[i](n)` halts with use ≰ n.
+      let rf := (dvt.get halts).l -- rf is a natural such that (eval_string ((n2l A) ++ (n2l rf)) i n).Dom.
       let Aₛ := (n2l Aₚ) ++ (n2l (rf+1))
-      -- let A_result := (eval fzero (c_kp54_aux Aₚ i lb) (Nat.pair 999 rf)).get (sorry)
-      let A_result := (eval_string (Aₛ) i lb).get (c_kp54_aux_2 halts)
+      let A_result := (eval_string Aₛ i lb).get (c_kp54_aux_2 halts)
       Nat.pair Aₛ ((n2l Bₚ).concat (Nat.sg' A_result))
     else
-      -- Nat.pair Aₚ (l2n $ (n2l Bₚ).concat 0)
       Nat.pair (l2n $ (n2l Aₚ).concat 0) (l2n $ (n2l Bₚ).concat 0)
-
-  else
-    -- then s=2i+1, and we will work on Sᵢ.
+  else -- then s=2i+1, and we will work on Sᵢ.
     let dvt := eval fzero (dovetail (c_kp54_aux Bₚ i la)) 17
     if halts:dvt.Dom then
-      let rf := dvt.get halts
+      let rf := (dvt.get halts).l
       let Bₛ := (n2l Bₚ) ++ (n2l (rf+1))
       let B_result := (eval_string (Bₛ) i la).get (c_kp54_aux_2 halts)
-      -- let B_result := (eval fzero (c_kp54_aux Bₚ i la) rf).get (sorry)
       Nat.pair ((n2l Aₚ).concat (Nat.sg' B_result)) Bₛ
     else
-      -- Nat.pair Bₚ (l2n $ (n2l Bₚ).concat 0)
       Nat.pair (l2n $ (n2l Aₚ).concat 0) (l2n $ (n2l Bₚ).concat 0)
-    -- Nat.pair 0 0
-/-
-so we can assert that
-A=(KP54 2i).l
-B=(KP54 2i).r
-Then
-evalSet A i ≠ χ B, by using lb
-Also remark that the use of evalSet A is below lb
--/
-
 
 
 /-
@@ -113,18 +92,9 @@ actually now i changed it so that i think
  · by stage n,   `χ_B(n)` is bound to be defined.
  · by stage n,   `χ_A(n)` is bound to be defined.
 -/
-
--- private def A := {x | x ∈ D (KP54 (2*x+1)).l}
--- private def B := {x | x ∈ D (KP54 (2*x)).r}
--- private def A := {x | Nat.BSMem (Nat.pair x (KP54 (2*x+1)).l) = 1}
--- private def B := {x | Nat.BSMem (Nat.pair x (KP54 (2*x)).r)   = 1}
 private noncomputable def As (s:ℕ) := n2l (KP54 s).l
 private noncomputable def Bs (s:ℕ) := n2l (KP54 s).r
--- private def A := {x | (As x)[x]? = some 1}
 
-
-
-#check List.IsPrefix
 theorem ABgetsextended : (As i) <+: (As (i+1)) ∧ (Bs i) <+: (Bs (i+1)) := by
   unfold As
   unfold Bs
@@ -198,11 +168,6 @@ theorem AsSize_e2o : (As (2*i+1)).length < (As (2*i+2)).length:= by
   rw [show As (2*i+1) = n2l Aₚ from rfl]
   if h0:(dvt).Dom then simp [h0]
   else simp [h0]
--- theorem asd : i=(i/2)*2 ∨ i=(i/2)*2+1 := by
---   #check Nat.even_or_odd
---   #check Odd
---   omega
-  -- grind
 theorem AsSize_mono' : (As i).length < (As (i+1)).length := by
   cases Nat.even_or_odd i with
   | inl h =>
@@ -256,8 +221,6 @@ theorem Asexext (hij:i<j): ∃ lM1, (As i)++(n2l (lM1+1))=As j := by
   use (l2n h1)-1
   simp [a4]
   exact h2
-  
-  -- exact?
 theorem AsBsSize : i≤(As i).length ∧ i≤(Bs i).length := by
   induction i with
   | zero => exact ⟨Nat.zero_le (As 0).length, Nat.zero_le (Bs 0).length⟩
@@ -293,11 +256,9 @@ theorem AsBsSize : i≤(As i).length ∧ i≤(Bs i).length := by
         exact ih
 theorem AsSize : i<(As (i+1)).length := (@AsBsSize (i+1)).left
 theorem BsSize : i<(Bs (i+1)).length := (@AsBsSize (i+1)).right
--- private def A := {x | (As (x+1))[x]'AsSize≠0}
+
 private def A := {x | n2b $ (As (x+1))[x]'AsSize}
 private def B := {x | n2b $ (Bs (x+1))[x]'BsSize}
--- private def B := {x | (Bs (x+1))[x]'BsSize≠0}
-private def Atest := {x | (n2l (KP54 (x)).l)[x]? = some 1}
 
 noncomputable def Bsize (i:ℕ) := (Bs i).length
 
@@ -448,7 +409,7 @@ let k:=(n2l (Bs (2*(i+1)-1))).length
   have := c_kp54_aux_2 h0
   simp [-Denumerable.list_ofNat_succ] at this
   rw [i_1_simp] at this
-  have a0 : (n2l Aₚ ++ n2l ((eval Nat.fzero (c_kp54_aux Aₚ i lb).dovetail 17).get h0 + 1)) = Aₛ := by exact rfl
+  have a0 : (n2l Aₚ ++ n2l (((eval Nat.fzero (c_kp54_aux Aₚ i lb).dovetail 17).get h0).l + 1)) = Aₛ := by exact rfl
   rw [a0] at this
   rw [keqlb] at h
   exact h this
