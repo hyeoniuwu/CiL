@@ -29,15 +29,15 @@ and here i can just directly work with a list of nat anyways, interpreting 0 as 
 -- the proofs later however are simplified if A_s,B_s are treated as List Bool...
 -- /mnt/Q/Mathematics/LaTeX/Writings/Computability.pdf
 -- c_kp54_aux check if x.r+1 is a finite extension to A for the computation [i](n).
-def c_kp54_aux (A i n:ℕ) := zero
+def c_kp54_aux (i n:ℕ) := zero
 theorem c_kp54_aux_evp :
-  eval Nat.fzero (c_kp54_aux A i n) x
+  eval Nat.fzero (c_kp54_aux i n) x
     =
-  if (evals ((n2l A) ++ (n2l (x.r+1))) i n).Dom then Part.some 0 else Part.some 1
+  if (evals ((n2l x.l) ++ (n2l (x.r+1))) i n).Dom then Part.some 0 else Part.some 1
 := by
   sorry
-theorem c_kp54_aux_2 (halts:(eval Nat.fzero (dovetail (c_kp54_aux Aₚ i lb)) 17).Dom) :
-  let dvt := (eval Nat.fzero (dovetail (c_kp54_aux Aₚ i lb)) 17).get halts
+theorem c_kp54_aux_2 (halts:(eval Nat.fzero (dovetail (c_kp54_aux i lb)) Aₚ).Dom) :
+  let dvt := (eval Nat.fzero (dovetail (c_kp54_aux i lb)) Aₚ).get halts
   (evals ((n2l Aₚ) ++ (n2l (dvt.l+1))) i lb).Dom := by
     have := dovetail_ev_0' halts
     extract_lets at this ⊢
@@ -63,7 +63,7 @@ noncomputable def KP54 : ℕ→ℕ := λ s ↦
   let la := List.length (n2l Aₚ)
 
   if s%2=0 then -- then s=2i+2, and we will work on Rᵢ.
-    let dvt := eval Nat.fzero (dovetail (c_kp54_aux Aₚ i lb)) 17
+    let dvt := eval Nat.fzero (dovetail (c_kp54_aux i lb)) Aₚ
     if halts:dvt.Dom then
       let rf := (dvt.get halts).l -- rf is a natural such that (eval_string ((n2l A) ++ (n2l rf)) i n).Dom.
       let Aₛ := (n2l Aₚ) ++ (n2l (rf+1))
@@ -72,7 +72,7 @@ noncomputable def KP54 : ℕ→ℕ := λ s ↦
     else
       Nat.pair (l2n $ (n2l Aₚ).concat 0) (l2n $ (n2l Bₚ).concat 0)
   else -- then s=2i+1, and we will work on Sᵢ.
-    let dvt := eval Nat.fzero (dovetail (c_kp54_aux Bₚ i la)) 17
+    let dvt := eval Nat.fzero (dovetail (c_kp54_aux i la)) Bₚ
     if halts:dvt.Dom then
       let rf := (dvt.get halts).l
       let Bₛ := (n2l Bₚ) ++ (n2l (rf+1))
