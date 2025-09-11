@@ -46,49 +46,23 @@ noncomputable def dovetail (c:Code) : Code :=
 theorem dovetail_ev_0 (h:(eval O (dovetail c) x).Dom) :
 let dvt := (eval O (dovetail c) x).get h
 evaln O dvt.r c (Nat.pair x (dvt.l))=Option.some 0 := by
-  extract_lets
-  expose_names
+  extract_lets; expose_names
+  have dvtrw : (eval O (dovetail c) x).get h = dvt := rfl
 
-  unfold dovetail at h
-  simp [] at h
-
-  have dvtrw : (eval O
-    (c_rfind
-      (c_if_eq'.comp
-        ((c_evaln.comp ((left.pair (left.comp right)).pair ((c_const c.encodeCode).pair (right.comp right)))).pair
-          (c_const 1))))
-    x) = (eval O c.dovetail x) := by rfl
-  let temprw := (eval O
-    (c_rfind
-      (c_if_eq'.comp
-        ((c_evaln.comp ((left.pair (left.comp right)).pair ((c_const c.encodeCode).pair (right.comp right)))).pair
-          (c_const 1))))
-    x).get
-    h
-  have temprwrw : (eval O
-    (c_rfind
-      (c_if_eq'.comp
-        ((c_evaln.comp ((left.pair (left.comp right)).pair ((c_const c.encodeCode).pair (right.comp right)))).pair
-          (c_const 1))))
-    x).get
-    h = temprw := rfl
+  unfold dovetail at h dvtrw
+  simp [] at h dvtrw
 
   have := Part.get_mem h
-  rw [temprwrw] at this
+  rw [dvtrw] at this
   simp [c_rfind_prop] at this
   simp [eval] at this
 
   rcases this with ⟨⟨h2,h3,h4⟩,h5⟩; clear h5
   simp [Seq.seq] at h3
-  rw [h3] at h4; clear h3
-  simp at h4
-  have temprw_eq_dvt : temprw = dvt := by exact temprwrw
-  rw [temprw_eq_dvt] at h4
+  rw [h3] at h4; clear h3; simp at h4
   have := Part.eq_some_iff.mpr h4; clear h4
-  simp at this
   simp [o2n] at this
-  apply Encodable.encode_inj.mp
-  exact this
+  exact Encodable.encode_inj.mp this
 theorem dovetail_ev_0' (h:(eval O (dovetail c) x).Dom) :
 let dvt := (eval O (dovetail c) x).get h
 eval O c (Nat.pair x (dvt.l))=Part.some 0 := by
