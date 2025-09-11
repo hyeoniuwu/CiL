@@ -1,10 +1,6 @@
 import Computability.Constructions.Basic
+import Computability.Constructions.Primitive
 import Computability.Basic
--- import Computability.Encoding
-import Mathlib.Computability.Reduce
-import Mathlib.Computability.Halting
-
-import Mathlib.Data.PFun
 
 open Computability
 open Classical
@@ -17,23 +13,6 @@ noncomputable abbrev K0 (O:ℕ→ℕ) := jump O
 
 notation:100 f"⌜" => jump f
 
-
-/-
-There are lots of primrec theorems we would like to use like
-
-theorem cond {c : α → Bool} {f : α → σ} {g : α → σ} (hc : Primrec c) (hf : Primrec f)
-    (hg : Primrec g) : Primrec fun a => bif (c a) then (f a) else (g a) :=
-  (nat_casesOn (encode_iff.2 hc) hg (hf.comp fst).to₂).of_eq fun a => by cases c a <;> rfl
-
--- Now, if f is primrec + oracle g,
-It'd be nice to be able to automatically extend all of these to smth like
-
-theorem cond {c : α → Bool} {f : α → σ} {g : α → σ} (hc : PrimrecOracle O c) (hf : PrimrecOracle O f)
-    (hg : PrimrecOracle O g) : PrimrecOracle O fun a => bif (c a) then (f a) else (g a)
-
--/
-
-
 /- Partially recursive partial functions `α → σ` between `Primcodable` types -/
 -- def PartrecIn2 {β τ α σ} [Primcodable β] [Primcodable τ] [Primcodable α] [Primcodable σ] (g : β →. τ) (f : α →. σ) :=
 --   Nat.RecursiveIn (fun n => Part.bind (Encodable.decode (β := β) n) fun a => (g a).map Encodable.encode) fun n => Part.bind (Encodable.decode (α := α) n) fun a => (f a).map Encodable.encode
@@ -41,7 +20,20 @@ theorem cond {c : α → Bool} {f : α → σ} {g : α → σ} (hc : PrimrecOrac
 --   Nat.RecursiveIn g fun n => Part.bind (Encodable.decode (α := α) n) fun a => (f a).map Encodable.encode
 
 -- instance : OfNat (Part ℕ) m where ofNat := Part.some (m)
+namespace Nat.RecursiveIn.Code
 
+def c_jump_decode (c) := c_ite c c_diverge (c_pred.comp c)
+theorem c_jump_decode_ev (hc:code_total O c): eval O (c_jump_decode c) x = if eval O c x = Part.some 0 then Part.none else (Nat.pred <$> eval O c x) := by
+  simp [c_jump_decode]
+  simp [c_ite_ev hc]
+  simp [c_diverge_ev]
+  congr
+  simp [eval]
+  if h:(eval O c x).Dom then
+    rw [Part.dom_imp_some h]
+    simp [-Part.some_get]
+  else
+    simp [Part.eq_none_iff'.mpr h]
 
 theorem Nat.RecursiveIn.jumpDecodeIte {O} {compute:ℕ→ℕ} (compute_recIn_fJump: compute ≤ᵀᶠ O): Nat.RecursiveIn O fun x ↦ if compute x = 0 then Part.none else ↑(some ((Nat.pred ∘ compute) x)) := by
   apply Nat.RecursiveIn.ite
@@ -50,8 +42,15 @@ theorem Nat.RecursiveIn.jumpDecodeIte {O} {compute:ℕ→ℕ} (compute_recIn_fJu
   · apply Nat.RecursiveIn.totalComp
     · exact Nat.RecursiveIn.of_primrec Nat.Primrec.pred
     · exact compute_recIn_fJump
-
 theorem jump_recIn (f:ℕ→ℕ) : f ≤ᵀᶠ (f⌜) := by
+  apply exists_code.mpr
+
+  -- f x = if f⌜ (oracle, x) = 0 the none else ~ - 1
+  let c :=
+    let compute := oracle.comp (pair (c_const oracle) c_id)
+    c_jumpDec compute
+
+  sorry
   let compute := (jump f) ∘ (Nat.pair (encodeCode (Nat.RecursiveIn.Code.oracle)));
   let f':ℕ→.ℕ := (fun x => if compute x=0 then Part.none else (Nat.pred ∘ compute) x)
 
@@ -60,9 +59,8 @@ theorem jump_recIn (f:ℕ→ℕ) : f ≤ᵀᶠ (f⌜) := by
       funext xs
       cases Classical.em (compute xs = 0) with
       | inl h =>
-        simp only [h]
-        simp only [compute, Function.comp_apply, jump, Nat.unpair_pair, decodeCode_encodeCode, Nat.succ_eq_add_one, dite_eq_right_iff, Nat.add_eq_zero, one_ne_zero, and_false, imp_false] at h
-        exact Part.eq_none_iff'.mpr h
+        simp [compute] at h
+        exact False.elim (h trivial)
       | inr h =>
         simp only [compute,Function.comp_apply, jump, Nat.unpair_pair, decodeCode_encodeCode,Nat.succ_eq_add_one, dite_eq_right_iff, Nat.add_eq_zero, one_ne_zero, and_false,imp_false, Nat.pred_eq_sub_one, Part.coe_some, ite_not, eval]
         simp only [compute, Function.comp_apply, jump, Nat.unpair_pair, decodeCode_encodeCode,Nat.succ_eq_add_one, dite_eq_right_iff, Nat.add_eq_zero, one_ne_zero, and_false,imp_false, Decidable.not_not, eval] at h
@@ -77,8 +75,7 @@ theorem jump_recIn (f:ℕ→ℕ) : f ≤ᵀᶠ (f⌜) := by
   have f'_recIn_fJump : Nat.RecursiveIn (f⌜) f' := by
     simp only [f']
     exact Nat.RecursiveIn.jumpDecodeIte compute_recIn_fJump
-
-  exact Nat.RecursiveIn.of_eq f'_recIn_fJump (congrFun (id (Eq.symm f_eq_f')))
+  exact of_eq f'_recIn_fJump (congrFun (_root_.id (Eq.symm f_eq_f')))
 
 
 
