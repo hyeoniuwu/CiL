@@ -23,7 +23,7 @@ notation:100 f"⌜" => jump f
 namespace Nat.RecursiveIn.Code
 
 def c_jump_decode (c) := c_ite c c_diverge (c_pred.comp c)
-theorem c_jump_decode_ev (hc:code_total O c): eval O (c_jump_decode c) x = if eval O c x = Part.some 0 then Part.none else (Nat.pred <$> eval O c x) := by
+@[simp] theorem c_jump_decode_ev (hc:code_total O c): eval O (c_jump_decode c) x = if eval O c x = Part.some 0 then Part.none else (Nat.pred <$> eval O c x) := by
   simp [c_jump_decode]
   simp [c_ite_ev hc]
   simp [c_diverge_ev]
@@ -34,21 +34,38 @@ theorem c_jump_decode_ev (hc:code_total O c): eval O (c_jump_decode c) x = if ev
     simp [-Part.some_get]
   else
     simp [Part.eq_none_iff'.mpr h]
+theorem c_jump_decode_ev' (hc:code_total O c): eval O (c_jump_decode c) = fun x => if eval O c x = Part.some 0 then Part.none else (Nat.pred <$> eval O c x) := by
+  funext xs
+  exact c_jump_decode_ev hc
 
-theorem Nat.RecursiveIn.jumpDecodeIte {O} {compute:ℕ→ℕ} (compute_recIn_fJump: compute ≤ᵀᶠ O): Nat.RecursiveIn O fun x ↦ if compute x = 0 then Part.none else ↑(some ((Nat.pred ∘ compute) x)) := by
-  apply Nat.RecursiveIn.ite
-  · exact compute_recIn_fJump
-  · exact Nat.RecursiveIn.none
-  · apply Nat.RecursiveIn.totalComp
-    · exact Nat.RecursiveIn.of_primrec Nat.Primrec.pred
-    · exact compute_recIn_fJump
+-- theorem Nat.RecursiveIn.jumpDecodeIte {O} {compute:ℕ→ℕ} (compute_recIn_fJump: compute ≤ᵀᶠ O): Nat.RecursiveIn O fun x ↦ if compute x = 0 then Part.none else ↑(some ((Nat.pred ∘ compute) x)) := by
+--   apply Nat.RecursiveIn.ite
+--   · exact compute_recIn_fJump
+--   · exact Nat.RecursiveIn.none
+--   · apply Nat.RecursiveIn.totalComp
+--     · exact Nat.RecursiveIn.of_primrec Nat.Primrec.pred
+--     · exact compute_recIn_fJump
 theorem jump_recIn (f:ℕ→ℕ) : f ≤ᵀᶠ (f⌜) := by
   apply exists_code.mpr
+  let compute := oracle.comp (pair (c_const oracle) c_id)
+  let c := c_jump_decode compute
+  use c
 
-  -- f x = if f⌜ (oracle, x) = 0 the none else ~ - 1
-  let c :=
-    let compute := oracle.comp (pair (c_const oracle) c_id)
-    c_jumpDec compute
+  have compute_total : ∀ O, code_total O compute := by
+    intro O
+    apply prim_total
+    repeat (first|assumption|simp|constructor)
+
+  simp [c]
+  simp [c_jump_decode_ev' (compute_total (f⌜))]
+  rw [←eval_total_eq_eval $ compute_total (f⌜)]
+  unfold compute
+  simp [eval_total, eval, Seq.seq]
+  exact rfl
+
+  -- simp [compute,eval]
+
+  -- simp [c_jump_decode_ev (compute_total (f⌜))]
 
   sorry
   let compute := (jump f) ∘ (Nat.pair (encodeCode (Nat.RecursiveIn.Code.oracle)));

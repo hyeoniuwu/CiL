@@ -1,4 +1,3 @@
-import Computability.Constructions.Basic
 import Computability.Constructions.List
 
 open Nat.RecursiveIn.Code
@@ -172,7 +171,7 @@ theorem c_cov_rec_evp_2_aux2_I (h:j≤i) :
   getLastI (eval_prim O (c_cov_rec cf cg) (Nat.pair x j)) := by
 
   rw [c_cov_rec_evp_2_aux1]
-  
+
   induction i with
   | zero =>
     simp only [show j=0 from eq_zero_of_le_zero h]

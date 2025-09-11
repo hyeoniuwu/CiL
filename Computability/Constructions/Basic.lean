@@ -1,6 +1,8 @@
 import Computability.Constructions.Primitive
+import Computability.Constructions.Eval
 
 open Nat.RecursiveIn.Code
+open Classical
 
 namespace Nat.RecursiveIn.Code
 
@@ -15,8 +17,7 @@ theorem c_diverge_ev : eval O c_diverge x = Part.none := by
 
 
 def c_ifz1 (c) (a b:ℕ) := c_add.comp₂ (c_mul.comp₂ (c_const b) (c_sg.comp c)) (c_mul.comp₂ (c_const a) (c_sg'.comp c))
-open Classical in
-theorem c_ifz1_ev (hc:code_total O c) : eval O (c_ifz1 c a b) x = if (eval O c x=Part.some 0) then Part.some a else Part.some b := by
+@[simp] theorem c_ifz1_ev (hc:code_total O c) : eval O (c_ifz1 c a b) x = if (eval O c x=Part.some 0) then Part.some a else Part.some b := by
   simp [c_ifz1]
   simp [eval]
   simp [Seq.seq]
@@ -25,7 +26,12 @@ theorem c_ifz1_ev (hc:code_total O c) : eval O (c_ifz1 c a b) x = if (eval O c x
   split
   next h => simp [Part.get_eq_iff_eq_some.mp h]
   next h => simp [Part.ne_of_get_ne' h]
-
+theorem c_ifz1_total (hc:code_total O c) : code_total O (c_ifz1 c a b) := by
+  intro x
+  simp [c_ifz1_ev hc]
+  split
+  next h => simp_all only [Part.some_dom]
+  next h => simp_all only [Part.some_dom]
 
 -- /-- Given a total choice function `c`, returns `a` or `b` conditioning on whether `c x=0`. -/
 -- theorem Nat.RecursiveIn.ifz1 {O:ℕ→ℕ} {c:ℕ→ℕ} (hc:Nat.RecursiveIn O c): Nat.RecursiveIn O (fun x => if (c x=0) then (a:ℕ) else (b:ℕ):ℕ→ℕ) := by
@@ -65,40 +71,46 @@ theorem c_ifz1_ev (hc:code_total O c) : eval O (c_ifz1 c a b) x = if (eval O c x
 --   rw [consEq]
 --   exact consRecin
 
-def c_ite (c a b:Nat.RecursiveIn.Code) := c_eval.comp
-open Classical in
+def c_ite (c a b:Nat.RecursiveIn.Code) := c_eval.comp₂ (c_ifz1 c a b) (c_id)
 theorem c_ite_ev (hc:code_total O c) : eval O (c_ite c a b) x = if (eval O c x=Part.some 0) then (eval O a x) else (eval O b x) := by
+  simp [c_ite]
+  simp [eval]
+  simp [Seq.seq]
+  have d := @c_ifz1_total O c a b hc x
+  simp [Part.Dom.bind d]
+  simp [c_ifz1_ev hc]
+  split
+  next h => simp only [Part.get_some, decodeCode_encodeCode]
+  next h => simp only [Part.get_some, decodeCode_encodeCode]
 
-  sorry
+-- theorem Nat.RecursiveIn.ite {O:ℕ→ℕ} {f g:ℕ→.ℕ} {c:ℕ→ℕ} (hc:Nat.RecursiveIn O c) (hf:Nat.RecursiveIn O f) (hg:Nat.RecursiveIn O g):Nat.RecursiveIn O fun a => if (c a=0) then (f a) else (g a) := by
+--     have exists_index_for_f:∃ c:ℕ, eval O c = f := by exact exists_code_nat.mp hf
+--     have exists_index_for_g:∃ c:ℕ, eval O c = g := by exact exists_code_nat.mp hg
+--     rcases exists_index_for_f with ⟨index_f,index_f_is_f⟩
+--     rcases exists_index_for_g with ⟨index_g,index_g_is_g⟩
 
-theorem Nat.RecursiveIn.ite {O:ℕ→ℕ} {f g:ℕ→.ℕ} {c:ℕ→ℕ} (hc:Nat.RecursiveIn O c) (hf:Nat.RecursiveIn O f) (hg:Nat.RecursiveIn O g):Nat.RecursiveIn O fun a => if (c a=0) then (f a) else (g a) := by
-    have exists_index_for_f:∃ c:ℕ, eval O c = f := by exact exists_code_nat.mp hf
-    have exists_index_for_g:∃ c:ℕ, eval O c = g := by exact exists_code_nat.mp hg
-    rcases exists_index_for_f with ⟨index_f,index_f_is_f⟩
-    rcases exists_index_for_g with ⟨index_g,index_g_is_g⟩
-
-    have main2:(fun a => if (c a=0) then (f a) else (g a)) = fun a => Nat.pair (if c a=0 then (index_f) else (index_g)) a >>= eval₁ O := by
-      funext xs
-      cases Classical.em (c xs = 0) with
-      | inl h =>
-        simp only [h, ↓reduceIte, Part.coe_some, Part.bind_eq_bind, Part.bind_some, eval₁, Nat.unpair_pair]
-        exact congrFun (_root_.id (Eq.symm index_f_is_f)) xs
-      | inr h =>
-        simp only [h, ↓reduceIte, Part.coe_some, Part.bind_eq_bind, Part.bind_some, eval₁, Nat.unpair_pair]
-        exact congrFun (_root_.id (Eq.symm index_g_is_g)) xs
-    rw [main2]
+--     have main2:(fun a => if (c a=0) then (f a) else (g a)) = fun a => Nat.pair (if c a=0 then (index_f) else (index_g)) a >>= eval₁ O := by
+--       funext xs
+--       cases Classical.em (c xs = 0) with
+--       | inl h =>
+--         simp only [h, ↓reduceIte, Part.coe_some, Part.bind_eq_bind, Part.bind_some, eval₁, Nat.unpair_pair]
+--         exact congrFun (_root_.id (Eq.symm index_f_is_f)) xs
+--       | inr h =>
+--         simp only [h, ↓reduceIte, Part.coe_some, Part.bind_eq_bind, Part.bind_some, eval₁, Nat.unpair_pair]
+--         exact congrFun (_root_.id (Eq.symm index_g_is_g)) xs
+--     rw [main2]
 
 
-    apply Nat.RecursiveIn.evalRecInO'
-    apply Nat.RecursiveIn.someTotal
+--     apply Nat.RecursiveIn.evalRecInO'
+--     apply Nat.RecursiveIn.someTotal
 
-    rw [Nat.RecursiveIn.pair']
+--     rw [Nat.RecursiveIn.pair']
 
-    apply Nat.RecursiveIn.pair
-    · simp only [Part.coe_some]
-      apply Nat.RecursiveIn.ifz1
-      exact hc
-    exact id
+--     apply Nat.RecursiveIn.pair
+--     · simp only [Part.coe_some]
+--       apply Nat.RecursiveIn.ifz1
+--       exact hc
+--     exact id
 
 
 
