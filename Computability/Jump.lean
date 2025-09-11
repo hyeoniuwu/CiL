@@ -11,7 +11,7 @@ open Nat.RecursiveIn.Code
   dite part.Dom (λ proof => Nat.succ $ part.get proof) (λ _ => 0)
 noncomputable abbrev K0 (O:ℕ→ℕ) := jump O
 
-notation:100 f"⌜" => jump f
+notation:10000 f"⌜" => jump f
 
 /- Partially recursive partial functions `α → σ` between `Primcodable` types -/
 -- def PartrecIn2 {β τ α σ} [Primcodable β] [Primcodable τ] [Primcodable α] [Primcodable σ] (g : β →. τ) (f : α →. σ) :=
@@ -45,20 +45,19 @@ theorem c_jump_decode_ev' (hc:code_total O c): eval O (c_jump_decode c) = fun x 
 --   · apply Nat.RecursiveIn.totalComp
 --     · exact Nat.RecursiveIn.of_primrec Nat.Primrec.pred
 --     · exact compute_recIn_fJump
-theorem jump_recIn (f:ℕ→ℕ) : f ≤ᵀᶠ (f⌜) := by
+theorem jump_recIn (f:ℕ→ℕ) : f ≤ᵀᶠ f⌜ := by
   apply exists_code.mpr
   let compute := oracle.comp (pair (c_const oracle) c_id)
   let c := c_jump_decode compute
   use c
 
-  have compute_total : ∀ O, code_total O compute := by
-    intro O
+  have compute_total : code_total f⌜ compute := by
     apply prim_total
     repeat (first|assumption|simp|constructor)
 
   simp [c]
-  simp [c_jump_decode_ev' (compute_total (f⌜))]
-  rw [←eval_total_eq_eval $ compute_total (f⌜)]
+  simp [c_jump_decode_ev' compute_total]
+  rw [←eval_total_eq_eval compute_total]
   unfold compute
   simp [eval_total, eval, Seq.seq]
   exact rfl

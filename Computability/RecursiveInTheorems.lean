@@ -181,6 +181,11 @@ theorem prim_total (h:code_prim c): code_total O c := by
       use IH'
       apply hb_ih
 -- def eval_total (O:ℕ→ℕ) (c:Code) {h:code_total O c}:ℕ→ℕ := fun x => (eval O c x).get (h x)
+theorem eval_total_comp (h:code_total O (comp cf cg)) :
+  eval O (comp cf cg) x = Part.some ((eval O cf ((eval O cg x).get (Part.Dom.of_bind (h x)))).get (total_of_comp_right h x)) := by
+    simp
+    simp [eval]
+    exact Part.Dom.bind (Part.Dom.of_bind (h x)) (eval O cf)
 def eval_total (O:ℕ→ℕ) (c:Code) (h:code_total O c) : ℕ→ℕ := match c with
 | zero       => fun _=>0
 | succ       => Nat.succ
