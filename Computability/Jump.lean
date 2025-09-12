@@ -7,8 +7,8 @@ open Classical
 open Nat.RecursiveIn.Code
 
 @[simp] noncomputable def jump (O : ℕ → ℕ) : ℕ → ℕ := λ n =>
-  let part := eval O (decodeCode (Nat.unpair n).1) (Nat.unpair n).2
-  dite part.Dom (λ proof => Nat.succ $ part.get proof) (λ _ => 0)
+  let part := eval O n.l n.r
+  if halts:part.Dom then (Nat.succ $ part.get halts) else (0)
 noncomputable abbrev K0 (O:ℕ→ℕ) := jump O
 
 notation:10000 f"⌜" => jump f

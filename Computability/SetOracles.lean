@@ -21,7 +21,7 @@ noncomputable def eval (O:Set ℕ) : Nat.RecursiveIn.Code → ℕ→.ℕ := Nat.
 @[simp] noncomputable def evalSet₁ (O:Set ℕ) : ℕ→.ℕ := eval₁ (χ O)
 @[simp] noncomputable def evalnSet₁ (O:Set ℕ) : ℕ→ℕ := evaln₁ (χ O)
 theorem prim_evalnSet₁:Nat.PrimrecIn (χ O) (evalnSet₁ O) := by simp only [evalnSet₁]; exact prim_evaln₁
-def SetK0 (A:Set ℕ) := {ex:ℕ | (eval A ex.unpair.1 ex.unpair.2).Dom}
+def SetK0 (A:Set ℕ) := {ex:ℕ | (eval A ex.l ex.r).Dom}
 def SetK (A:Set ℕ) := {x:ℕ | (eval A x x).Dom}
 abbrev SetJump := SetK
 def jumpn : ℕ → Set ℕ → Set ℕ
@@ -94,7 +94,7 @@ lemma some_comp_simp (a:Part ℕ) {f:ℕ→ℕ} {h:a.Dom}:  (Part.some (f (a.get
 
 section SetJumpTheorems
 theorem χ_leq_χK0 {O:Set ℕ} : Nat.RecursiveIn (χ (SetK0 O)) (χ O) := by
-  let χK0 : ℕ→ℕ := fun ex ↦ if (eval (χ O) (decodeCode (Nat.unpair ex).1) (Nat.unpair ex).2).Dom then 1 else 0
+  let χK0 : ℕ→ℕ := fun ex ↦ if (eval (χ O) ex.l ex.r).Dom then 1 else 0
   have h0 : χ (SetK0 O) = χK0 := by exact rfl
 
   let g := fun x => if (χ O) x = 0 then Part.none else Part.some 0
@@ -110,7 +110,7 @@ theorem χ_leq_χK0 {O:Set ℕ} : Nat.RecursiveIn (χ (SetK0 O)) (χ O) := by
       simp only [f']
       funext xs
       simp only [χK0]
-      simp only [PFun.coe_val, Nat.unpair_pair, Part.coe_some, Part.some_inj]
+      simp only [PFun.coe_val, pair_l, pair_r, Part.coe_some, Part.some_inj]
       rw [index_g_is_g]
       simp only [g]
 
@@ -134,7 +134,7 @@ theorem χ_leq_χK0 {O:Set ℕ} : Nat.RecursiveIn (χ (SetK0 O)) (χ O) := by
   rw [f_eq_f']
   exact f'_recIn_χK0
 theorem χK0_leq_K0χ {O:Set ℕ} : Nat.RecursiveIn (K0 (χ O)) (χ (SetK0 O)) := by
-  let χK0 : ℕ→ℕ := fun ex ↦ if (eval (χ O) (decodeCode (Nat.unpair ex).1) (Nat.unpair ex).2).Dom then 1 else 0
+  let χK0 : ℕ→ℕ := fun ex ↦ if (eval (χ O) ex.l ex.r).Dom then 1 else 0
   have h0 : χ (SetK0 O) = χK0 := by exact rfl
 
   let construction := Nat.sg ∘ K0 (χ O)
@@ -150,16 +150,16 @@ theorem χK0_leq_K0χ {O:Set ℕ} : Nat.RecursiveIn (K0 (χ O)) (χ (SetK0 O)) :
   rw [construction_eq_goal]
   exact construction_constructible
 theorem K0χ_leq_χK0 {O:Set ℕ} : Nat.RecursiveIn (χ (SetK0 O)) (K0 (χ O)) := by
-  let χK0 : ℕ→ℕ := fun ex ↦ if (eval (χ O) (decodeCode (Nat.unpair ex).1) (Nat.unpair ex).2).Dom then 1 else 0
+  let χK0 : ℕ→ℕ := fun ex ↦ if (eval (χ O) ex.l ex.r).Dom then 1 else 0
   have h0 : χ (SetK0 O) = χK0 := by exact rfl
-  have h1 (ex:ℕ) : (χK0 ex = 0) = ¬(eval (χ O) (decodeCode (Nat.unpair ex).1) (Nat.unpair ex).2).Dom := by
+  have h1 (ex:ℕ) : (χK0 ex = 0) = ¬(eval (χ O) ex.l ex.r).Dom := by
     simp only [χK0]
     simp only [ite_eq_right_iff, one_ne_zero, imp_false]
-  have h2 (ex:ℕ) : ¬χK0 ex = 0 = (eval (χ O) (decodeCode (Nat.unpair ex).1) (Nat.unpair ex).2).Dom := by
+  have h2 (ex:ℕ) : ¬χK0 ex = 0 = (eval (χ O) ex.l ex.r).Dom := by
     simp only [χK0]
     simp only [ite_eq_right_iff, one_ne_zero, imp_false, Decidable.not_not]
 
-  have h3 : (jump (χ O) : ℕ→.ℕ) = (fun ex => if (χK0 ex = 0) then 0 else (eval (χ O) ex.unpair.1 ex.unpair.2) >>= (Nat.succ:ℕ→.ℕ) :ℕ→.ℕ) := by
+  have h3 : (jump (χ O) : ℕ→.ℕ) = (fun ex => if (χK0 ex = 0) then 0 else (eval (χ O) ex.l ex.r) >>= (Nat.succ:ℕ→.ℕ) :ℕ→.ℕ) := by
     funext xs
     cases Classical.em (χK0 xs = 0) with
     | inl h =>
@@ -181,7 +181,7 @@ theorem K0χ_leq_χK0 {O:Set ℕ} : Nat.RecursiveIn (χ (SetK0 O)) (K0 (χ O)) :
 
       apply some_comp_simp
 
-  have h5 : Nat.RecursiveIn (χ O) (fun n ↦ eval (↑(χ O)) (decodeCode (Nat.unpair n).1) (Nat.unpair n).2) := by
+  have h5 : Nat.RecursiveIn (χ O) (fun n ↦ eval (χ O) n.l n.r) := by
     exact RecursiveIn.nat_iff.mp eval_part
 
   rw [h0]
@@ -280,7 +280,8 @@ theorem Kχ_leq_χK (O:Set ℕ) : Nat.RecursiveIn (χ (SetK O)) (K (χ O)) := by
 theorem χK_leq_χK0 (O:Set ℕ) : Nat.RecursiveIn (χ (SetK0 O)) (χ (SetK O)) := by
   have main : (χ (SetK O)) = (χ (SetK0 O)) ∘ fun x=> Nat.pair x x := by
     funext xs
-    simp only [χ, SetK, Set.mem_setOf_eq, SetK0, Function.comp_apply, Nat.unpair_pair]
+    simp only [χ, SetK, Set.mem_setOf_eq, SetK0, Function.comp_apply]
+    simp
   rw [main]
   exact Nat.RecursiveIn.totalComp Nat.RecursiveIn.oracle (Nat.RecursiveIn.of_primrec (Nat.Primrec.pair Nat.Primrec.id Nat.Primrec.id))
 theorem Kχ_eq_χK (O:Set ℕ) : (χ (SetK O)) ≡ᵀᶠ (K (χ O)) := ⟨trans (χK_leq_χK0 O) $ trans (χK0_leq_K0χ) $ trans (K0_leq_K (χ O)) $ Nat.RecursiveIn.oracle , Kχ_leq_χK O⟩
