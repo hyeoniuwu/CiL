@@ -13,13 +13,6 @@ noncomputable abbrev K0 (O:ℕ→ℕ) := jump O
 
 notation:10000 f"⌜" => jump f
 
-/- Partially recursive partial functions `α → σ` between `Primcodable` types -/
--- def PartrecIn2 {β τ α σ} [Primcodable β] [Primcodable τ] [Primcodable α] [Primcodable σ] (g : β →. τ) (f : α →. σ) :=
---   Nat.RecursiveIn (fun n => Part.bind (Encodable.decode (β := β) n) fun a => (g a).map Encodable.encode) fun n => Part.bind (Encodable.decode (α := α) n) fun a => (f a).map Encodable.encode
--- def PartrecIn1 {α σ} [Primcodable α] [Primcodable σ] (g : ℕ→.ℕ) (f : α →. σ) :=
---   Nat.RecursiveIn g fun n => Part.bind (Encodable.decode (α := α) n) fun a => (f a).map Encodable.encode
-
--- instance : OfNat (Part ℕ) m where ofNat := Part.some (m)
 namespace Nat.RecursiveIn.Code
 
 def c_jump_decode (c) := c_ite c c_diverge (c_pred.comp c)
@@ -122,53 +115,59 @@ theorem K_leq_K0 (O:ℕ→ℕ) : Nat.RecursiveIn (K0 O) (K O) := by
 
   simp [eval,Seq.seq]
   exact rfl
-
 theorem K0_leq_K (O:ℕ→ℕ) : Nat.RecursiveIn (K O) (K0 O) := by
-  let compute := (K O) ∘ c_evconst
-  let h:ℕ→.ℕ := (compute)
+  apply exists_code.mpr
+  let compute := oracle.comp c_ev_const
+  use compute
 
-  have main : O⌜ = h := by
-    simp only [h]
-    funext xs
-    cases Classical.em (compute xs = 0) with
-    | inl h =>
-        simp only [PFun.coe_val, jump, Nat.succ_eq_add_one, Part.some_inj]
-        simp only [h]
-        simp only [dite_eq_right_iff, Nat.add_eq_zero, one_ne_zero, and_false, imp_false]
-        simp only [compute] at h
-        simp only [Function.comp_apply, K, Nat.succ_eq_add_one, dite_eq_right_iff, Nat.add_eq_zero, one_ne_zero, and_false, imp_false] at h
-        rw [show xs = Nat.pair (xs.unpair.1) (xs.unpair.2) from Eq.symm (Nat.pair_unpair xs)] at h
-        simp only [c_evconst_ev] at h
-        exact h
-    | inr h =>
-      simp only [PFun.coe_val, jump, Nat.succ_eq_add_one, Part.some_inj]
-      simp only [compute]
-      simp only [compute] at h
-      simp only [Function.comp_apply, K, Nat.succ_eq_add_one, dite_eq_right_iff, Nat.add_eq_zero, one_ne_zero, and_false, imp_false, Decidable.not_not] at h
-      simp only [Function.comp_apply, K, Nat.succ_eq_add_one]
-      simp only [h]
-      rw [show xs = Nat.pair (xs.unpair.1) (xs.unpair.2) from Eq.symm (Nat.pair_unpair xs)] at h
-      simp only [c_evconst_ev] at h
-      simp only [h]
-      have temp : c_evconst xs = c_evconst (Nat.pair (xs.unpair.1) (xs.unpair.2)) := by simp only [Nat.pair_unpair]
-      simp only [temp]
-      simp only [c_evconst_ev]
+  have compute_total : code_total (K O) compute := by
+    apply prim_total
+    repeat (first|assumption|simp|constructor)
 
-  have compute_recIn_KO : compute ≤ᵀᶠ (K O) := by
-    simp only [compute, TuringReducible]
+  unfold compute
+  funext x
+  rw [eval_total_comp compute_total]
+  simp [eval, c_ev_const_ev']
 
-    apply Nat.RecursiveIn.totalComp
-    · exact Nat.RecursiveIn.oracle
-    · exact Nat.RecursiveIn.of_primrecIn c_evconst_pr
-
-  rw [main]
-  simp only [h]
-  exact compute_recIn_KO
 
 theorem K0_eq_K {O} : (K O) ≡ᵀᶠ (K0 O) := ⟨K_leq_K0 O,K0_leq_K O⟩
 
 
 theorem jump_not_leq_f (f:ℕ→ℕ) : ¬(f⌜ ≤ᵀᶠ f) := by
+  intro h
+  rcases exists_code.mp h with ⟨c_jf,hc_jh⟩
+  let g := c_ite (c_jf.comp (pair c_id c_id)) (zero) c_diverge
+  -- have g_total : code_total f g := by
+  --   sorry
+  --   -- apply prim_total
+  --   -- repeat (first|assumption|simp|constructor)
+
+  have fg : eval f g =  fun (x:ℕ) => if (f⌜) (Nat.pair x x) = 0 then 0 else Part.none := by
+    unfold g
+    simp
+    funext x
+    -- rw [eval_total_comp g_total]
+    simp [eval]
+    simp [hc_jh]
+    simp [Seq.seq]
+    simp [pure, PFun.pure]
+    simp [decodeCode]
+
+    simp [eval]
+    sorry
+  -- let g : (ℕ→.ℕ) := fun (x:ℕ) => if (f⌜) (Nat.pair x x) = 0 then 0 else Part.none
+  cases Classical.em (eval f g g).Dom with
+  | inl hh =>
+    have hh2 := hh
+    rw [fg] at hh2
+    simp [hh] at hh2
+  | inr hh =>
+    have hh2 := hh
+    rw [fg] at hh2
+    simp [hh] at hh2
+    exact hh2 trivial
+
+  sorry
   intro jump_reducible
   let g : (ℕ→.ℕ) := fun (x:ℕ) => if (f⌜) (Nat.pair x x) = 0 then 0 else Part.none
 

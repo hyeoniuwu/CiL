@@ -549,6 +549,8 @@ def c_c_const := (c_nat_iterate (c_comp.comp₂ (c_const succ) (c_id))).comp₂ 
 
 def c_ev_const := c_comp.comp₂ left (c_c_const.comp right)
 @[simp, aesop safe] theorem c_ev_const_ev_pr:code_prim c_ev_const := by unfold c_ev_const; repeat (first|assumption|simp|constructor)
-@[simp] theorem c_ev_const_evp : eval_prim O c_ev_const (Nat.pair e x) = encodeCode (comp e (c_const x)) := by simp [c_ev_const]
+theorem c_ev_const_evp' : eval_prim O c_ev_const x = encodeCode (comp x.l (c_const x.r)) := by simp [c_ev_const]
+@[simp] theorem c_ev_const_evp : eval_prim O c_ev_const (Nat.pair e x) = encodeCode (comp e (c_const x)) := by simp [c_ev_const_evp']
+theorem c_ev_const_ev':eval O c_ev_const x = encodeCode (comp x.l (c_const x.r)) := by rw [← eval_prim_eq_eval c_ev_const_ev_pr]; simp [c_ev_const_evp']
 @[simp] theorem c_ev_const_ev:eval O c_ev_const (Nat.pair e x) = encodeCode (comp e (c_const x)) := by rw [← eval_prim_eq_eval c_ev_const_ev_pr]; simp
 end Nat.RecursiveIn.Code
