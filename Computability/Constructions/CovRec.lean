@@ -454,16 +454,6 @@ end BSSize
 
 
 
-section mul2
-namespace Nat.RecursiveIn.Code
-def c_mul2 := c_mul.comp₂ c_id (c_const 2)
-@[simp] theorem c_mul2_ev_pr:code_prim c_mul2 := by unfold c_mul2; repeat (first|assumption|simp|constructor)
-@[simp] theorem c_mul2_evp:eval_prim O c_mul2 = fun x => x*2 := by simp [c_mul2]
-@[simp] theorem c_mul2_ev:eval O c_mul2 = (fun x => x*(2:ℕ)) := by rw [← eval_prim_eq_eval c_mul2_ev_pr]; simp only [c_mul2_evp];
-end Nat.RecursiveIn.Code
--- theorem Nat.PrimrecIn.mul2:Nat.PrimrecIn O Nat.mul2 := by ...
--- theorem Nat.Primrec.mul2:Nat.Primrec Nat.mul2 := by ...
-end mul2
 section div2
 namespace Nat.RecursiveIn.Code
 def c_div2 := c_div.comp₂ c_id (c_const 2)
@@ -474,7 +464,6 @@ end Nat.RecursiveIn.Code
 -- theorem Nat.PrimrecIn.div2:Nat.PrimrecIn O Nat.div2 := by ...
 -- theorem Nat.Primrec.div2:Nat.Primrec Nat.div2 := by ...
 end div2
-
 
 
 

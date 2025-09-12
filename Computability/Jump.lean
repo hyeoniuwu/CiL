@@ -62,44 +62,20 @@ theorem jump_recIn (f:ℕ→ℕ) : f ≤ᵀᶠ f⌜ := by
   simp [eval_total, eval, Seq.seq]
   exact rfl
 
-  -- simp [compute,eval]
-
-  -- simp [c_jump_decode_ev (compute_total (f⌜))]
-
-  sorry
-  let compute := (jump f) ∘ (Nat.pair (encodeCode (Nat.RecursiveIn.Code.oracle)));
-  let f':ℕ→.ℕ := (fun x => if compute x=0 then Part.none else (Nat.pred ∘ compute) x)
-
-  have f_eq_f': f = f' := by
-      simp only [f']
-      funext xs
-      cases Classical.em (compute xs = 0) with
-      | inl h =>
-        simp [compute] at h
-        exact False.elim (h trivial)
-      | inr h =>
-        simp only [compute,Function.comp_apply, jump, Nat.unpair_pair, decodeCode_encodeCode,Nat.succ_eq_add_one, dite_eq_right_iff, Nat.add_eq_zero, one_ne_zero, and_false,imp_false, Nat.pred_eq_sub_one, Part.coe_some, ite_not, eval]
-        simp only [compute, Function.comp_apply, jump, Nat.unpair_pair, decodeCode_encodeCode,Nat.succ_eq_add_one, dite_eq_right_iff, Nat.add_eq_zero, one_ne_zero, and_false,imp_false, Decidable.not_not, eval] at h
-        simp only [h,↓reduceIte, ↓reduceDIte, add_tsub_cancel_right, Part.some_get]
-
-  have compute_recIn_fJump : compute ≤ᵀᶠ (f⌜) := by
-    apply Nat.RecursiveIn.totalComp
-    · exact Nat.RecursiveIn.oracle
-    · apply Nat.RecursiveIn.of_primrec Nat.Primrec.pair_proj
-
-  -- have f'_recIn_fJump : f' ≤ᵀᶠ (f⌜) := by
-  have f'_recIn_fJump : Nat.RecursiveIn (f⌜) f' := by
-    simp only [f']
-    exact Nat.RecursiveIn.jumpDecodeIte compute_recIn_fJump
-  exact of_eq f'_recIn_fJump (congrFun (_root_.id (Eq.symm f_eq_f')))
-
-
-
 @[simp] noncomputable def K (O:ℕ→ℕ) : ℕ → ℕ := λ n =>
-  let part := eval O (decodeCode n) n
+  let part := eval O n n
   dite part.Dom (λ proof => Nat.succ $ part.get proof) (λ _ => 0)
 
 theorem OracleNat.RecursiveInK (O:ℕ→ℕ) : Nat.RecursiveIn (K O) O := by
+  apply exists_code.mpr
+  let compute := (K O) ∘ c_evconst ∘ Nat.pair (encodeCode oracle)
+  -- let h:ℕ→.ℕ := (fun x => if compute x=0 then Part.none else (Nat.pred ∘ compute) x)
+  -- let compute := oracle.comp (pair (c_const oracle) c_id)
+  let c := c_jump_decode compute
+  use c
+  -- use h
+
+  sorry
   let compute := (K O) ∘ c_evconst ∘ Nat.pair (encodeCode oracle)
   let h:ℕ→.ℕ := (fun x => if compute x=0 then Part.none else (Nat.pred ∘ compute) x)
 
@@ -140,21 +116,12 @@ theorem OracleNat.RecursiveInK (O:ℕ→ℕ) : Nat.RecursiveIn (K O) O := by
   simp only [h]
   exact Nat.RecursiveIn.jumpDecodeIte compute_recIn_KO
 
-theorem K_leq_K0 (O:ℕ→ℕ) :  Nat.RecursiveIn (K0 O) (K O) := by
-  let h:ℕ→ℕ := (fun x => Nat.pair x x)
+theorem K_leq_K0 (O:ℕ→ℕ) : Nat.RecursiveIn (K0 O) (K O) := by
+  apply exists_code.mpr
+  use oracle.comp $ pair c_id c_id
 
-  have construction_eq_goal : K O = O⌜ ∘ h := by
-    simp only [h]
-    funext xs
-    simp only [K]
-    simp only [Nat.succ_eq_add_one, Function.comp_apply, jump, Nat.unpair_pair]
-
-  rw [construction_eq_goal]
-  simp only [h]
-  refine Nat.RecursiveIn.totalComp ?_ ?_
-  · exact Nat.RecursiveIn.oracle
-  · exact Nat.RecursiveIn.of_primrec (Nat.Primrec.pair Nat.Primrec.id Nat.Primrec.id)
-
+  simp [eval,Seq.seq]
+  exact rfl
 
 theorem K0_leq_K (O:ℕ→ℕ) : Nat.RecursiveIn (K O) (K0 O) := by
   let compute := (K O) ∘ c_evconst

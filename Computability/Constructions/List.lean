@@ -182,26 +182,6 @@ def c_list_get := c_list_getI
 end Nat.RecursiveIn.Code
 end list_get
 
-section nat_iterate
-namespace Nat.RecursiveIn.Code
-def c_nat_iterate (cf:Code) :=
-  prec
-  c_id
-  (cf.comp (right.comp right))
-
-@[simp] theorem c_nat_iterate_ev_pr (hcf:code_prim cf) : code_prim (c_nat_iterate cf) := by unfold c_nat_iterate; repeat (first|assumption|simp|constructor)
-@[simp] theorem c_nat_iterate_evp : eval_prim O (c_nat_iterate cf) (Nat.pair input i) = (eval_prim O cf)^[i] (input) := by
-  simp [c_nat_iterate]
-  induction i with
-  | zero => simp
-  | succ n ih =>
-    simp [ih]
-    exact Eq.symm (Function.iterate_succ_apply' (eval_prim O cf) n input)
--- @[simp] theorem c_nat_iterate_ev :eval O (c_nat_iterate cf) (Nat.pair input i) = (eval_prim O cf)^[i] (input) := by
---     simp [← eval_prim_eq_eval c_nat_iterate_ev_pr]
-end Nat.RecursiveIn.Code
-end nat_iterate
-
 /-
 `foldl :: (a -> b -> a) -> a -> [b] -> a`
 `foldl fn acc [] = acc`

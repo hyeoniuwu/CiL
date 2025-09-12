@@ -252,6 +252,7 @@ theorem eval_prim_eq_eval (h:code_prim c):eval_prim O c = eval O c := by
       rw [Part.bind_some]
       simp
       rw [show eval O b ((Nat.pair xs.l (Nat.pair y' (Nat.rec (eval_prim O a xs.l) (fun y IH ↦ eval_prim O b (Nat.pair xs.l (Nat.pair y IH))) y')))) = Part.some (eval_prim O b ((Nat.pair xs.l (Nat.pair y' (Nat.rec (eval_prim O a xs.l) (fun y IH ↦ eval_prim O b (Nat.pair xs.l (Nat.pair y IH))) y'))))) from by exact congrFun (_root_.id (Eq.symm hb_ih)) ((Nat.pair xs.l (Nat.pair y' (Nat.rec (eval_prim O a xs.l) (fun y IH ↦ eval_prim O b (Nat.pair xs.l (Nat.pair y IH))) y'))))]
+theorem eval_prim_eq_eval_ext (h:code_prim c): eval O c x = Part.some (eval_prim O c x) := congrFun (_root_.id (Eq.symm (@eval_prim_eq_eval c O h))) x
 theorem eval_total_eq_eval (h:code_total O c):eval_total O c h = eval O c := by sorry
 theorem code_prim_prop (h:code_prim c):∀ O, Nat.PrimrecIn O (eval_prim O c) := by
   induction h with
@@ -309,7 +310,7 @@ c_g_pr : proof that g itself is primrec
 
 namespace Nat.RecursiveIn.Code
 /-- c_evconst takes as input a natural `(e,x)`, and returns an index to a program which calculates `[e](x)` regardless of its input. -/
-def c_evconst (ex:ℕ) : ℕ  := comp ex.unpair.1 (Code.const ex.unpair.2)
+def c_evconst (ex:ℕ) : ℕ := comp ex.unpair.1 (Code.const ex.unpair.2)
 @[simp] theorem c_evconst_ev : eval O (c_evconst (Nat.pair e x)) _z = eval O e x := by unfold c_evconst; simp [eval]
 -- hm, the proof shouldnt be this long?
 @[simp] theorem c_evconst_pr : Nat.PrimrecIn O c_evconst := by
@@ -336,7 +337,6 @@ def c_evconst (ex:ℕ) : ℕ  := comp ex.unpair.1 (Code.const ex.unpair.2)
 
 
 end Nat.RecursiveIn.Code
-
 
 
 
