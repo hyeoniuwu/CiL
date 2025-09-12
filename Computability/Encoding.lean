@@ -160,12 +160,17 @@ abbrev ofNatCode := decodeCode
     cases n.bodd <;> cases n.div2.bodd <;> simp [m, encodeCode, IH, IH1, IH2, Nat.bit_val]
 instance instDenumerable : Denumerable Code := mk' ⟨encodeCode, decodeCode, decodeCode_encodeCode, encodeCode_decodeCode⟩
 
+theorem decodeCode_bij : Function.Bijective decodeCode := Function.bijective_iff_has_inverse.mpr ⟨encodeCode, ⟨λ x ↦ encodeCode_decodeCode x, λ x ↦ decodeCode_encodeCode x⟩⟩
+theorem decodeCode_inj : Function.Injective decodeCode  := Function.Bijective.injective decodeCode_bij
+theorem decodeCode_sur : Function.Surjective decodeCode := Function.Bijective.surjective decodeCode_bij
+theorem encodeCode_bij : Function.Bijective encodeCode := Function.bijective_iff_has_inverse.mpr ⟨decodeCode, ⟨λ x ↦ decodeCode_encodeCode x, λ x ↦ encodeCode_decodeCode x⟩⟩
+theorem encodeCode_inj : Function.Injective encodeCode  := Function.Bijective.injective encodeCode_bij
+theorem encodeCode_sur : Function.Surjective encodeCode := Function.Bijective.surjective encodeCode_bij
 
 
 
 /-- Proof that `Nat.RecursiveIn.Code.ofNatCode` is the inverse of `Nat.RecursiveIn.Code.encodeCode` -/
 private theorem encode_ofNatCode : ∀ n, encodeCode (ofNatCode n) = n := by exact fun n ↦encodeCode_decodeCode n
-
 
 theorem encodeCode_eq : encode = encodeCode :=
   rfl

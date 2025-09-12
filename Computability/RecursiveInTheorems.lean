@@ -347,20 +347,24 @@ end Nat.RecursiveIn.Code
 
 -- addednum for existscode in Encoding.lean
 namespace Nat.RecursiveIn.Code
-theorem exists_code_nat {O:ℕ → ℕ} {f:ℕ →. ℕ}:Nat.RecursiveIn O f ↔ ∃ c:ℕ , eval O c = f := by
-  have h {f:ℕ →. ℕ}:Nat.RecursiveIn O f ↔ ∃ c:Nat.RecursiveIn.Code, eval O c = f := by exact
-    exists_code
+theorem exists_code_nat {O:ℕ → ℕ} {f:ℕ →. ℕ} : Nat.RecursiveIn O f ↔ ∃ c:ℕ , eval O c = f := by
+  rw [@exists_code O f]
+  exact Function.Surjective.exists decodeCode_sur
+theorem exists_code_total {O:ℕ → ℕ} {f:ℕ → ℕ} : Nat.RecursiveIn O f ↔ ∃ c , eval O c = f ∧ code_total O c := by
   constructor
-  · intro h2
-    obtain ⟨c, h3⟩ := h.mp h2
-    use c.encodeCode
-    simp only [decodeCode_encodeCode]
-    exact h3
-  · intro h2
-    obtain ⟨c, h3⟩ := h2
-    have h5: (∃ c:Nat.RecursiveIn.Code, eval O c = f) := by
-      use decodeCode c
-    exact exists_code.mpr h5
+  · 
+    intro h
+    rcases exists_code.mp h with ⟨c,hc⟩
+    use c
+    constructor
+    exact hc
+    intro x
+    rw [hc]
+    exact trivial
+  intro h
+  rcases h with ⟨c,hc,_⟩
+  apply exists_code.mpr ⟨c,hc⟩
+
 def eval₁ (O:ℕ→ℕ):ℕ→.ℕ := fun ex => eval O ex.unpair.1 ex.unpair.2
 def evaln₁ (O:ℕ→ℕ):ℕ→ℕ := fun abc => Encodable.encode (evaln O abc.r.r abc.l abc.r.l)
 theorem rec_eval₁:Nat.RecursiveIn O (eval₁ O) := by exact RecursiveIn.nat_iff.mp eval_part

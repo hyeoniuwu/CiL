@@ -7,7 +7,7 @@ open Classical
 namespace Nat.RecursiveIn.Code
 
 def c_diverge := rfind' (c_const 1)
-theorem c_diverge_ev : eval O c_diverge x = Part.none := by
+@[simp] theorem c_diverge_ev : eval O c_diverge x = Part.none := by
   simp [c_diverge,eval]
   apply Part.eq_none_iff.mpr
   simp
@@ -82,6 +82,17 @@ theorem c_ite_ev (hc:code_total O c) : eval O (c_ite c a b) x = if (eval O c x=P
   split
   next h => simp only [Part.get_some, decodeCode_encodeCode]
   next h => simp only [Part.get_some, decodeCode_encodeCode]
+theorem Nat.RecursiveIn.ite {O:ℕ→ℕ} {f g:ℕ→.ℕ} {c:ℕ→ℕ} (hc:Nat.RecursiveIn O c) (hf:Nat.RecursiveIn O f) (hg:Nat.RecursiveIn O g):Nat.RecursiveIn O fun a => if (c a=0) then (f a) else (g a) := by
+  apply exists_code.mpr
+  rcases exists_code_total.mp hc with ⟨cc,hcc,hcct⟩
+  rcases exists_code_nat.mp hf with ⟨ca,hca⟩
+  rcases exists_code_nat.mp hg with ⟨cb,hcb⟩
+  use c_ite cc ca cb
+  funext x
+  simp [c_ite_ev hcct]
+  simp [hcc, hca, hcb]
+  
+
 
 -- theorem Nat.RecursiveIn.ite {O:ℕ→ℕ} {f g:ℕ→.ℕ} {c:ℕ→ℕ} (hc:Nat.RecursiveIn O c) (hf:Nat.RecursiveIn O f) (hg:Nat.RecursiveIn O g):Nat.RecursiveIn O fun a => if (c a=0) then (f a) else (g a) := by
 --     have exists_index_for_f:∃ c:ℕ, eval O c = f := by exact exists_code_nat.mp hf
