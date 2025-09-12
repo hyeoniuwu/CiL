@@ -141,7 +141,7 @@ theorem χK0_leq_K0χ {O:Set ℕ} : Nat.RecursiveIn (K0 (χ O)) (χ (SetK0 O)) :
   have construction_eq_goal : χK0 = construction := by
     funext xs
     simp only [construction, χK0]
-    simp only [Function.comp_apply, Nat.sg, jump.eq_1, Nat.succ_eq_add_one, dite_eq_right_iff, Nat.add_eq_zero, one_ne_zero, and_false, imp_false, ite_not]
+    simp only [Function.comp_apply, Nat.sg, jump.eq_1, dite_eq_right_iff, Nat.add_eq_zero, one_ne_zero, and_false, imp_false, ite_not]
   have construction_constructible : Nat.RecursiveIn (K0 (χ O)) construction := by
     simp only [construction]
     exact Nat.RecursiveIn.totalComp (Nat.RecursiveIn.of_primrec Nat.Primrec.sg) Nat.RecursiveIn.oracle
@@ -175,7 +175,7 @@ theorem K0χ_leq_χK0 {O:Set ℕ} : Nat.RecursiveIn (χ (SetK0 O)) (K0 (χ O)) :
 
       simp only [(h2 xs)] at h
       rw [χsimp] at h
-      simp only [PFun.coe_val, jump, Nat.succ_eq_add_one]
+      simp only [PFun.coe_val, jump]
       simp only [h]
       simp only [↓reduceDIte]
 
