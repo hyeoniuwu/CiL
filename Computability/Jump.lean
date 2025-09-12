@@ -37,13 +37,14 @@ theorem c_jump_decode_ev' (hc:code_total O c): eval O (c_jump_decode c) = fun x 
 --   · apply Nat.RecursiveIn.totalComp
 --     · exact Nat.RecursiveIn.of_primrec Nat.Primrec.pred
 --     · exact compute_recIn_fJump
-theorem jump_recIn (f:ℕ→ℕ) : f ≤ᵀᶠ f⌜ := by
+-- theorem jump_recIn (f:ℕ→ℕ) : f ≤ᵀᶠ f⌜ := by
+theorem O_le_K0 (O:ℕ→ℕ) :  O ≤ᵀᶠ (K0 O) := by
   apply exists_code.mpr
   let compute := oracle.comp (pair (c_const oracle) c_id)
   let c := c_jump_decode compute
   use c
 
-  have compute_total : code_total f⌜ compute := by
+  have compute_total : code_total (K0 O) compute := by
     apply prim_total
     repeat (first|assumption|simp|constructor)
 
@@ -53,18 +54,19 @@ theorem jump_recIn (f:ℕ→ℕ) : f ≤ᵀᶠ f⌜ := by
   unfold compute
   simp [eval_total, eval, Seq.seq]
   exact rfl
+theorem O_le_J (O:ℕ→ℕ) : O ≤ᵀᶠ O⌜ :=  O_le_K0 O
 
 @[simp] noncomputable def K (O:ℕ→ℕ) : ℕ → ℕ := λ n =>
   let part := eval O n n
   dite part.Dom (λ proof => Nat.succ $ part.get proof) (λ _ => 0)
 
-theorem K_leq_K0 (O:ℕ→ℕ) : Nat.RecursiveIn (K0 O) (K O) := by
+theorem K_leq_K0 (O:ℕ→ℕ) : (K O)  ≤ᵀᶠ (K0 O) := by
   apply exists_code.mpr
   use oracle.comp $ pair c_id c_id
 
   simp [eval,Seq.seq]
   exact rfl
-theorem K0_leq_K (O:ℕ→ℕ) : Nat.RecursiveIn (K O) (K0 O) := by
+theorem K0_leq_K (O:ℕ→ℕ) : (K0 O) ≤ᵀᶠ (K O)  := by
   apply exists_code.mpr
   let compute := oracle.comp c_ev_const
   use compute
@@ -77,12 +79,10 @@ theorem K0_leq_K (O:ℕ→ℕ) : Nat.RecursiveIn (K O) (K0 O) := by
   funext x
   rw [eval_total_comp compute_total]
   simp [eval, c_ev_const_ev']
-
-
-theorem K0_eq_K {O} : (K O) ≡ᵀᶠ (K0 O) := ⟨K_leq_K0 O,K0_leq_K O⟩
-theorem O_le_K0 (O:ℕ→ℕ) :  O ≤ᵀᶠ (K0 O) := by exact jump_recIn O
+theorem K_eq_K0 {O} : (K O)  ≡ᵀᶠ (K0 O) := ⟨K_leq_K0 O,K0_leq_K O⟩
+theorem K0_eq_K {O} : (K0 O) ≡ᵀᶠ (K O)  := K_eq_K0.symm
 theorem O_le_K (O:ℕ→ℕ) : O ≤ᵀᶠ (K O) := TuringReducible.trans (O_le_K0 O) (K0_leq_K O)
-  
+
 theorem jump_not_leq_f (f:ℕ→ℕ) : ¬(f⌜ ≤ᵀᶠ f) := by
   intro h
   rcases exists_code.mp h with ⟨c_jf,hc_jh⟩
@@ -125,11 +125,12 @@ theorem jump_not_leq_f (f:ℕ→ℕ) : ¬(f⌜ ≤ᵀᶠ f) := by
     -- simp [Seq.seq]
   
 
-theorem jump_not_leq_f' (f:ℕ→ℕ) : ¬(f⌜ ≤ᵀᶠ f) := by
+-- theorem jump_not_leq_f' (O:ℕ→ℕ) : ¬(O⌜ ≤ᵀᶠ O) := by
+theorem K0_nle_O (O:ℕ→ℕ) : ¬(K0 O ≤ᵀᶠ O) := by
   intro jump_reducible
-  let g : (ℕ→.ℕ) := fun (x:ℕ) => if (f⌜) (Nat.pair x x) = 0 then 0 else Part.none
+  let g : (ℕ→.ℕ) := fun (x:ℕ) => if (O⌜) (Nat.pair x x) = 0 then 0 else Part.none
 
-  have g_recIn_f : Nat.RecursiveIn f g := by
+  have g_recIn_f : Nat.RecursiveIn O g := by
     simp only [g]
     apply Nat.RecursiveIn.ite
     · apply Nat.RecursiveIn.totalComp' jump_reducible
@@ -137,7 +138,7 @@ theorem jump_not_leq_f' (f:ℕ→ℕ) : ¬(f⌜ ≤ᵀᶠ f) := by
     · exact Nat.RecursiveIn.zero
     · exact Nat.RecursiveIn.none
 
-  have exists_index_for_g : ∃ c : ℕ, eval f c = g := by exact exists_code_nat.mp g_recIn_f
+  have exists_index_for_g : ∃ c : ℕ, eval O c = g := by exact exists_code_nat.mp g_recIn_f
   rcases exists_index_for_g with ⟨index_g,index_g_is_g⟩
 
   cases Classical.em (g index_g).Dom with
@@ -156,12 +157,12 @@ theorem jump_not_leq_f' (f:ℕ→ℕ) : ¬(f⌜ ≤ᵀᶠ f) := by
     rw [contra] at h
     exact h trivial
 
-theorem K_not_leq_f (O:ℕ→ℕ) : ¬(K O ≤ᵀᶠ O) := by
+theorem K_nle_O (O:ℕ→ℕ) : ¬(K O ≤ᵀᶠ O) := by
   intro h
   apply jump_not_leq_f
   exact TuringReducible.trans (K0_leq_K O) h
 
-theorem O_lt_K0 {O:ℕ→ℕ} : O <ᵀᶠ (K0 O) := ⟨jump_recIn O,jump_not_leq_f O⟩
+theorem O_lt_K0 {O:ℕ→ℕ} : O <ᵀᶠ (K0 O) := ⟨O_le_J O,jump_not_leq_f O⟩
 
 
 -- theorem re_iff_one_one_jump  (A : Set ℕ) (f : ℕ →. ℕ) :

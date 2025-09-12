@@ -48,7 +48,7 @@ instance : IsPreorder (ℕ→ℕ) TuringReducible where refl := .refl
 theorem TuringEquivalent.equivalence : Equivalence TuringEquivalent := (AntisymmRel.setoid _ _).iseqv
 @[refl] protected theorem TuringEquivalent.refl (f : ℕ→ℕ) : f ≡ᵀᶠ f := Equivalence.refl equivalence f
 @[symm] theorem TuringEquivalent.symm {f g : ℕ→ℕ} (h : f ≡ᵀᶠ g) : g ≡ᵀᶠ f := Equivalence.symm equivalence h
-@[trans] theorem TuringEquivalent.trans (f g h : ℕ→ℕ) (h₁ : f ≡ᵀᶠ g) (h₂ : g ≡ᵀᶠ h) : f ≡ᵀᶠ h := Equivalence.trans equivalence h₁ h₂
+@[trans] theorem TuringEquivalent.trans {f g h : ℕ→ℕ} (h₁ : f ≡ᵀᶠ g) (h₂ : g ≡ᵀᶠ h) : f ≡ᵀᶠ h := Equivalence.trans equivalence h₁ h₂
 
 /--
 Instance declaring that `Nat.RecursiveIn` is a preorder.
