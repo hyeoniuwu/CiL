@@ -141,7 +141,7 @@ theorem χK0_leq_K0χ {O:Set ℕ} : Nat.RecursiveIn (K0 (χ O)) (χ (SetK0 O)) :
   have construction_eq_goal : χK0 = construction := by
     funext xs
     simp only [construction, χK0]
-    simp only [Function.comp_apply, Nat.sg, jump.eq_1, dite_eq_right_iff, Nat.add_eq_zero, one_ne_zero, and_false, imp_false, ite_not]
+    simp only [Function.comp_apply, Nat.sg, K0, dite_eq_right_iff, Nat.add_eq_zero, one_ne_zero, and_false, imp_false, ite_not]
   have construction_constructible : Nat.RecursiveIn (K0 (χ O)) construction := by
     simp only [construction]
     exact Nat.RecursiveIn.totalComp (Nat.RecursiveIn.of_primrec Nat.Primrec.sg) Nat.RecursiveIn.oracle
@@ -159,15 +159,14 @@ theorem K0χ_leq_χK0 {O:Set ℕ} : Nat.RecursiveIn (χ (SetK0 O)) (K0 (χ O)) :
     simp only [χK0]
     simp only [ite_eq_right_iff, one_ne_zero, imp_false, Decidable.not_not]
 
-  have h3 : (jump (χ O) : ℕ→.ℕ) = (fun ex => if (χK0 ex = 0) then 0 else (eval (χ O) ex.l ex.r) >>= (Nat.succ:ℕ→.ℕ) :ℕ→.ℕ) := by
+  have h3 : (jump (χ O) : ℕ→.ℕ) = (fun ex => if (χK0 ex = 0) then Part.some 0 else (eval (χ O) ex.l ex.r) >>= (Nat.succ:ℕ→.ℕ) :ℕ→.ℕ) := by
     funext xs
     cases Classical.em (χK0 xs = 0) with
     | inl h =>
       simp only [h]
       simp only [↓reduceIte]
       simp only [(h1 xs)] at h
-      simp only [PFun.coe_val, jump, h, ↓reduceDIte]
-      exact rfl
+      simp [h]
     | inr h =>
       simp only [h]
       simp only [↓reduceIte]
@@ -176,8 +175,9 @@ theorem K0χ_leq_χK0 {O:Set ℕ} : Nat.RecursiveIn (χ (SetK0 O)) (K0 (χ O)) :
       simp only [(h2 xs)] at h
       rw [χsimp] at h
       simp only [PFun.coe_val, jump]
-      simp only [h]
-      simp only [↓reduceDIte]
+      simp [h]
+      -- simp only [h]
+      -- simp only [↓reduceDIte]
 
       apply some_comp_simp
 
@@ -263,7 +263,7 @@ theorem Kχ_leq_χK (O:Set ℕ) : Nat.RecursiveIn (χ (SetK O)) (K (χ O)) := by
       rw [χsimp]
       simp only [(h2 xs)] at h
       rw [χsimp] at h
-      simp only [PFun.coe_val, K, h, ↓reduceDIte, Nat.succ_eq_add_one, Part.bind_eq_bind]
+      simp only [PFun.coe_val, K, h, ↓reduceDIte, Part.bind_eq_bind]
       apply some_comp_simp
 
   have h5 : Nat.RecursiveIn (χ O) (fun x ↦ eval (↑(χ O)) (decodeCode x) x) := by

@@ -6,10 +6,10 @@ open Computability
 open Classical
 open Nat.RecursiveIn.Code
 
-@[simp] noncomputable def jump (O : ℕ → ℕ) : ℕ → ℕ := λ n =>
+@[simp] noncomputable def K0 (O : ℕ → ℕ) : ℕ → ℕ := λ n =>
   let part := eval O n.l n.r
   if h:part.Dom then part.get h+1 else 0
-noncomputable abbrev K0 (O:ℕ→ℕ) := jump O
+noncomputable abbrev jump (O:ℕ→ℕ) : ℕ → ℕ := K0 O
 
 notation:10000 f"⌜" => jump f
 
@@ -58,7 +58,7 @@ theorem O_le_J (O:ℕ→ℕ) : O ≤ᵀᶠ O⌜ :=  O_le_K0 O
 
 @[simp] noncomputable def K (O:ℕ→ℕ) : ℕ → ℕ := λ n =>
   let part := eval O n n
-  dite part.Dom (λ proof => Nat.succ $ part.get proof) (λ _ => 0)
+  if h:part.Dom then part.get h + 1 else 0
 
 theorem K_leq_K0 (O:ℕ→ℕ) : (K O)  ≤ᵀᶠ (K0 O) := by
   apply exists_code.mpr
