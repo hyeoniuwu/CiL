@@ -554,3 +554,16 @@ theorem c_ev_const_evp' : eval_prim O c_ev_const x = encodeCode (comp x.l (c_con
 theorem c_ev_const_ev':eval O c_ev_const x = encodeCode (comp x.l (c_const x.r)) := by rw [← eval_prim_eq_eval c_ev_const_ev_pr]; simp [c_ev_const_evp']
 @[simp] theorem c_ev_const_ev:eval O c_ev_const (Nat.pair e x) = encodeCode (comp e (c_const x)) := by rw [← eval_prim_eq_eval c_ev_const_ev_pr]; simp
 end Nat.RecursiveIn.Code
+
+section max
+namespace Nat.RecursiveIn.Code
+def c_max := c_if_le_te.comp₄ left right right left
+@[simp, aesop safe] theorem c_max_ev_pr:code_prim c_max := by unfold c_max; repeat (first|assumption|simp|constructor)
+@[simp] theorem c_max_evp:eval_prim O c_max = unpaired2 Nat.max := by
+  simp [c_max,eval_prim, -pair_lr]
+  exact rfl
+@[simp] theorem c_max_ev:eval O c_max = unpaired2 Nat.max := by rw [← eval_prim_eq_eval c_max_ev_pr]; simp only [c_max_evp]
+end Nat.RecursiveIn.Code
+-- theorem Nat.PrimrecIn.max:Nat.PrimrecIn O Nat.max := by ...
+-- theorem Nat.Primrec.max:Nat.Primrec Nat.max := by ...
+end max
