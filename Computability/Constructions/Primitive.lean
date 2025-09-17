@@ -200,7 +200,7 @@ namespace Nat.RecursiveIn.Code
 def c_pred := (c_casesOn1 0 c_id)
 @[simp, aesop safe] theorem c_pred_ev_pr:code_prim c_pred := by unfold c_pred; repeat (first|assumption|simp|constructor)
 @[simp] theorem c_pred_evp:eval_prim O c_pred = Nat.pred := by
-  simp [c_pred,eval_prim]
+  simp [c_pred]
   funext n;
   cases n <;> simp [*]
 @[simp] theorem c_pred_ev:eval O c_pred = Nat.pred := by rw [← eval_prim_eq_eval c_pred_ev_pr]; simp only [c_pred_evp]

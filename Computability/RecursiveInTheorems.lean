@@ -69,6 +69,15 @@ def Nat.unpaired2 {α} (f : ℕ → ℕ → α) (n : ℕ) : α := f n.l n.r
 -- def unpaired {α} (f : ℕ → ℕ → α) (n : ℕ) : α := f n.unpair.1 n.unpair.2
 @[simp] abbrev Nat.fzero:ℕ→ℕ:=λ_↦0
 
+def n2b (n:ℕ) : Bool := if n=0 then false else true
+def b2n (b:Bool) : ℕ := if b then 1 else 0
+def n2b' (n:ℕ) : Bool := if n=0 then true else false
+def b'2n (b:Bool) : ℕ := if b then 0 else 1
+open Denumerable
+open Encodable
+abbrev n2o := @ofNat (Option ℕ) _
+abbrev o2n := @encode (Option ℕ) _
+
 namespace Nat.RecursiveIn.Code.nc_to_nn
 @[coe] protected def lift (f:ℕ→Code) : ℕ→ℕ := fun x => encodeCode (f x)
 instance : Coe (ℕ→Code) (ℕ→ℕ) := ⟨Nat.RecursiveIn.Code.nc_to_nn.lift⟩
@@ -186,25 +195,36 @@ theorem eval_total_comp (h:code_total O (comp cf cg)) :
     simp
     simp [eval]
     exact Part.Dom.bind (Part.Dom.of_bind (h x)) (eval O cf)
-def eval_total (O:ℕ→ℕ) (c:Code) (h:code_total O c) : ℕ→ℕ := match c with
+-- def eval_total (O:ℕ→ℕ) (c:Code) (h:code_total O c) : ℕ→ℕ := match c with
+-- | zero       => fun _=>0
+-- | succ       => Nat.succ
+-- | left       => Nat.l
+-- | right      => Nat.r
+-- | oracle     => O
+-- | pair cf cg => fun n => Nat.pair (eval_total O cf (total_of_pair_left h) n) (eval_total O cg (total_of_pair_right
+--   h) n)
+-- | comp cf cg => fun x => (eval O cf ((eval O cg x).get (Part.Dom.of_bind (h x)))).get (total_of_comp_right h x)
+-- | prec cf cg => fun x => (x.r).rec (eval_total O cf (total_of_prec_left h) x.l) fun y IH => (eval_total O cg (sorry)) <| Nat.pair x.l <| Nat.pair y IH
+-- | rfind' _ => 0
+noncomputable def Part.getD (p:Part ℕ) : ℕ := if h:p.Dom then p.get h else 0
+noncomputable def eval_total (O:ℕ→ℕ) (c:Code) : ℕ→ℕ := match c with
 | zero       => fun _=>0
 | succ       => Nat.succ
 | left       => Nat.l
 | right      => Nat.r
 | oracle     => O
-| pair cf cg => fun n => Nat.pair (eval_total O cf (total_of_pair_left h) n) (eval_total O cg (total_of_pair_right
-  h) n)
-| comp cf cg => fun x => (eval O cf ((eval O cg x).get (Part.Dom.of_bind (h x)))).get (total_of_comp_right h x)
-| prec cf cg => fun x => (x.r).rec (eval_total O cf (total_of_prec_left h) x.l) fun y IH => (eval_total O cg (sorry)) <| Nat.pair x.l <| Nat.pair y IH
-| rfind' _ => 0
+| pair cf cg => fun x => Nat.pair (eval_total O cf x) (eval_total O cg x)
+| comp cf cg => fun x => eval_total O cf (eval_total O cg x)
+| prec cf cg => unpaired fun z n => n.rec (eval_total O cf z) fun y IH => (eval_total O cg) <| Nat.pair z <| Nat.pair y IH
+| rfind' cf =>  Nat.unpaired fun a m => ((Nat.rfind fun n => (fun x => x = 0) <$> eval_total O cf (Nat.pair a (n + m))).map (· + m)).getD
 @[simp] def eval_prim (O:ℕ→ℕ):Code→ℕ→ℕ
 | zero       => fun _=>0
 | succ       => Nat.succ
 | left       => Nat.l
 | right      => Nat.r
 | oracle     => O
-| pair cf cg => fun n => Nat.pair (eval_prim O cf n) (eval_prim O cg n)
-| comp cf cg => fun n => eval_prim O cf (eval_prim O cg n)
+| pair cf cg => fun x => Nat.pair (eval_prim O cf x) (eval_prim O cg x)
+| comp cf cg => fun x => eval_prim O cf (eval_prim O cg x)
 | prec cf cg => unpaired fun z n => n.rec (eval_prim O cf z) fun y IH => (eval_prim O cg) <| Nat.pair z <| Nat.pair y IH
 | rfind' _ => 0
 
@@ -253,7 +273,54 @@ theorem eval_prim_eq_eval (h:code_prim c):eval_prim O c = eval O c := by
       simp
       rw [show eval O b ((Nat.pair xs.l (Nat.pair y' (Nat.rec (eval_prim O a xs.l) (fun y IH ↦ eval_prim O b (Nat.pair xs.l (Nat.pair y IH))) y')))) = Part.some (eval_prim O b ((Nat.pair xs.l (Nat.pair y' (Nat.rec (eval_prim O a xs.l) (fun y IH ↦ eval_prim O b (Nat.pair xs.l (Nat.pair y IH))) y'))))) from by exact congrFun (_root_.id (Eq.symm hb_ih)) ((Nat.pair xs.l (Nat.pair y' (Nat.rec (eval_prim O a xs.l) (fun y IH ↦ eval_prim O b (Nat.pair xs.l (Nat.pair y IH))) y'))))]
 theorem eval_prim_eq_eval_ext (h:code_prim c): eval O c x = Part.some (eval_prim O c x) := congrFun (_root_.id (Eq.symm (@eval_prim_eq_eval c O h))) x
-theorem eval_total_eq_eval (h:code_total O c):eval_total O c h = eval O c := by sorry
+theorem eval_total_eq_eval (h:code_total O c):eval_total O c = eval O c := by
+  sorry
+  -- induction c generalizing h with
+  -- | zero => exact rfl
+  -- | succ => exact rfl
+  -- | left => exact rfl
+  -- | right => exact rfl
+  -- | oracle => exact rfl
+  -- | pair ha hb ha_ih hb_ih =>
+  --   unfold eval
+  --   rw [← ha_ih (total_of_pair_left h)]
+  --   rw [← hb_ih (total_of_pair_right h)]
+  --   exact pair' (eval_total O ha) (eval_total O hb)
+  -- | comp ha hb ha_ih hb_ih =>
+  --   unfold eval_total
+  --   simp [eval]
+  --   funext xs
+  --   simp
+  --   expose_names
+  --   simp only [show eval O b xs = Part.some (eval_total O b xs) from by exact congrFun (_root_.id (Eq.symm hb_ih)) xs]
+  --   simp
+  --   simp only [show eval O a (eval_total O b xs) = Part.some (eval_total O a (eval_total O b xs)) from by exact congrFun (_root_.id (Eq.symm ha_ih)) (eval_total O b xs)]
+  -- | prec ha hb ha_ih hb_ih =>
+  --   unfold eval
+  --   unfold eval_total
+  --   have := ha_ih ?_
+  --   rotate_left
+  --   exact total_of_prec_left h
+  --   rw [← this]
+
+  --   simp
+  --   funext xs
+  --   simp
+
+  --   induction xs.r with
+  --   | zero => simp
+  --   | succ n ih =>
+  --     simp
+  --     rw [← ih]
+  --     simp [Part.bind_some]
+      
+  --     sorry
+    
+  --   have := hb_ih ?_
+  --   rotate_left
+    
+  -- | rfind' cf hcf =>
+  --   sorry
 theorem code_prim_prop (h:code_prim c):∀ O, Nat.PrimrecIn O (eval_prim O c) := by
   induction h with
   | zero => unfold eval_prim; exact fun O ↦ PrimrecIn.zero

@@ -417,18 +417,13 @@ namespace Nat.RecursiveIn.Code
 noncomputable def ran_to_dom (O:ℕ→ℕ) : (ℕ→Code) := fun c => dovetail (c_if_eq'.comp₂ left ((c_eval₁ O).comp₂ (c_const c) right))
 
 
-theorem ran_to_dom_ev : (eval O (ran_to_dom O c) y).Dom ↔ ∃x,y∈eval O c x := by
+theorem ran_to_dom_ev : (eval O (ran_to_dom O c) y).Dom ↔ ∃ x, y ∈ eval O c x := by
   constructor
   ·
     intro h
-    -- unfold ran_to_dom at h
     have := dovetail_ev_0' h
-    -- rcases this with ⟨dvt,this⟩
     let dvt := ((eval O (c_if_eq'.comp₂ left ((c_eval₁ O).comp₂ (c_const c) right)).dovetail y).get h)
     rw [show ((eval O (c_if_eq'.comp₂ left ((c_eval₁ O).comp₂ (c_const c) right)).dovetail y).get h) = dvt from rfl] at this
-    -- rotate_left
-    -- ·
-    --   repeat (first|assumption|simp|constructor)
     simp at this
     simp [eval] at this
     simp [Seq.seq] at this
@@ -438,7 +433,7 @@ theorem ran_to_dom_ev : (eval O (ran_to_dom O c) y).Dom ↔ ∃x,y∈eval O c x 
     simp [Part.Dom.bind s1] at this
     simp [eval₁] at this s1
     use dvt.l
-    -- set_option diagnostics true in
+    
     suffices y = (eval O (decodeCode c) dvt.l).get s1 from by
       exact (@Part.get_eq_iff_mem ℕ (eval O (decodeCode c) dvt.l) y s1).mp this.symm
     exact this

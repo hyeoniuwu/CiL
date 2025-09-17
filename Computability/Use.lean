@@ -2834,6 +2834,11 @@ theorem usen_complete {c n x} : x ∈ use O c n ↔ ∃ s, x ∈ usen O c s n :=
     simp [usen]
     exact h.symm
 
+theorem use_eq_rfindOpt (c n) : use O c n = Nat.rfindOpt fun k => usen O c k n :=
+  Part.ext fun x => by
+    refine usen_complete.trans (Nat.rfindOpt_mono ?_).symm
+    intro a m n hl; apply usen_mono hl
+
 theorem usen_xles (h:(usen O c (s+1) x).isSome) : x≤s :=le_of_lt_succ (usen_bound (Option.get_mem h))
 theorem evaln_pair_dom (h:(evaln O (s+1) (pair cf cg) x).isSome) : (evaln O (s+1) cf x).isSome ∧ (evaln O (s+1) cg x).isSome := by
   have := evaln_xles h

@@ -1,4 +1,4 @@
-import Computability.Constructions.Primitive
+import Computability.Constructions.Option
 
 open Nat
 open Denumerable
@@ -7,8 +7,8 @@ open List
 
 abbrev n2l := @ofNat (List ℕ) _
 abbrev l2n := @encode (List ℕ) _
-abbrev n2o := @ofNat (Option ℕ) _
-abbrev o2n := @encode (Option ℕ) _
+-- abbrev n2o := @ofNat (Option ℕ) _
+-- abbrev o2n := @encode (Option ℕ) _
 
 instance : OfNat (List ℕ) lN where ofNat := n2l lN
 instance : Coe ℕ (List ℕ) := ⟨n2l⟩
@@ -402,7 +402,7 @@ end list_append
 section list_singleton
 namespace Nat.RecursiveIn.Code
 def c_list_singleton (cf:Code) := c_list_cons.comp₂ cf c_list_nil
-@[simp] theorem c_list_singleton_ev_pr (hcf:code_prim cf):code_prim (c_list_singleton c_flip) := by unfold c_list_singleton; repeat (first|assumption|simp|constructor)
+@[simp] theorem c_list_singleton_ev_pr :code_prim (c_list_singleton c_flip) := by unfold c_list_singleton; repeat (first|assumption|simp|constructor)
 @[simp] theorem c_list_singleton_evp : eval_prim O (c_list_singleton cf) x = l2n ([eval_prim O cf x]) := by
   simp [c_list_singleton]
 -- @[simp] theorem c_list_singleton_ev : eval O (c_list_singleton cf) x = l2n ([eval_prim O cf x]) := by simp [← eval_prim_eq_eval c_list_singleton_ev_pr]

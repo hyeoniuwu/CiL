@@ -9,13 +9,16 @@ open Nat.RecursiveIn.Code
 @[simp] noncomputable def K0 (O : ℕ → ℕ) : ℕ → ℕ := λ n =>
   let part := eval O n.l n.r
   if h:part.Dom then part.get h+1 else 0
+@[simp] noncomputable def K (O:ℕ→ℕ) : ℕ → ℕ := λ n =>
+  let part := eval O n n
+  if h:part.Dom then part.get h + 1 else 0
 noncomputable abbrev jump (O:ℕ→ℕ) : ℕ → ℕ := K0 O
 
 notation:10000 f"⌜" => jump f
 
 namespace Nat.RecursiveIn.Code
 
-def c_jump_decode (c) := c_ite c c_diverge (c_pred.comp c)
+def c_jump_decode (c:Code) := c_ite c c_diverge (c_pred.comp c)
 @[simp] theorem c_jump_decode_ev (hc:code_total O c): eval O (c_jump_decode c) x = if eval O c x = Part.some 0 then Part.none else (Nat.pred <$> eval O c x) := by
   simp [c_jump_decode]
   simp [c_ite_ev hc]
@@ -39,26 +42,19 @@ theorem c_jump_decode_ev' (hc:code_total O c): eval O (c_jump_decode c) = fun x 
 --     · exact compute_recIn_fJump
 -- theorem jump_recIn (f:ℕ→ℕ) : f ≤ᵀᶠ f⌜ := by
 theorem O_le_K0 (O:ℕ→ℕ) :  O ≤ᵀᶠ (K0 O) := by
-  apply exists_code.mpr
-  let compute := oracle.comp (pair (c_const oracle) c_id)
-  let c := c_jump_decode compute
-  use c
+  apply exists_code.mpr  -- change goal to: ∃ c, eval (K0 O) c = O
+  let q := oracle.comp (pair (c_const oracle) c_id)
+  use c_jump_decode q
 
-  have compute_total : code_total (K0 O) compute := by
+  have compute_total : code_total (K0 O) q := by
     apply prim_total
     repeat (first|assumption|simp|constructor)
 
-  simp [c]
-  simp [c_jump_decode_ev' compute_total]
-  rw [←eval_total_eq_eval compute_total]
-  unfold compute
-  simp [eval_total, eval, Seq.seq]
+  simp only [c_jump_decode_ev' compute_total]
+  simp only [q]
+  simp [eval, Seq.seq]
   exact rfl
 theorem O_le_J (O:ℕ→ℕ) : O ≤ᵀᶠ O⌜ :=  O_le_K0 O
-
-@[simp] noncomputable def K (O:ℕ→ℕ) : ℕ → ℕ := λ n =>
-  let part := eval O n n
-  if h:part.Dom then part.get h + 1 else 0
 
 theorem K_leq_K0 (O:ℕ→ℕ) : (K O)  ≤ᵀᶠ (K0 O) := by
   apply exists_code.mpr
