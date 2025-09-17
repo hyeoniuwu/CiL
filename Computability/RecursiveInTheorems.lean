@@ -5,7 +5,36 @@ import Mathlib.Data.Nat.Dist
 
 open Classical
 open Nat.RecursiveIn.Code
+open Nat
 
+-- general helper functions
+theorem pair_nonzero_right_pos_aux : ¬ (Nat.pair x (s+1)=0) := by
+  rw  [show 0=Nat.pair 0 0 from rfl]
+  rw [pair_eq_pair]
+  intro h
+  have hr := h.right
+  contradiction
+@[simp] theorem pair_nonzero_right_pos : (Nat.pair x (s+1))>0 := by
+  exact zero_lt_of_ne_zero pair_nonzero_right_pos_aux
+@[simp] theorem map_getI : (List.map (f) (List.range (s + 1))).getI x = if x<s+1 then f x else 0 := by
+  unfold List.getI
+  cases Classical.em (x<s+1) with
+  | inl h => simp [h]
+  | inr h => simp [h]
+theorem pair_r_gt0 {x} : x>0→(Nat.pair y x)>0 := by
+  contrapose
+  simp
+  intro h
+  rw [show x=(Nat.pair y x).unpair.2 from by simp [unpair_pair]]
+  rw [h]
+  simp [unpair_zero]
+theorem pair_l_gt0 {x} : x>0→(Nat.pair x y)>0 := by
+  contrapose
+  simp
+  intro h
+  rw [show x=(Nat.pair x y).unpair.1 from by simp [unpair_pair]]
+  rw [h]
+  simp [unpair_zero]
 
 -- helper functions for Part/Option
 theorem Part.eq_some_imp_dom {p:Part ℕ} : p=Part.some x → p.Dom := by

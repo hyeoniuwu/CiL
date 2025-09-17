@@ -8,34 +8,6 @@ open List
 section evaln
 namespace Nat.RecursiveIn.Code
 
-theorem pair_nonzero_right_pos_aux : ¬ (Nat.pair x (s+1)=0) := by
-  rw  [show 0=Nat.pair 0 0 from rfl]
-  rw [pair_eq_pair]
-  intro h
-  have hr := h.right
-  contradiction
-@[simp] theorem pair_nonzero_right_pos : (Nat.pair x (s+1))>0 := by
-  exact zero_lt_of_ne_zero pair_nonzero_right_pos_aux
-@[simp] theorem map_getI : (List.map (f) (List.range (s + 1))).getI x = if x<s+1 then f x else 0 := by
-  unfold List.getI
-  cases Classical.em (x<s+1) with
-  | inl h => simp [h]
-  | inr h => simp [h]
-theorem pair_r_gt0 {x} : x>0→(Nat.pair y x)>0 := by
-  contrapose
-  simp
-  intro h
-  rw [show x=(Nat.pair y x).unpair.2 from by simp [unpair_pair]]
-  rw [h]
-  simp [unpair_zero]
-theorem pair_l_gt0 {x} : x>0→(Nat.pair x y)>0 := by
-  contrapose
-  simp
-  intro h
-  rw [show x=(Nat.pair x y).unpair.1 from by simp [unpair_pair]]
-  rw [h]
-  simp [unpair_zero]
-
 /--
 `eval c_evaln_aux (_, (c,s)) .last = [ [c]ₛ(0), [c]ₛ(1), ..., [c]ₛ(s) ]`
 `eval c_evaln_aux (_, (c,s)).last` is the list of computations of code c for s steps on all inputs x=0 to s.
@@ -71,11 +43,12 @@ def c_evaln_aux :=
   -- `=[c]ₛ(x)`
   let lookup (x' c' s') := c_list_getI.comp₂ (c_list_getI.comp₂ (comp_hist.comp right) (pair c' s')) x'
 
-  -- pair
   let pc_ml_s (c') := lookup (c') (ml.comp right) (s.comp right) -- `[ml]ₛ(x)`
   let pc_mr_s (c') := lookup (c') (mr.comp right) (s.comp right) -- `[mr]ₛ(x)`
   let pc_m_s  (c') := lookup (c') (m.comp  right) (s.comp right) -- `[mr]ₛ(x)`
+  let pc_code_sM1 (c') := lookup (c') (code.comp right) (sM1.comp right) -- `[code]_{s-1}(x)`
 
+  -- pair
   let opt_pair := c_if_gt_te.comp₄ ele (sM1.comp right) (c_opt_none) $
     c_ifz.comp₃ (pc_ml_s ele) (c_opt_none) $
     c_ifz.comp₃ (pc_mr_s ele) (c_opt_none) $
@@ -90,8 +63,6 @@ def c_evaln_aux :=
   let comp_mapped := ((c_list_map' opt_comp).comp₂ (c_list_range.comp s) c_id)
 
   -- prec: if `x.r=n+1`, then `[mr](x.l, (x.r-1, [code](x.l, x.r-1)))` else `[ml](x.l,0)`
-  let pc_code_sM1 (c') := lookup (c') (code.comp right) (sM1.comp right) -- `[code]_{s-1}(x)`
-
   let prec_x   := left.comp ele
   let prec_i   := right.comp ele
   let prec_iM1 := c_pred.comp prec_i
@@ -133,10 +104,7 @@ def c_evaln_aux :=
 
 /-- api: `Nat.pair x (Nat.pair code s)` -/
 def c_evaln :=
-  -- let code_s := right
-  -- let x := left
   c_list_getI.comp₂ (c_list_getLastI.comp $ c_evaln_aux.comp (pair (c_const 17) right)) left
-
 
 -- set_option maxHeartbeats 3 in
 -- set_option maxRecDepth 600 in
@@ -144,21 +112,21 @@ def c_evaln :=
 --   unfold c_evaln;
 --   -- repeat (first|assumption|simp|constructor)
 --   first|assumption|simp|constructor
-
-
-
-
-theorem c_evaln_evp_aux_x_0_0 : eval_prim O (c_evaln) (Nat.pair x (Nat.pair 0 0)) = o2n (evaln O 0 (0:ℕ) x) := by
+-- #exit
+theorem c_evaln_evp_aux_x_0_0 : eval_prim O (c_evaln) (Nat.pair x (Nat.pair 0 0)) = o2n (evaln O 0 0 x) := by
   unfold c_evaln; unfold c_evaln_aux
   lift_lets
   extract_lets
   expose_names
   rw [show Nat.pair 0 0 = 0 from rfl]
-  simp
+  cases x with
+  | zero => simp; simp only  [getI, evaln]; simp
+  | succ n => sorry
+  stop
   cases x with
   | zero => simp [getI, evaln]
   | succ n => simp [getI, evaln]
-
+#exit
 theorem c_evaln_evp_aux_0_np1 : eval_prim O (c_evaln) (Nat.pair x (Nat.pair (n+1) 0)) = o2n (evaln O 0 (n+1:ℕ) x) := by
   unfold c_evaln; unfold c_evaln_aux
   lift_lets
@@ -217,7 +185,7 @@ theorem c_evaln_evp_aux_0_np1 : eval_prim O (c_evaln) (Nat.pair x (Nat.pair (n+1
   | zero => simp [getI, evaln]
   | succ n => simp [getI, evaln]
 
-
+#exit
 
 theorem c_evaln_evp_aux (hcode_val:code≤4) :
   eval_prim O (c_evaln) (Nat.pair x (Nat.pair code (s+1)))
@@ -1002,18 +970,13 @@ section eval
 namespace Nat.RecursiveIn.Code
 def c_eval := (c_rfindOpt (c_evaln.comp₃ (right.comp left) (left.comp left) right))
 @[simp] theorem c_eval_ev: eval O c_eval (Nat.pair c x) = eval O c x := by
-  unfold c_eval
-  simp
+  simp only [c_eval, comp₃, comp₂]
   have : code_total O ((c_evaln.comp ((right.comp left).pair ((left.comp left).pair right)))) := by
     apply prim_total
     repeat (first|assumption|simp|constructor)
-  -- simp [eval_eq_rfindOpt]
   simp [c_rfindOpt_ev this]
   rw [eval_eq_rfindOpt]
-  apply congrArg
-  funext xx
-  simp [eval]
-  simp [Seq.seq]
+  simp [eval,Seq.seq]
 end Nat.RecursiveIn.Code
 -- theorem Nat.PrimrecIn.eval:Nat.PrimrecIn O Nat.eval := by ...
 -- theorem Nat.Primrec.eval:Nat.Primrec Nat.eval := by ...
