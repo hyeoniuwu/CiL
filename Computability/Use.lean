@@ -4,58 +4,6 @@ import Computability.RecursiveInTheorems
 open Nat.RecursiveIn.Code
 namespace Nat.RecursiveIn.Code
 
--- general lemmas for later theorems
-protected theorem isSome.bind {o : Option α} (h : o.isSome) (f : α → Option β) : o.bind f = f (o.get h) := by
-  have : o = some (o.get h) := by exact Option.eq_some_of_isSome h
-  ext b
-  constructor
-  intro h2
-  rw [this] at h2
-  simp only [Option.bind_some] at h2
-  exact h2
-
-  intro h2
-  rw [this]
-  simp only [Option.bind_some]
-  exact h2
-theorem listrwgen (n): (List.range (n + 1)).reverse = n :: (List.range n).reverse := by
-  simp
-  exact List.range_succ
-theorem ne_of_mem_imp_not_mem {y:Part ℕ} (h:x∈y) (h2:x≠z) : z∉y := by
-  have aux: y=Part.some x := by exact Part.eq_some_iff.mpr h
-  rw [aux]
-  aesop? says
-    subst aux
-    simp_all only [ne_eq, Part.mem_some_iff]
-    apply Aesop.BuiltinRules.not_intro
-    intro a
-    subst a
-    simp_all only [not_true_eq_false]
-theorem opt_ne_of_mem_imp_not_mem {y:Option ℕ} (h:x∈y) (h2:x≠z) : z∉y := by
-  aesop
-lemma forall_mem_part {y:Part ℕ} (h1:y.Dom) (h2:∀ x ∈ y, x = c) : c∈y := by
-  contrapose h2
-  simp
-  use y.get h1
-  constructor
-  exact Part.get_mem h1
-  apply Aesop.BuiltinRules.not_intro
-  intro a
-  subst a
-  have : y.get h1 ∈ y := by exact Part.get_mem h1
-  contradiction
-lemma forall_mem_option {y:Option ℕ} (h1:y.isSome) (h2:∀ x ∈ y, x = c) : c∈y := by
-  contrapose h2
-  simp
-  use y.get h1
-  constructor
-  exact Option.eq_some_of_isSome h1
-  apply Aesop.BuiltinRules.not_intro
-  intro a
-  subst a
-  have : y.get h1 ∈ y := by exact Option.eq_some_of_isSome h1
-  contradiction
-
 -- general lemmas for evaln
 lemma evaln_sing (h1:a∈(evaln O s1 c x)) (h2:b∈(evaln O s2 c x)): a=b := by
   cases Classical.em (s1≤s2) with
@@ -2077,7 +2025,7 @@ theorem usen_rfind_prop2'
   exact
     Eq.symm
       (Option.get_of_eq_some (Option.isSome_of_mem (usen_rfind_prop2.mp (Option.get_mem h))) this)
-theorem usen_rfind_prop2'' : 
+theorem usen_rfind_prop2'' :
 (usen O cf.rfind' (k + 1) x)=(do
   guard (x≤k);
   let guard ← evaln O (k+1) (rfind' cf) x;
@@ -3566,7 +3514,7 @@ def up_to_usen.induction
     | rfind' cf ihcf => exact fun s x ↦ hrfind' cf s x fun x' s' ↦ ihcf s' x'
 theorem up_to_usen (hh:(evaln O₁ s c x).isSome) (hO: ∀ i<(usen O₁ c s x).get (en2un hh), O₁ i = O₂ i) :
 evaln O₁ s c x = evaln O₂ s c x
-∧ 
+∧
 usen O₁ c s x = usen O₂ c s x
 := by
   have sG1 := evaln_sG1 hh
@@ -3718,10 +3666,10 @@ usen O₁ c s x = usen O₂ c s x
       have ih1 := hcg
         (Nat.pair x.l (Nat.pair xrM1 ((evaln O₁ (s-1) (cf.prec cg) (Nat.pair x.l xrM1)).get (aux00)))) (aux11.right)
         (λ xx hxx ↦ hO xx (le_trans hxx (usen_mono_prec (en2un hh)).right))
-        
+
       simp [ih1.left]
       simp [ih1.right]
-  | hrfind' cf s x hcf =>  
+  | hrfind' cf s x hcf =>
     rcases nrfind'_obtain_prop hh with ⟨nrop1,nrop2,nrop3⟩
     let nro := nrfind'_obtain hh
     have rwnro : nrfind'_obtain hh = nro := rfl
@@ -3794,7 +3742,7 @@ usen O₁ c s x = usen O₂ c s x
         -- exact And.imp_left (fun a ↦ trivial) this
         -- simp only [congrArg some h2r]
         -- simp only [and_self]
-      
+
       -- constructor
       have geqlem := nrfind'_geq_xr hh
       suffices (evaln O₁ (s-1+1) cf.rfind' x).get hh -x.r +x.r ∈ evaln O₂ (s-1+1) cf.rfind' x from by
@@ -3813,7 +3761,7 @@ usen O₁ c s x = usen O₂ c s x
       · intro j hjro
         rw [←(ihAll j (le_of_succ_le hjro)).left]
         exact nrop3 j hjro
-    
+
     simp [main1]
     suffices
     (do
@@ -3861,7 +3809,7 @@ usen O₁ c s x = usen O₂ c s x
 
     have a4 := a2 0 (zero_le nro)
     simp at a4
-    
+
     generalize 0=b at ⊢
     revert nrop2
     revert a2
@@ -3872,20 +3820,20 @@ usen O₁ c s x = usen O₂ c s x
       intro a2
       intro nrop2
       simp (config:={singlePass:=true}) [listrwgen]; simp
-      
+
       have := a2 (nron+1) (le_rfl)
       simp at this
       simp [←this]
-      
+
       have := en2un $ nrop2 (nron+1) (Nat.le_refl (nron + 1))
       simp at this
       simp [isSome.bind this]
       have ih1 := @ih ((b.max ((usen O₁ cf (s - 1 - nron) (Nat.pair x.l (nron + 1 + x.r))).get this))) ?_ ?_
       rotate_left
-      · 
+      ·
         intro j hj
         exact a2 j (le_add_right_of_le hj)
-      · 
+      ·
         intro j hj
         exact nrop2 j (le_add_right_of_le hj)
       exact ih1
@@ -3910,7 +3858,7 @@ theorem up_to_use
 (hh:(eval O₁ c x).Dom)
 (hO: ∀ i<(use O₁ c x).get (e2u hh), O₁ i = O₂ i) :
 eval O₁ c x = eval O₂ c x
-∧ 
+∧
 use O₁ c x = use O₂ c x
 := by
   rcases evaln_complete.mp (Part.get_mem hh) with ⟨s,h1⟩

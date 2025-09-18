@@ -35,7 +35,57 @@ theorem pair_l_gt0 {x} : x>0→(Nat.pair x y)>0 := by
   rw [show x=(Nat.pair x y).unpair.1 from by simp [unpair_pair]]
   rw [h]
   simp [unpair_zero]
+-- general lemmas for later theorems
+protected theorem isSome.bind {o : Option α} (h : o.isSome) (f : α → Option β) : o.bind f = f (o.get h) := by
+  have : o = some (o.get h) := by exact Option.eq_some_of_isSome h
+  ext b
+  constructor
+  intro h2
+  rw [this] at h2
+  simp only [Option.bind_some] at h2
+  exact h2
 
+  intro h2
+  rw [this]
+  simp only [Option.bind_some]
+  exact h2
+theorem listrwgen (n): (List.range (n + 1)).reverse = n :: (List.range n).reverse := by
+  simp
+  exact List.range_succ
+theorem ne_of_mem_imp_not_mem {y:Part ℕ} (h:x∈y) (h2:x≠z) : z∉y := by
+  have aux: y=Part.some x := by exact Part.eq_some_iff.mpr h
+  rw [aux]
+  aesop? says
+    subst aux
+    simp_all only [ne_eq, Part.mem_some_iff]
+    apply Aesop.BuiltinRules.not_intro
+    intro a
+    subst a
+    simp_all only [not_true_eq_false]
+theorem opt_ne_of_mem_imp_not_mem {y:Option ℕ} (h:x∈y) (h2:x≠z) : z∉y := by
+  aesop
+lemma forall_mem_part {y:Part ℕ} (h1:y.Dom) (h2:∀ x ∈ y, x = c) : c∈y := by
+  contrapose h2
+  simp
+  use y.get h1
+  constructor
+  exact Part.get_mem h1
+  apply Aesop.BuiltinRules.not_intro
+  intro a
+  subst a
+  have : y.get h1 ∈ y := by exact Part.get_mem h1
+  contradiction
+lemma forall_mem_option {y:Option ℕ} (h1:y.isSome) (h2:∀ x ∈ y, x = c) : c∈y := by
+  contrapose h2
+  simp
+  use y.get h1
+  constructor
+  exact Option.eq_some_of_isSome h1
+  apply Aesop.BuiltinRules.not_intro
+  intro a
+  subst a
+  have : y.get h1 ∈ y := by exact Option.eq_some_of_isSome h1
+  contradiction
 -- helper functions for Part/Option
 theorem Part.eq_some_imp_dom {p:Part ℕ} : p=Part.some x → p.Dom := by
   intro a
@@ -342,12 +392,12 @@ theorem eval_total_eq_eval (h:code_total O c):eval_total O c = eval O c := by
   --     simp
   --     rw [← ih]
   --     simp [Part.bind_some]
-      
+
   --     sorry
-    
+
   --   have := hb_ih ?_
   --   rotate_left
-    
+
   -- | rfind' cf hcf =>
   --   sorry
 theorem code_prim_prop (h:code_prim c):∀ O, Nat.PrimrecIn O (eval_prim O c) := by
@@ -448,7 +498,7 @@ theorem exists_code_nat {O:ℕ → ℕ} {f:ℕ →. ℕ} : Nat.RecursiveIn O f �
   exact Function.Surjective.exists decodeCode_sur
 theorem exists_code_total {O:ℕ → ℕ} {f:ℕ → ℕ} : Nat.RecursiveIn O f ↔ ∃ c , eval O c = f ∧ code_total O c := by
   constructor
-  · 
+  ·
     intro h
     rcases exists_code.mp h with ⟨c,hc⟩
     use c

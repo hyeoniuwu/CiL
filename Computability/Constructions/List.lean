@@ -339,38 +339,6 @@ def c_list_getLast? := c_list_getElem?.comp₂ c_id (c_pred.comp $ c_list_length
 end Nat.RecursiveIn.Code
 end list_getLast?
 
-section opt_iget
-namespace Nat.RecursiveIn.Code
-def c_opt_iget := c_pred
-@[simp] theorem c_opt_iget_ev_pr:code_prim c_opt_iget := by unfold c_opt_iget; repeat (first|assumption|simp|constructor)
-@[simp] theorem c_opt_iget_evp : eval_prim O c_opt_iget o = Option.iget (n2o o) := by
-  simp [c_opt_iget]
-  by_cases ho:o=0
-  · simp [ho]; exact rfl
-  · have asd := exists_add_one_eq.mpr (one_le_iff_ne_zero.mpr ho)
-    rcases asd with ⟨k,hk⟩
-    simp [←hk]
-    have rwma : n2o (k + 1) = Option.some k := by exact rfl
-    rw [rwma]
-@[simp] theorem iget_evp_2 (h:o≠0):  Option.iget (n2o o) = o-1:= by
-  have asd : o = (o-1)+1 := by exact Eq.symm (succ_pred_eq_of_ne_zero h)
-  rw [asd]
-  exact rfl
-
-@[simp] theorem c_opt_iget_ev:eval O c_opt_iget o = Option.iget (n2o o) := by simp [← eval_prim_eq_eval c_opt_iget_ev_pr]
-end Nat.RecursiveIn.Code
-end opt_iget
-
-section opt_none
-namespace Nat.RecursiveIn.Code
-def c_opt_none := (c_const 0)
-@[simp] theorem c_opt_none_ev_pr:code_prim c_opt_none := by unfold c_opt_none; repeat (first|assumption|simp|constructor)
-@[simp] theorem c_opt_none_evp : eval_prim O c_opt_none o = o2n Option.none := by
-  simp [c_opt_none]
--- @[simp] theorem c_opt_none_ev: n2o (eval O c_opt_none o) = (Option.none : Option ℕ) := by simp [← eval_prim_eq_eval c_opt_none_ev_pr]
-end Nat.RecursiveIn.Code
-end opt_none
-
 section list_getLastI
 namespace Nat.RecursiveIn.Code
 def c_list_getLastI := c_opt_iget.comp c_list_getLast?
