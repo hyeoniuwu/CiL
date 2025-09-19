@@ -343,11 +343,11 @@ theorem c_evaln_evp_aux_nMod4 :
   let pc_m_s  (c') (elem) := eval_prim O (c_evaln) (Nat.pair (eval_prim O c' (Nat.pair elem covrec_inp)) (Nat.pair m  (s+1)))
   let pc_code_sM1 (c') (elem) := eval_prim O (c_evaln) (Nat.pair (eval_prim O c' (Nat.pair elem covrec_inp)) (Nat.pair ((n+4)+1) s))
 
-  let opt_pair (elem) := Encodable.encode (do guard (elem≤s); Nat.pair<$>n2o (pc_ml_s left elem)<*>n2o (pc_mr_s left elem))
-  let opt_comp (elem) := Encodable.encode (do guard (elem≤s); let intermediate ← (n2o (pc_mr_s left elem)); n2o (pc_ml_s left intermediate))
+  let opt_pair (elem) := o2n (do guard (elem≤s); Nat.pair<$>n2o (pc_ml_s left elem)<*>n2o (pc_mr_s left elem))
+  let opt_comp (elem) := o2n (do guard (elem≤s); let intermediate ← (n2o (pc_mr_s left elem)); n2o (pc_ml_s left intermediate))
 
   let opt_prec (elem) :=
-  Encodable.encode (
+  o2n (
     do
     guard (elem ≤ s)
     (Nat.rec
@@ -361,7 +361,7 @@ theorem c_evaln_evp_aux_nMod4 :
     )
 
   let opt_rfind' (elem) :=
-  Encodable.encode (do
+  o2n (do
     guard (elem ≤ s)
     (unpaired fun a m => do
       let x ← n2o $ pc_m_s left elem
@@ -677,7 +677,7 @@ theorem c_evaln_evp_aux_nMod4 :
 
 
 @[simp] theorem c_evaln_evp: eval_prim O (c_evaln) (Nat.pair x (Nat.pair code s)) =
-  Encodable.encode (evaln O s code x) := by
+  o2n (evaln O s code x) := by
 
   let code_s:=Nat.pair code s
   rw [show Nat.pair code s = code_s by rfl]
@@ -758,7 +758,7 @@ theorem c_evaln_evp_aux_nMod4 :
 
       rw [ih ml_s ml_s_lt_cs]
       rw [ih c_sM1 c_sM1_lt_cs]
-      have ih_i {i} : (eval_prim O c_evaln (Nat.pair (Nat.pair x.l (Nat.pair (x.r - 1) i)) (Nat.pair n.div2.div2.r (sM1 + 1)))) = (Encodable.encode (evaln O mr_s.r (decodeCode mr_s.l) (Nat.pair x.l (Nat.pair (x.r - 1) i)))) := by
+      have ih_i {i} : (eval_prim O c_evaln (Nat.pair (Nat.pair x.l (Nat.pair (x.r - 1) i)) (Nat.pair n.div2.div2.r (sM1 + 1)))) = (o2n (evaln O mr_s.r (decodeCode mr_s.l) (Nat.pair x.l (Nat.pair (x.r - 1) i)))) := by
         rw [ih mr_s mr_s_lt_cs];
       simp [ih_i]
 

@@ -4,29 +4,6 @@ import Computability.Constructions.Eval
 open Part
 namespace Nat.RecursiveIn.Code
 
-
-
-theorem rfind'_eqv_rfind : ((Nat.unpaired fun a m => (Nat.rfind fun n => (fun m => m = 0) <$> eval O c (Nat.pair a (n + m))).map (· + m)) (Nat.pair x 0)) = (Nat.rfind fun n => (fun m => m = 0) <$> eval O c (Nat.pair x n)) := by
--- theorem rfind'_eqv_rfind : ((Nat.unpaired fun a m => (Nat.rfind fun n => (fun m => m = 0) <$> eval O c (Nat.pair a (n + m))).map (· + m)) ∘ (Nat.pair <$> (fun (n:ℕ)=>n) <*> Part.some 0)) x = (Nat.rfind fun n => (fun m => m = 0) <$> eval O c (Nat.pair x n)) := by
-  simp only [Nat.unpaired]
-  simp only [Nat.unpair_pair, add_zero, Part.map_eq_map]
-  exact rfl
-
-
-/--`[code_rfind c](x)=smallest n s.t. [c](x,n)=0.`-/
--- def c_rfind : ℕ→ℕ := fun c => comp (rfind' c) (pair Nat.RecursiveIn.Code.id zero)
-def c_rfind : Nat.RecursiveIn.Code→Nat.RecursiveIn.Code := fun c => (rfind' c).comp (pair c_id zero)
-
-/-- Given a code `c` -/
-abbrev rfind (O:ℕ→ℕ) : ℕ→ℕ→.ℕ := fun c => fun a=> Nat.rfind fun n => (fun m => m = 0) <$> eval O c (Nat.pair a n)
-theorem c_rfind_prop : eval O (c_rfind c) a = (rfind O c a) := by
-  unfold c_rfind
-  unfold rfind
-  rw [←rfind'_eqv_rfind]
-  simp [eval,Seq.seq,pure,PFun.pure]
-
-
-
 /--
 Given a code `c`, `dovetail c` gives the code to the function which, on input n,
 returns `y` s.t. `[c](n,y)=0`.

@@ -619,7 +619,7 @@ theorem c_usen_evp_aux_nMod4 :
 
 
 @[simp] theorem c_usen_evp: eval_prim O (c_usen) (Nat.pair x (Nat.pair code s)) =
-  Encodable.encode (usen O code s x) := by
+  o2n (usen O code s x) := by
 
   let code_s:=Nat.pair code s
   rw [show Nat.pair code s = code_s by rfl]

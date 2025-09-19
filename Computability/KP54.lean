@@ -6,13 +6,8 @@ open Computability
 
 namespace Nat.RecursiveIn.Code
 
-
-
-def n2b (n:ℕ) : Bool := if n=0 then false else true
-def b2n (b:Bool) : ℕ := if b then 1 else 0
-
 -- the b2n $ n2b is to simplify later proofs where evals will be compared against _.
-def evals (σ:List ℕ) (c:Code) (x:ℕ):= eval_clamped (fun e=> b2n $ n2b $ σ.getD e 999) σ.length c x
+noncomputable def evals (σ:List ℕ) (c:Code) (x:ℕ) := evalc (fun e=> b2n $ n2b $ σ.getD e 999) σ.length c x
 end Nat.RecursiveIn.Code
 
 set_option linter.dupNamespace false
@@ -322,7 +317,7 @@ If `[i:As](k)` halts, then its value will be unchanged in all subsequent steps.
 theorem As_Uninjured_0 (hh:(evals (As (2*(i+1))) i k).Dom): evals (As (2*(i+1))) i k = eval A i k := by
   simp [A,_root_.eval]; unfold χ; simp [evals] -- unfold defns
 
-  have h1 := eval_clamped_prop_0 hh
+  have h1 := evalc_prop_0 hh
   simp at h1
   rw [h1]
 
@@ -332,7 +327,7 @@ theorem As_Uninjured_0 (hh:(evals (As (2*(i+1))) i k).Dom): evals (As (2*(i+1)))
   apply use_principle_eval hh2
 
   intro ii hii
-  rw [As_Mono_4 (Nat.lt_of_lt_of_le hii (eval_clamped_prop_1 hh)) AsSize]
+  rw [As_Mono_4 (Nat.lt_of_lt_of_le hii (evalc_prop_1 hh)) AsSize]
   split
   next h => simp [b2n,h]
   next h => simp [b2n,h]
@@ -389,7 +384,7 @@ theorem As_Uninjured_1 : ¬(evals (As (2*(i+1))) i (R_wt i)).Dom → ¬(eval A i
   unfold χ at a4
   simp at a4
 
-  -- use reverse of eval_clamped_prop'' to rephrase the eval_clamped in the goal to just eval.
+  -- use reverse of evalc_prop'' to rephrase the evalc in the goal to just eval.
   -- then, use the extension that will get the oracle string to As (use).
   -- the inequality will be satisfies as the list as size greater than use.
 
@@ -411,7 +406,7 @@ theorem As_Uninjured_1 : ¬(evals (As (2*(i+1))) i (R_wt i)).Dom → ¬(eval A i
       have := @As_Mono_4 i2 (usecn+1) (i2 + 1) 999 hi3 (AsSize)
       rw [this]
       simp only [b2n, ite_eq_ite]
-    apply eval_clamped_prop''_rev2.mp
+    apply evalc_prop''_rev2.mp
     simp only [←mainrw]
     exact Nat.le_of_succ_le (@AsSize usecn)
     simp only [←mainrw]
@@ -447,7 +442,7 @@ theorem As_Uninjured_1 : ¬(evals (As (2*(i+1))) i (R_wt i)).Dom → ¬(eval A i
     rw [this]
 
     simp only [b2n, ite_eq_ite]
-  apply eval_clamped_prop''_rev2.mp
+  apply evalc_prop''_rev2.mp
   simp only [←mainrw]
   exact a5
   simp only [←mainrw]
