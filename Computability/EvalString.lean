@@ -18,20 +18,20 @@ theorem evalnc_imp_usen (h:(evalnc O u s c x).isSome): (usen O c s x).isSome := 
 theorem evalnc_prop_1 (h:(evalnc O u s c x).isSome): (usen O c s x).get (evalnc_imp_usen h)≤u := by
   unfold evalnc at h
   simp at h
-  have := evalnc_imp_usen h
-  simp [isSome.bind this] at h
-  contrapose h
-  simp [h]
-theorem evalc_prop_0 (h:(evalc O u c x).Dom): evalc O u c x = eval O c x := by
-
-    sorry
+  simp [isSome.bind (evalnc_imp_usen h)] at h
+  contrapose h; simp [h]
 theorem evalc_imp_use (h:(evalc O u c x).Dom): (use O c x).Dom := by
-  have := evalc_prop_0 h
-  apply e2u
-  rw [←this]
-  exact h
+  unfold evalc at h
+  exact Part.Dom.of_bind h
 theorem evalc_prop_1 (h:(evalc O u c x).Dom): (use O c x).get (evalc_imp_use h)≤u := by
-  sorry
+  unfold evalc at h
+  simp at h
+  rcases h with ⟨h0,h1⟩
+  contrapose h1; simp [h1]
+theorem evalc_prop_0 (h:(evalc O u c x).Dom): evalc O u c x = eval O c x := by
+  simp [evalc]
+  simp [Part.Dom.bind $ evalc_imp_use h]
+  simp [evalc_prop_1 h]
 
 
 
