@@ -13,7 +13,7 @@ Given an input of the form (x, (i, list)), the code (c_efl_prec c) computes list
 -/
 def c_efl_prec:=fun c=>c_list_concat.comp (pair (c_id.comp (right.comp right)) c)
 -- def c_efl_prec:=fun c=>c_l_append.comp₂ (c_id.comp (right.comp right)) c
-@[simp] theorem c_efl_prec_ev_pr (h:code_prim c):code_prim $ c_efl_prec c := by unfold c_efl_prec; repeat (first|assumption|simp|constructor)
+@[simp] theorem c_efl_prec_ev_pr (h:code_prim c):code_prim $ c_efl_prec c := by repeat (first|assumption|simp|constructor)
 @[simp] theorem c_efl_prec_evp:eval_prim O (c_efl_prec c) x = l2n ((n2l x.r.r).concat (eval_prim O c x)) := by
   simp [c_efl_prec]
 -- @[simp] theorem c_efl_prec_ev : eval O (c_efl_prec c) x = Nat.list_append <$> x.r.r <*> (eval O c x) := by
@@ -369,7 +369,7 @@ end div
 section mod
 namespace Nat.RecursiveIn.Code
 def c_mod := c_sub.comp₂ left (c_mul.comp₂ right c_div)
-@[simp] theorem c_mod_ev_pr:code_prim c_mod := by unfold c_mod; repeat (first|assumption|simp|constructor)
+@[simp] theorem c_mod_ev_pr:code_prim c_mod := by repeat (first|assumption|simp|constructor)
 @[simp] theorem c_mod_evp:eval_prim O c_mod = unpaired2 ((· % ·) : ℕ → ℕ → ℕ) := by
   simp [c_mod,eval_prim];
 
@@ -405,7 +405,7 @@ namespace Nat.RecursiveIn.Code
 #eval BSMem (Nat.pair 3 (Nat.pair 5 0b01000))
 
 def c_BSMem := c_mod.comp₂ (right.comp right) (c_pow.comp₂ (c_const 2) left)
-@[simp] theorem c_BSMem_ev_pr:code_prim c_BSMem := by unfold c_BSMem; repeat (first|assumption|simp|constructor)
+@[simp] theorem c_BSMem_ev_pr:code_prim c_BSMem := by repeat (first|assumption|simp|constructor)
 @[simp] theorem c_BSMem_evp:eval_prim O c_BSMem = Nat.BSMem := by
   simp [c_BSMem,eval_prim]
   rw [BSMem_eq_BSMem_aux]
@@ -420,7 +420,7 @@ def Nat.BSUnion : ℕ→ℕ := fun bl1bl2 => Nat.pair (Nat.max bl1bl2.l.l bl1bl2
 theorem BSUnion_eq_BSUnion_aux : Nat.BSUnion = fun xa => xa.r.r % (2^xa.l) := by sorry
 namespace Nat.RecursiveIn.Code
 def c_BSUnion := c_mod.comp₂ (right.comp right) (c_pow.comp₂ (c_const 2) left)
-@[simp] theorem c_BSUnion_ev_pr:code_prim c_BSUnion := by unfold c_BSUnion; repeat (first|assumption|simp|constructor)
+@[simp] theorem c_BSUnion_ev_pr:code_prim c_BSUnion := by repeat (first|assumption|simp|constructor)
 @[simp] theorem c_BSUnion_evp:eval_prim O c_BSUnion = Nat.BSUnion := by
   simp [c_BSUnion,eval_prim]
   rw [BSUnion_eq_BSUnion_aux]
@@ -440,7 +440,7 @@ namespace Nat.RecursiveIn.Code
 
 
 def c_BSSize := c_mod.comp₂ (right.comp right) (c_pow.comp₂ (c_const 2) left)
-@[simp] theorem c_BSSize_ev_pr:code_prim c_BSSize := by unfold c_BSSize; repeat (first|assumption|simp|constructor)
+@[simp] theorem c_BSSize_ev_pr:code_prim c_BSSize := by repeat (first|assumption|simp|constructor)
 @[simp] theorem c_BSSize_evp:eval_prim O c_BSSize = Nat.BSSize := by
   simp [c_BSSize,eval_prim]
   rw [BSSize_eq_BSSize_aux]
@@ -457,7 +457,7 @@ end BSSize
 section div2
 namespace Nat.RecursiveIn.Code
 def c_div2 := c_div.comp₂ c_id (c_const 2)
-@[simp] theorem c_div2_ev_pr:code_prim c_div2 := by unfold c_div2; repeat (first|assumption|simp|constructor)
+@[simp] theorem c_div2_ev_pr:code_prim c_div2 := by repeat (first|assumption|simp|constructor)
 @[simp] theorem c_div2_evp:eval_prim O c_div2 = fun x => x/2 := by simp [c_div2]
 @[simp] theorem c_div2_ev:eval O c_div2 = (fun x => x/(2:ℕ)) := by rw [← eval_prim_eq_eval c_div2_ev_pr]; simp only [c_div2_evp];
 end Nat.RecursiveIn.Code
@@ -483,9 +483,6 @@ def encodeCode_replace_oracle (o:ℕ) : Code → ℕ
 | Code.prec cf cg  => 2*(2*(Nat.pair (encodeCode_replace_oracle o cf) (encodeCode_replace_oracle o cg))+1)   + 5
 | Code.rfind' cf   => 2*(2*(encodeCode_replace_oracle o cf                            )+1)+1 + 5
 def replace_oracle (o:ℕ) := fun n => (encodeCode_replace_oracle o (decodeCode n))
-
-
-
 
 /-- `eval c_replace_oracle (o,code)` = `code` but with calls to oracle replaced with calls to code `o` -/
 def c_replace_oracle_aux :=
@@ -800,6 +797,20 @@ theorem nMod4_eq_3 (hno:n.bodd=true ) (hn2o:n.div2.bodd=true ) : n%4=3 := by rw 
 
 
 @[simp] theorem c_replace_oracle_ev:eval O (c_replace_oracle) = unpaired2 replace_oracle := by rw [← eval_prim_eq_eval c_replace_oracle_ev_pr]; simp only [c_replace_oracle_evp];
+
+
+
+theorem eval_replace_oracle_prop {O o c} (ho:code_total O o) : eval O (replace_oracle o c) = eval (λ x ↦ (eval O o x).get (ho x)) c := by
+  -- funext x
+  simp [replace_oracle]
+  induction decodeCode c <;> (simp [decodeCode, encodeCode_replace_oracle, eval]; try simp_all )
+  funext o
+  simp_all only [PFun.coe_val, Part.some_get]
+
+
+
+
+
 end Nat.RecursiveIn.Code
 theorem Nat.PrimrecIn.replace_oracle:Nat.PrimrecIn O (unpaired2 replace_oracle) := by rw [← c_replace_oracle_evp]; apply code_prim_prop c_replace_oracle_ev_pr
 theorem Nat.Primrec.replace_oracle:Nat.Primrec (unpaired2 replace_oracle) := by exact PrimrecIn.PrimrecIn_Empty PrimrecIn.replace_oracle

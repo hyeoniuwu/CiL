@@ -213,12 +213,22 @@ def code_total (O) (c:Code) := ∀x, (eval O c x).Dom
 @[simp] theorem right_total {O} : code_total O right := λ _ ↦ trivial
 @[simp] theorem succ_total {O} : code_total O succ := λ _ ↦ trivial
 @[simp] theorem oracle_total {O} : code_total O oracle := λ _ ↦ trivial
-@[simp] theorem total_of_pair_left {O} (h:code_total O (pair cf cg)) : code_total O cf := by
-  intro h2
-  exact Part.left_dom_of_sub_dom (h h2)
-@[simp] theorem total_of_pair_right {O} (h:code_total O (pair cf cg)) : code_total O cg := by
-  intro h2
-  exact Part.right_dom_of_div_dom (h h2)
+theorem total_pair_iff : (code_total O cf) ∧ (code_total O cg) ↔ (code_total O (pair cf cg)) :=
+  ⟨  
+    λ h x ↦ ⟨h.left x, h.right x⟩
+  ,
+    λ h ↦ ⟨λ x ↦ Part.left_dom_of_sub_dom (h x) , λ x ↦ Part.right_dom_of_div_dom (h x)⟩
+  ⟩ 
+@[simp] theorem total_pair_of (hcf : code_total O cf) (hcg : code_total O cg) : (code_total O (pair cf cg)) := total_pair_iff.mp ⟨hcf,hcg⟩
+theorem total_comp_of (hcf : code_total O cf) (hcg : code_total O cg) : (code_total O (comp cf cg)) := by
+  intro x
+  simp [eval]
+  use hcg x
+  exact hcf ((eval O cg x).get (hcg x))
+@[simp] theorem total_of_pair_left {O} (h:code_total O (pair cf cg)) : code_total O cf :=
+  (total_pair_iff.mpr h).left
+@[simp] theorem total_of_pair_right {O} (h:code_total O (pair cf cg)) : code_total O cg :=
+  (total_pair_iff.mpr h).right
 @[simp] theorem total_of_comp_left {O} (h:code_total O (comp cf cg)) : code_total O cg := by
   intro h2
   exact Part.Dom.of_bind (h h2)
@@ -274,6 +284,7 @@ theorem eval_total_comp (h:code_total O (comp cf cg)) :
     simp
     simp [eval]
     exact Part.Dom.bind (Part.Dom.of_bind (h x)) (eval O cf)
+def evalt (O:ℕ→ℕ) (c:Code) (h:code_total O c) : ℕ→ℕ := λ x ↦ (eval O c x).get (h x)
 -- def eval_total (O:ℕ→ℕ) (c:Code) (h:code_total O c) : ℕ→ℕ := match c with
 -- | zero       => fun _=>0
 -- | succ       => Nat.succ
@@ -351,7 +362,7 @@ theorem eval_prim_eq_eval (h:code_prim c):eval_prim O c = eval O c := by
       rw [Part.bind_some]
       simp
       rw [show eval O b ((Nat.pair xs.l (Nat.pair y' (Nat.rec (eval_prim O a xs.l) (fun y IH ↦ eval_prim O b (Nat.pair xs.l (Nat.pair y IH))) y')))) = Part.some (eval_prim O b ((Nat.pair xs.l (Nat.pair y' (Nat.rec (eval_prim O a xs.l) (fun y IH ↦ eval_prim O b (Nat.pair xs.l (Nat.pair y IH))) y'))))) from by exact congrFun (_root_.id (Eq.symm hb_ih)) ((Nat.pair xs.l (Nat.pair y' (Nat.rec (eval_prim O a xs.l) (fun y IH ↦ eval_prim O b (Nat.pair xs.l (Nat.pair y IH))) y'))))]
-theorem eval_prim_eq_eval_ext (h:code_prim c): eval O c x = Part.some (eval_prim O c x) := congrFun (_root_.id (Eq.symm (@eval_prim_eq_eval c O h))) x
+theorem eval_prim_eq_eval_ext (h:code_prim c): eval O c x = eval_prim O c x := congrFun (_root_.id (Eq.symm (@eval_prim_eq_eval c O h))) x
 theorem eval_total_eq_eval (h:code_total O c):eval_total O c = eval O c := by
   sorry
   -- induction c generalizing h with

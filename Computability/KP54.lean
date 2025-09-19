@@ -6,8 +6,6 @@ open Computability
 
 namespace Nat.RecursiveIn.Code
 
--- the b2n $ n2b is to simplify later proofs where evals will be compared against _.
-noncomputable def evals (σ:List ℕ) (c:Code) (x:ℕ) := evalc (fun e=> b2n $ n2b $ σ.getD e 999) σ.length c x
 end Nat.RecursiveIn.Code
 
 set_option linter.dupNamespace false
@@ -396,14 +394,14 @@ theorem As_Uninjured_1 : ¬(evals (As (2*(i+1))) i (R_wt i)).Dom → ¬(eval A i
     use x
     rw [hx]
 
-    have mainrw : (use (χ A) (decodeCode i) (R_wt i)) = (use (fun e ↦ b2n (n2b ((As (usecn + 1)).getD e 999))) (decodeCode i) (R_wt i)) := by
+    have mainrw : (use (χ A) (decodeCode i) (R_wt i)) = (use (fun e ↦ b2n (n2b ((As (usecn + 1)).getD e whatever))) (decodeCode i) (R_wt i)) := by
       refine use_principle_use a1 ?_
       intro i2 hi2
       simp [χ,A]
       have hi3 : i2 < (As (usecn + 1)).length := calc
         i2 < usecn  := hi2
         usecn <  (As (usecn + 1)).length := AsSize
-      have := @As_Mono_4 i2 (usecn+1) (i2 + 1) 999 hi3 (AsSize)
+      have := @As_Mono_4 i2 (usecn+1) (i2 + 1) whatever hi3 (AsSize)
       rw [this]
       simp only [b2n, ite_eq_ite]
     apply evalc_prop_4.mp
@@ -426,7 +424,7 @@ theorem As_Uninjured_1 : ¬(evals (As (2*(i+1))) i (R_wt i)).Dom → ¬(eval A i
     _     ≤ (As (2 * i + 1) ++ n2l (0 + 1)).length := by
       simp only [zero_add, List.length_append, le_add_iff_nonneg_right, zero_le]
 
-  have mainrw : (use (χ A) (decodeCode i) (R_wt i)) = (use (fun e ↦ b2n (n2b ((As (2 * i + 1) ++ n2l (0 + 1)).getD e 999))) (decodeCode i) (R_wt i)):= by
+  have mainrw : (use (χ A) (decodeCode i) (R_wt i)) = (use (fun e ↦ b2n (n2b ((As (2 * i + 1) ++ n2l (0 + 1)).getD e whatever))) (decodeCode i) (R_wt i)):= by
     refine use_principle_use a1 ?_
     intro i2
     intro hi2
@@ -438,7 +436,7 @@ theorem As_Uninjured_1 : ¬(evals (As (2*(i+1))) i (R_wt i)).Dom → ¬(eval A i
       simp [hi3]
       grind
     rw [this]
-    have := @As_Mono_4 i2 (2*i+1) (i2 + 1) 999 (hi3) (AsSize)
+    have := @As_Mono_4 i2 (2*i+1) (i2 + 1) whatever (hi3) (AsSize)
     rw [this]
 
     simp only [b2n, ite_eq_ite]

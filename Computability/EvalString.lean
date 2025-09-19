@@ -46,4 +46,9 @@ theorem evalc_prop_4: (use O c x).get h≤u ↔ (evalc O u c x).Dom :=
     λ h0 ↦ evalc_prop_1 h0
   ⟩
 
+
+-- the b2n $ n2b is to simplify later proofs where evals will be compared against _.
+def whatever := 999
+noncomputable def evals (σ:List ℕ) (c:Code) (x:ℕ) := evalc (fun e=> b2n $ n2b $ σ.getD e whatever) σ.length c x
+
 end Nat.RecursiveIn.Code
