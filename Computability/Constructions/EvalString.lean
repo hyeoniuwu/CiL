@@ -98,89 +98,75 @@ theorem c_evals_oracle_ev : eval O (c_evals_oracle o) =
   simp [← eval_prim_eq_eval c_evals_oracle_ev_pr]
   simp [c_evals_oracle_evp]
 
-def c_comp₃ := c_add.comp₂ (c_mul2.comp $ c_mul2) (c_const 6)
+def c_comp₃ :=
+  let a := left.comp left
+  let b := left.comp right
+  let c := right.comp left
+  let d := right.comp right
+  c_comp.comp₂ (a) (c_pair.comp₂ c (c_pair.comp₂ b d))
 @[simp, aesop safe] theorem c_comp₃_ev_pr:code_prim c_comp₃ := by repeat (first|assumption|simp|constructor)
 @[simp] theorem c_comp₃_evp : eval_prim O c_comp₃ (Nat.pair (Nat.pair a b) (Nat.pair c d)) = encodeCode (comp₃ a b c d) := by
-  simp [encodeCode, c_comp₃, Nat.mul_comm]
-  sorry
-@[simp] theorem c_comp₃_ev:eval O c_comp₃ (Nat.pair a b) = encodeCode (comp a b) := by rw [← eval_prim_eq_eval c_comp₃_ev_pr]; simp
+  simp [c_comp₃]
+@[simp] theorem c_comp₃_ev:eval O c_comp₃ (Nat.pair (Nat.pair a b) (Nat.pair c d)) = encodeCode (comp₃ a b c d) := by rw [← eval_prim_eq_eval c_comp₃_ev_pr]; simp
 
 def c_c_evals_oracle := c_comp.comp₂ (c_const c_sg) (c_comp₃.comp₄ (c_const c_list_getD) (c_c_const.comp left) (c_const c_id) (c_const $ c_const whatever))
-theorem c_c_evals_oracle_evp : eval_prim O c_c_evals_oracle (Nat.pair o (Nat.pair c x)) =
+def c_c_evals_oracle_ev_pr : code_prim c_c_evals_oracle := by repeat (first|assumption|simp|constructor)
+@[simp] theorem c_c_evals_oracle_evp : eval_prim O c_c_evals_oracle (Nat.pair o (Nat.pair c x)) =
 encodeCode (c_evals_oracle o) := by
-  simp only [c_c_evals_oracle]
   unfold c_evals_oracle
-  simp
-  
-  sorry
-theorem c_evals_oracle_prop2 : eval O c_c_evals_oracle (Nat.pair o (Nat.pair c x)) =
-encodeCode (c_evals_oracle o) := by
 
-  sorry
+  unfold c_c_evals_oracle
+  rewrite [comp₂, comp₄, eval_prim.eq_7, eval_prim]
+  simp only []
+  rewrite [c_comp_evp]
+  rewrite [c_const_evp, decodeCode_encodeCode, comp₂, eval_prim, ]
+  simp only [eval_prim]
+  rewrite [c_comp₃_evp]
+  simp only [c_const_evp, decodeCode_encodeCode]
+  rewrite [c_c_const_evp]
+  rewrite [pair_l]
+  simp only [decodeCode_encodeCode, encodeCode_decodeCode]
 
-def c_evals_code := zero
+theorem c_c_evals_oracle_ev : eval O c_c_evals_oracle (Nat.pair o (Nat.pair c x)) = encodeCode (c_evals_oracle o) := by simp [← eval_prim_eq_eval c_c_evals_oracle_ev_pr]
+
+def c_evals_code := c_evalc.comp₂ (c_list_length.comp left) right
+
 theorem c_evals_code_prop : eval O c_evals_code (Nat.pair o (Nat.pair c x)) =
 evalc O (n2l o).length c x
--- encodeCode (c_evalc.comp₃
---     (c_list_length.comp o) -- the value to clamp at
---     (c) -- the code we will use
---     (x) -- input
--- )
-:= by sorry
+:= by
+  
+  simp [c_evals_code]
+  simp [eval, Seq.seq]
 
 def c_evals :=
-  let o := left
-  let c := left.comp right
-  let x := right.comp right
-  -- c_evalo.comp₃ ((c_evals_oracle.comp₂ σ (c_const 123)))
-  c_evalo.comp₃ c_c_evals_oracle
-  (
-    c_const c_evals_code
-    -- the code here should be a code c1 s.t.
-    -- eval c1 (Nat.pair o (Nat.pair c x)) = code for 
-    -- c_evalc.comp₃
-    -- (c_list_length.comp σ) -- the value to clamp at
-    -- (c) -- the code we will use
-    -- (x) -- input
+  c_evalo.comp₃
+  c_c_evals_oracle
+  (c_const c_evals_code)
+  c_id
 
-    -- c_c_const.comp $
-    -- c_evalc.comp₃
-    -- (c_list_length.comp σ) -- the value to clamp at
-    -- (c) -- the code we will use
-    -- (x) -- input
-  )
-  (c_id)
-  -- let u0 := left
-  -- let c0 := left.comp right
-  -- let x0 := right.comp right
-  -- let bind_prev := left
-  -- let u1 := u0.comp bind_prev
-  -- let c1 := c0.comp bind_prev
-  -- let x1 := x0.comp bind_prev
-
-  -- c_part_bind
-  -- (c_use.comp₂ c0 x0) $
-  -- c_if_le_te' right u1 (c_eval.comp₂ c1 x1) c_diverge
-
--- theorem evalc_prop_6 (h:¬(eval O c x).Dom) : ¬ (evalc O u c x).Dom := by
---   contrapose h
---   simp_all
---   exact u2e $ evalc_imp_use h
--- theorem evalc_prop_5 : evalc O₁ u c₁ x₁ = eval O₁
 @[simp] theorem c_evals_ev: eval O c_evals (Nat.pair o (Nat.pair c x)) = (evals (n2l o) c x) := by
+  unfold evals
   unfold c_evals
   simp
-  simp [eval]
+
+  -- simp [eval] blows things up. why?
+  rw [eval]
+  simp []
+  rw [eval]
   simp [Seq.seq]
-  simp [evals]
-  have t1 : code_total O c_c_evals_oracle := by sorry
-  have : code_total O c_c_evals_oracle := by sorry
-  have : code_total O (((eval O c_c_evals_oracle (Nat.pair o (Nat.pair c x))).get (t1 (Nat.pair o (Nat.pair c x))))) := by sorry
+  rw [eval]
+  simp [Seq.seq]
+
+  have t1 : code_total O c_c_evals_oracle := prim_total c_c_evals_oracle_ev_pr
+  have : code_total O ((eval O c_c_evals_oracle (Nat.pair o (Nat.pair c x))).get (t1 (Nat.pair o (Nat.pair c x)))) := by
+    simp [c_c_evals_oracle_ev]
+    apply prim_total
+    exact c_evals_oracle_ev_pr
   simp [Part.Dom.bind $ t1 (Nat.pair o (Nat.pair c x))]
   have := @c_evalo_ev O _ (c_evals_code.encodeCode) (Nat.pair o (Nat.pair c x)) this
   simp at this
   simp [this]
-  simp [c_evals_oracle_prop2]
+  simp [c_c_evals_oracle_ev]
   simp [c_evals_oracle_ev]
   simp [c_evals_code_prop]
   
