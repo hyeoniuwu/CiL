@@ -11,7 +11,6 @@ noncomputable def evalnc (O:ℕ→ℕ) (u:ℕ) : ℕ → Code → ℕ → Option
 noncomputable def evalc (O:ℕ→ℕ) (u:ℕ) : Code → ℕ → Part ℕ := λ c x ↦ do
   let use ← use O c x
   if use ≤ u  then eval O c x else Part.none
-
 theorem evalnc_imp_usen (h:(evalnc O u s c x).isSome): (usen O c s x).isSome := by
   unfold evalnc at h
   exact Option.isSome_of_isSome_bind h
@@ -28,21 +27,21 @@ theorem evalc_prop_1 (h:(evalc O u c x).Dom): (use O c x).get (evalc_imp_use h)�
   simp at h
   rcases h with ⟨h0,h1⟩
   contrapose h1; simp [h1]
-theorem evalc_prop_0 (h:(evalc O u c x).Dom): evalc O u c x = eval O c x := by
+theorem evalc_prop_0 {O u c x} (h:(evalc O u c x).Dom): evalc O u c x = eval O c x := by
   simp [evalc]
   simp [Part.Dom.bind $ evalc_imp_use h]
   simp [evalc_prop_1 h]
-
-
-
-theorem evalc_prop''_rev_aux (h:(eval O c x).Dom) (h0:(use O c x).get (e2u h)≤u): (evalc O u c x).Dom := by
-  sorry
-theorem evalc_prop''_rev (h:(eval O c x).Dom) (h0:(use O c x).get (e2u h)≤u): evalc O u c x=Part.some ((eval O c x).get h) := by
-  sorry
-open Part
-theorem evalc_prop''_rev2: (use O c x).get h≤u ↔ (evalc O u c x).Dom :=
+theorem evalc_prop_2 (h:(eval O c x).Dom) (h0:(use O c x).get (e2u h)≤u): (evalc O u c x).Dom := by
+  simp [evalc]
+  use e2u h
+  simpa [h0]
+theorem evalc_prop_3 (h:(eval O c x).Dom) (h0:(use O c x).get (e2u h)≤u): evalc O u c x=Part.some ((eval O c x).get h) := by
+  simp [evalc]
+  simp [Part.Dom.bind $ e2u h]
+  simp [h0]
+theorem evalc_prop_4: (use O c x).get h≤u ↔ (evalc O u c x).Dom :=
   ⟨
-    λ h0 ↦ Part.eq_some_imp_dom $ evalc_prop''_rev (u2e h) h0
+    λ h0 ↦ Part.eq_some_imp_dom $ evalc_prop_3 (u2e h) h0
     ,
     λ h0 ↦ evalc_prop_1 h0
   ⟩

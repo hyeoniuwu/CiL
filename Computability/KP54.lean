@@ -406,7 +406,7 @@ theorem As_Uninjured_1 : ¬(evals (As (2*(i+1))) i (R_wt i)).Dom → ¬(eval A i
       have := @As_Mono_4 i2 (usecn+1) (i2 + 1) 999 hi3 (AsSize)
       rw [this]
       simp only [b2n, ite_eq_ite]
-    apply evalc_prop''_rev2.mp
+    apply evalc_prop_4.mp
     simp only [←mainrw]
     exact Nat.le_of_succ_le (@AsSize usecn)
     simp only [←mainrw]
@@ -442,7 +442,7 @@ theorem As_Uninjured_1 : ¬(evals (As (2*(i+1))) i (R_wt i)).Dom → ¬(eval A i
     rw [this]
 
     simp only [b2n, ite_eq_ite]
-  apply evalc_prop''_rev2.mp
+  apply evalc_prop_4.mp
   simp only [←mainrw]
   exact a5
   simp only [←mainrw]
