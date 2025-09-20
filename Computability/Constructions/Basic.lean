@@ -65,4 +65,16 @@ def c_if_le_te' (c1 c2 c3 c4:Code) := c_ite (c_sub.comp₂ c1 c2) c3 c4
   simp [Part.Dom.bind $ hc2 x]
   exact Nat.sub_eq_zero_iff_le
 
+
+def c_ifdom (c a:Nat.RecursiveIn.Code) := c_add.comp₂ (zero.comp c) a
+@[simp] theorem c_ifdom_ev  : eval O (c_ifdom c a) x = if (eval O c x).Dom then (eval O a x) else Part.none := by
+  simp [c_ifdom]
+  simp [eval]
+  simp [Seq.seq]
+  split
+  next h =>
+    simp [Part.Dom.bind h, pure, PFun.pure]
+  next h =>
+    simp [Part.eq_none_iff'.mpr h]
+
 end Nat.RecursiveIn.Code

@@ -131,7 +131,7 @@ theorem c_c_evals_oracle_ev : eval O c_c_evals_oracle (Nat.pair o (Nat.pair c x)
 
 def c_evals_code := c_evalc.comp₂ (c_list_length.comp left) right
 
-theorem c_evals_code_prop : eval O c_evals_code (Nat.pair o (Nat.pair c x)) =
+theorem c_evals_code_ev : eval O c_evals_code (Nat.pair o (Nat.pair c x)) =
 evalc O (n2l o).length c x
 := by
   
@@ -168,7 +168,7 @@ def c_evals :=
   simp [this]
   simp [c_c_evals_oracle_ev]
   simp [c_evals_oracle_ev]
-  simp [c_evals_code_prop]
+  simp [c_evals_code_ev]
   
 
 end Nat.RecursiveIn.Code

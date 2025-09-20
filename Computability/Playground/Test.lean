@@ -1,7 +1,78 @@
-import Computability.Constructions.Eval
+import Computability.Constructions.EvalString
+import Computability.SetOracles
 
 namespace Nat.RecursiveIn.Code
+open Classical
+@[irreducible] noncomputable def c_kp54_aux (i n:ℕ) :=
+  zero
+  -- c_ifdom
+  -- (c_evals.comp₃ (c_list_append.comp₂ left (succ.comp right)) (c_const i) (c_const n))
+  -- zero
 
+theorem c_kp54_aux_evp :
+  eval Nat.fzero (c_kp54_aux i n) x
+    =
+  if (evals ((n2l x.l) ++ (n2l (x.r+1))) i n).Dom then Part.some 0 else Part.none
+:= by
+  sorry
+theorem c_kp54_aux_2 (halts:(eval Nat.fzero (dovetail (c_kp54_aux i lb)) Aₚ).Dom) :
+  let dvt := (eval Nat.fzero (dovetail (c_kp54_aux i lb)) Aₚ).get halts
+  (evals ((n2l Aₚ) ++ (n2l (dvt.l+1))) i lb).Dom := by
+    have := dovetail_ev_0' halts
+    extract_lets at this ⊢
+    expose_names
+    simp only [c_kp54_aux_evp] at this
+    contrapose this
+    simp [-Denumerable.list_ofNat_succ]
+    exact this
+
+def dovetail2 (c:Code) : Code :=
+  -- c_rfind $
+  -- (pair c_evaln zero)
+  c_evaln
+  -- zero
+  -- c_if_eq'.comp₂
+  -- (c_evaln.comp₃ (zero) (zero) (zero))
+  -- (c_evaln.comp (zero))
+  -- (c_const 1)
+@[irreducible] noncomputable def c_evaln2 : Code := c_evaln
+open Nat List in
+noncomputable def KP54 : ℕ→ℕ := λ s ↦
+  if s=0 then Nat.pair 0 0 else
+
+  -- let i  := (s-1).div2
+  let Aₚ := (KP54 (s-1)).l
+  -- let Bₚ := (KP54 (s-1)).r
+  -- let lb := List.length (n2l Bₚ)
+  -- let la := List.length (n2l Aₚ)
+
+  -- let dvt := eval Nat.fzero (dovetail (c_kp54_aux i lb)) Aₚ
+  let dvt := eval Nat.fzero ((c_evaln.comp $ c_evaln.comp $ c_evaln.comp $ c_evaln.comp $ c_evaln.comp $ c_evaln.comp $ c_add.comp $ c_add.comp c_add)) Aₚ
+  
+  if halts:dvt.Dom then
+    let rf := (dvt.get halts).l -- rf is a natural such that (eval_string ((n2l A) ++ (n2l rf)) i n).Dom.
+    rf
+    -- 9
+    -- rf
+    -- let Aₛ := (n2l Aₚ) ++ (n2l (rf+1))
+    -- l2n Aₛ
+    -- let A_result := (evals Aₛ i lb).get (c_kp54_aux_2 halts)
+    -- A_result
+    -- Nat.pair Aₛ ((n2l Bₚ).concat (Nat.sg' A_result))
+  else
+    0
+  -- if s%2=0 then -- then s=2i+2, and we will work on Rᵢ.
+  -- else -- then s=2i+1, and we will work on Sᵢ.
+  --   0
+    -- let dvt := eval Nat.fzero (dovetail (c_kp54_aux i la)) Bₚ
+    -- if halts:dvt.Dom then
+    --   let rf := (dvt.get halts).l
+    --   let Bₛ := (n2l Bₚ) ++ (n2l (rf+1))
+    --   let B_result := (evals (Bₛ) i la).get (c_kp54_aux_2 halts)
+    --   Nat.pair ((n2l Aₚ).concat (Nat.sg' B_result)) Bₛ
+    -- else
+    --   Nat.pair (l2n $ (n2l Aₚ).concat 0) (l2n $ (n2l Bₚ).concat 0)
+#exit
 set_option maxRecDepth 250 in
 @[simp] theorem c_evaln_aux_ev_pr:code_prim (c_evaln_aux) := by
   unfold c_evaln_aux;

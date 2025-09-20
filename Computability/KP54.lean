@@ -1,4 +1,5 @@
 import Computability.SetOracles
+import Computability.Constructions.EvalString
 
 open Nat.RecursiveIn.Code
 open Classical
@@ -22,13 +23,20 @@ and here i can just directly work with a list of nat anyways, interpreting 0 as 
 -- the proofs later however are simplified if A_s,B_s are treated as List Bool...
 -- /mnt/Q/Mathematics/LaTeX/Writings/Computability.pdf
 -- c_kp54_aux check if x.r+1 is a finite extension to A for the computation [i](n).
-def c_kp54_aux (i n:ℕ) := zero
+@[irreducible] noncomputable def c_kp54_aux (i n:ℕ) :=
+  -- zero
+  c_ifdom
+  (c_evals.comp₃ (c_list_append.comp₂ left (succ.comp right)) (c_const i) (c_const n))
+  zero
 theorem c_kp54_aux_evp :
   eval Nat.fzero (c_kp54_aux i n) x
     =
-  if (evals ((n2l x.l) ++ (n2l (x.r+1))) i n).Dom then Part.some 0 else Part.some 1
+  if (evals ((n2l x.l) ++ (n2l (x.r+1))) i n).Dom then Part.some 0 else Part.none
 := by
-  sorry
+  simp [c_kp54_aux, -Denumerable.list_ofNat_succ]
+  simp [Nat.RecursiveIn.Code.eval, -Denumerable.list_ofNat_succ]
+  simp [Seq.seq, -Denumerable.list_ofNat_succ]
+  congr
 theorem c_kp54_aux_2 (halts:(eval Nat.fzero (dovetail (c_kp54_aux i lb)) Aₚ).Dom) :
   let dvt := (eval Nat.fzero (dovetail (c_kp54_aux i lb)) Aₚ).get halts
   (evals ((n2l Aₚ) ++ (n2l (dvt.l+1))) i lb).Dom := by
@@ -39,13 +47,12 @@ theorem c_kp54_aux_2 (halts:(eval Nat.fzero (dovetail (c_kp54_aux i lb)) Aₚ).D
     contrapose this
     simp [-Denumerable.list_ofNat_succ]
     exact this
-#check eval Nat.fzero
 
 open Nat List in
-/--
-Input: stage `s`
-Output: (code for `Aₛ`, code for `Bₛ`)
--/
+-- /--
+-- Input: stage `s`
+-- Output: (code for `Aₛ`, code for `Bₛ`)
+-- -/
 noncomputable def KP54 : ℕ→ℕ := λ s ↦
   if s=0 then Nat.pair 0 0 else
 
@@ -74,6 +81,7 @@ noncomputable def KP54 : ℕ→ℕ := λ s ↦
     else
       Nat.pair (l2n $ (n2l Aₚ).concat 0) (l2n $ (n2l Bₚ).concat 0)
 
+#exit
 /-
 `KP54(s)=(a,b)` where `D a, D b` correspond to sets `A` and `B` at stage `s`.
 We note that:
@@ -463,6 +471,17 @@ theorem R_aux_1 (i:ℕ) : (eval A i (R_wt i)) ≠ Part.some ((χ B) (R_wt i)) :=
 
 private theorem R (i:ℕ) : eval A i ≠ χ B := Function.ne_iff.mpr ⟨R_wt i, R_aux_1 i⟩
 private theorem S (i:ℕ) : eval B i ≠ χ A := by sorry
+
+def c_kp54 := zero
+theorem c_kp54_t : code_total O c_kp54 := by sorry
+theorem c_kp54_ev : (eval (∅⌜) c_kp54 x).get (c_kp54_t x) = KP54 x := by sorry
+theorem A_le_J1 : A ≤ᵀ ∅⌜ := by
+  unfold A
+  unfold As
+  simp only [← c_kp54_ev]
+
+  
+  sorry
 
 theorem ex_incomparable_sets : ∃ A B:Set ℕ, A|ᵀB := by
   use A
