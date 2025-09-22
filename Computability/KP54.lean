@@ -38,7 +38,7 @@ theorem c_kp54_aux_evp :
   simp [Seq.seq, -Denumerable.list_ofNat_succ]
   congr
 theorem c_kp54_aux_2 (halts:(eval Nat.fzero (dovetail (c_kp54_aux i lb)) Aₚ).Dom) :
-  let dvt := (eval Nat.fzero (dovetail (c_kp54_aux i lb)) Aₚ).get halts
+  have dvt := (eval Nat.fzero (dovetail (c_kp54_aux i lb)) Aₚ).get halts
   (evals ((n2l Aₚ) ++ (n2l (dvt.l+1))) i lb).Dom := by
     have := dovetail_ev_0' halts
     extract_lets at this ⊢
@@ -54,15 +54,16 @@ open Nat List in
 -- Output: (code for `Aₛ`, code for `Bₛ`)
 -- -/
 noncomputable def KP54 : ℕ→ℕ := λ s ↦
-  if s=0 then Nat.pair 0 0 else
+match s with
+| 0 => Nat.pair 0 0
+| s+1 =>
+  have i  := (s).div2
+  have Aₚ := (KP54 (s)).l
+  have Bₚ := (KP54 (s)).r
+  have lb := List.length (n2l Bₚ)
+  have la := List.length (n2l Aₚ)
 
-  let i  := (s-1).div2
-  let Aₚ := (KP54 (s-1)).l
-  let Bₚ := (KP54 (s-1)).r
-  let lb := List.length (n2l Bₚ)
-  let la := List.length (n2l Aₚ)
-
-  if s%2=0 then -- then s=2i+2, and we will work on Rᵢ.
+  if (s+1)%2=0 then -- then s+1=2i+2, and we will work on Rᵢ.
     let dvt := eval Nat.fzero (dovetail (c_kp54_aux i lb)) Aₚ
     if halts:dvt.Dom then
       let rf := (dvt.get halts).l -- rf is a natural such that (eval_string ((n2l A) ++ (n2l rf)) i n).Dom.
@@ -71,7 +72,7 @@ noncomputable def KP54 : ℕ→ℕ := λ s ↦
       Nat.pair Aₛ ((n2l Bₚ).concat (Nat.sg' A_result))
     else
       Nat.pair (l2n $ (n2l Aₚ).concat 0) (l2n $ (n2l Bₚ).concat 0)
-  else -- then s=2i+1, and we will work on Sᵢ.
+  else -- then s+1=2i+1, and we will work on Sᵢ.
     let dvt := eval Nat.fzero (dovetail (c_kp54_aux i la)) Bₚ
     if halts:dvt.Dom then
       let rf := (dvt.get halts).l
@@ -80,8 +81,9 @@ noncomputable def KP54 : ℕ→ℕ := λ s ↦
       Nat.pair ((n2l Aₚ).concat (Nat.sg' B_result)) Bₛ
     else
       Nat.pair (l2n $ (n2l Aₚ).concat 0) (l2n $ (n2l Bₚ).concat 0)
+@[simp] theorem KP54_0_r : n2l (KP54 0).r = [] := by simp [KP54]
+@[simp] theorem KP54_0_l : n2l (KP54 0).l = [] := by simp [KP54]
 
-#exit
 /-
 `KP54(s)=(a,b)` where `D a, D b` correspond to sets `A` and `B` at stage `s`.
 We note that:
@@ -98,12 +100,13 @@ private noncomputable def Bs (s:ℕ) := n2l (KP54 s).r
 theorem AsBs_Mono_0 : (As i) <+: (As (i+1)) ∧ (Bs i) <+: (Bs (i+1)) := by
   unfold As
   unfold Bs
-  rw (config:={occs:=.pos [2,3]}) [KP54]
+  -- rw (config:={occs:=.pos [2,3]}) [KP54]
+  rw (config:={occs:=.pos [1,2]}) [KP54]
   simp (config := {zeta:=false}) [-Nat.rfind_dom]
-  lift_lets
-  extract_lets
-  expose_names
-  if h0:(i + 1) % 2 = 0 then
+  -- lift_lets
+  -- extract_lets
+  -- expose_names
+  if h0: (i+1) % 2 = 0 then
     simp [h0,-Nat.rfind_dom]
     aesop
   else
@@ -165,7 +168,7 @@ theorem Bs_Mono_4
     rw [this]
     exact Bs_Mono_3 hii asz
   rw [this]
-
+@[simp] private lemma AsBsSize_aux_0 : (2 * i + 1 + 1) % 2 = 0 := by omega
 theorem AsSize_o2e : (As (2*i+1)).length = (As (2*i)).length + 1 := by
   rw [As, KP54]
   simp (config := {zeta:=false})
@@ -274,29 +277,78 @@ private noncomputable def R_wt (i:ℕ) := (Bs (2*(i+1)-1)).length
   have := @BsSize_o2e i
   simp_all only [Nat.add_one_sub_one, lt_add_iff_pos_right, zero_lt_one]
 
+-- private noncomputable def S_wt (i:ℕ) := (As (2*(i+1)-1)).length
+-- @[simp] theorem AsSize_o2e' : S_wt i < (As (2 * (i + 1))).length := by
+--   rw [show S_wt i = (As (2*(i+1)-1)).length from rfl]
+--   exact AsSize_mono'
+
 
 private def A := { x | n2b (As (x+1))[x] }
 private def B := { x | n2b (Bs (x+1))[x] }
 
-private theorem R_aux_0 (i:ℕ) (h:(evals (As (2*(i+1))) i (R_wt i)).Dom):
-(evals (As (2*(i+1))) i (R_wt i)).get h ≠ b2n (n2b $ (Bs (2*(i+1)))[R_wt i]'BsSize_o2e') := by
+theorem i2iP1 {i:ℕ} : 2*(i+1) = 2*i+1+1 := by exact rfl
+
+
+-- private theorem S_aux_0 (i:ℕ) (h:(evals (Bs (2*(i+1))) i (S_wt i)).Dom):
+-- (evals (Bs (2*(i+1))) i (S_wt i)).get h ≠ b2n (n2b $ ((As (2*(i+1)))[S_wt i]'(by exact AsSize_o2e'))) := by
+
+-- set_option diagnostics true in
+-- private theorem R_aux_0 (i:ℕ) (h:(evals (As (2*(i+1))) i (R_wt i)).Dom):
+-- (evals (As (2*(i+1))) i (R_wt i)).get h ≠ b2n (n2b $ (Bs (2*(i+1)))[R_wt i]'(@BsSize_o2e' i)) := by
+private theorem R_aux_0 (i:ℕ) (h:(evals (As (2*i+1+1)) i (R_wt i)).Dom):
+(evals (As (2*i+1+1)) i (R_wt i)).get h ≠ b2n (n2b $ (Bs (2*i+1+1))[R_wt i]'(@BsSize_o2e' i)) := by
+
+  -- rw [@i2iP1 i] at h ⊢
   unfold Bs
   unfold As
   unfold KP54
+  -- extract_lets
+  -- simp (config := {zeta:=false}) only [i2iP1]
   simp (config := {zeta:=false})
+  simp (config := {zetaHave:=false}) only []
+  -- memory blows up if i lift the non-have lets. why?
+
+  -- simp only []
+  
+  -- simp
+  -- split
+  -- simp
+  -- extract_lets
   lift_lets
+
   extract_lets
   expose_names
-  have i_1_simp: i_1 = i := Nat.div2_bit1 i
+  have i_1_simp: i_1 = i := rfl
 
-  if h1: dvt.Dom then
-    simp (config := {zeta:=false}) [h1]
+  let (eq:=hdvt) dvt := (Nat.RecursiveIn.Code.eval Nat.fzero (c_kp54_aux i_1 lb).dovetail Aₚ)
+  simp (config := {zeta:=false}) only [←hdvt]
+
+
+  
+  -- sorry
+  
+
+  if halts: dvt.Dom then
+
+    let (eq:=hrf) rf  := (dvt.get halts).l -- rf is a natural such that (eval_string ((n2l A) ++ (n2l rf)) i n).Dom.
+    simp (config := {zeta:=false}) only [←hrf]
+    let (eq:=hAₛ) Aₛ := (n2l Aₚ) ++ (n2l (rf+1))
+    simp (config := {zeta:=false}) only [←hAₛ]
+
+
+    -- let A_result := (evals Aₛ i lb).get (c_kp54_aux_2 halts)
+
+    
+  --   sorry
+  -- else
+  --   sorry
+    simp (config := {zeta:=false}) [halts]
     lift_lets; extract_lets; expose_names
 
     have lbrw : R_wt i = (n2l Bₚ).length := rfl
     simp [lbrw]; simp only [←lbrw]
 
-    have aaa : A_result = (evals (Aₛ) i_1 (R_wt i)).get (c_kp54_aux_2 (of_eq_true (eq_true h1))) := rfl
+    have aaa : A_result = (evals (Aₛ) i_1 (R_wt i)).get (c_kp54_aux_2 (of_eq_true (eq_true halts))) := rfl
     simp (config := {zeta:=false}) only [i_1_simp] at aaa
     simp [←aaa]
 
@@ -307,7 +359,7 @@ private theorem R_aux_0 (i:ℕ) (h:(evals (As (2*(i+1))) i (R_wt i)).Dom):
     have := @Asexext (2*i+1) (2*i+2) (Nat.lt_add_one (2 * i + 1))
     rcases this with ⟨h3,h2⟩
 
-    have := dovetail_ev_1.mp (Part.eq_none_iff'.mpr h1) h3
+    have := dovetail_ev_1.mp (Part.eq_none_iff'.mpr halts) h3
     simp [c_kp54_aux_evp, -Denumerable.list_ofNat_succ] at this
     rw [show n2l Aₚ = As (2*i+1) from rfl, h2, i_1_simp] at this
     exact this h
@@ -346,12 +398,13 @@ theorem As_Uninjured_0' {i:ℕ} : ¬ (eval A i k).Dom → ¬ (evals (As (2*(i+1)
 /--
 If `[i:As](k)` diverges, then it will always diverge in subsequent steps.
 -/
-theorem As_Uninjured_1 : ¬(evals (As (2*(i+1))) i (R_wt i)).Dom → ¬(eval A i (R_wt i)).Dom := by
+theorem As_Uninjured_1 : ¬(evals (As (2*i+1+1)) i (R_wt i)).Dom → ¬(eval A i (R_wt i)).Dom := by
   unfold As
   unfold KP54
   simp (config := {zeta:=false})
   lift_lets; extract_lets; expose_names
-  have i_1_simp: i_1 = i := Nat.div2_bit1 i
+  -- have i_1_simp: i_1 = i := Nat.div2_bit1 i
+  have i_1_simp: i_1 = i := rfl
   have keqlb : R_wt i=lb := rfl
 
   if h0:dvt.Dom then
@@ -361,7 +414,7 @@ theorem As_Uninjured_1 : ¬(evals (As (2*(i+1))) i (R_wt i)).Dom → ¬(eval A i
     intro h
     exfalso
     have := c_kp54_aux_2 h0
-    rw [i_1_simp] at this
+    simp only [i_1_simp] at this
     exact h this
 
 
