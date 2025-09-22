@@ -108,8 +108,8 @@ def c_sg' := comp (prec (c_const 1) (((zero).comp left).comp left)) (pair zero c
   | succ n _ => simp
 @[simp] theorem c_sg'_ev : eval O c_sg' = Nat.sg' := by rw [← eval_prim_eq_eval c_sg'_ev_pr]; simp only [c_sg'_evp]
 end Nat.RecursiveIn.Code
-theorem Nat.PrimrecIn.sg:Nat.PrimrecIn O Nat.sg := by rw [←c_sg_evp]; apply code_prim_prop c_sg_ev_pr
-theorem Nat.PrimrecIn.sg':Nat.PrimrecIn O Nat.sg' := by rw [←c_sg'_evp]; apply code_prim_prop c_sg'_ev_pr
+theorem Nat.PrimrecIn.sg:Nat.PrimrecIn O Nat.sg := by rw [←c_sg_evp]; exact code_prim_prop
+theorem Nat.PrimrecIn.sg':Nat.PrimrecIn O Nat.sg' := by rw [←c_sg'_evp]; exact code_prim_prop
 theorem Nat.Primrec.sg:Nat.Primrec Nat.sg := by exact PrimrecIn.PrimrecIn_Empty PrimrecIn.sg
 theorem Nat.Primrec.sg':Nat.Primrec Nat.sg' := by exact PrimrecIn.PrimrecIn_Empty PrimrecIn.sg'
 
@@ -443,36 +443,6 @@ end ifz
 
 
 
-
-section ef
-namespace Nat.RecursiveIn.Code
-def c_ef:ℕ→ℕ:=fun c=>(pair Nat.RecursiveIn.Code.id c)
--- @[s, aesop safeimp] theorem c_ef_ev_pr:code_prim $ c_ef c := by repeat (first|assumption|simp|constructor)
-@[simp] theorem c_ef_pr_aux:Primrec (pair Nat.RecursiveIn.Code.id) := by
-  refine Primrec.projection ?_
-  apply PrimrecIn.PrimrecIn₂_iff_Primrec₂.mp
-  intro O
-  apply pair_prim
-@[simp] theorem c_ef_pr: Nat.Primrec c_ef := by
-  refine Primrec.nat_iff.mp ?_
-  apply c_ef_pr_aux
--- @[simp] theorem c_ef_evp:eval_prim O c_ef = fun ab => if ab.l=ab.r then 0 else 1 := by simp [c_ef,eval_prim];
-theorem c_ef_ev : eval O (c_ef c) x = Nat.pair <$> x <*> (eval O c x) := by simp [c_ef,eval]
-end Nat.RecursiveIn.Code
--- theorem Nat.PrimrecIn.ef:Nat.PrimrecIn O Nat.ef := by ...
--- theorem Nat.Primrec.ef:Nat.Primrec Nat.ef := by ...
-theorem c_ef_ev_left (h:(eval O c x).Dom) : eval O (left.comp $ c_ef c) x = x := by
-  have h0 : (eval O c x).get h ∈ (eval O c x) := by exact Part.get_mem h
-  have h1 : eval O c x = Part.some ((eval O c x).get h) := by exact Part.get_eq_iff_eq_some.mp rfl
-
-  simp [c_ef, eval]
-  rw [h1]
-  -- should maybe define some theorem that simplfies the Nat.pair <*> business
-  simp [Seq.seq]
-  exact Part.Dom.bind h fun y ↦ Part.some x
-end ef
-
-
 section nat_iterate
 namespace Nat.RecursiveIn.Code
 def c_nat_iterate (cf:Code) :=
@@ -514,16 +484,22 @@ namespace Nat.RecursiveIn.Code
 def c_pair := c_add.comp₂ (c_mul2.comp $ c_mul2) (c_const 5)
 @[simp, aesop safe] theorem c_pair_ev_pr:code_prim c_pair := by repeat (first|assumption|simp|constructor)
 @[simp] theorem c_pair_evp : eval_prim O c_pair (Nat.pair a b) = encodeCode (pair a b) := by simp [encodeCode, c_pair, Nat.mul_comm]
+@[simp] theorem c_pair_evp' : eval_prim O c_pair = fun ab:ℕ => encodeCode (pair ab.l ab.r) := by simp [encodeCode, c_pair, Nat.mul_comm]
 @[simp] theorem c_pair_ev:eval O c_pair (Nat.pair a b) = encodeCode (pair a b) := by rw [← eval_prim_eq_eval c_pair_ev_pr]; simp
+@[simp] theorem Nat.PrimrecIn.c_pair : Nat.PrimrecIn O (fun ab:ℕ => encodeCode (pair ab.l ab.r)) := by rw [←c_pair_evp']; exact code_prim_prop
 
 def c_comp := c_add.comp₂ (c_mul2.comp $ c_mul2) (c_const 6)
 @[simp, aesop safe] theorem c_comp_ev_pr:code_prim c_comp := by repeat (first|assumption|simp|constructor)
 @[simp] theorem c_comp_evp : eval_prim O c_comp (Nat.pair a b) = encodeCode (comp a b) := by simp [encodeCode, c_comp, Nat.mul_comm]
+@[simp] theorem c_comp_evp' : eval_prim O c_comp = fun ab:ℕ => encodeCode (comp ab.l ab.r) := by simp [encodeCode, c_comp, Nat.mul_comm]
 @[simp] theorem c_comp_ev:eval O c_comp (Nat.pair a b) = encodeCode (comp a b) := by rw [← eval_prim_eq_eval c_comp_ev_pr]; simp
+@[simp] theorem Nat.PrimrecIn.c_comp : Nat.PrimrecIn O (fun ab:ℕ => encodeCode (comp ab.l ab.r)) := by rw [←c_comp_evp']; exact code_prim_prop
 
 def c_prec := c_add.comp₂ (c_mul2.comp $ c_mul2) (c_const 7)
 @[simp, aesop safe] theorem c_prec_ev_pr:code_prim c_prec := by repeat (first|assumption|simp|constructor)
 @[simp] theorem c_prec_evp : eval_prim O c_prec (Nat.pair a b) = encodeCode (prec a b) := by simp [encodeCode, c_prec, Nat.mul_comm]; exact rfl
+@[simp] theorem c_prec_evp' : eval_prim O c_prec = fun ab:ℕ => encodeCode (prec ab.l ab.r) := by simp [encodeCode, c_prec, Nat.mul_comm]; exact rfl
+@[simp] theorem Nat.PrimrecIn.c_prec : Nat.PrimrecIn O (fun ab:ℕ => encodeCode (prec ab.l ab.r)) := by rw [←c_prec_evp']; exact code_prim_prop
 @[simp] theorem c_prec_ev:eval O c_prec (Nat.pair a b) = encodeCode (prec a b) := by rw [← eval_prim_eq_eval c_prec_ev_pr]; simp
 
 def c_rfind' := c_add.comp₂ (c_mul2.comp $ c_mul2) (c_const 8)
@@ -545,7 +521,12 @@ def c_c_const := (c_nat_iterate (c_comp.comp₂ (c_const succ) (c_id))).comp₂ 
     apply Eq.symm
     rw [c_const.eq_def] -- bug? cant rw without the eq.symm, even with occs
     simp only [decodeCode_encodeCode]
+theorem c_c_const_evp' : eval_prim O c_c_const = c_const := by
+  funext x
+  simp
+  exact rfl
 @[simp] theorem c_c_const_ev:eval O c_c_const c = encodeCode (c_const c) := by rw [← eval_prim_eq_eval c_c_const_ev_pr]; simp
+@[simp] theorem Nat.PrimrecIn.c_const:Nat.PrimrecIn O c_const := by rw [← c_c_const_evp']; exact code_prim_prop
 
 def c_ev_const := c_comp.comp₂ left (c_c_const.comp right)
 @[simp, aesop safe] theorem c_ev_const_ev_pr:code_prim c_ev_const := by repeat (first|assumption|simp|constructor)

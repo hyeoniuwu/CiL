@@ -41,6 +41,23 @@ def c_ite (c a b:Nat.RecursiveIn.Code) := c_eval.comp₂ (c_ifz1 c a b) (c_id)
   split
   next h => simp only [Part.get_some, decodeCode_encodeCode]
   next h => simp only [Part.get_some, decodeCode_encodeCode]
+theorem exists_code_nat {O:ℕ → ℕ} {f:ℕ →. ℕ} : Nat.RecursiveIn O f ↔ ∃ c:ℕ , eval O c = f := by
+  rw [@exists_code O f]
+  exact Function.Surjective.exists decodeCode_sur
+theorem exists_code_total {O:ℕ → ℕ} {f:ℕ → ℕ} : Nat.RecursiveIn O f ↔ ∃ c , eval O c = f ∧ code_total O c := by
+  constructor
+  ·
+    intro h
+    rcases exists_code.mp h with ⟨c,hc⟩
+    use c
+    constructor
+    exact hc
+    intro x
+    rw [hc]
+    exact trivial
+  intro h
+  rcases h with ⟨c,hc,_⟩
+  apply exists_code.mpr ⟨c,hc⟩
 theorem Nat.RecursiveIn.ite {O:ℕ→ℕ} {f g:ℕ→.ℕ} {c:ℕ→ℕ} (hc:Nat.RecursiveIn O c) (hf:Nat.RecursiveIn O f) (hg:Nat.RecursiveIn O g):Nat.RecursiveIn O fun a => if (c a=0) then (f a) else (g a) := by
   apply exists_code.mpr
   rcases exists_code_total.mp hc with ⟨cc,hcc,hcct⟩
@@ -76,5 +93,64 @@ def c_ifdom (c a:Nat.RecursiveIn.Code) := c_add.comp₂ (zero.comp c) a
     simp [Part.Dom.bind h, pure, PFun.pure]
   next h =>
     simp [Part.eq_none_iff'.mpr h]
+
+
+
+
+def eval₁ (O:ℕ→ℕ):ℕ→.ℕ := fun ex => eval O ex.l ex.r
+def c_evaln₁ := c_evaln.comp₃ (left.comp right) (left) (right.comp right)
+def evaln₁ (O:ℕ→ℕ):ℕ→ℕ := fun abc => Encodable.encode (evaln O abc.r.r abc.l abc.r.l)
+theorem c_evaln₁_evp : eval_prim O c_evaln₁ = evaln₁ O := by
+  simp [c_evaln₁]
+  exact rfl
+theorem rec_eval₁:Nat.RecursiveIn O (eval₁ O) := Nat.RecursiveIn.eval
+theorem prim_evaln₁:Nat.PrimrecIn O (evaln₁ O) := by
+  simp [← c_evaln₁_evp]
+
+end Nat.RecursiveIn.Code
+
+
+namespace Nat.RecursiveIn.Code
+/-- c_evconst takes as input a natural `(e,x)`, and returns an index to a program which calculates `[e](x)` regardless of its input. -/
+def c_evconst (ex:ℕ) : ℕ := comp ex.l (c_const ex.r)
+@[simp] theorem c_evconst_ev : eval O (c_evconst (Nat.pair e x)) _z = eval O e x := by unfold c_evconst; simp [eval]
+-- hm, the proof shouldnt be this long?
+@[simp] theorem c_evconst_pr : Nat.PrimrecIn O c_evconst := by
+  have rwmain : c_evconst = (fun ex:ℕ => (comp ex.l ex.r:ℕ)) ∘ (fun ex:ℕ => Nat.pair ex.l (c_const ex.r)) := by
+    funext xs
+    simp
+    unfold c_evconst
+    exact rfl
+  rw [rwmain]
+  have main2 : Nat.PrimrecIn O fun ex:ℕ => Nat.pair ex.l (c_const ex.r) := by
+    refine PrimrecIn.pair ?_ ?_
+    · exact PrimrecIn.left
+    · have main3 : (fun ex:ℕ ↦ ((c_const ex.r):ℕ)) = (fun ex => (c_const ex :ℕ)) ∘ fun exa => exa.r := by
+        funext xs
+        simp only [Function.comp_apply]
+      have main4 : Nat.PrimrecIn O fun ex => (c_const ex:ℕ) := by
+        exact Nat.PrimrecIn.c_const
+        -- refine PrimrecIn.nat_iff.mp ?_
+        
+        -- apply 
+      have main5 : Nat.PrimrecIn O fun exa => exa.r := by
+        exact PrimrecIn.right
+      rw [main3]
+      apply Nat.PrimrecIn.comp main4 main5
+  apply Nat.PrimrecIn.comp (Nat.PrimrecIn.c_comp) main2
+
+
+theorem Nat.RecursiveIn.evalRecInO' {O} {f:ℕ→.ℕ} (h:Nat.RecursiveIn O f):Nat.RecursiveIn O (fun x => (f x) >>= (eval₁ O)) := by
+  simp only [Part.bind_eq_bind]
+  refine _root_.Nat.RecursiveIn.comp ?_ h
+  apply rec_eval₁
+theorem Nat.RecursiveIn.eval_K_computable:Nat.RecursiveIn O (fun x ↦ Nat.RecursiveIn.Code.eval O x x) := by
+  have h:(fun (x:ℕ) ↦ Nat.RecursiveIn.Code.eval O x x) = (fun (x:ℕ) => Nat.RecursiveIn.Code.eval O x.unpair.1 x.unpair.2) ∘ (fun x=>Nat.pair x x) := by
+    funext xs
+    simp only [Function.comp_apply, Nat.unpair_pair]
+  rw [h]
+  refine Nat.RecursiveIn.partCompTotal ?_ ?_
+  exact rec_eval₁
+  exact Nat.RecursiveIn.of_primrec (Nat.Primrec.pair Nat.Primrec.id Nat.Primrec.id)
 
 end Nat.RecursiveIn.Code

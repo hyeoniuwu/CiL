@@ -182,8 +182,7 @@ theorem K0χ_leq_χSetK0 {O:Set ℕ} : Nat.RecursiveIn (χ (SetK0 O)) (K0 (χ O)
 
       apply some_comp_simp
 
-  have h5 : Nat.RecursiveIn (χ O) (fun n ↦ eval (χ O) n.l n.r) := by
-    exact RecursiveIn.nat_iff.mp eval_part
+  have h5 : Nat.RecursiveIn (χ O) (fun n ↦ eval (χ O) n.l n.r) := Nat.RecursiveIn.eval
 
   rw [h0]
   rw [h3]
@@ -216,6 +215,7 @@ theorem χ_leq_χSetK (O:Set ℕ) : Nat.RecursiveIn (χ (SetK O)) (χ O) := by
     simp only [f']
     funext xs
     simp only [χK, c_evconst_ev]
+    
     rw [index_g_is_g]
     simp only [g]
 
@@ -320,94 +320,33 @@ abbrev WR (O:Set ℕ) (e : ℕ) := (eval O e).ran
 section dom_to_ran
 
 
-
-/-- Given a code `e`, returns a code whose range is the domain of `e`. -/
-noncomputable def dom_to_ran (O:Set ℕ) : (ℕ→ℕ) := fun e => curry ((comp) (right.comp left) (c_ef (c_evalSet₁ O))) e
--- the internal expression, (comp) (right.comp left) (code_to_code_ef (c_evalSet₁ O)), takes a pair ex as input.
--- code_to_code_ef (c_evalSet₁ O) ex = (ex, [e](x)).
--- piping it into right.comp left returns x.
--- we curry bc we want eval (dom_to_ran e) x = ~
-
-theorem dom_to_ran_prop : (W O e) = (WR O (dom_to_ran O e)) := by
+def c_dom_to_ran (e:ℕ) := c_ifdom (c_eval.comp₂ (c_const e) c_id) c_id
+theorem dom_to_ran_prop : (W O e) = (WR O (c_dom_to_ran e)) := by
   ext xs
+  simp [c_dom_to_ran]
   constructor
   · intro h
     simp [_root_.eval] at h
     rcases h with ⟨y,hy⟩
-    simp [WR, _root_.eval]
-    simp only [dom_to_ran]
-    simp only [decodeCode_encodeCode]
-    have h0 : (eval (χ O) e xs).Dom := by
-      apply Part.dom_iff_mem.mpr
-      exact Exists.intro y hy
-    have h5234 : (eval (χ O) (decodeCode (c_evalSet₁ O)) (Nat.pair e xs)).Dom := by
-      simp? says simp only [decodeCode_encodeCode, c_evalSet₁_ev2, evalSet₁]
-      simp [eval₁]
-      exact h0
-
-
-    rw [PFun.ran]
-    simp only [eval_curry, Set.mem_setOf_eq]
     use xs
-    simp only [Nat.RecursiveIn.Code.eval, Part.coe_some, Part.bind_eq_bind]
-    rw [c_ef_ev]
+    simp [_root_.eval, Nat.RecursiveIn.Code.eval, Seq.seq, Part.mem_imp_dom hy]
 
-    apply Part.dom_iff_mem.mp at h5234
-    rcases h5234 with ⟨y',hy'⟩
-    apply Part.eq_some_iff.mpr at hy'
-    rw [hy']
-
-    simp [Seq.seq]
-
-  · contrapose
+  · 
     intro h
-    simp at h
-    -- rcases h with ⟨y,hy⟩
-    simp [WR, _root_.eval]
-    simp only [dom_to_ran]
-    simp only [decodeCode_encodeCode]
-    have h0 : ¬(eval (χ O) e xs).Dom := by
-      refine Part.eq_none_iff'.mp ?_
-      exact Part.eq_none_iff.mpr h
-    have h5234 : ¬(eval (χ O) (decodeCode (c_evalSet₁ O)) (Nat.pair e xs)).Dom := by
-      simp [evalSet₁]
-      simp [eval₁]
-      exact h0
-
-    rw [PFun.ran]
-    simp only [eval_curry, Set.mem_setOf_eq]
-    simp
-    intro x
-    simp only [Nat.RecursiveIn.Code.eval, Part.coe_some, Part.bind_eq_bind]
-    rw [c_ef_ev]
-
-    cases Classical.em ((eval (χ O) (decodeCode (c_evalSet₁ O)) (Nat.pair e x)).Dom) with
-    | inl h' =>
-      have h123: ¬ x=xs  := by
-        intro hxx
-        rw [hxx] at h'
-        contradiction
-      apply Part.dom_iff_mem.mp at h'
-      rcases h' with ⟨y',hy'⟩
-      apply Part.eq_some_iff.mpr at hy'
-      rw [hy']
-      simp [Seq.seq]
-      exact fun a ↦ h123 (id (Eq.symm a))
-    | inr h' =>
-      apply Part.eq_none_iff'.mpr at h'
-      rw [h']
-      simp [Seq.seq]
-
-
-private lemma prim_dom_to_ran_aux : Primrec ((right.comp left).comp (decodeCode (c_ef (c_evalSet₁ O)))).curry := by
-  refine Primrec.projection ?_
-  apply PrimrecIn.PrimrecIn₂_iff_Primrec₂.mp
-  exact fun O ↦ curry_prim
-theorem Nat.Primrec.prim_dom_to_ran : Nat.Primrec (dom_to_ran O) := by
-  unfold dom_to_ran
-  refine Primrec.nat_iff.mp ?_
-  apply prim_dom_to_ran_aux
-
+    simp [PFun.ran] at h
+    rcases h with ⟨h0,h1⟩
+    simp [_root_.eval, Nat.RecursiveIn.Code.eval] at h1
+    simp [Seq.seq] at h1
+    
+    have : xs=h0 := by
+      contrapose h1
+      split
+      next h => simp [h1]
+      next h => exact Part.notMem_none xs
+    rw [←this] at h1
+    split at h1
+    · (expose_names; exact Part.dom_iff_mem.mp h)
+    · simp_all only [Part.notMem_none]
 
 end dom_to_ran
 

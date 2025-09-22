@@ -1,4 +1,4 @@
-import Computability.Encoding
+import Computability.Encoding2
 import Computability.Basic
 import Mathlib.Data.PFun
 import Mathlib.Data.Nat.Dist
@@ -316,7 +316,7 @@ noncomputable def eval_total (O:ℕ→ℕ) (c:Code) : ℕ→ℕ := match c with
 | pair cf cg => fun x => Nat.pair (eval_prim O cf x) (eval_prim O cg x)
 | comp cf cg => fun x => eval_prim O cf (eval_prim O cg x)
 | prec cf cg => unpaired fun z n => n.rec (eval_prim O cf z) fun y IH => (eval_prim O cg) <| Nat.pair z <| Nat.pair y IH
-| rfind' _ => 0
+| rfind' _ => fun _=>0
 
 theorem eval_prim_eq_eval (h:code_prim c):eval_prim O c = eval O c := by
   induction h with
@@ -363,8 +363,8 @@ theorem eval_prim_eq_eval (h:code_prim c):eval_prim O c = eval O c := by
       simp
       rw [show eval O b ((Nat.pair xs.l (Nat.pair y' (Nat.rec (eval_prim O a xs.l) (fun y IH ↦ eval_prim O b (Nat.pair xs.l (Nat.pair y IH))) y')))) = Part.some (eval_prim O b ((Nat.pair xs.l (Nat.pair y' (Nat.rec (eval_prim O a xs.l) (fun y IH ↦ eval_prim O b (Nat.pair xs.l (Nat.pair y IH))) y'))))) from by exact congrFun (_root_.id (Eq.symm hb_ih)) ((Nat.pair xs.l (Nat.pair y' (Nat.rec (eval_prim O a xs.l) (fun y IH ↦ eval_prim O b (Nat.pair xs.l (Nat.pair y IH))) y'))))]
 theorem eval_prim_eq_eval_ext (h:code_prim c): eval O c x = eval_prim O c x := congrFun (_root_.id (Eq.symm (@eval_prim_eq_eval c O h))) x
-theorem eval_total_eq_eval (h:code_total O c):eval_total O c = eval O c := by
-  sorry
+-- theorem eval_total_eq_eval (h:code_total O c):eval_total O c = eval O c := by
+--   sorry
   -- induction c generalizing h with
   -- | zero => exact rfl
   -- | succ => exact rfl
@@ -411,16 +411,27 @@ theorem eval_total_eq_eval (h:code_total O c):eval_total O c = eval O c := by
 
   -- | rfind' cf hcf =>
   --   sorry
-theorem code_prim_prop (h:code_prim c):∀ O, Nat.PrimrecIn O (eval_prim O c) := by
-  induction h with
-  | zero => unfold eval_prim; exact fun O ↦ PrimrecIn.zero
-  | succ => unfold eval_prim; exact fun O ↦ PrimrecIn.succ
-  | left => unfold eval_prim; exact fun O ↦ PrimrecIn.left
-  | right => unfold eval_prim; exact fun O ↦ PrimrecIn.right
-  | oracle => unfold eval_prim; exact fun O ↦ PrimrecIn.oracle
-  | pair ha hb ha_ih hb_ih => unfold eval_prim; exact fun O ↦ PrimrecIn.pair (ha_ih O) (hb_ih O)
-  | comp ha hb ha_ih hb_ih => unfold eval_prim; exact fun O ↦ PrimrecIn.comp (ha_ih O) (hb_ih O)
-  | prec ha hb ha_ih hb_ih => unfold eval_prim; exact fun O ↦ PrimrecIn.prec (ha_ih O) (hb_ih O)
+-- theorem code_prim_prop (h:code_prim c):∀ O, Nat.PrimrecIn O (eval_prim O c) := by
+--   induction h with
+--   | zero => unfold eval_prim; exact fun O ↦ PrimrecIn.zero
+--   | succ => unfold eval_prim; exact fun O ↦ PrimrecIn.succ
+--   | left => unfold eval_prim; exact fun O ↦ PrimrecIn.left
+--   | right => unfold eval_prim; exact fun O ↦ PrimrecIn.right
+--   | oracle => unfold eval_prim; exact fun O ↦ PrimrecIn.oracle
+--   | pair ha hb ha_ih hb_ih => unfold eval_prim; exact fun O ↦ PrimrecIn.pair (ha_ih O) (hb_ih O)
+--   | comp ha hb ha_ih hb_ih => unfold eval_prim; exact fun O ↦ PrimrecIn.comp (ha_ih O) (hb_ih O)
+--   | prec ha hb ha_ih hb_ih => unfold eval_prim; exact fun O ↦ PrimrecIn.prec (ha_ih O) (hb_ih O)
+@[simp 1000] theorem code_prim_prop : Nat.PrimrecIn O (eval_prim O c) := by
+  induction c with
+  | zero => exact PrimrecIn.zero
+  | succ => exact PrimrecIn.succ
+  | left => exact PrimrecIn.left
+  | right => exact PrimrecIn.right
+  | oracle => exact PrimrecIn.oracle
+  | pair ha hb ha_ih hb_ih => unfold eval_prim; exact PrimrecIn.pair (ha_ih) (hb_ih)
+  | comp ha hb ha_ih hb_ih => unfold eval_prim; exact PrimrecIn.comp (ha_ih) (hb_ih)
+  | prec ha hb ha_ih hb_ih => unfold eval_prim; exact PrimrecIn.prec (ha_ih) (hb_ih)
+  | rfind' ha ha_ih => exact PrimrecIn.zero
 theorem code_prim_of_primrecIn (h:Nat.PrimrecIn O f) : ∃ c, code_prim c ∧ f=eval_prim O c := by
   induction h with
   | zero => use Code.zero; exact ⟨code_prim.zero,rfl⟩
@@ -451,151 +462,6 @@ theorem code_prim_of_primrecIn (h:Nat.PrimrecIn O f) : ∃ c, code_prim c ∧ f=
     · simp only [eval_prim]; rw [hcf.right, hcg.right]
 
 end Nat.RecursiveIn.Code
-
-/-
-When registering a function as being primrec:
-define:
-c_f : the code of f
-c_f_ev : proof that eval c_f = f
-c_f_ev_pr : proof that eval c_f is prim
-
-When registering a function on codes (g):
-c_g : the function g from codes to codes
-c_g_ev : proof that eval (c_g asd) has the intended behaviour
-c_g_pr : proof that g itself is primrec
--/
-
-namespace Nat.RecursiveIn.Code
-/-- c_evconst takes as input a natural `(e,x)`, and returns an index to a program which calculates `[e](x)` regardless of its input. -/
-def c_evconst (ex:ℕ) : ℕ := comp ex.unpair.1 (Code.const ex.unpair.2)
-@[simp] theorem c_evconst_ev : eval O (c_evconst (Nat.pair e x)) _z = eval O e x := by unfold c_evconst; simp [eval]
--- hm, the proof shouldnt be this long?
-@[simp] theorem c_evconst_pr : Nat.PrimrecIn O c_evconst := by
-  have rwmain : c_evconst = (fun ex:ℕ => (comp ex.unpair.1 ex.unpair.2:ℕ)) ∘ (fun ex:ℕ => Nat.pair ex.unpair.1 (Code.const ex.unpair.2)) := by
-    funext xs
-    simp only [Function.comp_apply, unpair_pair, decodeCode_encodeCode]
-    exact rfl
-  rw [rwmain]
-  have main2 : Nat.PrimrecIn O fun ex:ℕ => Nat.pair ex.unpair.1 (Code.const ex.unpair.2) := by
-    refine PrimrecIn.pair ?_ ?_
-    · exact PrimrecIn.left
-    · have main3 : (fun ex ↦ ((Code.const (unpair ex).2):ℕ)) = (fun ex => (Code.const ex :ℕ)) ∘ fun exa => (unpair exa).2 := by
-        funext xs
-        simp only [Function.comp_apply]
-      have main4 : Nat.PrimrecIn O fun ex => (Code.const ex:ℕ) := by
-        refine PrimrecIn.nat_iff.mp ?_
-        apply const_prim
-      have main5 : Nat.PrimrecIn O fun exa => (unpair exa).2 := by
-        exact PrimrecIn.right
-      rw [main3]
-      apply Nat.PrimrecIn.comp main4 main5
-
-  apply Nat.PrimrecIn.comp (PrimrecIn.nat_iff.mp (comp_prim)) main2
-
-
-end Nat.RecursiveIn.Code
-
-
-
-
-
-
-
-
--- addednum for existscode in Encoding.lean
-namespace Nat.RecursiveIn.Code
-theorem exists_code_nat {O:ℕ → ℕ} {f:ℕ →. ℕ} : Nat.RecursiveIn O f ↔ ∃ c:ℕ , eval O c = f := by
-  rw [@exists_code O f]
-  exact Function.Surjective.exists decodeCode_sur
-theorem exists_code_total {O:ℕ → ℕ} {f:ℕ → ℕ} : Nat.RecursiveIn O f ↔ ∃ c , eval O c = f ∧ code_total O c := by
-  constructor
-  ·
-    intro h
-    rcases exists_code.mp h with ⟨c,hc⟩
-    use c
-    constructor
-    exact hc
-    intro x
-    rw [hc]
-    exact trivial
-  intro h
-  rcases h with ⟨c,hc,_⟩
-  apply exists_code.mpr ⟨c,hc⟩
-
-def eval₁ (O:ℕ→ℕ):ℕ→.ℕ := fun ex => eval O ex.unpair.1 ex.unpair.2
-def evaln₁ (O:ℕ→ℕ):ℕ→ℕ := fun abc => Encodable.encode (evaln O abc.r.r abc.l abc.r.l)
-theorem rec_eval₁:Nat.RecursiveIn O (eval₁ O) := by exact RecursiveIn.nat_iff.mp eval_part
-theorem prim_evaln₁:Nat.PrimrecIn O (evaln₁ O) := by
-  refine PrimrecIn.nat_iff.mp ?_
-  unfold evaln₁
-  have h:(fun (abc:ℕ) ↦ evaln O abc.r.r (abc.l) abc.r.l) = (fun (a:(ℕ×Code)×ℕ) ↦ evaln O a.1.1 a.1.2 a.2) ∘ (fun (abc:ℕ) => ((abc.r.r, abc.l), abc.r.l)) := by
-    exact rfl
-  -- rw [h]
-  have h2:PrimrecIn O (fun (abc:ℕ) =>    (((abc.r.r, abc.l), abc.r.l):(ℕ×Code)×ℕ)    ) := by
-    refine _root_.PrimrecIn.pair ?_ ?_
-    · apply _root_.PrimrecIn.pair (_root_.PrimrecIn.comp (PrimrecIn.nat_iff.mpr PrimrecIn.right) (PrimrecIn.nat_iff.mpr PrimrecIn.right))
-      apply _root_.PrimrecIn.comp
-      · apply PrimrecIn.ofNat Nat.RecursiveIn.Code
-      · exact PrimrecIn.nat_iff.mpr PrimrecIn.left
-    · exact _root_.PrimrecIn.comp (PrimrecIn.nat_iff.mpr PrimrecIn.left) (PrimrecIn.nat_iff.mpr PrimrecIn.right)
-  apply _root_.PrimrecIn.comp evaln_prim h2
-
-
--- theorem exists_code_for_eval₁:∃ c:ℕ, eval O c = eval₁ O := by
---   apply (exists_code_nat.mp)
---   exact rec_eval₁
-
-theorem Nat.RecursiveIn.evalRecInO' {O} {f:ℕ→.ℕ} (h:Nat.RecursiveIn O f):Nat.RecursiveIn O (fun x => (f x) >>= (eval₁ O)) := by
-  simp only [Part.bind_eq_bind]
-  refine _root_.Nat.RecursiveIn.comp ?_ h
-  apply rec_eval₁
-theorem Nat.RecursiveIn.eval_K_computable:Nat.RecursiveIn O (fun x ↦ eval O x x) := by
-  have h:(fun (x:ℕ) ↦ eval O x x) = (fun (x:ℕ) => eval O x.unpair.1 x.unpair.2) ∘ (fun x=>Nat.pair x x) := by
-    funext xs
-    simp only [Function.comp_apply, Nat.unpair_pair]
-  rw [h]
-  refine Nat.RecursiveIn.partCompTotal ?_ ?_
-  exact rec_eval₁
-  exact Nat.RecursiveIn.of_primrec (Nat.Primrec.pair Nat.Primrec.id Nat.Primrec.id)
-end Nat.RecursiveIn.Code
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
