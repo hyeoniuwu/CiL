@@ -57,11 +57,11 @@ noncomputable def KP54 : ℕ→ℕ := λ s ↦
 match s with
 | 0 => Nat.pair 0 0
 | s+1 =>
-  have i  := (s).div2
-  have Aₚ := (KP54 (s)).l
-  have Bₚ := (KP54 (s)).r
-  have lb := List.length (n2l Bₚ)
-  have la := List.length (n2l Aₚ)
+  have i  := s.div2
+  have Aₚ := (KP54 s).l
+  have Bₚ := (KP54 s).r
+  have lb := (n2l Bₚ).length
+  have la := (n2l Aₚ).length
 
   if (s+1)%2=0 then -- then s+1=2i+2, and we will work on Rᵢ.
     let dvt := eval Nat.fzero (dovetail (c_kp54_aux i lb)) Aₚ
@@ -94,8 +94,8 @@ actually now i changed it so that i think
  · by stage n,   `χ_B(n)` is bound to be defined.
  · by stage n,   `χ_A(n)` is bound to be defined.
 -/
-private noncomputable def As (s:ℕ) := n2l (KP54 s).l
-private noncomputable def Bs (s:ℕ) := n2l (KP54 s).r
+noncomputable def As (s:ℕ) := n2l (KP54 s).l
+noncomputable def Bs (s:ℕ) := n2l (KP54 s).r
 
 theorem AsBs_Mono_0 : (As i) <+: (As (i+1)) ∧ (Bs i) <+: (Bs (i+1)) := by
   unfold As
@@ -283,8 +283,8 @@ private noncomputable def R_wt (i:ℕ) := (Bs (2*(i+1)-1)).length
 --   exact AsSize_mono'
 
 
-private def A := { x | n2b (As (x+1))[x] }
-private def B := { x | n2b (Bs (x+1))[x] }
+def A := { x | n2b (As (x+1))[x] }
+def B := { x | n2b (Bs (x+1))[x] }
 
 theorem i2iP1 {i:ℕ} : 2*(i+1) = 2*i+1+1 := by exact rfl
 

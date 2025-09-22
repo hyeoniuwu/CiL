@@ -55,6 +55,7 @@ notation:100 A"⌜" => SetJump A
 @[reducible,simp] def SetTuringDegreeLT (A B : Set ℕ) : Prop := TuringDegree.PO.lt ⟦A⟧ ⟦B⟧
 @[reducible,simp] def SetTuringDegreeEQ (A B : Set ℕ) : Prop := AntisymmRel TuringDegree.PO.le ⟦A⟧ ⟦B⟧
 @[reducible,simp] def SetTuringDegreeIN (A B : Set ℕ) : Prop := (¬TuringDegree.PO.le ⟦A⟧ ⟦B⟧)∧(¬TuringDegree.PO.le ⟦B⟧ ⟦A⟧)
+-- @[reducible,simp] scoped[Computability] infix:50 "≤ᵀ" => SetTuringReducible
 @[reducible,simp] scoped[Computability] infix:50 "≤ᵀ" => SetTuringDegreeLE
 @[reducible,simp] scoped[Computability] infix:50 "<ᵀ" => SetTuringDegreeLT
 @[reducible,simp] scoped[Computability] infix:50 "≡ᵀ" => SetTuringDegreeEQ
