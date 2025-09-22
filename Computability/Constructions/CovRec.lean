@@ -458,8 +458,10 @@ section div2
 namespace Nat.RecursiveIn.Code
 def c_div2 := c_div.comp₂ c_id (c_const 2)
 @[simp] theorem c_div2_ev_pr:code_prim c_div2 := by repeat (first|assumption|simp|constructor)
-@[simp] theorem c_div2_evp:eval_prim O c_div2 = fun x => x/2 := by simp [c_div2]
-@[simp] theorem c_div2_ev:eval O c_div2 = (fun x => x/(2:ℕ)) := by rw [← eval_prim_eq_eval c_div2_ev_pr]; simp only [c_div2_evp];
+-- @[simp] theorem c_div2_evp:eval_prim O c_div2 = fun x => x/2 := by simp [c_div2]
+-- @[simp] theorem c_div2_ev:eval O c_div2 = (fun x => x/(2:ℕ)) := by simp [← eval_prim_eq_eval c_div2_ev_pr]
+@[simp] theorem c_div2_evp:eval_prim O c_div2 = div2 := by simp [c_div2]; funext x; exact Eq.symm (div2_val x)
+@[simp] theorem c_div2_ev:eval O c_div2 = div2 := by simp [← eval_prim_eq_eval c_div2_ev_pr]
 end Nat.RecursiveIn.Code
 -- theorem Nat.PrimrecIn.div2:Nat.PrimrecIn O Nat.div2 := by ...
 -- theorem Nat.Primrec.div2:Nat.Primrec Nat.div2 := by ...
@@ -584,7 +586,6 @@ theorem c_replace_oracle_evp_aux_nMod4 :
     simp [m_1]
     simp [hn]
     simp [m]
-    simp [Nat.div2_val]
 
   have hml : eval_prim O ml_1 (Nat.pair o (Nat.pair (n+4) (eval_prim O c_replace_oracle_aux (Nat.pair o (n+4))))) = ml := by
     simp [ml_1]

@@ -295,11 +295,13 @@ theorem χK0_eq_χK (O:Set ℕ) : (χ (SetK0 O)) ≡ᵀᶠ (χ (SetK O)) := Turi
 theorem SetK0_eq_SetK (O:Set ℕ) : (SetK0 O) ≡ᵀ (SetK O) := ⟨(χK0_eq_χK O).le, (χK0_eq_χK O).ge⟩
 theorem Set_leq_SetK (O:Set ℕ) : O ≤ᵀ (SetK O) := χ_leq_χK O
 
+theorem TR_Set_iff_Fn {O₁ O₂} : O₁ ≤ᵀ O₂ ↔ (χ O₁) ≤ᵀᶠ (χ O₂) := Eq.to_iff rfl
+
 theorem SetJump_not_leq_Set (O:Set ℕ) : ¬O⌜≤ᵀO := by
   intro h
   simp only [SetJump] at h
   apply K_nle_O
-  exact trans (Kχ_leq_χK O) h
+  exact .trans (Kχ_leq_χK O) h
 theorem Set_lt_SetJump (O:Set ℕ) : O<ᵀO⌜ := by
   constructor
   · exact Set_leq_SetK O
