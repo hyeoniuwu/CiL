@@ -522,19 +522,8 @@ theorem R_aux_1 (i:ℕ) : (eval A i (R_wt i)) ≠ Part.some ((χ B) (R_wt i)) :=
   else
     simp [Part.eq_none_iff'.mpr h0]
 
-private theorem R (i:ℕ) : eval A i ≠ χ B := Function.ne_iff.mpr ⟨R_wt i, R_aux_1 i⟩
-private theorem S (i:ℕ) : eval B i ≠ χ A := by sorry
-
-def c_kp54 := zero
-theorem c_kp54_t : code_total O c_kp54 := by sorry
-theorem c_kp54_ev : (eval (∅⌜) c_kp54 x).get (c_kp54_t x) = KP54 x := by sorry
-theorem A_le_J1 : A ≤ᵀ ∅⌜ := by
-  unfold A
-  unfold As
-  simp only [← c_kp54_ev]
-
-  
-  sorry
+theorem R (i:ℕ) : eval A i ≠ χ B := Function.ne_iff.mpr ⟨R_wt i, R_aux_1 i⟩
+theorem S (i:ℕ) : eval B i ≠ χ A := by sorry
 
 theorem ex_incomparable_sets : ∃ A B:Set ℕ, A|ᵀB := by
   use A

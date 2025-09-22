@@ -51,7 +51,6 @@ def c_kp54_main :=
       pair (c_list_concat.comp₂ Aₚ (c_sg'.comp B_result)) Bₛ
     )
   )
-  -- c_eval
 def c_kp54 :=
   (
     prec
@@ -59,6 +58,8 @@ def c_kp54 :=
     c_kp54_main.comp right
   ).comp₂ zero c_id
 -- theorem c_kp54_t : code_total O c_kp54 := by sorry
+
+@[simp, aesop safe] theorem c_kp54_ev_pr:code_prim c_kp54 := by sorry
 @[simp] theorem c_kp54_evp : eval_prim (K0 Nat.fzero) c_kp54 x = KP54.KP54 x := by
   induction x with
   | zero =>
@@ -177,31 +178,58 @@ end n2b
   unfold List.getI
   simp [h]
 
+theorem fzero_eq_χempty : Nat.fzero = χ ∅ := by unfold χ; simp
 
 def c_kp54_A := c_n2b.comp $ c_list_getI.comp₂ (left.comp $ c_kp54.comp succ) c_id
-theorem c_kp54_A_evp : eval_prim (K0 Nat.fzero) c_kp54_A = χ KP54.A := by
+@[simp, aesop safe] theorem c_kp54_A_ev_pr:code_prim c_kp54_A := by repeat (first|assumption|simp|constructor)
+@[simp] theorem c_kp54_A_evp : eval_prim (K0 Nat.fzero) c_kp54_A = χ KP54.A := by
   funext x
-  simp [c_kp54_A]
-  unfold KP54.A
-  unfold KP54.As
-  simp [χ]
-  congr
+  simp [c_kp54_A]; congr
   exact getI_eq_getElem
-
-
-
-
+@[simp] theorem c_kp54_A_ev :eval (K0 Nat.fzero) c_kp54_A = χ KP54.A := by simp [← eval_prim_eq_eval c_kp54_A_ev_pr];
+theorem A_le_J1_aux : (χ KP54.A) ≤ᵀᶠ K0 Nat.fzero := exists_code.mpr ⟨c_kp54_A, c_kp54_A_ev⟩
 theorem A_le_J1 : KP54.A ≤ᵀ ∅⌜ := by
-  unfold KP54.A
-  unfold KP54.As
-  simp only [← c_kp54_ev]
-  simp
-  unfold SetTuringReducible
-  simp [SetTuringReducible]
-
-
-
-  sorry
+  apply TR_Set_iff_Fn.mpr
+  apply _root_.trans (A_le_J1_aux)
+  rw [fzero_eq_χempty]
+  exact (K0χ_eq_χSetK ∅).1
+def c_kp54_B := c_n2b.comp $ c_list_getI.comp₂ (right.comp $ c_kp54.comp succ) c_id
+@[simp, aesop safe] theorem c_kp54_B_ev_pr:code_prim c_kp54_B := by repeat (first|assumption|simp|constructor)
+@[simp] theorem c_kp54_B_evp : eval_prim (K0 Nat.fzero) c_kp54_B = χ KP54.B := by
+  funext x
+  simp [c_kp54_B]; congr
+  exact getI_eq_getElem
+@[simp] theorem c_kp54_B_ev :eval (K0 Nat.fzero) c_kp54_B = χ KP54.B := by simp [← eval_prim_eq_eval c_kp54_B_ev_pr];
+theorem B_le_J1_aux : (χ KP54.B) ≤ᵀᶠ K0 Nat.fzero := exists_code.mpr ⟨c_kp54_B, c_kp54_B_ev⟩
+theorem B_le_J1 : KP54.B ≤ᵀ ∅⌜ := by
+  apply TR_Set_iff_Fn.mpr
+  apply _root_.trans (B_le_J1_aux)
+  rw [fzero_eq_χempty]
+  exact (K0χ_eq_χSetK ∅).1
 
 -- end Nat.RecursiveIn.Code
 end kp54
+
+
+theorem ex_incomparable_sets : ∃ A B:Set ℕ, A≤ᵀ∅⌜ ∧ B≤ᵀ∅⌜ ∧ A|ᵀB := by
+  use KP54.A
+  use KP54.B
+  constructor
+  · exact A_le_J1
+  constructor
+  · exact B_le_J1
+  constructor
+  · change ¬SetTuringReducible KP54.A KP54.B
+    intro h
+    unfold SetTuringReducible at h
+    apply exists_code_nat.mp at h
+    rcases h with ⟨c,hc⟩
+    have contrad := KP54.S c
+    exact contrad hc
+  · change ¬SetTuringReducible KP54.B KP54.A
+    intro h
+    unfold SetTuringReducible at h
+    apply exists_code_nat.mp at h
+    rcases h with ⟨c,hc⟩
+    have contrad := KP54.R c
+    exact contrad hc
