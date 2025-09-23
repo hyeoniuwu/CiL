@@ -20,7 +20,7 @@ def c_dovetail :=
   (c_const c_if_eq')
   (c_comp₃.comp₄ (c_const c_evaln) (c_pair.comp₂ c_left (c_comp.comp₂ c_left c_right)) (c_c_const) (c_comp.comp₂ c_right c_right))
   (c_const (c_const 1))
-theorem c_dovetail_evp : eval_prim O c_dovetail = λ x ↦ encodeCode (dovetail $ decodeCode x) := by
+@[simp] theorem c_dovetail_evp : eval_prim O c_dovetail = λ x ↦ encodeCode (dovetail $ decodeCode x) := by
   -- just doing simp [c_dovetail, dovetail] should work, but gives a kernel recursion error. why?
   -- this was fixed by moving simp from def of comp_n to the comp_n_evp theorems.
   simp [c_dovetail, dovetail]
@@ -41,9 +41,10 @@ def c_c_evals :=
   rfl
 def c_c_ifdom :=
   c_comp₂.comp₃ (c_const c_add) (c_comp.comp₂ c_zero left) (right)
-theorem c_c_ifdom_evp : eval_prim O c_c_ifdom = λ x ↦ encodeCode (c_ifdom x.l x.r) := by
+@[simp] theorem c_c_ifdom_evp : eval_prim O c_c_ifdom = λ x ↦ encodeCode (c_ifdom x.l x.r) := by
   simp [c_c_ifdom, c_ifdom]
 def c_c_kp54_aux :=
+  c_dovetail.comp $
   c_c_ifdom.comp₂ 
   (
     c_comp₃.comp₄
@@ -53,10 +54,8 @@ def c_c_kp54_aux :=
     (c_c_const.comp right)
   )
   c_zero
-@[simp] theorem c_c_kp54_aux_evp : eval_prim O c_c_kp54_aux (Nat.pair i n) = dovetail (KP54.c_kp54_aux i n) := by
-
-  sorry
-
+@[simp] theorem c_c_kp54_aux_evp : eval_prim O c_c_kp54_aux = λ x:ℕ ↦ encodeCode (dovetail (KP54.c_kp54_aux x.l x.r)) := by
+  simp [c_c_kp54_aux, KP54.c_kp54_aux]
 
 
 def c_kp54_main :=
