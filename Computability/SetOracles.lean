@@ -329,13 +329,13 @@ theorem dom_to_ran_prop : (W O e) = (WR O (c_dom_to_ran e)) := by
     simp [_root_.eval] at h
     rcases h with ⟨y,hy⟩
     use xs
-    simp [_root_.eval, Nat.RecursiveIn.Code.eval, Seq.seq, Part.mem_imp_dom hy]
+    simp [_root_.eval, Seq.seq, Part.mem_imp_dom hy]
 
   · 
     intro h
     simp [PFun.ran] at h
     rcases h with ⟨h0,h1⟩
-    simp [_root_.eval, Nat.RecursiveIn.Code.eval] at h1
+    simp [_root_.eval] at h1
     simp [Seq.seq] at h1
     
     have : xs=h0 := by

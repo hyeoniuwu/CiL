@@ -18,7 +18,9 @@ def c_evalnc :=
   c_opt_bind
   (c_usen.comp₃ x0 c0 s0) $
   c_if_le_te.comp₄ right u1 (c_evaln.comp₃ x1 c1 s1) zero
-@[simp, aesop safe] theorem c_evalnc_ev_pr:code_prim c_evalnc := by unfold c_evalnc; repeat (first|assumption|simp|constructor)
+@[simp, aesop safe] theorem c_evalnc_ev_pr : code_prim c_evalnc := by
+  unfold c_evalnc;
+  apply_rules (config := {maxDepth:=90, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
 @[simp] theorem c_evalnc_evp:eval_prim O c_evalnc (Nat.pair (Nat.pair u s) (Nat.pair c x)) = o2n (evalnc O u s c x) := by
   simp [c_evalnc,eval_prim];
   simp [evalnc]
@@ -80,7 +82,9 @@ theorem c_evalo_ev (ho:code_total O o) : eval O c_evalo (Nat.pair o (Nat.pair c 
 
 
 def c_evals_oracle (o:Code):= c_sg.comp $ c_list_getD.comp₃ (c_const o) c_id (c_const whatever)
-theorem c_evals_oracle_ev_pr : code_prim (c_evals_oracle o) := by repeat (first|assumption|simp|constructor)
+@[cp] theorem c_evals_oracle_ev_pr : code_prim (c_evals_oracle o) := by
+  unfold c_evals_oracle
+  apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
 theorem c_evals_oracle_evp : eval_prim O (c_evals_oracle o) =
 λ x:ℕ ↦ b2n $ n2b $ (n2l o).getD x whatever := by
   simp [c_evals_oracle]
@@ -103,7 +107,9 @@ def c_comp₂ :=
   let b := left.comp right
   let c := right.comp right
   c_comp.comp₂ a $ c_pair.comp₂ b c
-@[simp, aesop safe] theorem c_comp₂_ev_pr:code_prim c_comp₂ := by repeat (first|assumption|simp|constructor)
+@[cp] theorem c_comp₂_ev_pr : code_prim c_comp₂ := by
+  unfold c_comp₂
+  apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
 @[simp] theorem c_comp₂_evp : eval_prim O c_comp₂ (Nat.pair a (Nat.pair b c)) = encodeCode (comp₂ a b c) := by
   simp [c_comp₂]; rfl
 @[simp] theorem c_comp₂_ev:eval O c_comp₂ (Nat.pair a (Nat.pair b c)) = encodeCode (comp₂ a b c) := by rw [← eval_prim_eq_eval c_comp₂_ev_pr]; simp
@@ -113,28 +119,19 @@ def c_comp₃ :=
   let c := right.comp left
   let d := right.comp right
   c_comp.comp₂ (a) (c_pair.comp₂ c (c_pair.comp₂ b d))
-@[simp, aesop safe] theorem c_comp₃_ev_pr:code_prim c_comp₃ := by repeat (first|assumption|simp|constructor)
+@[cp] theorem c_comp₃_ev_pr : code_prim c_comp₃ := by
+  unfold c_comp₃
+  apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
 @[simp] theorem c_comp₃_evp : eval_prim O c_comp₃ (Nat.pair (Nat.pair a b) (Nat.pair c d)) = encodeCode (comp₃ a b c d) := by
   simp [c_comp₃]; rfl
 @[simp] theorem c_comp₃_ev:eval O c_comp₃ (Nat.pair (Nat.pair a b) (Nat.pair c d)) = encodeCode (comp₃ a b c d) := by rw [← eval_prim_eq_eval c_comp₃_ev_pr]; simp
 
 def c_c_evals_oracle := c_comp.comp₂ (c_const c_sg) (c_comp₃.comp₄ (c_const c_list_getD) (c_c_const.comp left) (c_const c_id) (c_const $ c_const whatever))
-def c_c_evals_oracle_ev_pr : code_prim c_c_evals_oracle := by repeat (first|assumption|simp|constructor)
-@[simp] theorem c_c_evals_oracle_evp : eval_prim O c_c_evals_oracle (Nat.pair o (Nat.pair c x)) =
-encodeCode (c_evals_oracle o) := by
-  unfold c_evals_oracle
-
+@[cp] def c_c_evals_oracle_ev_pr : code_prim c_c_evals_oracle := by
   unfold c_c_evals_oracle
-  rewrite [comp₂, comp₄, eval_prim.eq_7, eval_prim]
-  simp only []
-  rewrite [c_comp_evp]
-  rewrite [c_const_evp, decodeCode_encodeCode, comp₂, eval_prim, ]
-  simp only [eval_prim]
-  rewrite [c_comp₃_evp]
-  simp only [c_const_evp, decodeCode_encodeCode]
-  rewrite [c_c_const_evp]
-  rewrite [pair_l]
-  simp only [decodeCode_encodeCode, encodeCode_decodeCode]
+  apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+@[simp] theorem c_c_evals_oracle_evp : eval_prim O c_c_evals_oracle (Nat.pair o (Nat.pair c x)) =
+encodeCode (c_evals_oracle o) := by simp [c_c_evals_oracle, c_evals_oracle]
 
 theorem c_c_evals_oracle_ev : eval O c_c_evals_oracle (Nat.pair o (Nat.pair c x)) = encodeCode (c_evals_oracle o) := by simp [← eval_prim_eq_eval c_c_evals_oracle_ev_pr]
 

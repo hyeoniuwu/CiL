@@ -48,7 +48,7 @@ theorem O_le_K0 (O:ℕ→ℕ) :  O ≤ᵀᶠ (K0 O) := by
 
   have compute_total : code_total (K0 O) q := by
     apply prim_total
-    repeat (first|assumption|simp|constructor)
+    apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
 
   simp only [c_jump_decode_ev' compute_total]
   simp only [q]
@@ -69,7 +69,7 @@ theorem K0_leq_K (O:ℕ→ℕ) : (K0 O) ≤ᵀᶠ (K O)  := by
 
   have compute_total : code_total (K O) compute := by
     apply prim_total
-    repeat (first|assumption|simp|constructor)
+    apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
 
   unfold compute
   funext x
@@ -83,43 +83,23 @@ theorem jump_not_leq_f (f:ℕ→ℕ) : ¬(f⌜ ≤ᵀᶠ f) := by
   intro h
   rcases exists_code.mp h with ⟨c_jf,hc_jh⟩
   let g := c_ite (c_jf.comp (pair c_id c_id)) (zero) c_diverge
-  -- have g_total : code_total f g := by
-  --   sorry
-  --   -- apply prim_total
-  --   -- repeat (first|assumption|simp|constructor)
   have fg : eval f g =  fun (x:ℕ) => if (f⌜) (Nat.pair x x) = 0 then Part.some 0 else Part.none := by
     unfold g
-    simp
     funext x
-    have : code_total f (c_jf.comp (pair c_id c_id)) := by
-      intro x
-      simp [eval,hc_jh,Seq.seq]
-    simp [c_ite_ev this]
-    simp [eval,hc_jh]
-    simp [Seq.seq]
+    have : code_total f (c_jf.comp (pair c_id c_id)) := by intro x; simp [eval,hc_jh,Seq.seq]
+    simp [c_ite_ev this, eval, hc_jh, Seq.seq]
     rfl
-  stop
   -- why does this blow up lean?
+  -- nvm, fixed [25-09-24 00:10:28]
   cases Classical.em (eval f g g).Dom with
   | inl hh =>
     have hh2 := hh
     rw [fg] at hh2
-    simp at hh2
-    simp only [hh] at hh2
-    simp only [↓reduceIte] at hh2
-    simp only [Part.not_none_dom] at hh2
-    -- exact hh2
-    -- simp at hh2
-
-    -- simp only [jump, unpair_pair, decodeCode_encodeCode, hh, ↓reduceDIte, succ_eq_add_one, Nat.add_eq_zero, one_ne_zero, and_false, ↓reduceIte, Part.not_none_dom] at hh2
+    simp [hh] at hh2
   | inr hh =>
     have hh2 := hh
-    -- rw [fg] at hh2
-    -- simp [hh] at hh2  
-
-    -- simp [eval]
-    -- simp [Seq.seq]
-  
+    rw [fg] at hh2
+    simp [hh] at hh2
 
 -- theorem jump_not_leq_f' (O:ℕ→ℕ) : ¬(O⌜ ≤ᵀᶠ O) := by
 theorem K0_nle_O (O:ℕ→ℕ) : ¬(K0 O ≤ᵀᶠ O) := by
