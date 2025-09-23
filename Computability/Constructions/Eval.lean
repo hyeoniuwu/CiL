@@ -354,7 +354,7 @@ theorem c_evaln_evp_aux_nMod4 :
     guard (elem ≤ s)
     (Nat.rec
       (n2o (pc_ml_s left elem.l))
-      (fun n_2 n_ih ↦
+      (fun _ _ ↦
         do
           let i ← n2o (pc_code_sM1 (left) (Nat.pair elem.l (elem.r-1)))
           n2o (pc_mr_s (left) (Nat.pair elem.l (Nat.pair (elem.r-1) i)))
@@ -846,9 +846,63 @@ theorem c_evaln_evp_aux_nMod4 :
 
       | inr h => simp [h,Option.bind]
 
-@[simp] theorem c_evaln_ev_pr:code_prim (c_evaln) := by
-  -- unfold c_evaln_aux;+
-  sorry
+@[cp] theorem c_evaln_aux_ev_pr : code_prim (c_evaln_aux) := by
+  unfold c_evaln_aux
+  lift_lets
+  extract_lets
+  expose_names
+
+  have cp_code_s : code_prim code_s := by apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+  have cp_code : code_prim code := by apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+  have cp_s : code_prim s := by apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+  have cp_sM1 : code_prim sM1 := by apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+  have cp_comp_hist : code_prim comp_hist := by apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+  have cp_n : code_prim n := by apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+  have cp_m : code_prim m := by apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+  have cp_ml : code_prim ml := by apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+  have cp_mr : code_prim mr := by apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+  have cp_nMod4 : code_prim nMod4 := by apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+  have cp_ele : code_prim ele := by apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+  have cp_opt_zero : code_prim opt_zero := by apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+  have cp_opt_succ : code_prim opt_succ := by apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+  have cp_opt_left : code_prim opt_left := by apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+  have cp_opt_right : code_prim opt_right := by apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+  have cp_opt_oracle : code_prim opt_oracle := by apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+  have cp_zero_mapped : code_prim zero_mapped := by apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+  have cp_succ_mapped : code_prim succ_mapped := by apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+  have cp_left_mapped : code_prim left_mapped := by apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+  have cp_right_mapped : code_prim right_mapped := by apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+  have cp_oracle_mapped : code_prim oracle_mapped := by apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+  have cp_lookup {x' c' s'} (hx':code_prim x') (hc':code_prim c') (hs':code_prim s') : code_prim (lookup x' c' s') := by apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+  have cp_pc_ml_s {c'} (hc':code_prim c') : code_prim (pc_ml_s c') := by apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+  have cp_pc_mr_s {c'} (hc':code_prim c') : code_prim (pc_mr_s c') := by apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+  have cp_pc_m_s  {c'} (hc':code_prim c') : code_prim (pc_m_s c') := by apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+  have cp_opt_pair : code_prim opt_pair := by apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+  have cp_pair_mapped : code_prim pair_mapped := by apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+  have cp_opt_comp : code_prim opt_comp := by apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+  have cp_comp_mapped : code_prim comp_mapped := by apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+  have cp_pc_code_sM1 {c'} (hc':code_prim c') : code_prim (pc_code_sM1 c') := by apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+  have cp_prec_x : code_prim prec_x := by apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+  have cp_prec_i : code_prim prec_i := by apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+  have cp_prec_iM1 : code_prim prec_iM1 := by apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+  have cp_prec_base_case : code_prim prec_base_case := by apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+  have cp_prec_prev_case : code_prim prec_prev_case := by apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+  have cp_prec_inductive_case : code_prim prec_inductive_case := by apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+  have cp_opt_prec : code_prim opt_prec := by apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+  have cp_prec_mapped : code_prim prec_mapped := by apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+  have cp_rfind'_base : code_prim rfind'_base := by apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+  have cp_rfind'_indt : code_prim rfind'_indt := by apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+  have cp_opt_rfind' : code_prim opt_rfind' := by apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+  have cp_rfind'_mapped : code_prim rfind'_mapped := by apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+  
+  apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+
+  
+
+@[cp] theorem c_evaln_ev_pr : code_prim (c_evaln) := by
+  unfold c_evaln
+  apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+
 @[simp] theorem c_evaln_ev: eval O c_evaln (Nat.pair x (Nat.pair code s)) = o2n (evaln O s code x) := by
   rw [← eval_prim_eq_eval c_evaln_ev_pr];
   simp only [PFun.coe_val, c_evaln_evp, Part.coe_some]
@@ -873,7 +927,7 @@ def c_eval := (c_rfindOpt (c_evaln.comp₃ (right.comp left) (left.comp left) ri
   simp only [c_eval, comp₃, comp₂]
   have : code_total O ((c_evaln.comp ((right.comp left).pair ((left.comp left).pair right)))) := by
     apply prim_total
-    repeat (first|assumption|simp|constructor)
+    apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
   simp [c_rfindOpt_ev this]
   rw [eval_eq_rfindOpt]
   simp [eval,Seq.seq]

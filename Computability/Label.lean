@@ -1,0 +1,2 @@
+import Lean.LabelAttribute
+register_label_attr cp

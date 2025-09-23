@@ -61,7 +61,9 @@ theorem iget_eq_get {o:Option ℕ} (h:o.isSome) : o.iget = o.get h := by
 section isSome
 namespace Nat.RecursiveIn.Code
 def c_isSome := c_sg'
-@[simp] theorem c_isSome_ev_pr:code_prim c_isSome := by repeat (first|assumption|simp|constructor)
+@[cp] theorem c_isSome_ev_pr : code_prim c_isSome := by
+  unfold c_isSome
+  apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
 @[simp] theorem c_isSome_evp:eval_prim O c_isSome = fun o => b'2n $ (n2o o).isSome := by
   simp [c_isSome]
   funext x
@@ -80,7 +82,9 @@ end isSome
 section opt_iget
 namespace Nat.RecursiveIn.Code
 def c_opt_iget := c_pred
-@[simp] theorem c_opt_iget_ev_pr:code_prim c_opt_iget := by repeat (first|assumption|simp|constructor)
+@[cp] theorem c_opt_iget_ev_pr : code_prim c_opt_iget := by
+  unfold c_opt_iget
+  apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
 @[simp] theorem c_opt_iget_evp : eval_prim O c_opt_iget o = Option.iget (n2o o) := by
   simp [c_opt_iget]
   by_cases ho:o=0
@@ -101,7 +105,9 @@ end opt_iget
 section opt_getD
 namespace Nat.RecursiveIn.Code
 def c_opt_getD := c_ifz.comp₃ left right (c_opt_iget.comp left)
-@[simp] theorem c_opt_getD_ev_pr:code_prim c_opt_getD := by repeat (first|assumption|simp|constructor)
+@[cp] theorem c_opt_getD_ev_pr : code_prim c_opt_getD := by
+  unfold c_opt_getD
+  apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
 @[simp] theorem c_opt_getD_evp : eval_prim O c_opt_getD (Nat.pair o d) = (n2o o).getD d := by
   simp [c_opt_getD]
   by_cases ho:o=0
@@ -121,7 +127,9 @@ end opt_getD
 section opt_none
 namespace Nat.RecursiveIn.Code
 def c_opt_none := (c_const 0)
-@[simp] theorem c_opt_none_ev_pr:code_prim c_opt_none := by repeat (first|assumption|simp|constructor)
+@[cp] theorem c_opt_none_ev_pr : code_prim c_opt_none := by
+  unfold c_opt_none
+  apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
 @[simp] theorem c_opt_none_evp : eval_prim O c_opt_none o = o2n Option.none := by
   simp [c_opt_none]
 -- @[simp] theorem c_opt_none_ev: n2o (eval O c_opt_none o) = (Option.none : Option ℕ) := by simp [← eval_prim_eq_eval c_opt_none_ev_pr]
@@ -132,7 +140,9 @@ section opt_bind
 namespace Nat.RecursiveIn.Code
 -- def c_opt_bind := c_ifz.comp₃ left zero (right.comp (c_opt_iget.comp left))
 def c_opt_bind (cf cg:Code) :=  c_ifz.comp₃ cf zero (cg.comp₂ c_id (c_opt_iget.comp cf))
-@[simp, aesop safe] theorem c_opt_bind_ev_pr(hcf:code_prim cf) (hcg:code_prim cg):code_prim (c_opt_bind cf cg) := by repeat (first|assumption|simp|constructor)
+@[cp] theorem c_opt_bind_ev_pr(hcf:code_prim cf) (hcg:code_prim cg) : code_prim (c_opt_bind cf cg) := by
+  unfold c_opt_bind
+  apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
 @[simp] theorem c_opt_bind_evp: eval_prim O (c_opt_bind cf cg) x =
   o2n do
     let t ← n2o (eval_prim O cf x)
@@ -161,10 +171,12 @@ section opt_bind'
 namespace Nat.RecursiveIn.Code
 -- def c_opt_bind' := c_ifz.comp₃ left zero (right.comp (c_opt_iget.comp left))
 def c_opt_bind' (cf cg:Code) :=  c_ifz.comp₃ cf zero cg
-@[simp, aesop safe] theorem c_opt_bind'_ev_pr(hcf:code_prim cf) (hcg:code_prim cg):code_prim (c_opt_bind' cf cg) := by repeat (first|assumption|simp|constructor)
+@[cp] theorem c_opt_bind'_ev_pr(hcf:code_prim cf) (hcg:code_prim cg) : code_prim (c_opt_bind' cf cg) := by
+  unfold c_opt_bind'
+  apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
 @[simp] theorem c_opt_bind'_evp: eval_prim O (c_opt_bind' cf cg) x =
   o2n do
-    let t ← n2o (eval_prim O cf x)
+    let _ ← n2o (eval_prim O cf x)
     let r ← n2o (eval_prim O cg x)
     -- return ←r
     return r

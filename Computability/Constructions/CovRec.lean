@@ -3,7 +3,6 @@ import Computability.Constructions.List
 open Nat.RecursiveIn.Code
 open List
 
-
 section efl_prec
 namespace Nat.RecursiveIn.Code
 /--
@@ -13,7 +12,11 @@ Given an input of the form (x, (i, list)), the code (c_efl_prec c) computes list
 -/
 def c_efl_prec:=fun c=>c_list_concat.comp (pair (c_id.comp (right.comp right)) c)
 -- def c_efl_prec:=fun c=>c_l_append.comp₂ (c_id.comp (right.comp right)) c
-@[simp] theorem c_efl_prec_ev_pr (h:code_prim c):code_prim $ c_efl_prec c := by repeat (first|assumption|simp|constructor)
+@[cp] theorem c_efl_prec_ev_pr (h:code_prim c):code_prim $ c_efl_prec c := by
+  unfold c_efl_prec
+  apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+
+
 @[simp] theorem c_efl_prec_evp:eval_prim O (c_efl_prec c) x = l2n ((n2l x.r.r).concat (eval_prim O c x)) := by
   simp [c_efl_prec]
 -- @[simp] theorem c_efl_prec_ev : eval O (c_efl_prec c) x = Nat.list_append <$> x.r.r <*> (eval O c x) := by
@@ -50,12 +53,12 @@ def c_cov_rec (cf cg:Code):=
   prec
   (c_list_concat.comp₂ c_list_nil cf)
   (c_efl_prec cg)
+@[cp] theorem c_cov_rec_ev_pr (hc1:code_prim c1) (hc2:code_prim c2) :code_prim (c_cov_rec c1 c2) := by
+  unfold c_cov_rec
+  apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
 @[simp] theorem c_cov_rec_evp_size_positive : 0<(n2l (eval_prim O (c_cov_rec cf cg) (Nat.pair x i))).length := by
   unfold c_cov_rec
-  simp [eval_prim]
-  induction i
-  · simp
-  · simp
+  induction i <;> simp
 @[simp] theorem c_cov_rec_evp_size : (n2l (eval_prim O (c_cov_rec cf cg) (Nat.pair x i))).length = i+1 := by
   unfold c_cov_rec
   simp [eval_prim]
@@ -92,7 +95,6 @@ theorem c_cov_rec_evp_0 :
   | succ i h =>
     simp [c_cov_rec_evp_0]
     simp [getI]
-
 @[simp] theorem c_cov_rec_evp_3 :
   getLastI
   (eval_prim O (c_cov_rec cf cg) (Nat.pair x (i+1)))
@@ -194,9 +196,6 @@ theorem c_cov_rec_evp_2_aux2_I (h:j≤i) :
 
 end Nat.RecursiveIn.Code
 end cov_rec
-
-
-
 
 
 
@@ -345,9 +344,11 @@ theorem c_div_flip_evp_aux:eval_prim O c_div_flip = unpaired2 div_flip_aux := by
   simp [eval_prim]
   simp [flip]
 
-@[simp] theorem c_div_ev_pr :code_prim c_div := by
+@[cp] theorem c_div_ev_pr : code_prim c_div := by
   unfold c_div;
-  repeat (first|assumption|simp|constructor)
+  unfold c_div_flip;
+  unfold c_div_flip_aux;
+  apply_rules (config := {maxDepth:=40, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
 
 @[simp] theorem c_div_ev:eval O c_div (Nat.pair a b)= a/b := by
   rw [← eval_prim_eq_eval c_div_ev_pr];
@@ -365,7 +366,9 @@ end div
 section mod
 namespace Nat.RecursiveIn.Code
 def c_mod := c_sub.comp₂ left (c_mul.comp₂ right c_div)
-@[simp] theorem c_mod_ev_pr:code_prim c_mod := by repeat (first|assumption|simp|constructor)
+@[cp] theorem c_mod_ev_pr:code_prim c_mod := by
+  unfold c_mod
+  apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
 @[simp] theorem c_mod_evp:eval_prim O c_mod = unpaired2 ((· % ·) : ℕ → ℕ → ℕ) := by
   simp [c_mod,eval_prim];
 
@@ -388,11 +391,12 @@ end mod
 
 
 
-
 section div2
 namespace Nat.RecursiveIn.Code
 def c_div2 := c_div.comp₂ c_id (c_const 2)
-@[simp] theorem c_div2_ev_pr:code_prim c_div2 := by repeat (first|assumption|simp|constructor)
+@[cp] theorem c_div2_ev_pr:code_prim c_div2 := by
+  unfold c_div2
+  apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
 -- @[simp] theorem c_div2_evp:eval_prim O c_div2 = fun x => x/2 := by simp [c_div2]
 -- @[simp] theorem c_div2_ev:eval O c_div2 = (fun x => x/(2:ℕ)) := by simp [← eval_prim_eq_eval c_div2_ev_pr]
 @[simp] theorem c_div2_evp:eval_prim O c_div2 = div2 := by simp [c_div2]; funext x; exact Eq.symm (div2_val x)
@@ -401,8 +405,6 @@ end Nat.RecursiveIn.Code
 -- theorem Nat.PrimrecIn.div2:Nat.PrimrecIn O Nat.div2 := by ...
 -- theorem Nat.Primrec.div2:Nat.Primrec Nat.div2 := by ...
 end div2
-
-
 
 
 
@@ -423,7 +425,6 @@ def replace_oracle (o:ℕ) := fun n => (encodeCode_replace_oracle o (decodeCode 
 
 /-- `eval c_replace_oracle (o,code)` = `code` but with calls to oracle replaced with calls to code `o` -/
 def c_replace_oracle_aux :=
--- def c_replace_oracle :=
   let o               := left
   let input_to_decode := succ.comp (left.comp right)
   let comp_hist       := right.comp right
@@ -438,8 +439,6 @@ def c_replace_oracle_aux :=
   let prec_code       := c_add.comp₂ (            c_mul2.comp $ succ.comp $ c_mul2.comp (pair ml mr)) (c_const 5)
   let rfind'_code     := c_add.comp₂ (succ.comp $ c_mul2.comp $ succ.comp $ c_mul2.comp mp          ) (c_const 5)
 
-  -- c_l_get_last.comp $
-
   c_cov_rec
 
   (c_const 0) $
@@ -448,15 +447,31 @@ def c_replace_oracle_aux :=
   c_if_eq_te.comp₄ input_to_decode (c_const 2) (c_const 2) $
   c_if_eq_te.comp₄ input_to_decode (c_const 3) (c_const 3) $
   c_if_eq_te.comp₄ input_to_decode (c_const 4) o           $
-  c_if_eq_te.comp₄ nMod4           (c_const 0) (pair_code) $
-  c_if_eq_te.comp₄ nMod4           (c_const 1) (comp_code) $
-  c_if_eq_te.comp₄ nMod4           (c_const 2) (prec_code) $
-                                                rfind'_code
+  c_if_eq_te.comp₄ nMod4           (c_const 0) pair_code   $
+  c_if_eq_te.comp₄ nMod4           (c_const 1) comp_code   $
+  c_if_eq_te.comp₄ nMod4           (c_const 2) prec_code   $
+                                               rfind'_code
 def c_replace_oracle := c_list_getLastI.comp c_replace_oracle_aux
-set_option maxRecDepth 5000 in
+-- set_option maxRecDepth 5000 in
 @[simp] theorem c_replace_oracle_ev_pr:code_prim (c_replace_oracle) := by
   unfold c_replace_oracle;
-  repeat (first|assumption|simp|constructor)
+  unfold c_replace_oracle_aux
+  extract_lets
+  expose_names
+  have cp_o : code_prim o := by apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+  have cp_input_to_decode : code_prim input_to_decode := by apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+  have cp_comp_hist : code_prim comp_hist := by apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+  have cp_n : code_prim n := by apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+  have cp_m : code_prim m := by apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+  have cp_ml : code_prim ml := by apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+  have cp_mr : code_prim mr := by apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+  have cp_mp : code_prim mp := by apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+  have cp_nMod4 : code_prim nMod4 := by apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+  have cp_pair_code : code_prim pair_code := by apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+  have cp_comp_code : code_prim comp_code := by apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+  have cp_prec_code : code_prim prec_code := by apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+  have cp_rfind'_code : code_prim rfind'_code := by apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+  apply_rules (config := {maxDepth:=40, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
 
 
 
@@ -473,11 +488,11 @@ theorem c_replace_oracle_evp_aux (hx:x≤4): eval_prim O (c_replace_oracle) (Nat
   have ho {x hist} : eval_prim O o_1 (Nat.pair o (Nat.pair (x) hist)) = o := by simp [o_1]
 
   match x with
-  | 0 => simp [hinput_to_decode, ho, comp₄]; simp only [replace_oracle, encodeCode_replace_oracle, decodeCode]
-  | 1 => simp [hinput_to_decode, ho, comp₄]; simp only [replace_oracle, encodeCode_replace_oracle, decodeCode]
-  | 2 => simp [hinput_to_decode, ho, comp₄]; simp only [replace_oracle, encodeCode_replace_oracle, decodeCode]
-  | 3 => simp [hinput_to_decode, ho, comp₄]; simp only [replace_oracle, encodeCode_replace_oracle, decodeCode]
-  | 4 => simp [hinput_to_decode, ho, comp₄]; simp only [replace_oracle, encodeCode_replace_oracle, decodeCode]
+  | 0 => simp [hinput_to_decode, ho]; simp only [replace_oracle, encodeCode_replace_oracle, decodeCode]
+  | 1 => simp [hinput_to_decode, ho]; simp only [replace_oracle, encodeCode_replace_oracle, decodeCode]
+  | 2 => simp [hinput_to_decode, ho]; simp only [replace_oracle, encodeCode_replace_oracle, decodeCode]
+  | 3 => simp [hinput_to_decode, ho]; simp only [replace_oracle, encodeCode_replace_oracle, decodeCode]
+  | 4 => simp [hinput_to_decode, ho]; simp only [replace_oracle, encodeCode_replace_oracle, decodeCode]
   | n+5 => simp at hx
 
 lemma c_replace_oracle_evp_aux_nMod4_bounds1 : (n/2/2).l≤n+4 := by exact le_add_right_of_le (Nat.le_trans (unpair_left_le (n/2/2)) (le_trans (Nat.div_le_self _ _) (Nat.div_le_self _ _)))

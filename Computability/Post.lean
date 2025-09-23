@@ -18,12 +18,12 @@ theorem CEin_range : CEin O A ↔ ∃ c:ℕ, A = WR O c := by
   constructor
   · intro h
     rcases h with ⟨c,hc⟩
-    use dom_to_ran O c
+    use c_dom_to_ran c
     rw [←dom_to_ran_prop]
     exact hc
   · intro h
     rcases h with ⟨c,hc⟩
-    use ran_to_dom O c
+    use ran_to_dom c
     rw [←ran_to_dom_prop]
     exact hc
 

@@ -1,4 +1,5 @@
 import Computability.Encoding2
+import Computability.Label
 import Computability.Basic
 import Mathlib.Data.PFun
 import Mathlib.Data.Nat.Dist
@@ -6,6 +7,7 @@ import Mathlib.Data.Nat.Dist
 open Classical
 open Nat.RecursiveIn.Code
 open Nat
+
 
 -- general helper functions
 theorem pair_nonzero_right_pos_aux : ¬ (Nat.pair x (s+1)=0) := by
@@ -198,7 +200,7 @@ theorem PrimrecIn.PrimrecIn_iff_Primrec:(∀O,Nat.PrimrecIn O f) ↔ Nat.Primrec
 
 -- templates for primrec constructions as codes
 namespace Nat.RecursiveIn.Code
-@[aesop safe] inductive code_prim:Code → Prop
+@[aesop safe, cp] inductive code_prim:Code → Prop
 | zero:code_prim zero
 | succ:code_prim succ
 | left:code_prim left
@@ -207,6 +209,14 @@ namespace Nat.RecursiveIn.Code
 | pair {a b:Code} (ha:code_prim a) (hb:code_prim b):code_prim (pair a b)
 | comp {a b:Code} (ha:code_prim a) (hb:code_prim b):code_prim (comp a b)
 | prec {a b:Code} (ha:code_prim a) (hb:code_prim b):code_prim (prec a b)
+@[cp] theorem zero_ev_pr : code_prim zero := code_prim.zero
+@[cp] theorem succ_ev_pr : code_prim succ := code_prim.succ
+@[cp] theorem left_ev_pr : code_prim left := code_prim.left
+@[cp] theorem right_ev_pr : code_prim right := code_prim.right
+@[cp] theorem oracle_ev_pr : code_prim oracle := code_prim.oracle
+@[cp] theorem pair_ev_pr (ha:code_prim a) (hb:code_prim b) : code_prim (pair a b) := code_prim.pair ha hb
+@[cp] theorem comp_ev_pr (ha:code_prim a) (hb:code_prim b) : code_prim (comp a b) := code_prim.comp ha hb
+@[cp] theorem prec_ev_pr (ha:code_prim a) (hb:code_prim b) : code_prim (prec a b) := code_prim.prec ha hb
 def code_total (O) (c:Code) := ∀x, (eval O c x).Dom
 @[simp] theorem zero_total {O} : code_total O zero := λ _ ↦ trivial
 @[simp] theorem left_total {O} : code_total O left := λ _ ↦ trivial
