@@ -308,40 +308,18 @@ private theorem R_aux_0 (i:ℕ) (h:(evals (As (2*i+1+1)) i (R_wt i)).Dom):
   simp (config := {zetaHave:=false}) only []
   -- memory blows up if i lift the non-have lets. why?
 
-  -- simp only []
-  
-  -- simp
-  -- split
-  -- simp
-  -- extract_lets
-  lift_lets
 
-  extract_lets
-  expose_names
+  lift_lets; extract_lets; expose_names
   have i_1_simp: i_1 = i := rfl
 
   let (eq:=hdvt) dvt := (Nat.RecursiveIn.Code.eval Nat.fzero (c_kp54_aux i_1 lb).dovetail Aₚ)
   simp (config := {zeta:=false}) only [←hdvt]
 
-
-  
-  -- sorry
-  
-
   if halts: dvt.Dom then
-
     let (eq:=hrf) rf  := (dvt.get halts).l -- rf is a natural such that (eval_string ((n2l A) ++ (n2l rf)) i n).Dom.
     simp (config := {zeta:=false}) only [←hrf]
     let (eq:=hAₛ) Aₛ := (n2l Aₚ) ++ (n2l (rf+1))
     simp (config := {zeta:=false}) only [←hAₛ]
-
-
-    -- let A_result := (evals Aₛ i lb).get (c_kp54_aux_2 halts)
-
-    
-  --   sorry
-  -- else
-  --   sorry
     simp (config := {zeta:=false}) [halts]
     lift_lets; extract_lets; expose_names
 
@@ -356,9 +334,7 @@ private theorem R_aux_0 (i:ℕ) (h:(evals (As (2*i+1+1)) i (R_wt i)).Dom):
 
   else
     exfalso
-    have := @Asexext (2*i+1) (2*i+2) (Nat.lt_add_one (2 * i + 1))
-    rcases this with ⟨h3,h2⟩
-
+    rcases @Asexext (2*i+1) (2*i+2) (Nat.lt_add_one (2 * i + 1)) with ⟨h3,h2⟩
     have := dovetail_ev_1.mp (Part.eq_none_iff'.mpr halts) h3
     simp [c_kp54_aux_evp, -Denumerable.list_ofNat_succ] at this
     rw [show n2l Aₚ = As (2*i+1) from rfl, h2, i_1_simp] at this
@@ -403,7 +379,6 @@ theorem As_Uninjured_1 : ¬(evals (As (2*i+1+1)) i (R_wt i)).Dom → ¬(eval A i
   unfold KP54
   simp (config := {zeta:=false})
   lift_lets; extract_lets; expose_names
-  -- have i_1_simp: i_1 = i := Nat.div2_bit1 i
   have i_1_simp: i_1 = i := rfl
   have keqlb : R_wt i=lb := rfl
 
@@ -416,7 +391,6 @@ theorem As_Uninjured_1 : ¬(evals (As (2*i+1+1)) i (R_wt i)).Dom → ¬(eval A i
     have := c_kp54_aux_2 h0
     simp only [i_1_simp] at this
     exact h this
-
 
   else
 

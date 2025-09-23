@@ -7,8 +7,6 @@ open List
 
 abbrev n2l := @ofNat (List ℕ) _
 abbrev l2n := @encode (List ℕ) _
--- abbrev n2o := @ofNat (Option ℕ) _
--- abbrev o2n := @encode (Option ℕ) _
 
 instance : OfNat (List ℕ) lN where ofNat := n2l lN
 instance : Coe ℕ (List ℕ) := ⟨n2l⟩
@@ -478,15 +476,13 @@ def c_list_zipWith_aux (cf:Code):=
 
   (c_list_foldl step).comp₂ (pair c_list_nil right) left
 def c_list_zipWith (cf:Code) := c_list_reverse.comp $ left.comp (c_list_zipWith_aux cf)
--- #eval eval_prim (Nat.fzero) c_list_zipWith_aux (Nat.pair [1] [3])
--- theorem zip_aux : List.foldr () = List.zip ()
+
 @[cp] theorem c_list_zipWith_aux_ev_pr (hcf:code_prim cf) : code_prim (c_list_zipWith_aux cf) := by
   unfold c_list_zipWith_aux
   apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
 @[cp] theorem c_list_zipWith_ev_pr (hcf:code_prim cf) : code_prim (c_list_zipWith cf) := by
   unfold c_list_zipWith
   apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
--- @[simp] theorem c_list_zipWith_evp : eval_prim O c_list_zipWith_aux (Nat.pair l1N l2N) = l2n (List.zipWith Nat.pair (n2l l1N) (n2l l2N)) := by
 theorem c_list_zipWith_evp_aux_2 {a b : List ℕ} {f:ℕ→ℕ→ℕ} (h:a.length≤b.length) : List.zipWith f (b++c) a = List.zipWith f b a := by
   have aux3 : b = take a.length (b) ++ drop a.length (b) := by
     exact Eq.symm (take_append_drop a.length (b))
@@ -558,7 +554,7 @@ theorem c_list_zipWith_aux_evp :
       rw [aux5] at aux4
       have aux2:(zipWith f (tail.reverse ++ [head]) (n2l l2N)) = (zipWith f tail.reverse (n2l l2N)) := by simp [c_list_zipWith_evp_aux_2 aux4]
       rw [aux2]
-    -- sorry
+
     · -- this is the case where l2N is longer than l1N.
       have omwv: ∃ head2 list2, drop tail.length (n2l l2N) = head2::list2 := by exact ne_nil_iff_exists_cons.mp hh
       rcases omwv with ⟨head2,list2,hl2⟩
@@ -575,11 +571,11 @@ theorem c_list_zipWith_aux_evp :
           simp [hl2]
 
         have aux7 :
-          let l₁:=tail.reverse ++ [head]
-          let l₂:=take tail.length (n2l l2N) ++ [head2] ++ list2
-          let l₁':=zipWith f (tail.reverse) (take tail.length (n2l l2N))
-          let l₂':List ℕ :=[f head head2]
-          -- let f:= f
+          let l₁  := tail.reverse ++ [head]
+          let l₂  := take tail.length (n2l l2N) ++ [head2] ++ list2
+          let l₁' := zipWith f (tail.reverse) (take tail.length (n2l l2N))
+          let l₂' : List ℕ := [f head head2]
+
           ∃ ws xs ys zs, ws.length = ys.length ∧ l₁ = ws ++ xs ∧ l₂ = ys ++ zs ∧ l₁' = zipWith f ws ys ∧ l₂' = zipWith f xs zs := by
             let ws := tail.reverse
             let ys := take tail.length (n2l l2N)
@@ -587,15 +583,10 @@ theorem c_list_zipWith_aux_evp :
             let zs := [head2] ++ list2
             use ws,xs,ys,zs
             constructor
-            · simp [ws,ys]
+            · 
+              simp [ws,ys]
               exact le_of_succ_le aux1
-            · constructor
-              · exact rfl
-              · constructor
-                · exact append_assoc (take tail.length (n2l l2N)) [head2] list2
-                · constructor
-                  · exact rfl
-                  · exact rfl
+            · exact ⟨rfl, append_assoc (take tail.length (n2l l2N)) [head2] list2, rfl, rfl⟩
         have aux8 := zipWith_eq_append_iff.mpr aux7
 
         rw (config:={occs:=.pos [2]}) [aux5]
@@ -675,7 +666,6 @@ def c_list_map' (cf:Code) :=
 @[cp] theorem c_list_map'_ev_pr (hcf:code_prim cf) : code_prim (c_list_map' cf) := by
   unfold c_list_map'
   apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
-
 @[simp] theorem c_list_map'_evp :
   eval_prim O (c_list_map' cf) (Nat.pair lN aux)
     =
@@ -683,14 +673,10 @@ def c_list_map' (cf:Code) :=
   simp [c_list_map', -encode_list_cons, -encode_list_nil]
   induction (n2l lN) with
   | nil => simp [Nat.pair]
-  | cons head tail ih =>
-    simp [replicate_succ]
-    exact ih
+  | cons head tail ih => simp [replicate_succ]; exact ih
 -- @[simp] theorem c_list_map'_ev : eval O (c_list_map' cf) lN = l2n ((n2l lN).map (eval_prim O cf)) := by simp [← eval_prim_eq_eval c_list_map'_ev_pr]
 end Nat.RecursiveIn.Code
 end list_map'
-
-
 
 @[simp] theorem getLastI_append {y:ℕ}: (x++[y]).getLastI = y := by
   rw [getLastI_eq_getLast?]
