@@ -217,9 +217,8 @@ def c_part_bind (cf cg:Code) := cg.comp₂ c_id cf
     return r
  := by
  simp [c_part_bind]
- simp [eval]
  simp [Seq.seq]
- 
+
 end Nat.RecursiveIn.Code
 -- theorem Nat.PrimrecIn.part_bind:Nat.PrimrecIn O Nat.part_bind := by ...
 -- theorem Nat.Primrec.part_bind:Nat.Primrec Nat.part_bind := by ...

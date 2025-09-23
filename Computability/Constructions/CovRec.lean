@@ -274,35 +274,31 @@ theorem c_div_flip_evp_aux_aux :
   rw (config:={occs:=.pos [1]}) [c_div_flip]
   unfold c_div_flip_aux
 
-  lift_lets
-  extract_lets
-  expose_names
+  lift_lets; extract_lets; expose_names
 
-  have hdivisor : eval_prim O divisor (Nat.pair (d + 1) (Nat.pair n (eval_prim O c_div_flip_aux (Nat.pair (d + 1) n)))) = d+1 := by
-    simp [divisor]
-  have hdividend : eval_prim O dividend (Nat.pair (d + 1) (Nat.pair n (eval_prim O c_div_flip_aux (Nat.pair (d + 1) n)))) = n+1 := by
-    simp [dividend]
-  have hlist_of_prev_values : eval_prim O list_of_prev_values (Nat.pair (d + 1) (Nat.pair n (eval_prim O c_div_flip_aux (Nat.pair (d + 1) n)))) = eval_prim O c_div_flip_aux (Nat.pair (d + 1) n) := by
-    simp [list_of_prev_values]
+  let (eq:=hinp) inp := Nat.pair (d + 1) (Nat.pair n (eval_prim O c_div_flip_aux (Nat.pair (d + 1) n)))
+  
 
+  have hdivisor : eval_prim O divisor inp = d+1 := by simp [hinp, divisor]
+  have hdividend : eval_prim O dividend inp = n+1 := by simp [hinp, dividend]
+  have hlist_of_prev_values : eval_prim O list_of_prev_values inp = eval_prim O c_div_flip_aux (Nat.pair (d + 1) n) := by simp [hinp, list_of_prev_values]
 
-
-  have stupidrewrite : (eval_prim O
-              ((c_const 0).c_cov_rec
-                (c_ifz.comp
-                  (divisor.pair
-                    ((c_const 0).pair
-                      (c_if_lt_te.comp
-                        ((dividend.pair divisor).pair
-                          ((c_const 0).pair
-                            (succ.comp
-                              (c_list_getI.comp (list_of_prev_values.pair (c_sub.comp (dividend.pair divisor))))))))))))
-              (Nat.pair (d + 1) n)) =
+  simp
+  
+  have stupidrewrite :
+  (eval_prim O
+  ((c_const 0).c_cov_rec
+  (c_ifz.comp₂ divisor
+  ((c_const 0).pair
+  (c_if_lt_te.comp₄ dividend divisor (c_const 0)
+  (succ.comp (c_list_getI.comp₂ list_of_prev_values (c_sub.comp₂ dividend divisor)))))))
+  (Nat.pair (d + 1) n))
+                =
               eval_prim O c_div_flip_aux (Nat.pair (d+1) (n))
               := by exact rfl
 
-  -- set_option trace.Meta.Tactic.simp.rewrite true in
   simp [stupidrewrite]
+  simp only [←hinp]
   simp [hdivisor,hdividend,hlist_of_prev_values]
 
   unfold c_div_flip
@@ -585,33 +581,22 @@ theorem c_replace_oracle_evp_aux_nMod4 :
     simp [hmp]
     simp [mul_comm]
 
+  simp
 -- how can i avoid writing this out in full?
-  have stupidrewrite : (eval_prim O
-          ((c_const 0).c_cov_rec
-            (c_if_eq_te.comp
-              ((input_to_decode.pair (c_const 1)).pair
-                ((c_const 1).pair
-                  (c_if_eq_te.comp
-                    ((input_to_decode.pair (c_const 2)).pair
-                      ((c_const 2).pair
-                        (c_if_eq_te.comp
-                          ((input_to_decode.pair (c_const 3)).pair
-                            ((c_const 3).pair
-                              (c_if_eq_te.comp
-                                ((input_to_decode.pair (c_const 4)).pair
-                                  (o_1.pair
-                                    (c_if_eq_te.comp
-                                      ((nMod4.pair (c_const 0)).pair
-                                        (pair_code.pair
-                                          (c_if_eq_te.comp
-                                            ((nMod4.pair (c_const 1)).pair
-                                              (comp_code.pair
-                                                (c_if_eq_te.comp
-                                                  ((nMod4.pair (c_const 2)).pair
-                                                    (prec_code.pair rfind'_code))))))))))))))))))))))
-          (Nat.pair o (n + 4))) = eval_prim O c_replace_oracle_aux (Nat.pair o (n+4)) := by exact rfl
+  have stupidrewrite :
+  (eval_prim O
+  ((c_const 0).c_cov_rec
+  (c_if_eq_te.comp₄ input_to_decode (c_const 1) (c_const 1)
+  (c_if_eq_te.comp₄ input_to_decode (c_const 2) (c_const 2)
+  (c_if_eq_te.comp₄ input_to_decode (c_const 3) (c_const 3)
+  (c_if_eq_te.comp₄ input_to_decode (c_const 4) o_1
+  (c_if_eq_te.comp₄ nMod4 (c_const 0) pair_code
+  (c_if_eq_te.comp₄ nMod4 (c_const 1) comp_code
+  (c_if_eq_te.comp₄ nMod4 (c_const 2) prec_code rfind'_code))))))))
+  (Nat.pair o (n + 4)))
+  = eval_prim O c_replace_oracle_aux (Nat.pair o (n+4)) := by exact rfl
 
-  simp [comp₄, stupidrewrite]
+  simp [stupidrewrite]
 
 
   simp [hinput_to_decode]

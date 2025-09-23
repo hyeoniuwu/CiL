@@ -105,7 +105,7 @@ def c_comp₂ :=
   c_comp.comp₂ a $ c_pair.comp₂ b c
 @[simp, aesop safe] theorem c_comp₂_ev_pr:code_prim c_comp₂ := by repeat (first|assumption|simp|constructor)
 @[simp] theorem c_comp₂_evp : eval_prim O c_comp₂ (Nat.pair a (Nat.pair b c)) = encodeCode (comp₂ a b c) := by
-  simp [c_comp₂]
+  simp [c_comp₂]; rfl
 @[simp] theorem c_comp₂_ev:eval O c_comp₂ (Nat.pair a (Nat.pair b c)) = encodeCode (comp₂ a b c) := by rw [← eval_prim_eq_eval c_comp₂_ev_pr]; simp
 def c_comp₃ :=
   let a := left.comp left
@@ -115,7 +115,7 @@ def c_comp₃ :=
   c_comp.comp₂ (a) (c_pair.comp₂ c (c_pair.comp₂ b d))
 @[simp, aesop safe] theorem c_comp₃_ev_pr:code_prim c_comp₃ := by repeat (first|assumption|simp|constructor)
 @[simp] theorem c_comp₃_evp : eval_prim O c_comp₃ (Nat.pair (Nat.pair a b) (Nat.pair c d)) = encodeCode (comp₃ a b c d) := by
-  simp [c_comp₃]
+  simp [c_comp₃]; rfl
 @[simp] theorem c_comp₃_ev:eval O c_comp₃ (Nat.pair (Nat.pair a b) (Nat.pair c d)) = encodeCode (comp₃ a b c d) := by rw [← eval_prim_eq_eval c_comp₃_ev_pr]; simp
 
 def c_c_evals_oracle := c_comp.comp₂ (c_const c_sg) (c_comp₃.comp₄ (c_const c_list_getD) (c_c_const.comp left) (c_const c_id) (c_const $ c_const whatever))
@@ -158,12 +158,6 @@ def c_evals :=
   unfold c_evals
   simp
 
-  -- simp [eval] blows things up. why?
-  rw [eval]
-  simp []
-  rw [eval]
-  simp [Seq.seq]
-  rw [eval]
   simp [Seq.seq]
 
   have t1 : code_total O c_c_evals_oracle := prim_total c_c_evals_oracle_ev_pr

@@ -27,7 +27,6 @@ evaln O dvt.r c (Nat.pair x (dvt.l))=Option.some 0 := by
   have dvtrw : (eval O (dovetail c) x).get h = dvt := rfl
 
   unfold dovetail at h dvtrw
-  simp [] at h dvtrw
 
   have := Part.get_mem h
   rw [dvtrw] at this
@@ -51,6 +50,7 @@ eval O c (Nat.pair x (dvt.l))=Part.some 0 := by
 -- theorem dovetail_ev_0'' (h:(eval O (dovetail c) x).Dom) : ∃ y, eval O c (Nat.pair x y)=Part.some 0 := by sorry
 -- let dvt := (eval O (dovetail c) x).get h
 -- evaln O dvt.r c (Nat.pair x (dvt.l))=Option.some 0
+
 theorem dovetail_ev_1' : eval O (dovetail c) x=Part.none ↔ ∀ s y, evaln O s c (Nat.pair x y)≠Option.some 0 := by
   constructor
   ·
@@ -61,9 +61,10 @@ theorem dovetail_ev_1' : eval O (dovetail c) x=Part.none ↔ ∀ s y, evaln O s 
     apply Part.not_none_iff_dom.mpr
 
     unfold dovetail
-    simp []
     simp only [c_rfind_prop]
-    simp
+    simp only [comp₂, comp₃] -- without this theres a recursion depth error. why?
+    simp []
+
     use Nat.pair y s
     simp [eval]
     simp [Seq.seq]

@@ -21,21 +21,10 @@ def c_dovetail :=
   (c_comp₃.comp₄ (c_const c_evaln) (c_pair.comp₂ c_left (c_comp.comp₂ c_left c_right)) (c_c_const) (c_comp.comp₂ c_right c_right))
   (c_const (c_const 1))
 theorem c_dovetail_evp : eval_prim O c_dovetail = λ x ↦ encodeCode (dovetail $ decodeCode x) := by
-  -- unfold dovetail
   -- just doing simp [c_dovetail, dovetail] should work, but gives a kernel recursion error. why?
-  funext x
-  unfold c_dovetail
-  rewrite [eval_prim.eq_7]
-  rewrite [c_c_rfind_evp]
-  simp only []
-  rewrite [comp₃_evp,c_comp₂_evp, comp₄_evp, c_comp₃_evp, comp₂_evp, c_pair_evp']
-  simp only [c_const_evp]
-  simp only [decodeCode_encodeCode]
-  simp only [comp₂_evp, c_comp_evp, decodeCode_encodeCode]
-  simp only [c_left_evp, decodeCode_encodeCode]
-  
-  unfold dovetail
-  simp
+  -- this was fixed by moving simp from def of comp_n to the comp_n_evp theorems.
+  simp [c_dovetail, dovetail]
+
 
 def c_c_evals :=
   c_comp₃.comp₄
@@ -110,7 +99,7 @@ def c_kp54 :=
 -- theorem c_kp54_t : code_total O c_kp54 := by sorry
 
 @[simp, aesop safe] theorem c_kp54_ev_pr:code_prim c_kp54 := by sorry
-set_option maxRecDepth 10000
+-- set_option maxRecDepth 10000
 @[simp] theorem c_kp54_evp : eval_prim (K0 Nat.fzero) c_kp54 x = KP54.KP54 x := by
   induction x with
   | zero =>
@@ -148,16 +137,8 @@ set_option maxRecDepth 10000
       split
       next h1 =>
         have : ¬ dvt.Dom := by
-          simp only [q0] at h1
-          simp only [comp₂_evp, eval_prim] at h1
-          simp [hi, hlb, hAₚ] at h1
+          simp [q0, hi, hlb, hAₚ] at h1;
           exact h1
-          
-          #exit
-          -- set_option trace.Meta.Tactic.simp.rewrite true in
-          -- simp at h1
-          -- simp [q0, hi, hlb, hAₚ] at h1;
-          -- exact h1
         simp (config := {zeta:=false}) [this, hAₚ, hBₚ]
       next h1 =>
         have : dvt.Dom := by simp [q0, hi, hlb, hAₚ] at h1; exact h1
