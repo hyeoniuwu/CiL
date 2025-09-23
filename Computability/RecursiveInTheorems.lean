@@ -171,13 +171,13 @@ instance : Coe (Code→Code) (ℕ→ℕ) := ⟨Nat.RecursiveIn.Code.cc_to_nn.lif
 end Nat.RecursiveIn.Code.cc_to_nn
 
 -- conversions between oracle and non-oracle versions
-lemma PrimrecIn.PrimrecIn_Empty (h:Nat.PrimrecIn (fun _=>0) f):Nat.Primrec f := by
+lemma PrimrecIn.PrimrecIn_Empty (h:Nat.PrimrecIn (λ _ ↦ 0) f):Nat.Primrec f := by
   induction' h with g hg g h _ _ ih₁ ih₂ g h _ _ ih₁ ih₂ g h _ _ ih₁ ih₂ g _ ih
   repeat {constructor}
   · (expose_names; exact Nat.Primrec.pair a_ih a_ih_1)
   repeat {constructor; assumption; try assumption}
   (expose_names; exact Nat.Primrec.prec a_ih a_ih_1)
-lemma PrimrecIn.PrimrecIn₂_Empty {f:α→β→σ} (h:PrimrecIn₂ (fun _=>0) f):Primrec₂ f := by
+lemma PrimrecIn.PrimrecIn₂_Empty {f:α→β→σ} (h:PrimrecIn₂ (λ _ ↦ 0) f):Primrec₂ f := by
   unfold PrimrecIn₂ at h
   unfold Primrec₂
   apply PrimrecIn.PrimrecIn_Empty
@@ -286,7 +286,7 @@ theorem eval_total_comp (h:code_total O (comp cf cg)) :
     exact Part.Dom.bind (Part.Dom.of_bind (h x)) (eval O cf)
 def evalt (O:ℕ→ℕ) (c:Code) (h:code_total O c) : ℕ→ℕ := λ x ↦ (eval O c x).get (h x)
 -- def eval_total (O:ℕ→ℕ) (c:Code) (h:code_total O c) : ℕ→ℕ := match c with
--- | zero       => fun _=>0
+-- | zero       => λ _ ↦ 0
 -- | succ       => Nat.succ
 -- | left       => Nat.l
 -- | right      => Nat.r
@@ -298,7 +298,7 @@ def evalt (O:ℕ→ℕ) (c:Code) (h:code_total O c) : ℕ→ℕ := λ x ↦ (eva
 -- | rfind' _ => 0
 noncomputable def Part.getD (p:Part ℕ) : ℕ := if h:p.Dom then p.get h else 0
 noncomputable def eval_total (O:ℕ→ℕ) (c:Code) : ℕ→ℕ := match c with
-| zero       => fun _=>0
+| zero       => λ _ ↦ 0
 | succ       => Nat.succ
 | left       => Nat.l
 | right      => Nat.r
@@ -308,7 +308,7 @@ noncomputable def eval_total (O:ℕ→ℕ) (c:Code) : ℕ→ℕ := match c with
 | prec cf cg => unpaired fun z n => n.rec (eval_total O cf z) fun y IH => (eval_total O cg) <| Nat.pair z <| Nat.pair y IH
 | rfind' cf =>  Nat.unpaired fun a m => ((Nat.rfind fun n => (fun x => x = 0) <$> eval_total O cf (Nat.pair a (n + m))).map (· + m)).getD
 @[simp] def eval_prim (O:ℕ→ℕ):Code→ℕ→ℕ
-| zero       => fun _=>0
+| zero       => λ _ ↦ 0
 | succ       => Nat.succ
 | left       => Nat.l
 | right      => Nat.r
@@ -316,7 +316,7 @@ noncomputable def eval_total (O:ℕ→ℕ) (c:Code) : ℕ→ℕ := match c with
 | pair cf cg => fun x => Nat.pair (eval_prim O cf x) (eval_prim O cg x)
 | comp cf cg => fun x => eval_prim O cf (eval_prim O cg x)
 | prec cf cg => unpaired fun z n => n.rec (eval_prim O cf z) fun y IH => (eval_prim O cg) <| Nat.pair z <| Nat.pair y IH
-| rfind' _ => fun _=>0
+| rfind' _ => λ _ ↦ 0
 
 theorem eval_prim_eq_eval (h:code_prim c):eval_prim O c = eval O c := by
   induction h with
@@ -411,16 +411,6 @@ theorem eval_prim_eq_eval_ext (h:code_prim c): eval O c x = eval_prim O c x := c
 
   -- | rfind' cf hcf =>
   --   sorry
--- theorem code_prim_prop (h:code_prim c):∀ O, Nat.PrimrecIn O (eval_prim O c) := by
---   induction h with
---   | zero => unfold eval_prim; exact fun O ↦ PrimrecIn.zero
---   | succ => unfold eval_prim; exact fun O ↦ PrimrecIn.succ
---   | left => unfold eval_prim; exact fun O ↦ PrimrecIn.left
---   | right => unfold eval_prim; exact fun O ↦ PrimrecIn.right
---   | oracle => unfold eval_prim; exact fun O ↦ PrimrecIn.oracle
---   | pair ha hb ha_ih hb_ih => unfold eval_prim; exact fun O ↦ PrimrecIn.pair (ha_ih O) (hb_ih O)
---   | comp ha hb ha_ih hb_ih => unfold eval_prim; exact fun O ↦ PrimrecIn.comp (ha_ih O) (hb_ih O)
---   | prec ha hb ha_ih hb_ih => unfold eval_prim; exact fun O ↦ PrimrecIn.prec (ha_ih O) (hb_ih O)
 @[simp 1000] theorem code_prim_prop : Nat.PrimrecIn O (eval_prim O c) := by
   induction c with
   | zero => exact PrimrecIn.zero

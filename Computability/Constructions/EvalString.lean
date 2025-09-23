@@ -98,6 +98,15 @@ theorem c_evals_oracle_ev : eval O (c_evals_oracle o) =
   simp [← eval_prim_eq_eval c_evals_oracle_ev_pr]
   simp [c_evals_oracle_evp]
 
+def c_comp₂ :=
+  let a := left
+  let b := left.comp right
+  let c := right.comp right
+  c_comp.comp₂ a $ c_pair.comp₂ b c
+@[simp, aesop safe] theorem c_comp₂_ev_pr:code_prim c_comp₂ := by repeat (first|assumption|simp|constructor)
+@[simp] theorem c_comp₂_evp : eval_prim O c_comp₂ (Nat.pair a (Nat.pair b c)) = encodeCode (comp₂ a b c) := by
+  simp [c_comp₂]
+@[simp] theorem c_comp₂_ev:eval O c_comp₂ (Nat.pair a (Nat.pair b c)) = encodeCode (comp₂ a b c) := by rw [← eval_prim_eq_eval c_comp₂_ev_pr]; simp
 def c_comp₃ :=
   let a := left.comp left
   let b := left.comp right

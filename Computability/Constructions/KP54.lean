@@ -12,14 +12,64 @@ section kp54
 
 -- theorem c_kp54_ev : eval (K0 Nat.fzero) c_kp54 = KP54 := by sorry
 
-def c_c_kp54_aux :=
-  zero
-@[simp] theorem c_c_kp54_aux_evp : eval_prim O c_c_kp54_aux (Nat.pair i n) = dovetail (KP54.c_kp54_aux i n) := by sorry
-def c_c_evals :=
-  zero
-@[simp] theorem c_c_evals_evp : eval_prim O c_c_evals x = c_evals := by sorry
+@[irreducible] def c_c_rfind := c_comp.comp₂ c_rfind' (c_pair.comp₂ (c_const c_id) (c_zero))
+@[simp] theorem c_c_rfind_evp : eval_prim O c_c_rfind = fun x:ℕ => encodeCode (c_rfind x) := by simp [c_c_rfind, c_rfind]
+def c_dovetail :=
+  c_c_rfind.comp $
+  c_comp₂.comp₃
+  (c_const c_if_eq')
+  (c_comp₃.comp₄ (c_const c_evaln) (c_pair.comp₂ c_left (c_comp.comp₂ c_left c_right)) (c_c_const) (c_comp.comp₂ c_right c_right))
+  (c_const (c_const 1))
+theorem c_dovetail_evp : eval_prim O c_dovetail = λ x ↦ encodeCode (dovetail $ decodeCode x) := by
+  -- unfold dovetail
+  -- just doing simp [c_dovetail, dovetail] should work, but gives a kernel recursion error. why?
+  funext x
+  unfold c_dovetail
+  rewrite [eval_prim.eq_7]
+  rewrite [c_c_rfind_evp]
+  simp only []
+  rewrite [comp₃_evp,c_comp₂_evp, comp₄_evp, c_comp₃_evp, comp₂_evp, c_pair_evp']
+  simp only [c_const_evp]
+  simp only [decodeCode_encodeCode]
+  simp only [comp₂_evp, c_comp_evp, decodeCode_encodeCode]
+  simp only [c_left_evp, decodeCode_encodeCode]
+  
+  unfold dovetail
+  simp
 
-#check c_evals
+def c_c_evals :=
+  c_comp₃.comp₄
+  (c_const c_evalo)
+  (c_const c_c_evals_oracle)
+  (c_const $ c_const c_evals_code)
+  (c_const c_id)
+
+-- again, normal simp blows up here.
+@[simp] theorem c_c_evals_evp : eval_prim O c_c_evals x = c_evals := by
+  unfold c_c_evals
+  simp only [comp₄_evp, c_comp₃_evp, c_const_evp, decodeCode_encodeCode]
+  unfold c_evals
+  rfl
+def c_c_ifdom :=
+  c_comp₂.comp₃ (c_const c_add) (c_comp.comp₂ c_zero left) (right)
+theorem c_c_ifdom_evp : eval_prim O c_c_ifdom = λ x ↦ encodeCode (c_ifdom x.l x.r) := by
+  simp [c_c_ifdom, c_ifdom]
+def c_c_kp54_aux :=
+  c_c_ifdom.comp₂ 
+  (
+    c_comp₃.comp₄
+    c_c_evals
+    (c_comp₂.comp₃ (c_const c_list_append) (c_left) (c_comp.comp₂ c_succ c_right))
+    (c_c_const.comp left)
+    (c_c_const.comp right)
+  )
+  c_zero
+@[simp] theorem c_c_kp54_aux_evp : eval_prim O c_c_kp54_aux (Nat.pair i n) = dovetail (KP54.c_kp54_aux i n) := by
+
+  sorry
+
+
+
 def c_kp54_main :=
   have s := left
   have KP54s := right
@@ -60,6 +110,7 @@ def c_kp54 :=
 -- theorem c_kp54_t : code_total O c_kp54 := by sorry
 
 @[simp, aesop safe] theorem c_kp54_ev_pr:code_prim c_kp54 := by sorry
+set_option maxRecDepth 10000
 @[simp] theorem c_kp54_evp : eval_prim (K0 Nat.fzero) c_kp54 x = KP54.KP54 x := by
   induction x with
   | zero =>
@@ -96,7 +147,17 @@ def c_kp54 :=
     next h0 =>
       split
       next h1 =>
-        have : ¬ dvt.Dom := by simp [q0, hi, hlb, hAₚ] at h1; exact h1
+        have : ¬ dvt.Dom := by
+          simp only [q0] at h1
+          simp only [comp₂_evp, eval_prim] at h1
+          simp [hi, hlb, hAₚ] at h1
+          exact h1
+          
+          #exit
+          -- set_option trace.Meta.Tactic.simp.rewrite true in
+          -- simp at h1
+          -- simp [q0, hi, hlb, hAₚ] at h1;
+          -- exact h1
         simp (config := {zeta:=false}) [this, hAₚ, hBₚ]
       next h1 =>
         have : dvt.Dom := by simp [q0, hi, hlb, hAₚ] at h1; exact h1

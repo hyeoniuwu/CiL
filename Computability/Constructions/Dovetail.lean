@@ -10,7 +10,7 @@ returns `y` s.t. `[c](n,y)=0`.
 -/
 -- noncomputable def dovetail_aux (c:Code) : Code := c_evaln.comp₃ (left) c right
 -- noncomputable def dovetail (c:Code) : Code := (c_rfind (c_evaln.comp₃ (pair left (left.comp right)) (c_const c) (right.comp right)))
-noncomputable def dovetail (c:Code) : Code :=
+@[irreducible] def dovetail (c:Code) : Code :=
   c_rfind $
   c_if_eq'.comp₂
   (c_evaln.comp₃ (pair left (left.comp right)) (c_const c) (right.comp right))

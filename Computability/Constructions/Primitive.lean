@@ -481,6 +481,37 @@ end mul2
 
 
 namespace Nat.RecursiveIn.Code
+def c_zero := c_const zero
+@[simp, aesop safe] theorem c_zero_ev_pr:code_prim c_zero := by repeat (first|assumption|simp|constructor)
+@[simp] theorem c_zero_evp : eval_prim O c_zero x = encodeCode zero := by simp [c_zero]
+@[simp] theorem c_zero_evp' : eval_prim O c_zero = fun _:ℕ => encodeCode (zero) := by funext x; simp
+@[simp] theorem c_zero_ev:eval O c_zero x = encodeCode zero := by rw [← eval_prim_eq_eval c_zero_ev_pr]; simp
+@[simp] theorem Nat.PrimrecIn.c_zero : Nat.PrimrecIn O (fun _:ℕ => encodeCode zero) := by rw [←c_zero_evp']; exact code_prim_prop
+def c_succ := c_const succ
+@[simp, aesop safe] theorem c_succ_ev_pr:code_prim c_succ := by repeat (first|assumption|simp|constructor)
+@[simp] theorem c_succ_evp : eval_prim O c_succ x = encodeCode succ := by simp [c_succ]
+@[simp] theorem c_succ_evp' : eval_prim O c_succ = fun _:ℕ => encodeCode (succ) := by funext x; simp
+@[simp] theorem c_succ_ev:eval O c_succ x = encodeCode succ := by rw [← eval_prim_eq_eval c_succ_ev_pr]; simp
+@[simp] theorem Nat.PrimrecIn.c_succ : Nat.PrimrecIn O (fun _:ℕ => encodeCode succ) := by rw [←c_succ_evp']; exact code_prim_prop
+def c_left := c_const left
+@[simp, aesop safe] theorem c_left_ev_pr:code_prim c_left := by repeat (first|assumption|simp|constructor)
+@[simp] theorem c_left_evp : eval_prim O c_left x = encodeCode left := by simp [c_left]
+@[simp] theorem c_left_evp' : eval_prim O c_left = fun _:ℕ => encodeCode (left) := by funext x; simp
+@[simp] theorem c_left_ev:eval O c_left x = encodeCode left := by rw [← eval_prim_eq_eval c_left_ev_pr]; simp
+@[simp] theorem Nat.PrimrecIn.c_left : Nat.PrimrecIn O (fun _:ℕ => encodeCode left) := by rw [←c_left_evp']; exact code_prim_prop
+def c_right := c_const right
+@[simp, aesop safe] theorem c_right_ev_pr:code_prim c_right := by repeat (first|assumption|simp|constructor)
+@[simp] theorem c_right_evp : eval_prim O c_right x = encodeCode right := by simp [c_right]
+@[simp] theorem c_right_evp' : eval_prim O c_right = fun _:ℕ => encodeCode (right) := by funext x; simp
+@[simp] theorem c_right_ev:eval O c_right x = encodeCode right := by rw [← eval_prim_eq_eval c_right_ev_pr]; simp
+@[simp] theorem Nat.PrimrecIn.c_right : Nat.PrimrecIn O (fun _:ℕ => encodeCode right) := by rw [←c_right_evp']; exact code_prim_prop
+def c_oracle := c_const oracle
+@[simp, aesop safe] theorem c_oracle_ev_pr:code_prim c_oracle := by repeat (first|assumption|simp|constructor)
+@[simp] theorem c_oracle_evp : eval_prim O c_oracle x = encodeCode oracle := by simp [c_oracle]
+@[simp] theorem c_oracle_evp' : eval_prim O c_oracle = fun _:ℕ => encodeCode (oracle) := by funext x; simp
+@[simp] theorem c_oracle_ev:eval O c_oracle x = encodeCode oracle := by rw [← eval_prim_eq_eval c_oracle_ev_pr]; simp
+@[simp] theorem Nat.PrimrecIn.c_oracle : Nat.PrimrecIn O (fun _:ℕ => encodeCode oracle) := by rw [←c_oracle_evp']; exact code_prim_prop
+
 def c_pair := c_add.comp₂ (c_mul2.comp $ c_mul2) (c_const 5)
 @[simp, aesop safe] theorem c_pair_ev_pr:code_prim c_pair := by repeat (first|assumption|simp|constructor)
 @[simp] theorem c_pair_evp : eval_prim O c_pair (Nat.pair a b) = encodeCode (pair a b) := by simp [encodeCode, c_pair, Nat.mul_comm]
