@@ -1,4 +1,3 @@
--- import Computability.Constructions.CovRec
 import Computability.RecursiveInTheorems
 
 open Nat.RecursiveIn.Code
@@ -674,19 +673,6 @@ match c,s with
     let usen_indt  ← usen O (rfind' cf) s (Nat.pair x.l (x.r+1))
     Nat.max usen_base usen_indt
 
--- theorem use_nrfind'_prop
--- (h:(evaln O s (rfind' cf) x).isSome)
--- :
--- (u∈(evaln O s (rfind' cf) x))
--- ↔
--- (
--- 0∈(evaln O (s-y) cf (Nat.pair x.l (y+x.r)))
--- ∧ (∀ j ≤ y, (evaln O (s-j) cf (Nat.pair x.l (j+x.r))).isSome)
--- ∧ (∀ j < y, ¬0∈(evaln O (s-j) cf (Nat.pair x.l (j+x.r))))
--- )
--- := by sorry
--- #exit
-
 -- Custom induction principle used in usen_sound
 def CodeNatK.induction
   {motive : ℕ → Code → Prop}
@@ -782,17 +768,10 @@ private def ind : ℕ → Code → ℕ
 | _+1, oracle => 0
 | s+1, pair cf cg => ind (s+1) cf + ind (s+1) cg
 | s+1, comp cf cg => ind (s+1) cf + ind (s+1) cg
--- | 0, prec cf cg => ind 0 cf + ind 0 cg
 | s+1, prec cf cg =>
-  -- ∑ i ∈ Finset.range (s+1),
-  -- (ind i cf + ind i cg)
   ind (s+1) cf
   + ind (s+1) cg
   + ind s (prec cf cg)
-  -- +
-  -- ind s cf +
-  -- ind s cg
--- | 0, rfind' cf => 0
 | s+1, rfind' cf =>
   ind (s+1) cf
   + ind s (rfind' cf)
@@ -815,15 +794,13 @@ theorem usen_none_iff_evaln_none : (usen O c s x) = Option.none ↔ (evaln O s c
     | inl h =>
     simp [h]
     constructor
-    ·
-      intro hh a ha
+    · intro hh a ha
       have := (@hcf x).not
       simp only [Option.ne_none_iff_exists'] at this
       obtain ⟨a2,ha2⟩ := this.mpr ⟨a,ha⟩
       exact hcg.mp (Option.eq_none_iff_forall_ne_some.mpr (hh a2 ha2))
 
-    · intro hh
-      intro a ha
+    · intro hh a ha
       apply Option.eq_none_iff_forall_ne_some.mp
       have := (@hcf x).not
       simp only [Option.ne_none_iff_exists'] at this
@@ -2452,10 +2429,8 @@ lemma lemlemlem3
       rw [this]
       exact iihh2
 
-
 -- set_option diagnostics true in
 set_option maxHeartbeats 1000000 in
-
 theorem usen_complete {c n x} : x ∈ use O c n ↔ ∃ s, x ∈ usen O c s n := by
   refine ⟨fun h => ?_, fun ⟨k, h⟩ => usen_sound h⟩
   rsuffices ⟨k, h⟩ : ∃ k, x ∈ usen O  c (k + 1) n
