@@ -1,4 +1,5 @@
 import Computability.RecursiveInTheorems
+import Mathlib.Tactic.Linarith
 
 open Nat.RecursiveIn.Code
 namespace Nat.RecursiveIn.Code
@@ -68,9 +69,7 @@ theorem evaln_rfind_base (h:(evaln O (s+1) (rfind' cf) x).isSome) : (evaln O (s+
   contrapose h
   simp at h
   simp [evaln]
-  intro h1
-  intro h2
-  intro h3
+  intro h1 h2 h3
   rw [h] at h3
   contradiction
 theorem evaln_rfind_indt
@@ -81,11 +80,8 @@ theorem evaln_rfind_indt
   contrapose h
   simp at h
   simp [evaln]
-  simp_all
-  intro h4
-  intro h5
-  intro h6
-  grind only [Option.not_isSome, Option.get_some, Option.isSome_some]
+  intro h4 h5 h6
+  simp_all only [Option.get_some, ne_eq, ↓reduceIte]
 theorem evaln_rfind_as_eval_rfind
 (h:(evaln O (s+1) (rfind' c) x).isSome)
 :
@@ -118,12 +114,9 @@ theorem evaln_rfind_as_eval_rfind
       contrapose h4
       simp [rwasd]
       have : asd≠0 := by
-        contrapose h4
-        simp at h4
-        simp
+        contrapose h4; simp only [ne_eq, Decidable.not_not] at h4 ⊢
         rw [h4] at rwasd
         rw [show 0=(Option.some 0).get (Option.isSome_some) from rfl] at rwasd
-
         exact Option.get_inj.mp rwasd
       simp [this]
       have halt2 := evaln_rfind_indt h hh this
@@ -133,8 +126,7 @@ theorem evaln_rfind_as_eval_rfind
     | succ roM1 ih =>
       have := @ih (s-1) (Nat.pair x.l (x.r+1)) ?_ ?_
       -- simp_all
-      simp
-      simp at this
+      simp at this ⊢
       all_goals
         have hh := evaln_rfind_base h
         let asd := (evaln O (s + 1) c x).get hh
@@ -166,16 +158,12 @@ theorem evaln_rfind_as_eval_rfind
           | succ n =>
             simp [hasd] at h4
             simp [evaln]
-            rw [add_assoc] at h4
-            rw (config:={occs:=.pos [2]})[add_comm] at h4
-            exact h4
+            ac_nf at h4 ⊢
       · cases s with
       | zero => simp_all [evaln]
       | succ n =>
         simp at this
-        rw [add_assoc]
-        rw (config:={occs:=.pos [3]}) [add_comm]
-        exact this
+        ac_nf at this ⊢
   exact this
   all_goals
     have halt_base := evaln_rfind_base h
@@ -219,8 +207,7 @@ theorem evaln_rfind_as_eval_rfind
           simp [hb] at h4
           have halt2 := evaln_rfind_indt h halt_base (by simp_all)
           cases s with
-          | zero =>
-            simp [evaln] at halt2
+          | zero => simp [evaln] at halt2
           | succ sM1 =>
             simp_all
             rw (config:={occs:=.pos [2]}) [add_comm]
@@ -317,31 +304,14 @@ theorem evaln_rfind_as_eval_rfind_reverse
     rotate_left
     · simp
       rw [←sss]
-      rw (config:={occs:=.pos [2]}) [add_comm]
-      rwa [←add_assoc]
+      ac_nf at h2 ⊢
     · simp
       intro j hj
       have := @h3 (j+1) (Nat.add_lt_add_right hj 1)
       simp at this
       rw [←sss]
-      rw (config:={occs:=.pos [2]}) [add_comm]
-      rwa [←add_assoc]
-    have xles : x≤s := by
-
-      contrapose h2
-      simp at h2
-      -- have : s < (Nat.pair x.l (1 + x.r)) := by exact?
-      have contra : s-n < (Nat.pair x.l (n + 1 + x.r)) := calc
-        s-n ≤ s                  := sub_le s n
-        _ < x                    := h2
-        _ = Nat.pair x.l x.r     := Eq.symm pair_lr
-        _ < Nat.pair x.l (n+1+x.r) := by
-          apply pair_lt_pair_right x.l
-          grind
-      intro he
-      have := evaln_bound he
-      have := lt_trans contra this
-      simp at this
+      ac_nf at this ⊢
+    have xles : x≤s := evaln_xles h30
     simp [xles]
 
     have := @h3 0 (zero_lt_succ n)
@@ -735,28 +705,24 @@ def CodeNatK.induction
     | pair cf cg hcf hcg =>
       cases k with
       | zero   => exact h0 (.pair cf cg)
-      | succ k =>
-        exact hpair k cf cg hcf hcg
+      | succ k => exact hpair k cf cg hcf hcg
     | comp cf cg hcf hcg =>
       cases k with
       | zero   => exact h0 (.comp cf cg)
-      | succ k =>
-        exact hcomp k cf cg hcf hcg
+      | succ k => exact hcomp k cf cg hcf hcg
     | prec cf cg hcf hcg =>
       cases k with
       | zero   => exact h0 (.prec cf cg)
-      | succ k =>
-        apply hprec k cf cg
-        exact hcf
-        exact hcg
-        exact ih k (Nat.lt_succ_self _) (.prec cf cg)
+      | succ k => exact hprec k cf cg hcf hcg (ih k (Nat.lt_succ_self _) (.prec cf cg))
     | rfind' cf hcf =>
       cases k with
       | zero   => exact h0 (.rfind' cf)
       | succ k =>
         apply hrfind k cf
         intro x' hle
-        grind only
+        cases Nat.eq_or_lt_of_le hle with
+        | inl h => rw [h]; exact hcf
+        | inr h => exact ih x' h cf
 
 -- TODO: replace ind with an explicit induction scheme
 private def ind : ℕ → Code → ℕ
@@ -1125,12 +1091,8 @@ theorem evaln_rfind_prop_not' :
     have := evaln_rfind_prop5 cont
     simp at this
 
-
-
   | succ yM1 ih =>
-  have rwadd : yM1 + 1 + x.r = yM1 + (x.r + 1) := by
-    rw [add_assoc]
-    rw (config:={occs:=.pos [2]}) [add_comm]
+  have rwadd : yM1 + 1 + x.r = yM1 + (x.r + 1) := by ac_nf
 
   constructor
 
@@ -1285,9 +1247,7 @@ theorem evaln_rfind_prop_not' :
       constructor
       exact le_of_lt_succ h2
       simp at h3
-      rw [←h3]
-      rw [add_assoc]
-      rw (config:={occs:=.pos [3]}) [add_comm]
+      ac_nf at h3 ⊢
     exact ih1.mpr (Or.inr (Or.inl this))
   | inr h =>
     rcases h with ⟨h1,h2,h3⟩
@@ -1299,9 +1259,7 @@ theorem evaln_rfind_prop_not' :
       constructor
       exact succ_lt_succ_iff.mp h2
       simp at h3
-      rw [←h3]
-      rw [add_assoc]
-      rw (config:={occs:=.pos [3]}) [add_comm]
+      ac_nf at h3 ⊢
     exact ih1.mpr (Or.inr (Or.inr this))
 theorem evaln_rfind_prop :
 y+x.r∈evaln O (k+1) cf.rfind' x
@@ -1744,26 +1702,20 @@ y∈(do
       else
         clear ih
         simp [hroM1]
-        have roM1M1: roM1 = roM1-1+1 := by exact Eq.symm (succ_pred_eq_of_ne_zero hroM1)
+        have roM1M1: roM1 = roM1-1+1 := Eq.symm (succ_pred_eq_of_ne_zero hroM1)
         simp (config:={singlePass:=true}) [roM1M1] at *
         have : (usen O cf.rfind' k (Nat.pair x.l (x.r + 1 + 1))).isSome := by
-          have := nrop2 2 (le_add_left 2 (roM1 - 1))
-          have := usen_mono_dom (show k + 1 - 2 ≤ k from by grind) this
           have := nrop6 (1+1) (le_add_left (1 + 1) (roM1 - 1))
           simp only [reduceSubDiff] at this
           have := Option.isSome_of_mem this
-          simp at this
-          rw [add_assoc]
-          simp
-          rw [add_comm]
-          have := en2un this
-          have := usen_mono_dom (show k-1≤k from sub_le k 1) this
-          exact this
+          ac_nf at this ⊢
+          simp at this ⊢
+          exact usen_mono_dom (show k-1≤k from sub_le k 1) (en2un this)
         simp [isSome.bind this]
         apply congrArg
         apply congrArg
 
-        have kkk : k=k-1+1 := by exact nrf_aux usenindtdom
+        have kkk : k=k-1+1 :=  nrf_aux usenindtdom
         simp [show (usen O cf.rfind' k (Nat.pair x.l (x.r + 1))) = (usen O cf.rfind' (k-1+1) (Nat.pair x.l (x.r + 1))) from congrFun
           (congrArg (usen O cf.rfind') kkk) (Nat.pair x.l (x.r + 1))]
 
@@ -1829,18 +1781,14 @@ y∈(do
   clear base'
 
   induction (evaln O (k + 1) cf.rfind' x).get h2 - x.r generalizing base h2 x with
-  | zero =>
-    simp
-    simp [isSome.bind $ en2un h1]
+  | zero => simp [isSome.bind $ en2un h1]
   | succ roM1 ih =>
-    simp
-    simp at ih
-    intro asd
-    intro h
+    simp at ih ⊢
+    intro asd h
     simp (config:={singlePass:=true}) [listrwgen] at h
     simp at h
 
-    have nrop := nrfind'_obtain_prop' h2
+    have nrop  := nrfind'_obtain_prop' h2
     have nrop4 := nrfind'_obtain_prop_4' h2
     have nrop6 := nrfind'_obtain_prop_6' h2
     rw [asd] at nrop nrop6 nrop4
@@ -1872,13 +1820,8 @@ y∈(do
       (base.max ((usen O cf (k+1) x).get (en2un h1)))
       ?_
       ?_
-      -- ?_
-      -- -- (base.max ((usen O cf (k - roM1) (Nat.pair x.l (roM1 + 1 + x.r))).get asddom))
-      -- ?_
-      -- ?_
     rotate_left
-    ·
-      exact Option.isSome_of_mem (evaln_mono (show k≤k+1 from le_add_right k 1) (Option.get_mem evalnindtdom))
+    · exact Option.isSome_of_mem (evaln_mono (show k≤k+1 from le_add_right k 1) (Option.get_mem evalnindtdom))
     ·
       exact aux0
     ·
@@ -1894,23 +1837,14 @@ y∈(do
       rw [←add_assoc]
       simp only [reduceSubDiff, add_tsub_cancel_left]
     ·
-      -- have := @lemlemlem2 O k cf x roM1 y (asddom) base h1 (en2un h1) (en2un aux0) (fun j a ↦ nrop2 j a) h
       simp
-      -- simp at ih1
       have := @lemlemlem2 O k cf x roM1 (asddom) base h1 (en2un h1) (en2un aux0) (fun j a ↦ nrop2 j a)
-      -- rw [this] at ih1
       rw [this]
       exact h
-      -- rw [ih1]
 
     simp at ih1
-    -- have := @lemlemlem2 O k cf x roM1 y (asddom) base h1 (en2un h1) (en2un aux0) (fun j a ↦ nrop2 j a) h
-    -- rw [this] at ih1
-    -- rw [←this]
-    -- rw [←ih1] at h
     rw [←ih1]
 
-    -- sorry
     have usenindtdom : (usen O cf.rfind' k (Nat.pair x.l (x.r + 1))).isSome := by
       have := nrop4 1 (le_add_left 1 roM1)
       rw [add_comm]
@@ -1939,18 +1873,12 @@ y∈(do
       have roM1M1: roM1 = roM1-1+1 := by exact Eq.symm (succ_pred_eq_of_ne_zero hroM1)
       simp (config:={singlePass:=true}) [roM1M1] at *
       have : (usen O cf.rfind' k (Nat.pair x.l (x.r + 1 + 1))).isSome := by
-        have := nrop2 2 (le_add_left 2 (roM1 - 1))
-        have := usen_mono_dom (show k + 1 - 2 ≤ k from by grind) this
         have := nrop6 (1+1) (le_add_left (1 + 1) (roM1 - 1))
         simp only [reduceSubDiff] at this
         have := Option.isSome_of_mem this
-        simp at this
-        rw [add_assoc]
-        simp
-        rw [add_comm]
-        have := en2un this
-        have := usen_mono_dom (show k-1≤k from sub_le k 1) this
-        exact this
+        ac_nf at this ⊢
+        simp at this ⊢
+        exact usen_mono_dom (show k-1≤k from sub_le k 1) (en2un this)
       simp [isSome.bind this]
       apply congrArg
       apply congrArg
@@ -1959,8 +1887,6 @@ y∈(do
       simp [show (usen O cf.rfind' k (Nat.pair x.l (x.r + 1))) = (usen O cf.rfind' (k-1+1) (Nat.pair x.l (x.r + 1))) from congrFun
         (congrArg (usen O cf.rfind') kkk) (Nat.pair x.l (x.r + 1))]
 
-      -- rw [this]
-      -- simp (config:={singlePass:=true}) [this]
       simp [usen]
 
       have auxdom1 : (evaln O k cf (Nat.pair x.l (x.r + 1))).isSome := by
@@ -2016,11 +1942,9 @@ theorem usen_rfind_prop2'' :
     apply Option.eq_of_eq_some
     intro y
     exact usen_rfind_prop2
-
+theorem usen_xles (h:(usen O c (s+1) x).isSome) : x≤s := le_of_lt_succ (usen_bound (Option.get_mem h))
 theorem usen_sound : ∀ {c s n x}, x ∈ usen O c s n → x ∈ use O c n
 := by
--- | _, 0, n, x, h => by simp [usen] at h
--- | c, k + 1, n, x, h => by
   intro c k n x h
   induction k,c using CodeNatK.induction generalizing x n with
   | h0 c => simp [usen] at h
@@ -2076,14 +2000,11 @@ theorem usen_sound : ∀ {c s n x}, x ∈ usen O c s n → x ∈ use O c n
       intro h1
       have h1 := h1.right
       simp at h1
-      apply hf
-      exact h1
+      exact hf h1
     · simp
-      intro hh1
-      intro hh
-      -- have hh := hh.right
+      intro hh1 hh
       simp [Option.bind_eq_some_iff] at hh
-      rcases hh with ⟨hh,⟨h3,⟨h4,⟨h5,⟨h7,⟨h8,h9⟩⟩⟩⟩⟩⟩
+      rcases hh with ⟨hh,h3,h4,h5,h7,h8,h9⟩
 
       use h4
       constructor
@@ -2091,21 +2012,14 @@ theorem usen_sound : ∀ {c s n x}, x ∈ usen O c s n → x ∈ use O c n
       · use hh
         constructor
         ·
-          -- #check
-          -- have main := usen_sound h3
           have main := ih h3
           simp [use] at main
           exact main
-        · use h7
-          constructor
-          · exact @hg (Nat.pair n.l (Nat.pair m h4)) h7 h8
-          · exact h9
+        · exact ⟨h7, @hg (Nat.pair n.l (Nat.pair m h4)) h7 h8,h9⟩
   | hrfind k cf hfih =>
-    -- have hf := hfih (k+1) (le_rfl)
     simp [use]
     have := usen_rfind_prop2.mp h
     have urop1 := usen_rfind_prop h
-    -- have urop11 := urop1 1
     rcases urop1 0 (zero_le (rfind'_obtain (usen_rfind_prop_aux h))) with ⟨h1,h2⟩
     simp at h2
 
@@ -2115,32 +2029,25 @@ theorem usen_sound : ∀ {c s n x}, x ∈ usen O c s n → x ∈ use O c n
       simp [Part.eq_some_iff.mpr (evaln_sound h8)]
     simp [h145] at *
 
-    -- simp [h8] at this
     simp_all
 
-    have nlek : n≤k := by
-      contrapose this
-      simp [this, Option.bind]
+    have nlek : n≤k := usen_xles (Option.isSome_of_mem h)
     simp [nlek] at this
 
     use h7
     constructor
     exact evaln_sound h8
 
-    -- let asd := h7 - n.r
-    -- have rwasd : h7 - n.r = asd := rfl
-    -- rw [rwasd]
-    -- rw [rwasd] at this
     revert this
     revert urop1
-    generalize 0=a
+    generalize 0=base
     -- revert 0
-    induction h7 - n.r generalizing a with
+    induction h7 - n.r generalizing base with
     | zero =>
       -- simp [hind] at this
       simp
       intro h3 h4 this
-      use (ForInStep.yield (a.max h1))
+      use (ForInStep.yield (base.max h1))
       constructor
       use h1
       constructor
@@ -2153,35 +2060,20 @@ theorem usen_sound : ∀ {c s n x}, x ∈ usen O c s n → x ∈ use O c n
       intro urop1
       have aux0 : (∀ j ≤ nn, ∃ y, usen O cf (k + 1 - j) (Nat.pair n.l (n.r + j)) = some y) := by
         intro j jnn
-        have := urop1 j (le_add_right_of_le jnn)
-        exact this
+        exact urop1 j (le_add_right_of_le jnn)
 
       rcases urop1 (nn+1) (Nat.le_refl (nn + 1)) with ⟨h3,h4⟩
       simp at h4
-      rw (config:={occs:=.pos [1]}) [add_comm] at h4
+      ac_nf at h4 ⊢
       simp [h4]
-      have hknn : k-nn-1+1=k-nn := by
-        contrapose h4
-        simp at h4
-        have : k-nn=0 := by grind
-        simp [this,usen]
 
-
-      -- hfih (k+1) (le_rfl)
-      have hf2 := @hfih (k-nn) (by grind) (Nat.pair n.l (nn + 1 + n.r)) h3 h4
-      -- simp at this
-      -- have hf2 := this h4
+      have hf2 := @hfih (k-nn) (le_add_right_of_le (sub_le k nn)) (Nat.pair n.l (nn + (n.r+1))) h3 h4
 
       intro h5
-      use (ForInStep.yield (a.max h3))
+      use (ForInStep.yield (base.max h3))
       constructor
       use h3
-      simp
-      have ih1 := ih (a.max h3) aux0
-      clear ih
-      have ih2 := ih1 h5
-      clear ih1
-      exact ih2
+      exact ih (base.max h3) aux0 h5
 
 lemma lemlemlem
 {a n:ℕ}
@@ -2197,42 +2089,44 @@ lemma lemlemlem
     (use O cf (Nat.pair n.l (i + (1 + n.r)))).bind fun use_i ↦ Part.some (ForInStep.yield (r.max use_i)))
  := by
   revert h6
+  ac_nf
   induction nn generalizing h5 n a with
   | zero =>
     simp
     intro h6
-
     have : use O cf n = Part.some h57 := by
       exact Part.get_eq_iff_eq_some.mp (_root_.id (Eq.symm h57def))
     simp_all
     have := rop3 1 (le_rfl)
-    rw [add_comm] at this
     simp [Part.Dom.bind this]
-    have : h5 = ((use O cf (Nat.pair n.l (1 + n.r))).get this) := by
-      exact (Part.eq_get_iff_mem this).mpr h6
-    simp [←this]
-    rw (config:={occs:=.pos [2]}) [Nat.max_comm]
+    simp [←(Part.eq_get_iff_mem this).mpr h6]
+    ac_nf
 
   | succ nnn iihh =>
-
+    -- sorry
     intro h6
 
     simp (config:={singlePass:=true}) [listrwgen]
     simp
 
-    have dom1 : (use O cf (Nat.pair n.l (nnn + 1 + n.r))).Dom := by
+    ac_nf
+
+    have dom1 : (use O cf (Nat.pair n.l (nnn + (n.r + 1)))).Dom := by
       have := rop3 (nnn+1) (le_add_right (nnn + 1) 1)
-      rw [show n.r + (nnn + 1) = nnn + 1 + n.r from by grind] at this
-      exact this
+      ac_nf at this
+      -- ac_nf at this
+      -- rw [show n.r + (nnn + 1) = nnn + 1 + n.r from by grind] at this
+      -- exact this
     simp [Part.Dom.bind dom1]
-    have dom2 : (use O cf (Nat.pair n.l (nnn + 1 + (1 + n.r)))).Dom := by
-      rw [show (nnn + 1 + (1 + n.r)) = nnn + 1 + 1 + n.r from by grind]
-      exact Part.dom_iff_mem.mpr ⟨h5,h6⟩
+    have dom2 : (use O cf (Nat.pair n.l (nnn + (n.r + 2)))).Dom := by
+      ac_nf at h6
+      simp at h6
+      exact Part.mem_imp_dom h6
     simp [Part.Dom.bind dom2]
 
+    -- sorry
 
-
-    have iihh1 := @iihh ((use O cf (Nat.pair n.l (nnn + 1 + n.r))).get dom1) (a.max h5) (Nat.pair n.l (n.r)) ?_
+    have iihh1 := @iihh ((use O cf (Nat.pair n.l (nnn + (n.r + 1)))).get dom1) (a.max h5) (Nat.pair n.l (n.r)) ?_
     simp at iihh1
     clear iihh
     rotate_right
@@ -2240,25 +2134,14 @@ lemma lemlemlem
       intro j hj
       have := rop3 j (le_add_right_of_le hj)
       simpa
-
-    have iihh2 := iihh1 h57dom ?_ ?_
+    ac_nf at iihh1
+    have iihh2 := iihh1 h57dom h57def (Part.get_mem dom1)
     clear iihh1
-    rotate_left
-    ·
-      exact h57def
-    · exact Part.get_mem dom1
-
     rw [iihh2]
 
-
-    have : (use O cf (Nat.pair n.l (nnn + 1 + (1 + n.r)))).get dom2 = h5 := by
-      simp [show (nnn + 1 + (1 + n.r)) = nnn + 1 + 1 + n.r from by grind]
-      exact
-        Part.get_eq_of_mem h6
-          (congrArg (fun x ↦ use O cf (Nat.pair n.l x))
-              (have this := lemlemlem._proof_1_5 nnn rop3 h57dom h57def h6 dom1 dom2 iihh2;
-              this) ▸
-            dom2)
+    have : (use O cf (Nat.pair n.l (nnn + (n.r + 2)))).get dom2 = h5 := by
+      simp [show (nnn + (n.r + 2)) = (nnn + 1 + (n.r + 1)) from by grind]
+      exact Part.get_eq_of_mem h6 _
     rw [this]
     rw (config:={occs:=.pos [2]}) [Nat.max_comm]
 lemma lemlemlem3
@@ -2290,18 +2173,6 @@ lemma lemlemlem3
     intro h6
     simp_all
 
-    -- have : use O cf n = Part.some h57 := by
-    --   exact Part.get_eq_iff_eq_some.mp (_root_.id (Eq.symm h57def))
-    -- have : h57 ∈ (use O cf n) := by exact
-    --   (Part.get_eq_iff_mem h57dom).mp (_root_.id (Eq.symm h57def))
-    -- rcases hf this with ⟨g1,g2⟩
--- have : i1+1≤ kk.max i1 + 1 + 1 := by grind
--- have := usen_mono this i2
--- simp at this
--- simp [this]
-    -- simp [
-
-
     rcases hf h6 with ⟨g3,g4⟩
     have : ∃z,z∈(usen O cf (kk + 1) (Nat.pair n.l (1 + n.r))) := by
       contrapose hkk
@@ -2312,25 +2183,13 @@ lemma lemlemlem3
     simp at lmao4
     simp [lmao4] at hkk
     simp [usen_sing lmao4 g4] at hkk
-
-
-
-    -- simp [←this]
-    rw (config:={occs:=.pos [2]}) [Nat.max_comm]
-    exact hkk.symm
+    subst hkk
+    ac_nf
 
   | succ nnn iihh =>
-
     intro h6
-
-    simp (config:={singlePass:=true}) [listrwgen]
-    simp (config:={singlePass:=true}) [listrwgen] at hkk
-    simp at hkk
-    simp
-
-    -- simplify the goal
-
-
+    simp (config:={singlePass:=true}) [listrwgen] at hkk ⊢
+    simp at hkk ⊢
 
     rcases hf h6 with ⟨g3,g4⟩
     have : ∃z,z∈(usen O cf (kk - nnn) (Nat.pair n.l (nnn + 1 + (1 + n.r)))) := by
@@ -2340,10 +2199,9 @@ lemma lemlemlem3
       simp [this]
     rcases this with ⟨lmao3,lmao4⟩
     simp at lmao4
-    simp [lmao4] at hkk
-    simp [lmao4]
+    simp [lmao4] at hkk ⊢
+
     rw [add_assoc] at g4
-    -- rw [show ( nnn + 1 + 1 + n.r )= nnn + 1 + (1 + n.r)) from by grind] at g4
 
     simp [usen_sing lmao4 g4] at *
 
@@ -2351,19 +2209,7 @@ lemma lemlemlem3
     have rtdom := rop3 (nnn+1) (le_add_right (nnn + 1) 1)
     rw [add_comm] at rtdom
     let rtval := (use O cf (Nat.pair n.l (nnn + 1 + n.r))).get rtdom
-    -- have : use O cf (Nat.pair n.l (nnn + 1 + n.r)) = Part.some h57 := by
-    --   exact Part.get_eq_iff_eq_some.mp (_root_.id (Eq.symm h57def))
--- have : ∃z,z∈(usen O cf (kk.max i1 + 1 - nnn) (Nat.pair n.l (nnn + 1 + n.r))) := by
---   contrapose hkk
---   simp at hkk
---   have := Option.eq_none_iff_forall_ne_some.mpr hkk
---   simp (config:={singlePass:=true}) [listrwgen]
---   have : (usen O cf (kk + 1 - nnn) (Nat.pair n.l (nnn + (1 + n.r)))) = Option.none := by
---     rw [add_assoc] at this
 
---     have ineq1: kk + 1 - nnn ≤ kk.max i1 + 1 - nnn := by grind
---     simp [usen_mono_contra ineq1 this]
---   simp [this]
     have : ∃z,z∈(usen O cf (use_steps - nnn) (Nat.pair n.l (nnn + 1 + n.r))) := by
       contrapose hkk
       simp at hkk
@@ -2375,32 +2221,17 @@ lemma lemlemlem3
         have ineq1: kk + 1 - nnn ≤ use_steps - nnn := by grind only [cases Or]
         simp [usen_mono_contra ineq1 this]
       simp [this]
-    -- simp [this]
-    -- have : rtval ∈ (use O cf (Nat.pair n.l (nnn + 1 + n.r))) := by exact Part.get_mem rtdom
+
     rcases this with ⟨g1,g2⟩
     simp at g2
     simp [g2]
 
-    -- have : i1+1≤ kk.max i1 + 1 := by grind
-    -- have := usen_mono this g2
-    -- simp at this
-    -- simp [this]
 
-
-
-    -- simp [usen_sing lmao4 g4] at hkk
 
     have dom1 : (use O cf (Nat.pair n.l (nnn + 1 + n.r))).Dom := by
       have := rop3 (nnn+1) (le_add_right (nnn + 1) 1)
       rw [show n.r + (nnn + 1) = nnn + 1 + n.r from by grind] at this
       exact this
-    -- simp [Part.Dom.bind dom1]
-    -- have dom2 : (use O cf (Nat.pair n.l (nnn + 1 + (1 + n.r)))).Dom := by
-    --   rw [show (nnn + 1 + (1 + n.r)) = nnn + 1 + 1 + n.r from by grind]
-    --   exact Part.dom_iff_mem.mpr ⟨h5,h6⟩
-    -- simp [Part.Dom.bind dom2]
-
-
 
     have iihh1 := @iihh ((use O cf (Nat.pair n.l (nnn + 1 + n.r))).get dom1) (a.max h5) (Nat.pair n.l (n.r)) ?_
     simp at iihh1
@@ -2633,10 +2464,12 @@ theorem usen_complete {c n x} : x ∈ use O c n ↔ ∃ s, x ∈ usen O c s n :=
       rotate_right 5
       · simp
         constructor
-        rw [←add_assoc]
-        exact urop1
+        -- rw [←add_assoc]
+        ac_nf at urop1 ⊢
+        -- exact urop1
         constructor
         intro j hj
+        have := rop1 (j+1) (Nat.add_le_add_right hj 1)
         rw [←add_assoc]
         exact rop1 (j+1) (Nat.add_le_add_right hj 1)
         intro j hj
@@ -2644,6 +2477,7 @@ theorem usen_complete {c n x} : x ∈ use O c n ↔ ∃ s, x ∈ usen O c s n :=
         exact rop2 (j+1) (Nat.add_le_add_right hj 1)
       · simp
         intro j hj
+        -- ac_nf
         rw [←add_assoc]
         exact rop4 (j+1) (Nat.add_le_add_right hj 1)
       ·
@@ -2762,7 +2596,7 @@ theorem use_eq_rfindOpt (c n) : use O c n = Nat.rfindOpt fun k => usen O c k n :
     refine usen_complete.trans (Nat.rfindOpt_mono ?_).symm
     intro a m n hl; apply usen_mono hl
 
-theorem usen_xles (h:(usen O c (s+1) x).isSome) : x≤s :=le_of_lt_succ (usen_bound (Option.get_mem h))
+
 theorem evaln_pair_dom (h:(evaln O (s+1) (pair cf cg) x).isSome) : (evaln O (s+1) cf x).isSome ∧ (evaln O (s+1) cg x).isSome := by
   have := evaln_xles h
   contrapose h
