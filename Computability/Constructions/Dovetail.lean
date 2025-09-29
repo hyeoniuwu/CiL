@@ -1,8 +1,9 @@
 import Computability.Basic
 import Computability.Constructions.Eval
 
-open Part
-namespace Nat.RecursiveIn.Code
+open Nat Part
+
+namespace Computability.Code
 
 /--
 Given a code `c`, `dovetail c` gives the code to the function which, on input n,
@@ -108,4 +109,4 @@ theorem dovetail_ev_2 : (eval O (dovetail c) x).Dom ↔ ∃ y, eval O c (Nat.pai
   exact Iff.trans (Iff.symm Part.not_none_iff_dom) this
 
 
-end Nat.RecursiveIn.Code
+end Computability.Code

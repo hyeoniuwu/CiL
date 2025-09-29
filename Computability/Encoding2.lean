@@ -1,15 +1,18 @@
 import Computability.Oracle
 import Mathlib.Data.Option.Basic
 
-
+open Nat
 open Encodable Denumerable
+open Nat.RecursiveIn
+open Nat.PrimrecIn
 
 
-namespace Nat.RecursiveIn
+-- namespace Nat.RecursiveIn
+
 
 #check Computable.comp
 
-theorem rfind' {f} (hf : Nat.RecursiveIn O f) :
+theorem Nat.RecursiveIn.rfind' {f} (hf : Nat.RecursiveIn O f) :
     Nat.RecursiveIn O
       (Nat.unpaired fun a m =>
         (Nat.rfind fun n => (fun m => m = 0) <$> f (Nat.pair a (n + m))).map (· + m)) :=
@@ -24,14 +27,14 @@ theorem rfind' {f} (hf : Nat.RecursiveIn O f) :
     have : Nat.RecursiveIn O (fun a => Nat.rfind (fun n => (fun m => decide (m = 0)) <$>
       Nat.unpaired (fun a b => f (Nat.pair (Nat.unpair a).1 (b + (Nat.unpair a).2)))
         (Nat.pair a n))) :=
-      rfind
+      Nat.RecursiveIn.rfind
         (RecursiveIn₂.unpaired'.2
           ((RecursiveIn.nat_iff.2 hf).comp
               (PrimrecIn₂.pair.comp (PrimrecIn.fst.comp <| PrimrecIn.unpair.comp PrimrecIn.fst)
                   (PrimrecIn.nat_add.comp PrimrecIn.snd
                     (PrimrecIn.snd.comp <| PrimrecIn.unpair.comp PrimrecIn.fst))).to_compIn))
     simpa
-
+namespace Computability
 inductive Code : Type
 | zero : Code
 | succ : Code
@@ -46,9 +49,12 @@ inductive Code : Type
 
 compile_inductive% Code
 
-end Nat.RecursiveIn
+-- end Nat.RecursiveIn
+end Computability
 
-namespace Nat.RecursiveIn.Code
+-- namespace Nat.RecursiveIn.Code
+namespace Computability.Code
+
 
 instance instInhabited : Inhabited Code :=
   ⟨zero⟩
@@ -58,10 +64,10 @@ protected def const : ℕ → Code
   | 0 => zero
   | n + 1 => comp succ (Code.const n)
 
-theorem const_inj : ∀ {n₁ n₂}, Nat.RecursiveIn.Code.const n₁ = Nat.RecursiveIn.Code.const n₂ → n₁ = n₂
+theorem const_inj : ∀ {n₁ n₂}, Code.const n₁ = Code.const n₂ → n₁ = n₂
   | 0, 0, _ => by simp
   | n₁ + 1, n₂ + 1, h => by
-    dsimp [Nat.RecursiveIn.Code.const] at h
+    dsimp [Code.const] at h
     injection h with h₁ h₂
     simp only [const_inj h₂]
 
@@ -83,16 +89,16 @@ def curry (c : Code) (n : ℕ) : Code :=
 
 
 
-def encodeCode : Code → ℕ
+def c2n : Code → ℕ
 | Code.zero        => 0
 | Code.succ        => 1
 | Code.left        => 2
 | Code.right       => 3
 | Code.oracle      => 4
-| Code.pair cf cg  => 2*(2*(Nat.pair (encodeCode cf) (encodeCode cg))  )   + 5
-| Code.comp cf cg  => 2*(2*(Nat.pair (encodeCode cf) (encodeCode cg))  )+1 + 5
-| Code.prec cf cg  => 2*(2*(Nat.pair (encodeCode cf) (encodeCode cg))+1)   + 5
-| Code.rfind' cf   => 2*(2*(encodeCode cf                            )+1)+1 + 5
+| Code.pair cf cg  => 2*(2*(Nat.pair (c2n cf) (c2n cg))  )   + 5
+| Code.comp cf cg  => 2*(2*(Nat.pair (c2n cf) (c2n cg))  )+1 + 5
+| Code.prec cf cg  => 2*(2*(Nat.pair (c2n cf) (c2n cg))+1)   + 5
+| Code.rfind' cf   => 2*(2*(c2n cf                            )+1)+1 + 5
 
 /--
 Procedure for decoding:
@@ -105,7 +111,7 @@ comp
 prec
 rfind'
 -/
-def decodeCode : ℕ → Code
+def n2c : ℕ → Code
 | 0 => Code.zero
 | 1 => Code.succ
 | 2 => Code.left
@@ -121,26 +127,26 @@ def decodeCode : ℕ → Code
   have _m1 : m.unpair.1 < n + 5 := lt_of_le_of_lt m.unpair_left_le hm
   have _m2 : m.unpair.2 < n + 5 := lt_of_le_of_lt m.unpair_right_le hm
   match n.bodd, n.div2.bodd with
-  | false, false => Code.pair (decodeCode m.unpair.1) (decodeCode m.unpair.2) -- n%4=0
-  | true , false => Code.comp (decodeCode m.unpair.1) (decodeCode m.unpair.2) -- n%4=1
-  | false, true  => Code.prec (decodeCode m.unpair.1) (decodeCode m.unpair.2) -- n%4=2
-  | true , true  => Code.rfind' (decodeCode m)                                 -- n%4=3
+  | false, false => Code.pair (n2c m.unpair.1) (n2c m.unpair.2) -- n%4=0
+  | true , false => Code.comp (n2c m.unpair.1) (n2c m.unpair.2) -- n%4=1
+  | false, true  => Code.prec (n2c m.unpair.1) (n2c m.unpair.2) -- n%4=2
+  | true , true  => Code.rfind' (n2c m)                                 -- n%4=3
 
-instance : OfNat (Code) m where ofNat := decodeCode m
-instance : Coe ℕ Code := ⟨decodeCode⟩
-instance : Coe Code ℕ := ⟨encodeCode⟩
+instance : OfNat (Code) m where ofNat := n2c m
+instance : Coe ℕ Code := ⟨n2c⟩
+instance : Coe Code ℕ := ⟨c2n⟩
 -- /-- Converts an `Code` into a `ℕ`. -/ @[coe] def ofCode : Code → ℕ := encodeCode
-abbrev ofNatCode := decodeCode
+abbrev ofNatCode := n2c
 
-@[simp] theorem decodeCode_encodeCode : ∀ c, decodeCode (encodeCode c) = c := fun c => by
-  induction c <;> (simp [encodeCode, decodeCode, Nat.div2_val, *])
-@[simp] theorem encodeCode_decodeCode : ∀ c, encodeCode (decodeCode c) = c :=
+@[simp] theorem n2c_c2n : ∀ c, n2c (c2n c) = c := fun c => by
+  induction c <;> (simp [c2n, n2c, Nat.div2_val, *])
+@[simp] theorem c2n_n2c : ∀ c, c2n (n2c c) = c :=
 λ c => match c with
-  | 0 => by simp only [decodeCode, encodeCode]
-  | 1 => by simp only [decodeCode, encodeCode]
-  | 2 => by simp only [decodeCode, encodeCode]
-  | 3 => by simp only [decodeCode, encodeCode]
-  | 4 => by simp only [decodeCode, encodeCode]
+  | 0 => by simp only [n2c, c2n]
+  | 1 => by simp only [n2c, c2n]
+  | 2 => by simp only [n2c, c2n]
+  | 3 => by simp only [n2c, c2n]
+  | 4 => by simp only [n2c, c2n]
   | n + 5 => by
     let m := n.div2.div2
     have hm : m < n + 5 := by
@@ -148,27 +154,27 @@ abbrev ofNatCode := decodeCode
       exact lt_of_le_of_lt (le_trans (Nat.div_le_self _ _) (Nat.div_le_self _ _)) (Nat.succ_le_succ (Nat.le_add_right _ _))
     have _m1 : m.unpair.1 < n + 5 := lt_of_le_of_lt m.unpair_left_le hm
     have _m2 : m.unpair.2 < n + 5 := lt_of_le_of_lt m.unpair_right_le hm
-    have IH := encodeCode_decodeCode m
-    have IH1 := encodeCode_decodeCode m.unpair.1
-    have IH2 := encodeCode_decodeCode m.unpair.2
+    have IH := c2n_n2c m
+    have IH1 := c2n_n2c m.unpair.1
+    have IH2 := c2n_n2c m.unpair.2
     conv_rhs => rw [← Nat.bit_decomp n, ← Nat.bit_decomp n.div2]
-    simp only [decodeCode.eq_6]
-    cases n.bodd <;> cases n.div2.bodd <;> simp [m, encodeCode, IH, IH1, IH2, Nat.bit_val]
-instance instDenumerable : Denumerable Code := mk' ⟨encodeCode, decodeCode, decodeCode_encodeCode, encodeCode_decodeCode⟩
+    simp only [n2c.eq_6]
+    cases n.bodd <;> cases n.div2.bodd <;> simp [m, c2n, IH, IH1, IH2, Nat.bit_val]
+instance instDenumerable : Denumerable Code := mk' ⟨c2n, n2c, n2c_c2n, c2n_n2c⟩
 
-theorem decodeCode_bij : Function.Bijective decodeCode := Function.bijective_iff_has_inverse.mpr ⟨encodeCode, ⟨λ x ↦ encodeCode_decodeCode x, λ x ↦ decodeCode_encodeCode x⟩⟩
-theorem decodeCode_inj : Function.Injective decodeCode  := Function.Bijective.injective decodeCode_bij
-theorem decodeCode_sur : Function.Surjective decodeCode := Function.Bijective.surjective decodeCode_bij
-theorem encodeCode_bij : Function.Bijective encodeCode := Function.bijective_iff_has_inverse.mpr ⟨decodeCode, ⟨λ x ↦ decodeCode_encodeCode x, λ x ↦ encodeCode_decodeCode x⟩⟩
-theorem encodeCode_inj : Function.Injective encodeCode  := Function.Bijective.injective encodeCode_bij
-theorem encodeCode_sur : Function.Surjective encodeCode := Function.Bijective.surjective encodeCode_bij
+theorem n2c_bij : Function.Bijective n2c := Function.bijective_iff_has_inverse.mpr ⟨c2n, ⟨λ x ↦ c2n_n2c x, λ x ↦ n2c_c2n x⟩⟩
+theorem n2c_inj : Function.Injective n2c  := Function.Bijective.injective n2c_bij
+theorem n2c_sur : Function.Surjective n2c := Function.Bijective.surjective n2c_bij
+theorem encodeCode_bij : Function.Bijective c2n := Function.bijective_iff_has_inverse.mpr ⟨n2c, ⟨λ x ↦ n2c_c2n x, λ x ↦ c2n_n2c x⟩⟩
+theorem encodeCode_inj : Function.Injective c2n  := Function.Bijective.injective encodeCode_bij
+theorem encodeCode_sur : Function.Surjective c2n := Function.Bijective.surjective encodeCode_bij
 
 
 
 /-- Proof that `Nat.RecursiveIn.Code.ofNatCode` is the inverse of `Nat.RecursiveIn.Code.encodeCode` -/
-private theorem encode_ofNatCode : ∀ n, encodeCode (ofNatCode n) = n := by exact fun n ↦encodeCode_decodeCode n
+private theorem encode_ofNatCode : ∀ n, c2n (ofNatCode n) = n := by exact fun n ↦c2n_n2c n
 
-theorem encodeCode_eq : encode = encodeCode :=
+theorem encodeCode_eq : encode = c2n :=
   rfl
 
 theorem ofNatCode_eq : ofNat Code = ofNatCode :=
@@ -176,27 +182,27 @@ theorem ofNatCode_eq : ofNat Code = ofNatCode :=
 
 theorem encode_lt_pair (cf cg) :
     encode cf < encode (pair cf cg) ∧ encode cg < encode (pair cf cg) := by
-  simp only [encodeCode_eq, encodeCode]
-  have := Nat.mul_le_mul_right (Nat.pair cf.encodeCode cg.encodeCode) (by decide : 1 ≤ 2 * 2)
+  simp only [encodeCode_eq, c2n]
+  have := Nat.mul_le_mul_right (Nat.pair cf.c2n cg.c2n) (by decide : 1 ≤ 2 * 2)
   rw [one_mul, mul_assoc] at this
   have := lt_of_le_of_lt this (lt_add_of_pos_right _ (by decide : 0 < 5))
   exact ⟨lt_of_le_of_lt (Nat.left_le_pair _ _) this, lt_of_le_of_lt (Nat.right_le_pair _ _) this⟩
 
 theorem encode_lt_comp (cf cg) :
     encode cf < encode (comp cf cg) ∧ encode cg < encode (comp cf cg) := by
-  have : encode (pair cf cg) < encode (comp cf cg) := by simp [encodeCode_eq, encodeCode]
+  have : encode (pair cf cg) < encode (comp cf cg) := by simp [encodeCode_eq, c2n]
   exact (encode_lt_pair cf cg).imp (fun h => lt_trans h this) fun h => lt_trans h this
 
 theorem encode_lt_prec (cf cg) :
     encode cf < encode (prec cf cg) ∧ encode cg < encode (prec cf cg) := by
-  have : encode (pair cf cg) < encode (prec cf cg) := by simp [encodeCode_eq, encodeCode]
+  have : encode (pair cf cg) < encode (prec cf cg) := by simp [encodeCode_eq, c2n]
   exact (encode_lt_pair cf cg).imp (fun h => lt_trans h this) fun h => lt_trans h this
 
 theorem encode_lt_rfind' (cf) : encode cf < encode (rfind' cf) := by
-  simp only [encodeCode_eq, encodeCode]
+  simp only [encodeCode_eq, c2n]
   omega
 
-end Nat.RecursiveIn.Code
+end Code
 
 -- section
 -- open PrimrecIn
@@ -307,8 +313,8 @@ end Nat.RecursiveIn.Code
 --       snd.pair <| nat_div2.comp <| nat_div2.comp snd
 --   refine (nat_strong_rec (fun a n => F a (ofNat Code n)) this.to₂ fun a n => ?_)
 --     |>.comp .id (encode_iff.2 hc) |>.of_eq fun a => by simp
---   iterate 5 rcases n with - | n; · simp [ofNatCode_eq, ofNatCode, decodeCode]; rfl
---   -- · simp [ofNatCode_eq, ofNatCode, decodeCode];
+--   iterate 5 rcases n with - | n; · simp [ofNatCode_eq, ofNatCode, n2c]; rfl
+--   -- · simp [ofNatCode_eq, ofNatCode, n2c];
 --   --   exact?
 --   simp only [G]; rw [List.length_map, List.length_range]
 --   let m := n.div2.div2
@@ -323,7 +329,7 @@ end Nat.RecursiveIn.Code
 --   have m2 : m.unpair.2 < n + 5 := lt_of_le_of_lt m.unpair_right_le hm
 --   simp [G₁, m, List.getElem?_map, List.getElem?_range, hm, m1, m2]
 --   rw [show ofNat Code (n + 5) = ofNatCode (n + 5) from rfl]
---   unfold decodeCode
+--   unfold n2c
 --   simp
 --   cases n.bodd <;> cases n.div2.bodd <;> rfl
 
@@ -351,12 +357,13 @@ end Nat.RecursiveIn.Code
 -- end Nat.RecursiveIn.Code
 -- end
 
-namespace Nat.RecursiveIn.Code
+-- namespace Code
+open Code
 section
 
 open ComputableIn
 
-/-- Recursion on `Nat.RecursiveIn.Code` is computable. -/
+/-- Recursion on `Code` is computable. -/
 theorem rec_computable {α σ} [Primcodable α] [Primcodable σ] {c : α → Code} (hc : ComputableIn O c)
     {z : α → σ} (hz : ComputableIn O z) {s : α → σ} (hs : ComputableIn O s) {l : α → σ} (hl : ComputableIn O l)
     {r : α → σ} (hr : ComputableIn O r) {o : α → σ} (ho : ComputableIn O o) {pr : α → Code × Code × σ × σ → σ} (hpr : ComputableIn₂ O pr)
@@ -367,7 +374,7 @@ theorem rec_computable {α σ} [Primcodable α] [Primcodable σ] {c : α → Cod
     let PC (a) cf cg hf hg := pc a (cf, cg, hf, hg)
     let RF (a) cf hf := rf a (cf, hf)
     let F (a : α) (c : Code) : σ :=
-      Nat.RecursiveIn.Code.recOn c (z a) (s a) (l a) (r a) (o a) (PR a) (CO a) (PC a) (RF a)
+      Code.recOn c (z a) (s a) (l a) (r a) (o a) (PR a) (CO a) (PC a) (RF a)
     ComputableIn O fun a => F a (c a) := by
   -- TODO(Mario): less copy-paste from previous proof
   intros _ _ _ _ F
@@ -425,7 +432,7 @@ theorem rec_computable {α σ} [Primcodable α] [Primcodable σ] {c : α → Cod
       snd.pair <| nat_div2.comp <| nat_div2.comp snd
   refine (nat_strong_rec (fun a n => F a (ofNat Code n)) this.to₂ fun a n => ?_)
     |>.comp .id (encode_iff.2 hc) |>.of_eq fun a => by simp
-  iterate 5 rcases n with - | n; · simp [ofNatCode_eq, ofNatCode, decodeCode]; rfl
+  iterate 5 rcases n with - | n; · simp [Code.ofNatCode_eq, Code.ofNatCode, Code.n2c]; rfl
   simp only [G]; rw [List.length_map, List.length_range]
   let m := n.div2.div2
   show G₁ ((a, (List.range (n + 5)).map fun n => F a (ofNat Code n)), n, m)
@@ -438,8 +445,8 @@ theorem rec_computable {α σ} [Primcodable α] [Primcodable σ] {c : α → Cod
   have m1 : m.unpair.1 < n + 5 := lt_of_le_of_lt m.unpair_left_le hm
   have m2 : m.unpair.2 < n + 5 := lt_of_le_of_lt m.unpair_right_le hm
   simp [G₁, m, List.getElem?_map, List.getElem?_range, hm, m1, m2]
-  rw [show ofNat Code (n + 5) = ofNatCode (n + 5) from rfl]
-  unfold decodeCode
+  rw [show ofNat Code (n + 5) = Code.ofNatCode (n + 5) from rfl]
+  unfold Code.n2c
   simp
   cases n.bodd <;> cases n.div2.bodd <;> rfl
 
@@ -461,21 +468,21 @@ end
 -/
 def eval (O : ℕ → ℕ) : Code → ℕ →. ℕ
 -- | zero => pure 0
-| zero => λ _ ↦ Part.some 0
-| succ => fun n => some (n + 1)
-| left => fun n => some (Nat.unpair n).1
-| right => fun n => some (Nat.unpair n).2
-| oracle => O
-| pair cf cg =>
+| .zero => λ _ ↦ Part.some 0
+| .succ => fun n => some (n + 1)
+| .left => fun n => some (Nat.unpair n).1
+| .right => fun n => some (Nat.unpair n).2
+| .oracle => O
+| .pair cf cg =>
     fun n => Nat.pair <$> eval O cf n <*> eval O cg n
-| comp cf cg =>
+| .comp cf cg =>
     fun n => eval O cg n >>= eval O cf
-| prec cf cg =>
+| .prec cf cg =>
     Nat.unpaired fun a n =>
       n.rec (eval O cf a) fun y IH => do
         let i ← IH
         eval O cg (Nat.pair a (Nat.pair y i))
-| rfind' cf =>
+| .rfind' cf =>
     Nat.unpaired fun a m =>
       (Nat.rfind fun n => (fun x => x = 0) <$> eval O cf (Nat.pair a (n + m))).map (· + m)
 
@@ -536,14 +543,14 @@ theorem eval_curry (c n x) : eval O (curry c n) x = eval O c (Nat.pair n x) := b
 theorem exists_code {f : ℕ →. ℕ} : Nat.RecursiveIn O f ↔ ∃ c : Code, eval O c = f := by
   refine ⟨fun h => ?_, ?_⟩
   · induction h with
-    | zero => exact ⟨zero, rfl⟩
+    | zero => exact ⟨.zero, rfl⟩
     | succ => exact ⟨succ, rfl⟩
     | left => exact ⟨left, rfl⟩
     | right => exact ⟨right, rfl⟩
     | oracle => exact ⟨oracle, rfl⟩
     | pair pf pg hf hg =>
       rcases hf with ⟨cf, rfl⟩; rcases hg with ⟨cg, rfl⟩
-      exact ⟨pair cf cg, rfl⟩
+      exact ⟨.pair cf cg, rfl⟩
     | comp pf pg hf hg =>
       rcases hf with ⟨cf, rfl⟩; rcases hg with ⟨cg, rfl⟩
       exact ⟨comp cf cg, rfl⟩
@@ -552,7 +559,7 @@ theorem exists_code {f : ℕ →. ℕ} : Nat.RecursiveIn O f ↔ ∃ c : Code, e
       exact ⟨prec cf cg, rfl⟩
     | rfind pf hf =>
       rcases hf with ⟨cf, rfl⟩
-      refine ⟨comp (rfind' cf) (pair Code.id zero), ?_⟩
+      refine ⟨.comp (rfind' cf) (.pair Code.id .zero), ?_⟩
       simp [eval, Seq.seq, pure, PFun.pure, Part.map_id']
   · rintro ⟨c, rfl⟩
     induction c with
@@ -572,37 +579,37 @@ of its execution. Other than this, the semantics are the same as in `Nat.Recursi
 -/
 def evaln (O:ℕ→ℕ) : ℕ → Code → ℕ → Option ℕ
   | 0, _ => fun _ => Option.none
-  | k + 1, zero => fun n => do
+  | k + 1, .zero => fun n => do
     guard (n ≤ k)
     return 0
-  | k + 1, succ => fun n => do
+  | k + 1, .succ => fun n => do
     guard (n ≤ k)
     return (Nat.succ n)
-  | k + 1, left => fun n => do
+  | k + 1, .left => fun n => do
     guard (n ≤ k)
     return n.unpair.1
-  | k + 1, right => fun n => do
+  | k + 1, .right => fun n => do
     guard (n ≤ k)
     pure n.unpair.2
-  | k + 1, oracle => fun n => do
+  | k + 1, .oracle => fun n => do
     guard (n ≤ k)
     -- (O n).toOption
     -- umm. this is a contradiction. um.
     pure (O n)
-  | k + 1, pair cf cg => fun n => do
+  | k + 1, .pair cf cg => fun n => do
     guard (n ≤ k)
     Nat.pair <$> evaln O (k + 1) cf n <*> evaln O (k + 1) cg n
-  | k + 1, comp cf cg => fun n => do
+  | k + 1, .comp cf cg => fun n => do
     guard (n ≤ k)
     let x ← evaln O (k + 1) cg n
     evaln O (k + 1) cf x
-  | k + 1, prec cf cg => fun n => do
+  | k + 1, .prec cf cg => fun n => do
     guard (n ≤ k)
     n.unpaired fun a n =>
       n.casesOn (evaln O (k + 1) cf a) fun y => do
         let i ← evaln O k (prec cf cg) (Nat.pair a y)
         evaln O (k + 1) cg (Nat.pair a (Nat.pair y i))
-  | k + 1, rfind' cf => fun n => do
+  | k + 1, .rfind' cf => fun n => do
     guard (n ≤ k)
     n.unpaired fun a m => do
       let x ← evaln O (k + 1) cf (Nat.pair a m)
@@ -774,8 +781,4 @@ theorem eval_eq_rfindOpt (c n) : eval O c n = Nat.rfindOpt fun k => evaln O k c 
     refine evaln_complete.trans (Nat.rfindOpt_mono ?_).symm
     intro a m n hl; apply evaln_mono hl
 
-
 end
-
-
-end Nat.RecursiveIn.Code

@@ -1,12 +1,10 @@
 import Computability.Constructions.CovRec
 import Computability.Constructions.Eval_Aux
 
-open List
-
--- set_option profiler true
+open List Nat
 
 section evaln
-namespace Nat.RecursiveIn.Code
+namespace Computability.Code
 
 /--
 `eval c_evaln_aux (_, (c,s)) .last = [ [c]ₛ(0), [c]ₛ(1), ..., [c]ₛ(s) ]`
@@ -264,28 +262,28 @@ theorem c_evaln_evp_aux (hcode_val:code≤4) :
   | 0 =>
     simp [hzero_mapped]
     cases Classical.em (x<s+1) with
-    | inl h => simp [h, decodeCode, evaln, le_of_lt_succ h]
-    | inr h => simp [h, decodeCode, evaln, Nat.not_le_of_lt (not_lt.mp h), Option.bind]
+    | inl h => simp [h, n2c, evaln, le_of_lt_succ h]
+    | inr h => simp [h, n2c, evaln, Nat.not_le_of_lt (not_lt.mp h), Option.bind]
   | 1 =>
     simp [hsucc_mapped]
     cases Classical.em (x<s+1) with
-    | inl h => simp [h, decodeCode, evaln, le_of_lt_succ h]
-    | inr h => simp [h, decodeCode, evaln, Nat.not_le_of_lt (not_lt.mp h), Option.bind]
+    | inl h => simp [h, n2c, evaln, le_of_lt_succ h]
+    | inr h => simp [h, n2c, evaln, Nat.not_le_of_lt (not_lt.mp h), Option.bind]
   | 2 =>
     simp [hleft_mapped]
     cases Classical.em (x<s+1) with
-    | inl h => simp [h, decodeCode, evaln, le_of_lt_succ h]
-    | inr h => simp [h, decodeCode, evaln, Nat.not_le_of_lt (not_lt.mp h), Option.bind]
+    | inl h => simp [h, n2c, evaln, le_of_lt_succ h]
+    | inr h => simp [h, n2c, evaln, Nat.not_le_of_lt (not_lt.mp h), Option.bind]
   | 3 =>
     simp [hright_mapped]
     cases Classical.em (x<s+1) with
-    | inl h => simp [h, decodeCode, evaln, le_of_lt_succ h]
-    | inr h => simp [h, decodeCode, evaln, Nat.not_le_of_lt (not_lt.mp h), Option.bind]
+    | inl h => simp [h, n2c, evaln, le_of_lt_succ h]
+    | inr h => simp [h, n2c, evaln, Nat.not_le_of_lt (not_lt.mp h), Option.bind]
   | 4 =>
     simp [horacle_mapped]
     cases Classical.em (x<s+1) with
-    | inl h => simp [h, decodeCode, evaln, le_of_lt_succ h]
-    | inr h => simp [h, decodeCode, evaln, Nat.not_le_of_lt (not_lt.mp h), Option.bind]
+    | inl h => simp [h, n2c, evaln, le_of_lt_succ h]
+    | inr h => simp [h, n2c, evaln, Nat.not_le_of_lt (not_lt.mp h), Option.bind]
   | n+5 => simp at hcode_val
 
 theorem unpair_right_le' (n:ℕ) : n.r ≤ n := by unfold r; exact unpair_right_le n
@@ -316,9 +314,6 @@ lemma c_evaln_bounds_4 : Nat.pair (n + 4 + 1) s ≤ Nat.pair (n + 4 + 1) (s + 1)
   simp [Nat.sub_add_cancel c_evaln_bounds_aux]
   apply pair_lt_pair_right
   exact lt_add_one s
-
-
-
 
 theorem c_evaln_evp_aux_nMod4 :
   eval_prim O (c_evaln) (Nat.pair x (Nat.pair ((n+4)+1) (s+1)))
@@ -660,7 +655,6 @@ theorem c_evaln_evp_aux_nMod4 :
     rw [show x.succ.succ.succ.succ=x+4 from rfl] at contrad
     simp at contrad
 
-
 @[simp] theorem c_evaln_evp: eval_prim O (c_evaln) (Nat.pair x (Nat.pair code s)) =
   o2n (evaln O s code x) := by
 
@@ -720,7 +714,7 @@ theorem c_evaln_evp_aux_nMod4 :
     | false =>
       have h0: n%4=0 := nMod4_eq_0 hno hn2o
       -- simplify the rhs
-      simp [decodeCode]
+      simp [n2c]
       simp [evaln,hno, hn2o]
 
       rw [c_evaln_evp_aux_nMod4]
@@ -735,7 +729,7 @@ theorem c_evaln_evp_aux_nMod4 :
       have h0: n%4=2 := nMod4_eq_2 hno hn2o
 
       -- simplify the rhs
-      simp [decodeCode]
+      simp [n2c]
       simp only [hno, hn2o, evaln]
 
       rw [c_evaln_evp_aux_nMod4]
@@ -743,7 +737,7 @@ theorem c_evaln_evp_aux_nMod4 :
 
       rw [ih ml_s ml_s_lt_cs]
       rw [ih c_sM1 c_sM1_lt_cs]
-      have ih_i {i} : (eval_prim O c_evaln (Nat.pair (Nat.pair x.l (Nat.pair (x.r - 1) i)) (Nat.pair n.div2.div2.r (sM1 + 1)))) = (o2n (evaln O mr_s.r (decodeCode mr_s.l) (Nat.pair x.l (Nat.pair (x.r - 1) i)))) := by
+      have ih_i {i} : (eval_prim O c_evaln (Nat.pair (Nat.pair x.l (Nat.pair (x.r - 1) i)) (Nat.pair n.div2.div2.r (sM1 + 1)))) = (o2n (evaln O mr_s.r (n2c mr_s.l) (Nat.pair x.l (Nat.pair (x.r - 1) i)))) := by
         rw [ih mr_s mr_s_lt_cs];
       simp [ih_i]
 
@@ -755,13 +749,13 @@ theorem c_evaln_evp_aux_nMod4 :
         | zero => rfl
         | succ xxx =>
           simp
-          have rw3_aux : encodeCode (((decodeCode n.div2.div2.l).prec (decodeCode n.div2.div2.r))) = (n + 4 + 1) := by
-            simp [encodeCode]
+          have rw3_aux : c2n (((n2c n.div2.div2.l).prec (n2c n.div2.div2.r))) = (n + 4 + 1) := by
+            simp [c2n]
             apply codes_aux_2 hno hn2o
 
-          have rw3 : ((decodeCode n.div2.div2.l).prec (decodeCode n.div2.div2.r)) = (decodeCode (n + 4 + 1)) := by
-            rw [←(decodeCode_encodeCode (decodeCode (n + 4 + 1)))]
-            rw [←(decodeCode_encodeCode (((decodeCode n.div2.div2.l).prec (decodeCode n.div2.div2.r))))]
+          have rw3 : ((n2c n.div2.div2.l).prec (n2c n.div2.div2.r)) = (n2c (n + 4 + 1)) := by
+            rw [←(n2c_c2n (n2c (n + 4 + 1)))]
+            rw [←(n2c_c2n (((n2c n.div2.div2.l).prec (n2c n.div2.div2.r))))]
             simp [rw3_aux]
           rw [rw3]
 
@@ -773,7 +767,7 @@ theorem c_evaln_evp_aux_nMod4 :
 
       -- simplify the rhs
       -- simp
-      simp [decodeCode]
+      simp [n2c]
       simp [evaln,hno, hn2o]
 
       rw [c_evaln_evp_aux_nMod4]
@@ -785,10 +779,10 @@ theorem c_evaln_evp_aux_nMod4 :
       cases Classical.em (x≤sM1) with
       | inl h =>
         simp [h]
-        cases Classical.em (evaln O (sM1 + 1) (decodeCode n.div2.div2.r) x=Option.none) with
+        cases Classical.em (evaln O (sM1 + 1) (n2c n.div2.div2.r) x=Option.none) with
         | inl hh => simp [hh]
         | inr hh =>
-          have optval := Option.eq_none_or_eq_some (evaln O (sM1 + 1) (decodeCode n.div2.div2.r) x)
+          have optval := Option.eq_none_or_eq_some (evaln O (sM1 + 1) (n2c n.div2.div2.r) x)
           simp [hh] at optval
           rcases optval with ⟨inter, hinter⟩
           simp [hinter]
@@ -801,7 +795,7 @@ theorem c_evaln_evp_aux_nMod4 :
     -- rfind
     | true =>
       have h0: n%4=3 := nMod4_eq_3 hno hn2o
-      simp [decodeCode]
+      simp [n2c]
       simp [evaln,hno, hn2o]
 
       rw [c_evaln_evp_aux_nMod4]
@@ -817,12 +811,12 @@ theorem c_evaln_evp_aux_nMod4 :
         simp [m]
         simp [c_sM1]
 
-        have rw0_aux : encodeCode ((decodeCode n.div2.div2).rfind') = n + 4 + 1 := by
-          simp [encodeCode]
+        have rw0_aux : c2n ((n2c n.div2.div2).rfind') = n + 4 + 1 := by
+          simp [c2n]
           exact codes_aux_3 hno hn2o
-        have rw0 : (decodeCode (n + 4 + 1)) = (decodeCode n.div2.div2).rfind' := by
-          rw [←(decodeCode_encodeCode (decodeCode (n + 4 + 1)))]
-          rw [←decodeCode_encodeCode ((decodeCode n.div2.div2).rfind')]
+        have rw0 : (n2c (n + 4 + 1)) = (n2c n.div2.div2).rfind' := by
+          rw [←(n2c_c2n (n2c (n + 4 + 1)))]
+          rw [←n2c_c2n ((n2c n.div2.div2).rfind')]
           simp [rw0_aux]
         rw [rw0]
 
@@ -879,8 +873,6 @@ theorem c_evaln_evp_aux_nMod4 :
 
   apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
 
-
-
 @[cp] theorem c_evaln_ev_pr : code_prim (c_evaln) := by
   unfold c_evaln
   apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
@@ -897,13 +889,12 @@ theorem c_evaln_evp_aux_nMod4 :
 -- theorem Nat.PrimrecIn.evaln:Nat.PrimrecIn O (fun x => o2n $ evaln O x.r.r x.r.l x.l) := by
 
 --   rw [← c_evaln_evp]; apply code_prim_prop c_evaln_ev_pr
-end Nat.RecursiveIn.Code
+end Computability.Code
 -- theorem Nat.Primrec.evaln:Nat.Primrec (unpaired evaln) := by exact PrimrecIn.PrimrecIn_Empty PrimrecIn.evaln
 end evaln
 
-
 section eval
-namespace Nat.RecursiveIn.Code
+namespace Computability.Code
 def c_eval := (c_rfindOpt (c_evaln.comp₃ (right.comp left) (left.comp left) right))
 @[simp] theorem c_eval_ev: eval O c_eval (Nat.pair c x) = eval O c x := by
   simp only [c_eval, comp₃, comp₂]
@@ -913,13 +904,13 @@ def c_eval := (c_rfindOpt (c_evaln.comp₃ (right.comp left) (left.comp left) ri
   simp [c_rfindOpt_ev this]
   rw [eval_eq_rfindOpt]
   simp [eval,Seq.seq]
-theorem Nat.RecursiveIn.eval:Nat.RecursiveIn O (fun ex => eval O ex.l ex.r) := by
+theorem Computability.eval:Nat.RecursiveIn O (fun ex => eval O ex.l ex.r) := by
   apply exists_code.mpr
   use c_eval
   funext x
   rw (config:={occs:=.pos [1]}) [←(@pair_lr x)]
   exact c_eval_ev
 
-end Nat.RecursiveIn.Code
+end Computability.Code
 -- theorem Nat.Primrec.eval:Nat.Primrec Nat.eval := by ...
 end eval

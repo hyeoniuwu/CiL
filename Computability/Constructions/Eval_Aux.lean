@@ -7,7 +7,7 @@ open List
 
 
 section rfindOpt
-namespace Nat.RecursiveIn.Code
+namespace Computability.Code
 
 theorem rfind'_eqv_rfind : ((Nat.unpaired fun a m => (Nat.rfind fun n => (fun m => m = 0) <$> eval O c (Nat.pair a (n + m))).map (· + m)) (Nat.pair x 0)) = (Nat.rfind fun n => (fun m => m = 0) <$> eval O c (Nat.pair x n)) := by
 -- theorem rfind'_eqv_rfind : ((Nat.unpaired fun a m => (Nat.rfind fun n => (fun m => m = 0) <$> eval O c (Nat.pair a (n + m))).map (· + m)) ∘ (Nat.pair <$> (fun (n:ℕ)=>n) <*> Part.some 0)) x = (Nat.rfind fun n => (fun m => m = 0) <$> eval O c (Nat.pair x n)) := by
@@ -16,8 +16,8 @@ theorem rfind'_eqv_rfind : ((Nat.unpaired fun a m => (Nat.rfind fun n => (fun m 
   exact rfl
 
 /--`[code_rfind c](x)=smallest n s.t. [c](x,n)=0.`-/
--- def c_rfind : ℕ→ℕ := fun c => comp (rfind' c) (pair Nat.RecursiveIn.Code.id zero)
-def c_rfind : Nat.RecursiveIn.Code→Nat.RecursiveIn.Code := fun c => (rfind' c).comp (pair c_id zero)
+-- def c_rfind : ℕ→ℕ := fun c => comp (rfind' c) (pair Computability.Code.id zero)
+def c_rfind : Computability.Code→Computability.Code := fun c => (rfind' c).comp (pair c_id zero)
 
 /-- Given a code `c` -/
 abbrev rfind (O:ℕ→ℕ) : ℕ→ℕ→.ℕ := fun c => fun a=> Nat.rfind fun n => (fun m => m = 0) <$> eval O c (Nat.pair a n)
@@ -95,7 +95,7 @@ def c_rfindOpt (c:Code) := (c_ofOption c).comp₂ c_id (c_rfind (c_isSome.comp (
   else
   simp [Part.eq_none_iff'.mpr hh]
   simp [Seq.seq]
-end Nat.RecursiveIn.Code
+end Computability.Code
 -- -- theorem Nat.PrimrecIn.rfindOpt:Nat.PrimrecIn O Nat.rfindOpt := by ...
 -- -- theorem Nat.Primrec.rfindOpt:Nat.Primrec Nat.rfindOpt := by ...
 end rfindOpt

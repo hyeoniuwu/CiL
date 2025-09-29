@@ -1,13 +1,13 @@
 import Computability.SetOracles
 import Computability.Constructions.EvalString
 
-open Nat.RecursiveIn.Code
+open Computability.Code
 open Classical
 open Computability
 
-namespace Nat.RecursiveIn.Code
+namespace Computability.Code
 
-end Nat.RecursiveIn.Code
+end Computability.Code
 
 set_option linter.dupNamespace false
 namespace KP54
@@ -34,7 +34,7 @@ theorem c_kp54_aux_evp :
   if (evals ((n2l x.l) ++ (n2l (x.r+1))) i n).Dom then Part.some 0 else Part.none
 := by
   simp [c_kp54_aux, -Denumerable.list_ofNat_succ]
-  simp [Nat.RecursiveIn.Code.eval, -Denumerable.list_ofNat_succ]
+  simp [Computability.eval, -Denumerable.list_ofNat_succ]
   simp [Seq.seq, -Denumerable.list_ofNat_succ]
 theorem c_kp54_aux_2 (halts:(eval Nat.fzero (dovetail (c_kp54_aux i lb)) Aₚ).Dom) :
   have dvt := (eval Nat.fzero (dovetail (c_kp54_aux i lb)) Aₚ).get halts
@@ -311,7 +311,7 @@ private theorem R_aux_0 (i:ℕ) (h:(evals (As (2*i+1+1)) i (R_wt i)).Dom):
   lift_lets; extract_lets; expose_names
   have i_1_simp: i_1 = i := rfl
 
-  let (eq:=hdvt) dvt := (Nat.RecursiveIn.Code.eval Nat.fzero (c_kp54_aux i_1 lb).dovetail Aₚ)
+  let (eq:=hdvt) dvt := (Computability.eval Nat.fzero (c_kp54_aux i_1 lb).dovetail Aₚ)
   simp (config := {zeta:=false}) only [←hdvt]
 
   if halts: dvt.Dom then
@@ -347,8 +347,8 @@ theorem R_aux_χ: χ B (R_wt i) = b2n (n2b ((Bs (2 * (i + 1)))[(R_wt i)]'(@BsSiz
 /--
 If `[i:As](k)` halts, then its value will be unchanged in all subsequent steps.
 -/
-theorem As_Uninjured_0 (hh:(evals (As (2*(i+1))) i k).Dom): evals (As (2*(i+1))) i k = eval A i k := by
-  simp [A,_root_.eval]; unfold χ; simp [evals] -- unfold defns
+theorem As_Uninjured_0 (hh:(evals (As (2*(i+1))) i k).Dom): evals (As (2*(i+1))) i k = evalSet A i k := by
+  simp [A,evalSet]; unfold χ; simp [evals] -- unfold defns
 
   have h1 := evalc_prop_0 hh
   simp at h1
@@ -364,7 +364,7 @@ theorem As_Uninjured_0 (hh:(evals (As (2*(i+1))) i k).Dom): evals (As (2*(i+1)))
   split
   next h => simp [b2n,h]
   next h => simp [b2n,h]
-theorem As_Uninjured_0' {i:ℕ} : ¬ (eval A i k).Dom → ¬ (evals (As (2*(i+1))) i k).Dom := by
+theorem As_Uninjured_0' {i:ℕ} : ¬ (evalSet A i k).Dom → ¬ (evals (As (2*(i+1))) i k).Dom := by
   contrapose
   simp only [Decidable.not_not]
   intro h
@@ -373,7 +373,7 @@ theorem As_Uninjured_0' {i:ℕ} : ¬ (eval A i k).Dom → ¬ (evals (As (2*(i+1)
 /--
 If `[i:As](k)` diverges, then it will always diverge in subsequent steps.
 -/
-theorem As_Uninjured_1 : ¬(evals (As (2*i+1+1)) i (R_wt i)).Dom → ¬(eval A i (R_wt i)).Dom := by
+theorem As_Uninjured_1 : ¬(evals (As (2*i+1+1)) i (R_wt i)).Dom → ¬(evalSet A i (R_wt i)).Dom := by
   unfold As
   unfold KP54
   simp (config := {zeta:=false})
@@ -409,7 +409,7 @@ theorem As_Uninjured_1 : ¬(evals (As (2*i+1+1)) i (R_wt i)).Dom → ¬(eval A i
   simp only [evals]
 
   have a2 := e2u a1
-  let usecn := (use (χ A) (decodeCode i) (R_wt i)).get a2
+  let usecn := (use (χ A) (n2c i) (R_wt i)).get a2
 
   have a4 := a2
   unfold A at a4
@@ -428,7 +428,7 @@ theorem As_Uninjured_1 : ¬(evals (As (2*i+1+1)) i (R_wt i)).Dom → ¬(eval A i
     use x
     rw [hx]
 
-    have mainrw : (use (χ A) (decodeCode i) (R_wt i)) = (use (fun e ↦ b2n (n2b ((As (usecn + 1)).getD e whatever))) (decodeCode i) (R_wt i)) := by
+    have mainrw : (use (χ A) (n2c i) (R_wt i)) = (use (fun e ↦ b2n (n2b ((As (usecn + 1)).getD e whatever))) (n2c i) (R_wt i)) := by
       refine use_principle_use a1 ?_
       intro i2 hi2
       simp [χ,A]
@@ -458,7 +458,7 @@ theorem As_Uninjured_1 : ¬(evals (As (2*i+1+1)) i (R_wt i)).Dom → ¬(eval A i
     _     ≤ (As (2 * i + 1) ++ n2l (0 + 1)).length := by
       simp only [zero_add, List.length_append, le_add_iff_nonneg_right, zero_le]
 
-  have mainrw : (use (χ A) (decodeCode i) (R_wt i)) = (use (fun e ↦ b2n (n2b ((As (2 * i + 1) ++ n2l (0 + 1)).getD e whatever))) (decodeCode i) (R_wt i)):= by
+  have mainrw : (use (χ A) (n2c i) (R_wt i)) = (use (fun e ↦ b2n (n2b ((As (2 * i + 1) ++ n2l (0 + 1)).getD e whatever))) (n2c i) (R_wt i)):= by
     refine use_principle_use a1 ?_
     intro i2
     intro hi2
@@ -479,24 +479,24 @@ theorem As_Uninjured_1 : ¬(evals (As (2*i+1+1)) i (R_wt i)).Dom → ¬(eval A i
   exact a5
   simp only [←mainrw]
   exact a2
-theorem As_Uninjured_1' {i:ℕ} : (eval A i (R_wt i)).Dom  → (evals (As (2*(i+1))) i (R_wt i)).Dom := not_imp_not.mp (@As_Uninjured_1 i)
-theorem As_Uninjured (i:ℕ) : eval A i (R_wt i) = evals (As (2*(i+1))) i (R_wt i) := by
-  if h:(eval A i (R_wt i)).Dom then
+theorem As_Uninjured_1' {i:ℕ} : (evalSet A i (R_wt i)).Dom  → (evals (As (2*(i+1))) i (R_wt i)).Dom := not_imp_not.mp (@As_Uninjured_1 i)
+theorem As_Uninjured (i:ℕ) : evalSet A i (R_wt i) = evals (As (2*(i+1))) i (R_wt i) := by
+  if h:(evalSet A i (R_wt i)).Dom then
     rw [@As_Uninjured_0 (i) (R_wt i) (As_Uninjured_1' h)]
   else
     rw [Part.eq_none_iff'.mpr h]
     rw [Part.eq_none_iff'.mpr (As_Uninjured_0' h)]
 
-theorem R_aux_1 (i:ℕ) : (eval A i (R_wt i)) ≠ Part.some ((χ B) (R_wt i)) := by
-  if h0 : (eval A i (R_wt i)).Dom then
+theorem R_aux_1 (i:ℕ) : (evalSet A i (R_wt i)) ≠ Part.some ((χ B) (R_wt i)) := by
+  if h0 : (evalSet A i (R_wt i)).Dom then
     rw [R_aux_χ] -- rw the rhs
     simp only [As_Uninjured i] -- rw the lhs
     exact Part.ne_of_get_ne' $ R_aux_0 i (As_Uninjured_1' h0)
   else
     simp [Part.eq_none_iff'.mpr h0]
 
-theorem R (i:ℕ) : eval A i ≠ χ B := Function.ne_iff.mpr ⟨R_wt i, R_aux_1 i⟩
-theorem S (i:ℕ) : eval B i ≠ χ A := by sorry
+theorem R (i:ℕ) : evalSet A i ≠ χ B := Function.ne_iff.mpr ⟨R_wt i, R_aux_1 i⟩
+theorem S (i:ℕ) : evalSet B i ≠ χ A := by sorry
 
 theorem ex_incomparable_sets : ∃ A B:Set ℕ, A|ᵀB := by
   use A

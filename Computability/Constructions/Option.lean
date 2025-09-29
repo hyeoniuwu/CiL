@@ -53,7 +53,7 @@ theorem iget_eq_get {o:Option ℕ} (h:o.isSome) : o.iget = o.get h := by
 
 
 section isSome
-namespace Nat.RecursiveIn.Code
+namespace Computability.Code
 def c_isSome := c_sg'
 @[cp] theorem c_isSome_ev_pr : code_prim c_isSome := by
   unfold c_isSome
@@ -65,14 +65,14 @@ def c_isSome := c_sg'
   simp [b'2n, n2o]
   cases x <;> simp
 @[simp] theorem c_isSome_ev:eval O c_isSome = fun o => b'2n $ (n2o o).isSome := by rw [← eval_prim_eq_eval c_isSome_ev_pr]; simp only [c_isSome_evp];
-end Nat.RecursiveIn.Code
+end Computability.Code
 -- theorem Nat.PrimrecIn.isSome:Nat.PrimrecIn O Nat.isSome := by ...
 -- theorem Nat.Primrec.isSome:Nat.Primrec Nat.isSome := by ...
 end isSome
 
 
 section opt_iget
-namespace Nat.RecursiveIn.Code
+namespace Computability.Code
 def c_opt_iget := c_pred
 @[cp] theorem c_opt_iget_ev_pr : code_prim c_opt_iget := by
   unfold c_opt_iget
@@ -90,10 +90,10 @@ def c_opt_iget := c_pred
   exact rfl
 
 @[simp] theorem c_opt_iget_ev:eval O c_opt_iget o = Option.iget (n2o o) := by simp [← eval_prim_eq_eval c_opt_iget_ev_pr]
-end Nat.RecursiveIn.Code
+end Computability.Code
 end opt_iget
 section opt_getD
-namespace Nat.RecursiveIn.Code
+namespace Computability.Code
 def c_opt_getD := c_ifz.comp₃ left right (c_opt_iget.comp left)
 @[cp] theorem c_opt_getD_ev_pr : code_prim c_opt_getD := by
   unfold c_opt_getD
@@ -107,11 +107,11 @@ def c_opt_getD := c_ifz.comp₃ left right (c_opt_iget.comp left)
     rcases asd with ⟨k,hk⟩
     simp [←hk]
 @[simp] theorem c_opt_getD_ev:eval O c_opt_getD (Nat.pair o d) = (n2o o).getD d := by simp [← eval_prim_eq_eval c_opt_getD_ev_pr]
-end Nat.RecursiveIn.Code
+end Computability.Code
 end opt_getD
 
 section opt_none
-namespace Nat.RecursiveIn.Code
+namespace Computability.Code
 def c_opt_none := (c_const 0)
 @[cp] theorem c_opt_none_ev_pr : code_prim c_opt_none := by
   unfold c_opt_none
@@ -119,11 +119,11 @@ def c_opt_none := (c_const 0)
 @[simp] theorem c_opt_none_evp : eval_prim O c_opt_none o = o2n Option.none := by
   simp [c_opt_none]
 -- @[simp] theorem c_opt_none_ev: n2o (eval O c_opt_none o) = (Option.none : Option ℕ) := by simp [← eval_prim_eq_eval c_opt_none_ev_pr]
-end Nat.RecursiveIn.Code
+end Computability.Code
 end opt_none
 
 section opt_bind
-namespace Nat.RecursiveIn.Code
+namespace Computability.Code
 -- def c_opt_bind := c_ifz.comp₃ left zero (right.comp (c_opt_iget.comp left))
 def c_opt_bind (cf cg:Code) :=  c_ifz.comp₃ cf zero (cg.comp₂ c_id (c_opt_iget.comp cf))
 @[cp] theorem c_opt_bind_ev_pr(hcf:code_prim cf) (hcg:code_prim cg) : code_prim (c_opt_bind cf cg) := by
@@ -148,13 +148,13 @@ def c_opt_bind (cf cg:Code) :=  c_ifz.comp₃ cf zero (cg.comp₂ c_id (c_opt_ig
     exact Eq.symm hnat_7
 
 -- @[simp] theorem c_opt_bind_ev:eval O c_opt_bind = unpaired2 Nat.opt_bind := by rw [← eval_prim_eq_eval c_opt_bind_ev_pr]; simp only [c_opt_bind_evp]
-end Nat.RecursiveIn.Code
+end Computability.Code
 -- theorem Nat.PrimrecIn.opt_bind:Nat.PrimrecIn O Nat.opt_bind := by ...
 -- theorem Nat.Primrec.opt_bind:Nat.Primrec Nat.opt_bind := by ...
 end opt_bind
 
 section opt_bind'
-namespace Nat.RecursiveIn.Code
+namespace Computability.Code
 -- def c_opt_bind' := c_ifz.comp₃ left zero (right.comp (c_opt_iget.comp left))
 def c_opt_bind' (cf cg:Code) :=  c_ifz.comp₃ cf zero cg
 @[cp] theorem c_opt_bind'_ev_pr(hcf:code_prim cf) (hcg:code_prim cg) : code_prim (c_opt_bind' cf cg) := by
@@ -180,13 +180,13 @@ def c_opt_bind' (cf cg:Code) :=  c_ifz.comp₃ cf zero cg
 
 
 -- @[simp] theorem c_opt_bind'_ev:eval O c_opt_bind' = unpaired2 Nat.opt_bind' := by rw [← eval_prim_eq_eval c_opt_bind'_ev_pr]; simp only [c_opt_bind'_evp]
-end Nat.RecursiveIn.Code
+end Computability.Code
 -- theorem Nat.PrimrecIn.opt_bind':Nat.PrimrecIn O Nat.opt_bind' := by ...
 -- theorem Nat.Primrec.opt_bind':Nat.Primrec Nat.opt_bind' := by ...
 end opt_bind'
 
 section part_bind
-namespace Nat.RecursiveIn.Code
+namespace Computability.Code
 -- def c_part_bind := c_ifz.comp₃ left zero (right.comp (c_opt_iget.comp left))
 def c_part_bind (cf cg:Code) := cg.comp₂ c_id cf
 -- @[simp, aesop safe] theorem c_part_bind_ev_pr(hcf:code_prim cf) (hcg:code_prim cg):code_prim (c_part_bind cf cg) := by repeat (first|assumption|simp|constructor)
@@ -217,7 +217,7 @@ def c_part_bind (cf cg:Code) := cg.comp₂ c_id cf
  simp [c_part_bind]
  simp [Seq.seq]
 
-end Nat.RecursiveIn.Code
+end Computability.Code
 -- theorem Nat.PrimrecIn.part_bind:Nat.PrimrecIn O Nat.part_bind := by ...
 -- theorem Nat.Primrec.part_bind:Nat.Primrec Nat.part_bind := by ...
 end part_bind

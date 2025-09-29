@@ -4,7 +4,7 @@ import Computability.Basic
 
 open Computability
 open Classical
-open Nat.RecursiveIn.Code
+open Computability.Code
 
 @[simp] noncomputable def K0 (O : ℕ → ℕ) : ℕ → ℕ := λ n =>
   let part := eval O n.l n.r
@@ -16,7 +16,7 @@ noncomputable abbrev jump (O:ℕ→ℕ) : ℕ → ℕ := K0 O
 
 notation:10000 f"⌜" => jump f
 
-namespace Nat.RecursiveIn.Code
+namespace Computability.Code
 
 def c_jump_decode (c:Code) := c_ite c c_diverge (c_pred.comp c)
 @[simp] theorem c_jump_decode_ev (hc:code_total O c): eval O (c_jump_decode c) x = if eval O c x = Part.some 0 then Part.none else (Nat.pred <$> eval O c x) := by

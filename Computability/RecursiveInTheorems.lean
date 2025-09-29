@@ -5,7 +5,7 @@ import Mathlib.Data.PFun
 import Mathlib.Data.Nat.Dist
 
 open Classical
-open Nat.RecursiveIn.Code
+open Computability.Code
 open Nat
 
 
@@ -159,18 +159,19 @@ open Encodable
 abbrev n2o := @ofNat (Option ℕ) _
 abbrev o2n := @encode (Option ℕ) _
 
-namespace Nat.RecursiveIn.Code.nc_to_nn
-@[coe] protected def lift (f:ℕ→Code) : ℕ→ℕ := fun x => encodeCode (f x)
-instance : Coe (ℕ→Code) (ℕ→ℕ) := ⟨Nat.RecursiveIn.Code.nc_to_nn.lift⟩
-end Nat.RecursiveIn.Code.nc_to_nn
--- namespace Nat.RecursiveIn.Code.cn_to_nn
+-- TODO: maybe delete the below?
+namespace Computability.Code.nc_to_nn
+@[coe] protected def lift (f:ℕ→Code) : ℕ→ℕ := fun x => c2n (f x)
+instance : Coe (ℕ→Code) (ℕ→ℕ) := ⟨Computability.Code.nc_to_nn.lift⟩
+end Computability.Code.nc_to_nn
+-- namespace Computability.Code.cn_to_nn
 -- @[coe] protected def lift (f:Code→ℕ) : ℕ→ℕ := fun x => (f x)
--- instance coe : Coe (Code→ℕ) (ℕ→ℕ) := ⟨Nat.RecursiveIn.Code.cn_to_nn.lift⟩
--- end Nat.RecursiveIn.Code.cn_to_nn
-namespace Nat.RecursiveIn.Code.cc_to_nn
-@[coe] protected def lift (f:Code→Code) : ℕ→ℕ := encodeCode ∘ f ∘ decodeCode
-instance : Coe (Code→Code) (ℕ→ℕ) := ⟨Nat.RecursiveIn.Code.cc_to_nn.lift⟩
-end Nat.RecursiveIn.Code.cc_to_nn
+-- instance coe : Coe (Code→ℕ) (ℕ→ℕ) := ⟨Computability.Code.cn_to_nn.lift⟩
+-- end Computability.Code.cn_to_nn
+namespace Computability.Code.cc_to_nn
+@[coe] protected def lift (f:Code→Code) : ℕ→ℕ := c2n ∘ f ∘ n2c
+instance : Coe (Code→Code) (ℕ→ℕ) := ⟨Computability.Code.cc_to_nn.lift⟩
+end Computability.Code.cc_to_nn
 
 -- conversions between oracle and non-oracle versions
 lemma PrimrecIn.PrimrecIn_Empty (h:Nat.PrimrecIn (λ _ ↦ 0) f):Nat.Primrec f := by
@@ -199,7 +200,7 @@ theorem PrimrecIn.PrimrecIn_iff_Primrec:(∀O,Nat.PrimrecIn O f) ↔ Nat.Primrec
   · exact fun a O ↦ Nat.Primrec.to_PrimrecIn a
 
 -- templates for primrec constructions as codes
-namespace Nat.RecursiveIn.Code
+namespace Computability.Code
 @[aesop safe, cp] inductive code_prim:Code → Prop
 | zero:code_prim zero
 | succ:code_prim succ
@@ -423,15 +424,15 @@ theorem eval_prim_eq_eval_ext (h:code_prim c): eval O c x = eval_prim O c x := c
   --   sorry
 @[simp 1000] theorem code_prim_prop : Nat.PrimrecIn O (eval_prim O c) := by
   induction c with
-  | zero => exact PrimrecIn.zero
-  | succ => exact PrimrecIn.succ
-  | left => exact PrimrecIn.left
-  | right => exact PrimrecIn.right
-  | oracle => exact PrimrecIn.oracle
-  | pair ha hb ha_ih hb_ih => unfold eval_prim; exact PrimrecIn.pair (ha_ih) (hb_ih)
-  | comp ha hb ha_ih hb_ih => unfold eval_prim; exact PrimrecIn.comp (ha_ih) (hb_ih)
-  | prec ha hb ha_ih hb_ih => unfold eval_prim; exact PrimrecIn.prec (ha_ih) (hb_ih)
-  | rfind' ha ha_ih => exact PrimrecIn.zero
+  | zero => exact Nat.PrimrecIn.zero
+  | succ => exact Nat.PrimrecIn.succ
+  | left => exact Nat.PrimrecIn.left
+  | right => exact Nat.PrimrecIn.right
+  | oracle => exact Nat.PrimrecIn.oracle
+  | pair ha hb ha_ih hb_ih => unfold eval_prim; exact Nat.PrimrecIn.pair (ha_ih) (hb_ih)
+  | comp ha hb ha_ih hb_ih => unfold eval_prim; exact Nat.PrimrecIn.comp (ha_ih) (hb_ih)
+  | prec ha hb ha_ih hb_ih => unfold eval_prim; exact Nat.PrimrecIn.prec (ha_ih) (hb_ih)
+  | rfind' ha ha_ih => exact Nat.PrimrecIn.zero
 theorem code_prim_of_primrecIn (h:Nat.PrimrecIn O f) : ∃ c, code_prim c ∧ f=eval_prim O c := by
   induction h with
   | zero => use Code.zero; exact ⟨code_prim.zero,rfl⟩
@@ -461,7 +462,7 @@ theorem code_prim_of_primrecIn (h:Nat.PrimrecIn O f) : ∃ c, code_prim c ∧ f=
     · exact code_prim.prec hcf.left hcg.left
     · simp only [eval_prim]; rw [hcf.right, hcg.right]
 
-end Nat.RecursiveIn.Code
+end Computability.Code
 
 
 

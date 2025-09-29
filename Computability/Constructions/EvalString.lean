@@ -2,8 +2,10 @@ import Computability.Constructions.Use
 import Computability.Constructions.Basic
 import Computability.EvalString
 
+open Nat
+
 section evalnc
-namespace Nat.RecursiveIn.Code
+namespace Computability.Code
 def c_evalnc :=
   let u0 := left.comp left
   let s0 := right.comp left
@@ -28,13 +30,13 @@ def c_evalnc :=
   simp only [apply_ite]
   aesop
 @[simp] theorem c_evalnc_ev:eval O c_evalnc (Nat.pair (Nat.pair u s) (Nat.pair c x)) = o2n (evalnc O u s c x) := by simp [← eval_prim_eq_eval c_evalnc_ev_pr]
-end Nat.RecursiveIn.Code
+end Computability.Code
 -- theorem Nat.PrimrecIn.evalnc:Nat.PrimrecIn O evalnc := by ...
 -- theorem Nat.Primrec.evalnc:Nat.Primrec Nat.evalnc := by ...
 end evalnc
 
 section evalc
-namespace Nat.RecursiveIn.Code
+namespace Computability.Code
 def c_evalc :=
   let u0 := left
   let c0 := left.comp right
@@ -54,7 +56,7 @@ def c_evalc :=
   simp [eval]
   simp [Seq.seq]
   simp [evalc]
-  if h:(use O (decodeCode c) x).Dom then
+  if h:(use O (n2c c) x).Dom then
   simp [Part.Dom.bind h]
   have hc1 : code_total O right := by exact right_total
   have hc2 : code_total O (left.comp left) := by exact total_comp_of hc1 hc1
@@ -63,13 +65,13 @@ def c_evalc :=
   else
   simp [Part.eq_none_iff'.mpr h]
 
-end Nat.RecursiveIn.Code
+end Computability.Code
 -- theorem Nat.PrimrecIn.evalc:Nat.PrimrecIn O evalc := by ...
 -- theorem Nat.Primrec.evalc:Nat.Primrec Nat.evalc := by ...
 end evalc
 
 section evals
-namespace Nat.RecursiveIn.Code
+namespace Computability.Code
 def c_evalo :=
   let o := left
   let c := left.comp right
@@ -110,9 +112,9 @@ def c_comp₂ :=
 @[cp] theorem c_comp₂_ev_pr : code_prim c_comp₂ := by
   unfold c_comp₂
   apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
-@[simp] theorem c_comp₂_evp : eval_prim O c_comp₂ (Nat.pair a (Nat.pair b c)) = encodeCode (comp₂ a b c) := by
+@[simp] theorem c_comp₂_evp : eval_prim O c_comp₂ (Nat.pair a (Nat.pair b c)) = c2n (comp₂ a b c) := by
   simp [c_comp₂]; rfl
-@[simp] theorem c_comp₂_ev:eval O c_comp₂ (Nat.pair a (Nat.pair b c)) = encodeCode (comp₂ a b c) := by rw [← eval_prim_eq_eval c_comp₂_ev_pr]; simp
+@[simp] theorem c_comp₂_ev:eval O c_comp₂ (Nat.pair a (Nat.pair b c)) = c2n (comp₂ a b c) := by rw [← eval_prim_eq_eval c_comp₂_ev_pr]; simp
 def c_comp₃ :=
   let a := left.comp left
   let b := left.comp right
@@ -122,25 +124,25 @@ def c_comp₃ :=
 @[cp] theorem c_comp₃_ev_pr : code_prim c_comp₃ := by
   unfold c_comp₃
   apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
-@[simp] theorem c_comp₃_evp : eval_prim O c_comp₃ (Nat.pair (Nat.pair a b) (Nat.pair c d)) = encodeCode (comp₃ a b c d) := by
+@[simp] theorem c_comp₃_evp : eval_prim O c_comp₃ (Nat.pair (Nat.pair a b) (Nat.pair c d)) = c2n (comp₃ a b c d) := by
   simp [c_comp₃]; rfl
-@[simp] theorem c_comp₃_ev:eval O c_comp₃ (Nat.pair (Nat.pair a b) (Nat.pair c d)) = encodeCode (comp₃ a b c d) := by rw [← eval_prim_eq_eval c_comp₃_ev_pr]; simp
+@[simp] theorem c_comp₃_ev:eval O c_comp₃ (Nat.pair (Nat.pair a b) (Nat.pair c d)) = c2n (comp₃ a b c d) := by rw [← eval_prim_eq_eval c_comp₃_ev_pr]; simp
 
 def c_c_evals_oracle := c_comp.comp₂ (c_const c_sg) (c_comp₃.comp₄ (c_const c_list_getD) (c_c_const.comp left) (c_const c_id) (c_const $ c_const whatever))
 @[cp] def c_c_evals_oracle_ev_pr : code_prim c_c_evals_oracle := by
   unfold c_c_evals_oracle
   apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
 @[simp] theorem c_c_evals_oracle_evp : eval_prim O c_c_evals_oracle (Nat.pair o (Nat.pair c x)) =
-encodeCode (c_evals_oracle o) := by simp [c_c_evals_oracle, c_evals_oracle]
+c2n (c_evals_oracle o) := by simp [c_c_evals_oracle, c_evals_oracle]
 
-theorem c_c_evals_oracle_ev : eval O c_c_evals_oracle (Nat.pair o (Nat.pair c x)) = encodeCode (c_evals_oracle o) := by simp [← eval_prim_eq_eval c_c_evals_oracle_ev_pr]
+theorem c_c_evals_oracle_ev : eval O c_c_evals_oracle (Nat.pair o (Nat.pair c x)) = c2n (c_evals_oracle o) := by simp [← eval_prim_eq_eval c_c_evals_oracle_ev_pr]
 
 def c_evals_code := c_evalc.comp₂ (c_list_length.comp left) right
 
 theorem c_evals_code_ev : eval O c_evals_code (Nat.pair o (Nat.pair c x)) =
 evalc O (n2l o).length c x
 := by
-  
+
   simp [c_evals_code]
   simp [eval, Seq.seq]
 
@@ -163,15 +165,15 @@ def c_evals :=
     apply prim_total
     exact c_evals_oracle_ev_pr
   simp [Part.Dom.bind $ t1 (Nat.pair o (Nat.pair c x))]
-  have := @c_evalo_ev O _ (c_evals_code.encodeCode) (Nat.pair o (Nat.pair c x)) this
+  have := @c_evalo_ev O _ (c_evals_code.c2n) (Nat.pair o (Nat.pair c x)) this
   simp at this
   simp [this]
   simp [c_c_evals_oracle_ev]
   simp [c_evals_oracle_ev]
   simp [c_evals_code_ev]
-  
 
-end Nat.RecursiveIn.Code
+
+end Computability.Code
 -- theorem Nat.PrimrecIn.evals:Nat.PrimrecIn O evals := by ...
 -- theorem Nat.Primrec.evals:Nat.Primrec Nat.evals := by ...
 end evals

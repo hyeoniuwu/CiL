@@ -2,21 +2,16 @@ import Computability.Constructions.EvalString
 import Computability.SetOracles
 import Computability.KP54
 
-open Nat.RecursiveIn.Code
+open Computability.Code
 open Computability
 
 section kp54
--- namespace Nat.RecursiveIn.Code
-
--- def c_kp54 := zero
-
--- theorem c_kp54_ev : eval (K0 Nat.fzero) c_kp54 = KP54 := by sorry
 
 @[irreducible] def c_c_rfind := c_comp.comp₂ c_rfind' (c_pair.comp₂ (c_const c_id) (c_zero))
 @[cp] theorem c_c_rfind_ev_pr : code_prim c_c_rfind := by
   unfold c_c_rfind
   apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
-@[simp] theorem c_c_rfind_evp : eval_prim O c_c_rfind = fun x:ℕ => encodeCode (c_rfind x) := by simp [c_c_rfind, c_rfind]
+@[simp] theorem c_c_rfind_evp : eval_prim O c_c_rfind = fun x:ℕ => c2n (c_rfind x) := by simp [c_c_rfind, c_rfind]
 def c_dovetail :=
   c_c_rfind.comp $
   c_comp₂.comp₃
@@ -26,7 +21,7 @@ def c_dovetail :=
 @[cp] theorem c_dovetail_ev_pr : code_prim c_dovetail := by
   unfold c_dovetail
   apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
-@[simp] theorem c_dovetail_evp : eval_prim O c_dovetail = λ x ↦ encodeCode (dovetail $ decodeCode x) := by
+@[simp] theorem c_dovetail_evp : eval_prim O c_dovetail = λ x ↦ c2n (dovetail $ n2c x) := by
   -- just doing simp [c_dovetail, dovetail] should work, but gives a kernel recursion error. why?
   -- this was fixed by moving simp from def of comp_n to the comp_n_evp theorems.
   simp [c_dovetail, dovetail]
@@ -47,11 +42,11 @@ def c_c_ifdom :=
 @[cp] theorem c_c_ifdom_ev_pr : code_prim c_c_ifdom := by
   unfold c_c_ifdom
   apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
-@[simp] theorem c_c_ifdom_evp : eval_prim O c_c_ifdom = λ x ↦ encodeCode (c_ifdom x.l x.r) := by
+@[simp] theorem c_c_ifdom_evp : eval_prim O c_c_ifdom = λ x ↦ c2n (c_ifdom x.l x.r) := by
   simp [c_c_ifdom, c_ifdom]
 def c_c_kp54_aux :=
   c_dovetail.comp $
-  c_c_ifdom.comp₂ 
+  c_c_ifdom.comp₂
   (
     c_comp₃.comp₄
     c_c_evals
@@ -64,7 +59,7 @@ def c_c_kp54_aux :=
   unfold c_c_kp54_aux
   apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
 
-@[simp] theorem c_c_kp54_aux_evp : eval_prim O c_c_kp54_aux = λ x:ℕ ↦ encodeCode (dovetail (KP54.c_kp54_aux x.l x.r)) := by
+@[simp] theorem c_c_kp54_aux_evp : eval_prim O c_c_kp54_aux = λ x:ℕ ↦ c2n (dovetail (KP54.c_kp54_aux x.l x.r)) := by
   simp [c_c_kp54_aux, KP54.c_kp54_aux]
 
 
@@ -191,7 +186,7 @@ def c_kp54 :=
             -- this case is a contradiction, as we know the evals must halt from "this".
             simp [dvt] at this
             simp [hAₛ, hi, hlb] at h2
-            have contra : (evals Aₛ_1 (decodeCode i_1) lb_1).Dom := by
+            have contra : (evals Aₛ_1 (n2c i_1) lb_1).Dom := by
               have a0 := dovetail_ev_0' this
               simp [KP54.c_kp54_aux_evp, -Denumerable.list_ofNat_succ] at a0
               exact a0
@@ -223,7 +218,7 @@ def c_kp54 :=
             -- this case is a contradiction, as we know the evals must halt from "this".
             simp [dvt_1] at this
             simp [hBₛ, hi, hla] at h2
-            have contra : (evals Bₛ_1 (decodeCode i_1) la_1).Dom := by
+            have contra : (evals Bₛ_1 (n2c i_1) la_1).Dom := by
               have a0 := dovetail_ev_0' this
               simp [KP54.c_kp54_aux_evp, -Denumerable.list_ofNat_succ] at a0
               exact a0
@@ -234,17 +229,17 @@ def c_kp54 :=
 -- theorem c_kp54_ev : (eval (∅⌜) c_kp54 x).get (c_kp54_t x) = KP54.KP54 x := by sorry
 
 section n2b
-namespace Nat.RecursiveIn.Code
+namespace Computability.Code
 def c_n2b := c_sg
 @[cp] theorem c_n2b_ev_pr : code_prim c_n2b := by
   unfold c_n2b
   apply_rules (config := {maxDepth:=10, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
 @[simp] theorem c_n2b_evp:eval_prim O c_n2b = fun x => if n2b x = true then 1 else 0 := by
   simp [c_n2b]
-  unfold sg; unfold n2b
+  unfold Nat.sg; unfold n2b
   aesop
 @[simp] theorem c_n2b_ev:eval O c_n2b = fun x => if n2b x = true then 1 else 0 := by rw [← eval_prim_eq_eval c_n2b_ev_pr]; simp only [c_n2b_evp]; funext x; aesop
-end Nat.RecursiveIn.Code
+end Computability.Code
 -- theorem Nat.PrimrecIn.n2b:Nat.PrimrecIn O Nat.n2b := by ...
 -- theorem Nat.Primrec.n2b:Nat.Primrec Nat.n2b := by ...
 end n2b
@@ -286,7 +281,7 @@ theorem B_le_J1 : KP54.B ≤ᵀ ∅⌜ := by
   rw [fzero_eq_χempty]
   exact (K0χ_eq_χSetK ∅).1
 
--- end Nat.RecursiveIn.Code
+-- end Computability.Code
 end kp54
 
 

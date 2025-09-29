@@ -1,8 +1,10 @@
 import Computability.RecursiveInTheorems
 import Mathlib.Tactic.Linarith
 
-open Nat.RecursiveIn.Code
-namespace Nat.RecursiveIn.Code
+open List Nat
+open Computability.Code
+
+namespace Computability.Code
 
 -- general lemmas for evaln
 lemma evaln_sing (h1:a∈(evaln O s1 c x)) (h2:b∈(evaln O s2 c x)): a=b := by
@@ -122,7 +124,7 @@ theorem evaln_rfind_as_eval_rfind
       have halt2 := evaln_rfind_indt h hh this
       have := nrfind'_geq_xr halt2
       simp at this
-      exact ne_of_lt this
+      exact Nat.ne_of_lt this
     | succ roM1 ih =>
       have := @ih (s-1) (Nat.pair x.l (x.r+1)) ?_ ?_
       -- simp_all
@@ -2016,7 +2018,7 @@ theorem usen_sound : ∀ {c s n x}, x ∈ usen O c s n → x ∈ use O c n
     simp [use]
     have := usen_rfind_prop2.mp h
     have urop1 := usen_rfind_prop h
-    rcases urop1 0 (zero_le (rfind'_obtain (usen_rfind_prop_aux h))) with ⟨h1,h2⟩
+    rcases urop1 0 (Nat.zero_le (rfind'_obtain (usen_rfind_prop_aux h))) with ⟨h1,h2⟩
     simp at h2
 
     rcases usen_dom_iff_evaln_dom.mp ⟨x,h⟩ with ⟨h7,h8⟩
@@ -2867,6 +2869,7 @@ let eval_prev := (evaln O s (prec cf cg) (Nat.pair x i)).get (usen_prec_dom_aux 
 lemma cm_aux_0
 {l}
 {head :ℕ}
+{tail : List ℕ}
 (hhht : ∃ l'', l'' ++ l' = l)
 (hht : head :: tail = l')
 :
@@ -2876,6 +2879,7 @@ lemma cm_aux_0
 lemma cm_aux_1
 {l}
 {head :ℕ}
+{tail : List ℕ}
 (hhht : ∃ l'', l'' ++ l' = l)
 (hht : head :: tail = l')
 :
@@ -3032,7 +3036,7 @@ theorem usen_mono_rfind'
   have rop4 := nrfind'_obtain_prop_4 (un2en hh)
   simp [rwro] at rop4
 
-  have aux3 := rop2 0 (zero_le ro)
+  have aux3 := rop2 0 (Nat.zero_le ro)
   simp at aux3
   have aux5 := rop2 j hjro
 
@@ -3153,7 +3157,7 @@ theorem usen_mono_rfind'
         simp
       | succ n ih =>
         -- do cases on if ro-n≤0
-        cases eq_zero_or_pos (ro - n) with
+        cases Nat.eq_zero_or_pos (ro - n) with
         | inl hh =>
           simp [show ro-(n+1)=ro-n-1 from rfl]
           have : ro-n-1=ro-n := by exact sub_one_eq_self.mpr hh
@@ -3508,8 +3512,8 @@ usen O₁ c s x = usen O₂ c s x
     simp
 
     simp [evaln_xles hh]
-    have bcrw := (ihAll 0 (zero_le nro)).left
-    have bcrw2 := (ihAll 0 (zero_le nro)).right
+    have bcrw := (ihAll 0 (Nat.zero_le nro)).left
+    have bcrw2 := (ihAll 0 (Nat.zero_le nro)).right
     simp at bcrw
     simp at bcrw2
     rw [←main1]
@@ -3520,7 +3524,7 @@ usen O₁ c s x = usen O₂ c s x
     rw [a0]
     clear rwnro nrop3 nrop1 bcrw bcrw2 aux0 hO a0 main1 hcf ihAll
 
-    have a4 := a2 0 (zero_le nro)
+    have a4 := a2 0 (Nat.zero_le nro)
     simp at a4
 
     generalize 0=b at ⊢

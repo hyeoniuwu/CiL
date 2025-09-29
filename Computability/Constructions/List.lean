@@ -13,29 +13,29 @@ instance : Coe ℕ (List ℕ) := ⟨n2l⟩
 instance : Coe (List ℕ) ℕ := ⟨l2n⟩
 
 section list_nil
-namespace Nat.RecursiveIn.Code
+namespace Computability.Code
 def c_list_nil := zero
 @[cp] theorem c_list_nil_ev_pr : code_prim c_list_nil := by
   unfold c_list_nil
   apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
 @[simp] theorem c_list_nil_evp :eval_prim O c_list_nil x = l2n ([]) := by simp [c_list_nil]
 @[simp] theorem c_list_nil_ev :eval O c_list_nil x = l2n ([]) := by simp [←eval_prim_eq_eval c_list_nil_ev_pr]
-end Nat.RecursiveIn.Code
+end Computability.Code
 end list_nil
 
 section list_cons
-namespace Nat.RecursiveIn.Code
+namespace Computability.Code
 def c_list_cons := succ
 @[cp] theorem c_list_cons_ev_pr : code_prim c_list_cons := by
   unfold c_list_cons
   apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
 @[simp] theorem c_list_cons_evp :eval_prim O c_list_cons (Nat.pair a lN)= l2n (List.cons a (n2l lN)) := by simp [c_list_cons]
 @[simp] theorem c_list_cons_ev :eval O c_list_cons (Nat.pair a lN)= l2n (List.cons a (n2l lN)) := by simp [←eval_prim_eq_eval c_list_cons_ev_pr]
-end Nat.RecursiveIn.Code
+end Computability.Code
 end list_cons
 
 section list_tail
-namespace Nat.RecursiveIn.Code
+namespace Computability.Code
 def c_list_tail := right.comp c_pred
 @[cp] theorem c_list_tail_ev_pr : code_prim c_list_tail := by
   unfold c_list_tail
@@ -46,11 +46,11 @@ def c_list_tail := right.comp c_pred
   · simp [hl,r]
   · rw [←(exists_add_one_eq.mpr (one_le_iff_ne_zero.mpr hl)).choose_spec]; simp
 @[simp] theorem c_list_tail_ev:eval O c_list_tail lN = l2n (List.tail (n2l lN)) := by simp [← eval_prim_eq_eval c_list_tail_ev_pr]
-end Nat.RecursiveIn.Code
+end Computability.Code
 end list_tail
 
 section list_head?
-namespace Nat.RecursiveIn.Code
+namespace Computability.Code
 def c_list_head? := c_ifz.comp₃ c_id zero $ succ.comp (left.comp c_pred)
 @[cp] theorem c_list_head?_ev_pr : code_prim c_list_head? := by
   unfold c_list_head?
@@ -61,13 +61,13 @@ def c_list_head? := c_ifz.comp₃ c_id zero $ succ.comp (left.comp c_pred)
   · simp [hl]
   · rw [←(exists_add_one_eq.mpr (one_le_iff_ne_zero.mpr hl)).choose_spec]; simp
 @[simp] theorem c_list_head?_ev:eval O c_list_head? lN = o2n (List.head? (n2l lN)) := by simp [← eval_prim_eq_eval c_list_head?_ev_pr]
-end Nat.RecursiveIn.Code
+end Computability.Code
 end list_head?
 
 
 
 section list_headI
-namespace Nat.RecursiveIn.Code
+namespace Computability.Code
 def c_list_headI := c_ifz.comp₃ c_id zero (left.comp c_pred)
 @[cp] theorem c_list_headI_ev_pr : code_prim c_list_headI := by
   unfold c_list_headI
@@ -78,11 +78,11 @@ def c_list_headI := c_ifz.comp₃ c_id zero (left.comp c_pred)
   · simp [hl]
   · rw [←(exists_add_one_eq.mpr (one_le_iff_ne_zero.mpr hl)).choose_spec]; simp
 @[simp] theorem c_list_headI_ev:eval O c_list_headI lN = List.headI (n2l lN) := by simp [← eval_prim_eq_eval c_list_headI_ev_pr]
-end Nat.RecursiveIn.Code
+end Computability.Code
 end list_headI
 
 section list_casesOn
-namespace Nat.RecursiveIn.Code
+namespace Computability.Code
 def c_list_casesOn (cl cf cg:Code) :=
   let x := left.comp (c_pred.comp cl)
   let xs := right.comp (c_pred.comp cl)
@@ -106,10 +106,10 @@ def c_list_casesOn (cl cf cg:Code) :=
 --   (eval_prim O cf input)
 --   (fun x xs => eval_prim O cg (Nat.pair (@encode ℕ _ x) (l2n xs))) := by
 --     simp [← eval_prim_eq_eval c_list_casesOn_ev_pr]
-end Nat.RecursiveIn.Code
+end Computability.Code
 end list_casesOn
 section list_casesOn'
-namespace Nat.RecursiveIn.Code
+namespace Computability.Code
 def c_list_casesOn' (cl cf cg:Code) :=
   c_if_eq_te.comp₄ cl (c_const 0) cf cg
 @[cp] theorem c_list_casesOn'_ev_pr (hcl:code_prim cl) (hcf:code_prim cf) (hcg:code_prim cg):code_prim (c_list_casesOn' cl cf cg) := by
@@ -131,11 +131,11 @@ def c_list_casesOn' (cl cf cg:Code) :=
 --   (eval_prim O cf lN)
 --   (fun x xs => eval_prim O cg (Nat.pair (@encode ℕ _ x) (l2n xs))) := by
 --     simp [← eval_prim_eq_eval c_list_casesOn'_ev_pr]
-end Nat.RecursiveIn.Code
+end Computability.Code
 end list_casesOn'
 
 section list_drop
-namespace Nat.RecursiveIn.Code
+namespace Computability.Code
 def c_list_drop :=
   (
     prec
@@ -157,33 +157,33 @@ def c_list_drop :=
     | zero => simp
     | succ n ih => simp [ih]
 @[simp] theorem c_list_drop_ev:eval O c_list_drop (Nat.pair i lN) = l2n (List.drop i (n2l lN)) := by simp [← eval_prim_eq_eval c_list_drop_ev_pr]
-end Nat.RecursiveIn.Code
+end Computability.Code
 end list_drop
 
 section list_getElem?
-namespace Nat.RecursiveIn.Code
+namespace Computability.Code
 def c_list_getElem? := c_list_head?.comp (c_list_drop.comp c_flip)
 @[cp] theorem c_list_getElem?_ev_pr : code_prim c_list_getElem? := by
   unfold c_list_getElem?
   apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
 @[simp] theorem c_list_getElem?_evp : eval_prim O c_list_getElem? (Nat.pair lN i) = o2n (n2l lN)[i]? := by simp [c_list_getElem?]
 @[simp] theorem c_list_getElem?_ev : eval O c_list_getElem? (Nat.pair lN i) = o2n (n2l lN)[i]? := by simp [← eval_prim_eq_eval c_list_getElem?_ev_pr]
-end Nat.RecursiveIn.Code
+end Computability.Code
 end list_getElem?
 
 section list_getD
-namespace Nat.RecursiveIn.Code
+namespace Computability.Code
 def c_list_getD := c_opt_getD.comp₂ (c_list_getElem?.comp₂ left (left.comp right)) (right.comp right)
 @[cp] theorem c_list_getD_ev_pr : code_prim c_list_getD := by
   unfold c_list_getD
   apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
 @[simp] theorem c_list_getD_evp : eval_prim O c_list_getD (Nat.pair lN (Nat.pair i d)) = (n2l lN).getD i d := by simp [c_list_getD]
 @[simp] theorem c_list_getD_ev : eval O c_list_getD (Nat.pair lN (Nat.pair i d)) = (n2l lN).getD i d := by simp [← eval_prim_eq_eval c_list_getD_ev_pr]
-end Nat.RecursiveIn.Code
+end Computability.Code
 end list_getD
 
 section list_getI
-namespace Nat.RecursiveIn.Code
+namespace Computability.Code
 def c_list_getI := c_pred.comp c_list_getElem?
 @[cp] theorem c_list_getI_ev_pr : code_prim c_list_getI := by
   unfold c_list_getI
@@ -192,11 +192,11 @@ def c_list_getI := c_pred.comp c_list_getElem?
   simp [c_list_getI]
   by_cases hl:i<(n2l lN).length <;> simp [hl, List.getI]
 @[simp] theorem c_list_getI_ev : eval O c_list_getI (Nat.pair lN i) = ((n2l lN).getI i) := by simp [← eval_prim_eq_eval c_list_getI_ev_pr]
-end Nat.RecursiveIn.Code
+end Computability.Code
 end list_getI
 
 section list_get
-namespace Nat.RecursiveIn.Code
+namespace Computability.Code
 def c_list_get := c_list_getI
 @[cp] theorem c_list_get_ev_pr : code_prim c_list_get := by
   unfold c_list_get
@@ -210,7 +210,7 @@ def c_list_get := c_list_getI
 @[simp] theorem c_list_get_ev (h:i<(n2l lN).length) : eval O c_list_get (Nat.pair lN i) = (n2l lN)[i] := by
   simp [← eval_prim_eq_eval c_list_get_ev_pr]
   simp [h]
-end Nat.RecursiveIn.Code
+end Computability.Code
 end list_get
 
 /-
@@ -219,7 +219,7 @@ end list_get
 `foldl fn acc (x:xs) = foldl fn (fn acc x) xs`
 -/
 section list_foldl
-namespace Nat.RecursiveIn.Code
+namespace Computability.Code
 def c_list_foldl_aux (cf:Code) :=
   let x:=left.comp (c_pred.comp right)
   let xs:=right.comp (c_pred.comp right)
@@ -302,12 +302,12 @@ def c_list_foldl (cf:Code) := left.comp (c_list_foldl_aux2 cf)
 --     (init)
 --     (n2l lN)
 --   ) := by rw [← eval_prim_eq_eval c_list_foldl_ev_pr]; simp only [c_list_foldl_evp]
-end Nat.RecursiveIn.Code
+end Computability.Code
 end list_foldl
 
 -- reverse = foldl (flip (:)) []
 section list_reverse
-namespace Nat.RecursiveIn.Code
+namespace Computability.Code
 def c_list_reverse := (c_list_foldl (c_list_cons.comp c_flip)).comp₂ c_list_nil c_id
 @[cp] theorem c_list_reverse_ev_pr : code_prim c_list_reverse := by
   unfold c_list_reverse
@@ -323,7 +323,7 @@ def c_list_reverse := (c_list_foldl (c_list_cons.comp c_flip)).comp₂ c_list_ni
   rw [aux (n2l lN) (l2n [])]
   simp
 @[simp] theorem c_list_reverse_ev : eval O c_list_reverse lN =  l2n (List.reverse (n2l lN)) := by simp [← eval_prim_eq_eval c_list_reverse_ev_pr]
-end Nat.RecursiveIn.Code
+end Computability.Code
 end list_reverse
 
 /-
@@ -332,7 +332,7 @@ end list_reverse
 `foldr fn acc (x:xs) = fn x (foldr fn acc xs)`
 -/
 section list_foldr
-namespace Nat.RecursiveIn.Code
+namespace Computability.Code
 def c_list_foldr (cf:Code) := (c_list_foldl (cf.comp c_flip)).comp₂ left (c_list_reverse.comp right)
 @[cp] theorem c_list_foldr_ev_pr(hcf:code_prim cf) : code_prim (c_list_foldr cf) := by
   unfold c_list_foldr
@@ -352,23 +352,23 @@ def c_list_foldr (cf:Code) := (c_list_foldl (cf.comp c_flip)).comp₂ left (c_li
 --     (init)
 --     (n2l lN)
 --   ) := by rw [← eval_prim_eq_eval c_list_foldr_ev_pr]; simp only [c_list_foldr_evp]
-end Nat.RecursiveIn.Code
+end Computability.Code
 end list_foldr
 
 -- https://hackage.haskell.org/package/ghc-internal-9.1201.0/docs/src/GHC.Internal.Data.Foldable.html#length
 section list_length
-namespace Nat.RecursiveIn.Code
+namespace Computability.Code
 def c_list_length := (c_list_foldl (succ.comp left)).comp₂ zero c_id
 @[cp] theorem c_list_length_ev_pr : code_prim c_list_length := by
   unfold c_list_length
   apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
 @[simp] theorem c_list_length_evp : eval_prim O c_list_length lN = List.length (n2l lN) := by simp [c_list_length]
 @[simp] theorem c_list_length_ev : eval O c_list_length lN = List.length (n2l lN) := by simp [← eval_prim_eq_eval c_list_length_ev_pr]
-end Nat.RecursiveIn.Code
+end Computability.Code
 end list_length
 
 section list_getLast?
-namespace Nat.RecursiveIn.Code
+namespace Computability.Code
 def c_list_getLast? := c_list_getElem?.comp₂ c_id (c_pred.comp $ c_list_length.comp c_id)
 @[cp] theorem c_list_getLast?_ev_pr : code_prim c_list_getLast? := by
   unfold c_list_getLast?
@@ -377,11 +377,11 @@ def c_list_getLast? := c_list_getElem?.comp₂ c_id (c_pred.comp $ c_list_length
   simp [c_list_getLast?]
   exact Eq.symm List.getLast?_eq_getElem?
 @[simp] theorem c_list_getLast?_ev:eval O c_list_getLast? lN = o2n (List.getLast? (n2l lN)) := by simp [← eval_prim_eq_eval c_list_getLast?_ev_pr]
-end Nat.RecursiveIn.Code
+end Computability.Code
 end list_getLast?
 
 section list_getLastI
-namespace Nat.RecursiveIn.Code
+namespace Computability.Code
 def c_list_getLastI := c_opt_iget.comp c_list_getLast?
 @[cp] theorem c_list_getLastI_ev_pr : code_prim c_list_getLastI := by
   unfold c_list_getLastI
@@ -390,7 +390,7 @@ def c_list_getLastI := c_opt_iget.comp c_list_getLast?
   simp [c_list_getLastI]
   exact Eq.symm (List.getLastI_eq_getLast? (n2l lN))
 @[simp] theorem c_list_getLastI_ev:eval O c_list_getLastI lN = List.getLastI (n2l lN) := by simp [← eval_prim_eq_eval c_list_getLastI_ev_pr]
-end Nat.RecursiveIn.Code
+end Computability.Code
 end list_getLastI
 
 /-
@@ -398,7 +398,7 @@ end list_getLastI
 (++) (x:xs) ys = x : xs ++ ys
 -/
 section list_append
-namespace Nat.RecursiveIn.Code
+namespace Computability.Code
 def c_list_append := (c_list_foldr (c_list_cons)).comp c_flip
 @[cp] theorem c_list_append_ev_pr : code_prim c_list_append := by
   unfold c_list_append
@@ -409,11 +409,11 @@ def c_list_append := (c_list_foldr (c_list_cons)).comp c_flip
   | nil => simp
   | cons head tail ih => simp [ih, -encode_list_cons, -encode_list_nil]
 @[simp] theorem c_list_append_ev : eval O c_list_append (Nat.pair l1N l2N) = l2n ((n2l l1N) ++ (n2l l2N)) := by simp [← eval_prim_eq_eval c_list_append_ev_pr]
-end Nat.RecursiveIn.Code
+end Computability.Code
 end list_append
 
 section list_singleton
-namespace Nat.RecursiveIn.Code
+namespace Computability.Code
 def c_list_singleton (cf:Code) := c_list_cons.comp₂ cf c_list_nil
 @[cp] theorem c_list_singleton_ev_pr (hcf:code_prim cf) : code_prim (c_list_singleton cf) := by
   unfold c_list_singleton
@@ -421,11 +421,11 @@ def c_list_singleton (cf:Code) := c_list_cons.comp₂ cf c_list_nil
 @[simp] theorem c_list_singleton_evp : eval_prim O (c_list_singleton cf) x = l2n ([eval_prim O cf x]) := by
   simp [c_list_singleton]
 -- @[simp] theorem c_list_singleton_ev : eval O (c_list_singleton cf) x = l2n ([eval_prim O cf x]) := by simp [← eval_prim_eq_eval c_list_singleton_ev_pr]
-end Nat.RecursiveIn.Code
+end Computability.Code
 end list_singleton
 
 section list_concat
-namespace Nat.RecursiveIn.Code
+namespace Computability.Code
 def c_list_concat := c_list_append.comp₂ left (c_list_singleton right)
 @[cp] theorem c_list_concat_ev_pr : code_prim c_list_concat := by
   unfold c_list_concat
@@ -433,12 +433,12 @@ def c_list_concat := c_list_append.comp₂ left (c_list_singleton right)
 @[simp] theorem c_list_concat_evp : eval_prim O c_list_concat (Nat.pair lN i) = l2n ((n2l lN)++[i]) := by
   simp [c_list_concat, -encode_list_cons, -encode_list_nil]
 @[simp] theorem c_list_concat_ev : eval O c_list_concat (Nat.pair lN i) = l2n ((n2l lN)++[i]) := by simp [← eval_prim_eq_eval c_list_concat_ev_pr]
-end Nat.RecursiveIn.Code
+end Computability.Code
 end list_concat
 
 -- https://hackage.haskell.org/package/ghc-internal-9.1201.0/docs/src/GHC.Internal.Base.html#map
 section list_map
-namespace Nat.RecursiveIn.Code
+namespace Computability.Code
 def c_list_map (cf:Code) := (c_list_foldr (c_list_cons.comp₂ (cf.comp left) right)).comp₂ (c_list_nil) (c_id)
 @[cp] theorem c_list_map_ev_pr (hcf:code_prim cf) : code_prim (c_list_map cf) := by
   unfold c_list_map
@@ -449,11 +449,11 @@ def c_list_map (cf:Code) := (c_list_foldr (c_list_cons.comp₂ (cf.comp left) ri
   | nil => simp
   | cons head tail ih => simp [ih, -encode_list_cons, -encode_list_nil]
 -- @[simp] theorem c_list_map_ev : eval O (c_list_map cf) lN = l2n ((n2l lN).map (eval_prim O cf)) := by simp [← eval_prim_eq_eval c_list_map_ev_pr]
-end Nat.RecursiveIn.Code
+end Computability.Code
 end list_map
 
 section list_zipWith
-namespace Nat.RecursiveIn.Code
+namespace Computability.Code
 /-
 zipL :: [a] -> [b] -> [(a,b)]
 zipL xs ys = reverse $ fst $ foldl step ([], ys) xs
@@ -583,7 +583,7 @@ theorem c_list_zipWith_aux_evp :
             let zs := [head2] ++ list2
             use ws,xs,ys,zs
             constructor
-            · 
+            ·
               simp [ws,ys]
               exact le_of_succ_le aux1
             · exact ⟨rfl, append_assoc (take tail.length (n2l l2N)) [head2] list2, rfl, rfl⟩
@@ -607,11 +607,11 @@ theorem c_list_zipWith_aux_evp :
   List.zipWith (fun x y => eval_prim O cf (Nat.pair x y)) l1N l2N := by
     simp [c_list_zipWith, c_list_zipWith_aux_evp]
 -- @[simp] theorem c_list_zipWith_ev : eval O (c_list_zipWith_aux cf) lN = l2n ((n2l lN).map (eval_prim O cf)) := by simp [← eval_prim_eq_eval c_list_zipWith_ev_pr]
-end Nat.RecursiveIn.Code
+end Computability.Code
 end list_zipWith
 
 section list_range
-namespace Nat.RecursiveIn.Code
+namespace Computability.Code
 def c_list_range :=
   let prev_list := right.comp right
   let i := (left.comp right)
@@ -629,11 +629,11 @@ def c_list_range :=
     simp [-encode_list_cons, -encode_list_nil, ih]
     exact Eq.symm List.range_succ
 @[simp] theorem c_list_range_ev : eval O c_list_range n = l2n (List.range n) := by simp [← eval_prim_eq_eval c_list_range_ev_pr]
-end Nat.RecursiveIn.Code
+end Computability.Code
 end list_range
 
 section list_replicate
-namespace Nat.RecursiveIn.Code
+namespace Computability.Code
 def c_list_replicate :=
   let prev_list := right.comp right
   let x := left
@@ -651,11 +651,11 @@ def c_list_replicate :=
     simp [-encode_list_cons, -encode_list_nil, ih]
     exact Eq.symm replicate_succ'
 @[simp] theorem c_list_replicate_ev : eval O c_list_replicate (Nat.pair n x) = l2n (List.replicate n x) := by simp [← eval_prim_eq_eval c_list_replicate_ev_pr]
-end Nat.RecursiveIn.Code
+end Computability.Code
 end list_replicate
 
 section list_map'
-namespace Nat.RecursiveIn.Code
+namespace Computability.Code
 /--
 `eval_prim O (c_list_map' cf) (Nat.pair lN aux) = ((n2l lN).map (fun ele => eval_prim O cf (Nat.pair ele aux)))`
 -/
@@ -675,7 +675,7 @@ def c_list_map' (cf:Code) :=
   | nil => simp [Nat.pair]
   | cons head tail ih => simp [replicate_succ]; exact ih
 -- @[simp] theorem c_list_map'_ev : eval O (c_list_map' cf) lN = l2n ((n2l lN).map (eval_prim O cf)) := by simp [← eval_prim_eq_eval c_list_map'_ev_pr]
-end Nat.RecursiveIn.Code
+end Computability.Code
 end list_map'
 
 @[simp] theorem getLastI_append {y:ℕ}: (x++[y]).getLastI = y := by

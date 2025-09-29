@@ -1,8 +1,8 @@
 import Computability.Use
-open Nat.RecursiveIn.Code
+open Computability.Code
 open Classical
 
-namespace Nat.RecursiveIn.Code
+namespace Computability.Code
 
 -- stands for "evaln clamped"
 noncomputable def evalnc (O:ℕ→ℕ) (u:ℕ) : ℕ → Code → ℕ → Option ℕ := λ s c x ↦ do
@@ -51,4 +51,4 @@ theorem evalc_prop_4: (use O c x).get h≤u ↔ (evalc O u c x).Dom :=
 def whatever := 0
 noncomputable def evals (σ:List ℕ) (c:Code) (x:ℕ) := evalc (λ e ↦ b2n $ n2b $ σ.getD e whatever) σ.length c x
 
-end Nat.RecursiveIn.Code
+end Computability.Code
