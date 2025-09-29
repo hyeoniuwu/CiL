@@ -88,7 +88,6 @@ theorem jump_not_leq_f (f:ℕ→ℕ) : ¬(f⌜ ≤ᵀᶠ f) := by
     funext x
     have : code_total f (c_jf.comp (pair c_id c_id)) := by intro x; simp [eval,hc_jh,Seq.seq]
     simp [c_ite_ev this, eval, hc_jh, Seq.seq]
-    rfl
   -- why does this blow up lean?
   -- nvm, fixed [25-09-24 00:10:28]
   cases Classical.em (eval f g g).Dom with

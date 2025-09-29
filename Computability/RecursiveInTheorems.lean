@@ -224,11 +224,11 @@ def code_total (O) (c:Code) := ∀x, (eval O c x).Dom
 @[simp] theorem succ_total {O} : code_total O succ := λ _ ↦ trivial
 @[simp] theorem oracle_total {O} : code_total O oracle := λ _ ↦ trivial
 theorem total_pair_iff : (code_total O cf) ∧ (code_total O cg) ↔ (code_total O (pair cf cg)) :=
-  ⟨  
+  ⟨
     λ h x ↦ ⟨h.left x, h.right x⟩
   ,
     λ h ↦ ⟨λ x ↦ Part.left_dom_of_sub_dom (h x) , λ x ↦ Part.right_dom_of_div_dom (h x)⟩
-  ⟩ 
+  ⟩
 @[simp] theorem total_pair_of (hcf : code_total O cf) (hcg : code_total O cg) : (code_total O (pair cf cg)) := total_pair_iff.mp ⟨hcf,hcg⟩
 theorem total_comp_of (hcf : code_total O cf) (hcg : code_total O cg) : (code_total O (comp cf cg)) := by
   intro x
@@ -265,7 +265,7 @@ theorem total_comp_of (hcf : code_total O cf) (hcg : code_total O cg) : (code_to
 theorem prim_total (h:code_prim c): code_total O c := by
   unfold code_total
   induction h with
-  | zero                   => simp [eval]; exact fun x ↦ trivial
+  | zero                   => simp [eval];
   | succ                   => simp [eval];
   | left                   => simp [eval];
   | right                  => simp [eval];

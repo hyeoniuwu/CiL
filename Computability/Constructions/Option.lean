@@ -9,13 +9,11 @@ open List
 
 -- theorem option_isSome : Primrec (@Option.isSome α) :=
 --   (option_casesOn .id (const false) (const true).to₂).of_eq fun o => by cases o <;> rfl
-theorem hnat_to_opt_0 : (Denumerable.ofNat (Option ℕ) 0) = Option.none := by exact rfl
-theorem hnat_to_opt_1_aux {x} (h2:¬x=0) : x=x-1+1 := by exact Eq.symm (succ_pred_eq_of_ne_zero h2)
-theorem hnat_to_opt_1 {x} (h3:¬x=0) : (Denumerable.ofNat (Option ℕ) x) = Option.some (x-1) := by
-  rw (config := {occs := .pos [1]}) [hnat_to_opt_1_aux h3]
-  exact rfl
+@[simp] theorem hnat_to_opt_0 : (Denumerable.ofNat (Option ℕ) 0) = Option.none := by exact rfl
+@[simp] theorem hnat_to_opt_0' : (Denumerable.ofNat (Option ℕ) (x+1)) = Option.some (x) := by exact rfl
+theorem ge_0_rw {x} (h2:¬x=0) : x=x-1+1 := by exact Eq.symm (succ_pred_eq_of_ne_zero h2)
 theorem hnat_to_opt_2 {x} (h3:¬x=o2n Option.none) : n2o x = (Option.some (x-1)) := by
-  rw (config := {occs := .pos [1]}) [hnat_to_opt_1_aux h3]
+  rw (config := {occs := .pos [1]}) [ge_0_rw h3]
   exact rfl
 theorem not_none_imp_not_zero {xx} (h:¬xx=o2n Option.none):¬xx=0:=by
   simp at h
@@ -29,25 +27,21 @@ theorem hnat_1 {o:Option ℕ} (ho: ¬ o = Option.none) : ¬ o2n o = 0 := by
 theorem hnat_2 {o:Option ℕ} (ho: o.isSome) : (o2n o) - 1 = o.get ho := by
   simp (config:={singlePass:=true}) [Option.dom_imp_some ho]
   exact rfl
-theorem n2o0 : n2o 0 = Option.none := by exact rfl
-theorem hnat_4 (hn:¬n=0) : n2o n = Option.some (n-1) := by
-  exact hnat_to_opt_2 hn
+
 theorem hnat_5 (h:n≠0) : ((n-1).max (a-1))+1 = n.max a := by
   grind only [= Nat.max_def, cases Or]
 theorem hnat_6 (h:i≠0) : (n2o i).isSome := by
-  have : i=i-1+1 := by exact hnat_to_opt_1_aux h
+  have : i=i-1+1 := by exact ge_0_rw h
   rw [this]
   rfl
 theorem hnat_8 (h:(n2o o).isSome): o≠0 := by
   contrapose h
   simp at h
   simp [h]
-  rfl
 theorem hnat_7 : (n2o o).get h = o-1 := by
   have : o ≠ 0 := by exact hnat_8 h
-  have : o=o-1+1 := by exact hnat_to_opt_1_aux this
+  have : o=o-1+1 := by exact ge_0_rw this
   simp (config:={singlePass:=true}) [this]
-  rfl
 theorem hnat_9 : o.get h = (o2n o)-1 := by
   exact Eq.symm (hnat_2 h)
 theorem iget_eq_get {o:Option ℕ} (h:o.isSome) : o.iget = o.get h := by
@@ -69,9 +63,7 @@ def c_isSome := c_sg'
   funext x
   simp
   simp [b'2n, n2o]
-  cases x with
-  | zero => simp; exact rfl
-  | succ n => simp; exact Option.isSome_iff_ne_none.mp rfl
+  cases x <;> simp
 @[simp] theorem c_isSome_ev:eval O c_isSome = fun o => b'2n $ (n2o o).isSome := by rw [← eval_prim_eq_eval c_isSome_ev_pr]; simp only [c_isSome_evp];
 end Nat.RecursiveIn.Code
 -- theorem Nat.PrimrecIn.isSome:Nat.PrimrecIn O Nat.isSome := by ...
@@ -88,12 +80,10 @@ def c_opt_iget := c_pred
 @[simp] theorem c_opt_iget_evp : eval_prim O c_opt_iget o = Option.iget (n2o o) := by
   simp [c_opt_iget]
   by_cases ho:o=0
-  · simp [ho]; exact rfl
+  · simp [ho];
   · have asd := exists_add_one_eq.mpr (one_le_iff_ne_zero.mpr ho)
     rcases asd with ⟨k,hk⟩
     simp [←hk]
-    have rwma : n2o (k + 1) = Option.some k := by exact rfl
-    rw [rwma]
 @[simp] theorem iget_evp_2 (h:o≠0):  Option.iget (n2o o) = o-1:= by
   have asd : o = (o-1)+1 := by exact Eq.symm (succ_pred_eq_of_ne_zero h)
   rw [asd]
@@ -112,14 +102,10 @@ def c_opt_getD := c_ifz.comp₃ left right (c_opt_iget.comp left)
   simp [c_opt_getD]
   by_cases ho:o=0
   · simp [ho];
-    simp [n2o0]
-  · 
+  ·
     have asd := exists_add_one_eq.mpr (one_le_iff_ne_zero.mpr ho)
     rcases asd with ⟨k,hk⟩
     simp [←hk]
-    have rwma : n2o (k + 1) = Option.some k := by exact rfl
-    rw [rwma]
-    rfl
 @[simp] theorem c_opt_getD_ev:eval O c_opt_getD (Nat.pair o d) = (n2o o).getD d := by simp [← eval_prim_eq_eval c_opt_getD_ev_pr]
 end Nat.RecursiveIn.Code
 end opt_getD
@@ -154,7 +140,7 @@ def c_opt_bind (cf cg:Code) :=  c_ifz.comp₃ cf zero (cg.comp₂ c_id (c_opt_ig
   -- sorry
   simp [c_opt_bind,eval_prim]
   cases Classical.em (eval_prim O cf x = 0) with
-  | inl h => simp [h, n2o0]
+  | inl h => simp [h]
   | inr h =>
     simp [h]
     simp [isSome.bind $ hnat_6 h]
@@ -185,7 +171,7 @@ def c_opt_bind' (cf cg:Code) :=  c_ifz.comp₃ cf zero cg
   -- sorry
   simp [c_opt_bind',eval_prim]
   cases Classical.em (eval_prim O cf x = 0) with
-  | inl h => simp [h, n2o0]
+  | inl h => simp [h]
   | inr h =>
     simp [h]
     simp [isSome.bind $ hnat_6 h]
@@ -222,7 +208,7 @@ def c_part_bind (cf cg:Code) := cg.comp₂ c_id cf
 --     congr
 --     exact Eq.symm hnat_7
 
-@[simp] theorem c_part_bind_ev : eval O (c_part_bind cf cg) x = 
+@[simp] theorem c_part_bind_ev : eval O (c_part_bind cf cg) x =
   do
     let t ← eval O cf x
     let r ← eval O cg (Nat.pair x t)

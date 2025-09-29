@@ -8,18 +8,13 @@ namespace Nat.RecursiveIn.Code
 Given a code `c`, `dovetail c` gives the code to the function which, on input n,
 returns `y` s.t. `[c](n,y)=0`.
 -/
--- noncomputable def dovetail_aux (c:Code) : Code := c_evaln.comp₃ (left) c right
--- noncomputable def dovetail (c:Code) : Code := (c_rfind (c_evaln.comp₃ (pair left (left.comp right)) (c_const c) (right.comp right)))
+
 @[irreducible] def dovetail (c:Code) : Code :=
   c_rfind $
   c_if_eq'.comp₂
   (c_evaln.comp₃ (pair left (left.comp right)) (c_const c) (right.comp right))
   (c_const 1)
--- noncomputable def dovetail (c:Code) : Code := (rfind' (c_evaln.comp₃ (pair left (right.comp left)) (c_const c) (right.comp right))).comp₂ c_id zero
--- theorem dovetail_evp_0 (hc:code_prim c) : y∈eval O (dovetail c) x → eval O c (Nat.pair x y)=0 := by sorry
--- theorem dovetail_evp_0' (hc:code_prim c) (h:(eval O (dovetail c) x).Dom) : eval_prim O c (Nat.pair x ((eval O (dovetail c) x).get h))=0 := by sorry
--- theorem dovetail_evp_1 (hc:code_prim c) : eval O (dovetail c) x=Part.none ↔ ∀ y, eval_prim O c (Nat.pair x y)=0 := by sorry
--- theorem dovetail_ev_0 : y∈eval O (dovetail c) x → eval O c (Nat.pair x y)=0 := by sorry
+
 theorem dovetail_ev_0 (h:(eval O (dovetail c) x).Dom) :
 let dvt := (eval O (dovetail c) x).get h
 evaln O dvt.r c (Nat.pair x (dvt.l))=Option.some 0 := by
@@ -47,9 +42,6 @@ eval O c (Nat.pair x (dvt.l))=Part.some 0 := by
   expose_names
   extract_lets at this
   exact Part.eq_some_iff.mpr (evaln_sound this)
--- theorem dovetail_ev_0'' (h:(eval O (dovetail c) x).Dom) : ∃ y, eval O c (Nat.pair x y)=Part.some 0 := by sorry
--- let dvt := (eval O (dovetail c) x).get h
--- evaln O dvt.r c (Nat.pair x (dvt.l))=Option.some 0
 
 theorem dovetail_ev_1' : eval O (dovetail c) x=Part.none ↔ ∀ s y, evaln O s c (Nat.pair x y)≠Option.some 0 := by
   constructor

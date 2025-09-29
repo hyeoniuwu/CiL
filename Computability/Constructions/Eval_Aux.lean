@@ -25,7 +25,7 @@ theorem c_rfind_prop : eval O (c_rfind c) a = (rfind O c a) := by
   unfold c_rfind
   unfold rfind
   rw [←rfind'_eqv_rfind]
-  simp [eval,Seq.seq,pure,PFun.pure]
+  simp [eval,Seq.seq]
 
 theorem c_rfind_prop2 : eval O (c_rfind c) a = (Nat.rfind (fun x => n2b' <$> eval O c (Nat.pair a x))) := by
   simp [c_rfind_prop]
@@ -61,8 +61,8 @@ theorem c_ofOption_ev (hc1:code_total O c) : eval O (c_ofOption c) x = ↑(n2o (
   simp [eval]
   simp [Part.Dom.bind (hc1 x)]
   cases (eval O c x).get (hc1 x) with
-  | zero => simp; exact rfl
-  | succ n => simp; exact rfl
+  | zero => simp;
+  | succ n => simp;
 
 -- def c_rfindOpt (c:Code) := (c_ofOption c).comp (c_rfind (c_isSome.comp (c.comp right)))
 def c_rfindOpt (c:Code) := (c_ofOption c).comp₂ c_id (c_rfind (c_isSome.comp (c)))
@@ -90,8 +90,8 @@ def c_rfindOpt (c:Code) := (c_ofOption c).comp₂ c_id (c_rfind (c_isSome.comp (
   simp [Part.Dom.bind hh]
   -- have : ((eval O c ((Nat.rfind fun n ↦ Part.some (n2o ((eval O c (Nat.pair x n)).get (hc1 (Nat.pair x n)))).isSome).get hh))).Dom := by exact hc1 ((Nat.rfind fun n ↦ Part.some (n2o ((eval O c (Nat.pair x n)).get (hc1 (Nat.pair x n)))).isSome).get hh)
   -- congr
-  
-  
+
+
   else
   simp [Part.eq_none_iff'.mpr hh]
   simp [Seq.seq]

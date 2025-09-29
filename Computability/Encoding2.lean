@@ -460,7 +460,8 @@ end
   for `b < a`
 -/
 def eval (O : ℕ → ℕ) : Code → ℕ →. ℕ
-| zero => pure 0
+-- | zero => pure 0
+| zero => λ _ ↦ Part.some 0
 | succ => fun n => some (n + 1)
 | left => fun n => some (Nat.unpair n).1
 | right => fun n => some (Nat.unpair n).2

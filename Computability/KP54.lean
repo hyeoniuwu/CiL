@@ -36,7 +36,6 @@ theorem c_kp54_aux_evp :
   simp [c_kp54_aux, -Denumerable.list_ofNat_succ]
   simp [Nat.RecursiveIn.Code.eval, -Denumerable.list_ofNat_succ]
   simp [Seq.seq, -Denumerable.list_ofNat_succ]
-  congr
 theorem c_kp54_aux_2 (halts:(eval Nat.fzero (dovetail (c_kp54_aux i lb)) Aₚ).Dom) :
   have dvt := (eval Nat.fzero (dovetail (c_kp54_aux i lb)) Aₚ).get halts
   (evals ((n2l Aₚ) ++ (n2l (dvt.l+1))) i lb).Dom := by

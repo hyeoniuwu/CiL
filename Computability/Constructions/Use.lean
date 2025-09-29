@@ -476,7 +476,7 @@ theorem c_usen_evp_aux_nMod4 :
           rw [this]
 
           cases Classical.em (pc_ml_s left ((evaln O (s + 1) (decodeCode mr) elem).get (Option.isSome_iff_ne_none.mpr hhh)) = 0) with
-          | inl hhhh => simp [hhhh, n2o0]
+          | inl hhhh => simp [hhhh]
           | inr hhhh =>
             simp [not_none_imp_not_zero hhhh, hnat_to_opt_2 hhhh]
             simp [hnat_5 hhhh]
@@ -532,11 +532,11 @@ theorem c_usen_evp_aux_nMod4 :
             simp [isSome.bind $ isSome_iff_not_none.mp hh]
             simp [hprec_usen_indt elem (isSome_iff_not_none.mp hh )]
             cases Classical.em ((pc_mr_s left (Nat.pair elem.l (Nat.pair (elem.r - 1) ((evaln O s (decodeCode (n + 4 + 1)) (Nat.pair elem.l (elem.r - 1))).get (isSome_iff_not_none.mp hh ))))) = o2n Option.none ) with
-            | inl hhh => simp [hhh, n2o0]
+            | inl hhh => simp [hhh]
             | inr hhh =>
               simp [not_none_imp_not_zero hhh, hnat_to_opt_2 hhh]
               cases Classical.em (pc_c_sM1 left (Nat.pair elem.l (elem.r - 1)) = o2n Option.none )  with
-              | inl hhhh => simp [hhhh, n2o0]
+              | inl hhhh => simp [hhhh]
               | inr hhhh => simp [not_none_imp_not_zero hhhh, hnat_to_opt_2 hhhh]
   have hprec_mapped:eval_prim O prec_mapped covrec_inp = (map (opt_prec) (range (s+1))) := by simp [prec_mapped, hs,hopt_prec]
 
@@ -569,7 +569,7 @@ theorem c_usen_evp_aux_nMod4 :
             simp [isSome.bind $ isSome_iff_not_none.mp hhh]
             simp [iget_eq_get $ isSome_iff_not_none.mp hhh]
             cases (evaln O (s + 1) (decodeCode m) elem).get (isSome_iff_not_none.mp hhh) with
-            | zero => simp; exact hnat_to_opt_1_aux (not_none_imp_not_zero hh)
+            | zero => simp; exact ge_0_rw (not_none_imp_not_zero hh)
             | succ _ =>
               simp [hrfind'_usen_indt]
               cases Classical.em ( pc_c_sM1 left (Nat.pair elem.l (elem.r + 1))=o2n Option.none) with
