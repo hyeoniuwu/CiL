@@ -105,17 +105,7 @@ def c_evaln_aux :=
 
 /-- api: `Nat.pair x (Nat.pair code s)` -/
 def c_evaln :=
-  -- let code_s := right
-  -- let x := left
   c_list_getI.comp₂ (c_list_getLastI.comp $ c_evaln_aux.comp (pair (c_const 17) right)) left
-
--- set_option maxHeartbeats 3 in
--- set_option maxRecDepth 600 in
--- @[simp] theorem c_evaln_ev_pr:code_prim (c_evaln) := by
---   unfold c_evaln;
---   -- repeat (first|assumption|simp|constructor)
---   first|assumption|simp|constructor
--- #exit
 theorem c_evaln_evp_aux_x_0_0 : eval_prim O (c_evaln) (Nat.pair x (Nat.pair 0 0)) = o2n (evaln O 0 0 x) := by
   unfold c_evaln; unfold c_evaln_aux
   lift_lets
@@ -143,7 +133,7 @@ theorem c_evaln_evp_aux_0_np1 : eval_prim O (c_evaln) (Nat.pair x (Nat.pair (n+1
   let covrec_inp := Nat.pair 17 (Nat.pair k (eval_prim O c_evaln_aux (Nat.pair 17 k)))
   have covrec_inp_simp : Nat.pair 17 (Nat.pair k (eval_prim O c_evaln_aux (Nat.pair 17 k))) = covrec_inp := rfl
 
-  
+
   simp
   have stupidrewrite :
   (eval_prim O
@@ -528,13 +518,10 @@ theorem c_evaln_evp_aux_nMod4 :
         | inr hh =>
           simp [hpc_ml_s]
           simp [hnat_to_opt_2 hh]
-          -- simp [hpc_mlmr_s_lookup]
           simp [not_none_imp_not_zero hh]
-          -- rw [hnat_to_opt_1 hh]
-          -- simp [Option.bind]
           cases Classical.em (pc_ml_s (c_pred.comp (pc_mr_s_1 left)) elem=o2n Option.none) with
           | inl hhh =>
-            simp [hhh];
+            simp [hhh]
             simp [pc_ml_s] at hhh
             simp [hpc_mr_s] at hhh
             simp [pc_ml_s]
@@ -545,7 +532,6 @@ theorem c_evaln_evp_aux_nMod4 :
             simp [hpc_mr_s]
       | inr h => simp [h, gt_of_not_le h, Option.bind]
   have hcomp_mapped:eval_prim O comp_mapped covrec_inp = (map (opt_comp) (range (s+1))) := by simp [comp_mapped, hs,hopt_comp]
-
   have hprec_x (elem) : eval_prim O prec_x (Nat.pair elem covrec_inp) = elem.l := by simp [prec_x,ele]
   have hprec_i (elem) : eval_prim O prec_i (Nat.pair elem covrec_inp) = elem.r := by simp [prec_i,ele]
   have hprec_iM1 (elem) : eval_prim O prec_iM1 (Nat.pair elem covrec_inp) = elem.r-1 := by simp [prec_iM1,hprec_i]
@@ -557,8 +543,6 @@ theorem c_evaln_evp_aux_nMod4 :
       funext elem
       simp [opt_prec_1]
       simp [hsM1,ele]
-
-
       simp
       [
         prec_base_case,
@@ -577,21 +561,19 @@ theorem c_evaln_evp_aux_nMod4 :
           simp [pc_ml_s]
           simp [hprec_x,hprec_i,helemr]
         | succ nn =>
-          simp [prec_i,ele,helemr]
+          simp [hprec_i,helemr]
+          simp [hpc_c_sM1]
 
           simp [pc_c_sM1]
 
-          simp [hpc_c_sM1 ((prec_x.pair prec_iM1)) elem]
           have rw_elemr : nn = elem.r-1 := by simp [helemr]
           rw [rw_elemr]
 
-          simp [pc_c_sM1]
           simp [hprec_x, hprec_iM1]
 
 
           cases Classical.em ((eval_prim O c_evaln (Nat.pair (Nat.pair elem.l (elem.r - 1)) (Nat.pair (n + 4 + 1) s))) = o2n Option.none) with
-          | inl hh =>
-            simp [hh, hnat_to_opt_0]
+          | inl hh => simp [hh, hnat_to_opt_0]
           | inr hh =>
             simp [not_none_imp_not_zero hh]
             rw [hnat_to_opt_2 hh]
@@ -894,10 +876,10 @@ theorem c_evaln_evp_aux_nMod4 :
   have cp_rfind'_indt : code_prim rfind'_indt := by apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
   have cp_opt_rfind' : code_prim opt_rfind' := by apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
   have cp_rfind'_mapped : code_prim rfind'_mapped := by apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
-  
+
   apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
 
-  
+
 
 @[cp] theorem c_evaln_ev_pr : code_prim (c_evaln) := by
   unfold c_evaln
@@ -913,7 +895,7 @@ theorem c_evaln_evp_aux_nMod4 :
   rw (config:={occs:=.pos [1]}) [this]
   exact c_evaln_evp
 -- theorem Nat.PrimrecIn.evaln:Nat.PrimrecIn O (fun x => o2n $ evaln O x.r.r x.r.l x.l) := by
-  
+
 --   rw [← c_evaln_evp]; apply code_prim_prop c_evaln_ev_pr
 end Nat.RecursiveIn.Code
 -- theorem Nat.Primrec.evaln:Nat.Primrec (unpaired evaln) := by exact PrimrecIn.PrimrecIn_Empty PrimrecIn.evaln

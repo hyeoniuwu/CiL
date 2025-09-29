@@ -1541,14 +1541,12 @@ lemma lemlemlem2
 
   induction roM1 generalizing a with
   | zero =>
-    simp
     simp [isSome.bind u0]
     simp [isSome.bind u1]
-    simp [add_comm]
+    ac_nf
     rw (config:={occs:=.pos [2]}) [Nat.max_comm]
     apply congrArg
-    rw [Nat.max_comm]
-    rw (config:={occs:=.pos [2]}) [Nat.max_comm]
+    apply congrFun
     apply congrArg
     apply usen_sing'
 
@@ -1565,10 +1563,9 @@ lemma lemlemlem2
     simp at urom
     rw [add_assoc] at urom
     rw (config:={occs:=.pos [3]}) [add_comm] at urom
-    -- simp [isSome.bind urom] at hkk ⊢
     simp [isSome.bind urom]
 
-    have urom2:(usen O cf (k +1 - (roM2+1)) (Nat.pair x.l ((roM2+1) + x.r))).isSome := nrop2 (roM2+1) (le_add_right (roM2 + 1) 1)
+    have urom2 : (usen O cf (k +1 - (roM2+1)) (Nat.pair x.l ((roM2+1) + x.r))).isSome := nrop2 (roM2+1) (le_add_right (roM2 + 1) 1)
     simp at urom2
     simp [isSome.bind urom2]
 
@@ -1588,7 +1585,6 @@ lemma lemlemlem2
       exact usen_sing'
     rw [this]
 
-theorem opt_aux {o1 o2 : Option ℕ} (h:∀ y,y∈o1↔y∈o2) : o1=o2 := by exact Option.eq_of_eq_some h
 theorem usen_rfind_prop2 :
 (y ∈ usen O cf.rfind' (k + 1) x)
 ↔
