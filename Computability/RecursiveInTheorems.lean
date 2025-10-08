@@ -1,4 +1,4 @@
-import Computability.Encoding2
+import Computability.Encoding
 import Computability.Label
 import Computability.Basic
 import Mathlib.Data.PFun
