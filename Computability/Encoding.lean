@@ -1,6 +1,4 @@
--- import Computability.Oracle
 import Computability.Oracle
--- import Computability.PrimrecIn
 import Mathlib.Data.Option.Basic
 import Mathlib.Logic.Encodable.Pi
 import Mathlib.Algebra.Order.Ring.Nat
@@ -9,33 +7,6 @@ open Nat
 open Encodable Denumerable
 
 
--- namespace Nat.RecursiveIn
-
-
--- #check Computable.comp
-
--- theorem Nat.RecursiveIn.rfind' {f} (hf : Nat.RecursiveIn O f) :
---     Nat.RecursiveIn O
---       (Nat.unpaired fun a m =>
---         (Nat.rfind fun n => (fun m => m = 0) <$> f (Nat.pair a (n + m))).map (· + m)) :=
---   RecursiveIn₂.unpaired'.2 <| by
---     refine
---       RecursiveIn.map
---         ((@RecursiveIn₂.unpaired' O fun a b : ℕ =>
---               Nat.rfind fun n => (fun m => m = 0) <$> f (Nat.pair a (n + b))).1
---           ?_)
---         (PrimrecIn.nat_add.comp PrimrecIn.snd <| PrimrecIn.snd.comp PrimrecIn.fst).to_compIn.to₂
---         -- (ComputableIn.to₂ (ComputableIn O₂.to_compIn (PrimrecIn.nat_add.comp PrimrecIn.snd <| PrimrecIn.snd.comp PrimrecIn.fst)))
---     have : Nat.RecursiveIn O (fun a => Nat.rfind (fun n => (fun m => decide (m = 0)) <$>
---       Nat.unpaired (fun a b => f (Nat.pair (Nat.unpair a).1 (b + (Nat.unpair a).2)))
---         (Nat.pair a n))) :=
---       Nat.RecursiveIn.rfind
---         (RecursiveIn₂.unpaired'.2
---           ((RecursiveIn.nat_iff.2 hf).comp
---               (PrimrecIn₂.pair.comp (PrimrecIn.fst.comp <| PrimrecIn.unpair.comp PrimrecIn.fst)
---                   (PrimrecIn.nat_add.comp PrimrecIn.snd
---                     (PrimrecIn.snd.comp <| PrimrecIn.unpair.comp PrimrecIn.fst))).to_compIn))
---     simpa
 namespace Computability
 inductive Code : Type
 | zero : Code
@@ -356,7 +327,7 @@ theorem evaln_bound : ∀ {k c n x}, x ∈ evaln O k c n → n < k
   | k + 1, c, n, x, h => by
     suffices ∀ {o : Option ℕ}, x ∈ do { guard (n ≤ k); o } → n < k + 1 by
       cases c <;> rw [evaln] at h <;> exact this h
-    simpa [Option.bind_eq_some] using Nat.lt_succ_of_le
+    simpa [Option.bind_eq_some_iff] using Nat.lt_succ_of_le
 
 theorem evaln_mono : ∀ {k₁ k₂ c n x}, k₁ ≤ k₂ → x ∈ evaln O k₁ c n → x ∈ evaln O k₂ c n
   | 0, k₂, c, n, x, _, h => by simp [evaln] at h
@@ -366,7 +337,7 @@ theorem evaln_mono : ∀ {k₁ k₂ c n x}, k₁ ≤ k₂ → x ∈ evaln O k₁
       ∀ {k k₂ n x : ℕ} {o₁ o₂ : Option ℕ},
         k ≤ k₂ → (x ∈ o₁ → x ∈ o₂) →
           x ∈ do { guard (n ≤ k); o₁ } → x ∈ do { guard (n ≤ k₂); o₂ } := by
-      simp only [Option.mem_def, bind, Option.bind_eq_some, Option.guard_eq_some', exists_and_left,
+      simp only [Option.mem_def, bind, Option.bind_eq_some_iff, Option.guard_eq_some', exists_and_left,
         exists_const, and_imp]
       introv h h₁ h₂ h₃
       exact ⟨le_trans h₂ h, h₁ h₃⟩
@@ -375,24 +346,24 @@ theorem evaln_mono : ∀ {k₁ k₂ c n x}, k₁ ≤ k₂ → x ∈ evaln O k₁
       rw [evaln] at h ⊢ <;> refine this hl' (fun h => ?_) h
     iterate 5 exact h
     · -- pair cf cg
-      simp? [Seq.seq, Option.bind_eq_some] at h ⊢ says
-        simp only [Seq.seq, Option.map_eq_map, Option.mem_def, Option.bind_eq_some,
-          Option.map_eq_some', exists_exists_and_eq_and] at h ⊢
+      simp? [Seq.seq, Option.bind_eq_some_iff] at h ⊢ says
+        simp only [Seq.seq, Option.map_eq_map, Option.mem_def, Option.bind_eq_some_iff,
+          Option.map_eq_some_iff, exists_exists_and_eq_and] at h ⊢
       exact h.imp fun a => And.imp (hf _ _) <| Exists.imp fun b => And.imp_left (hg _ _)
     · -- comp cf cg
-      simp? [Bind.bind, Option.bind_eq_some] at h ⊢ says
-        simp only [bind, Option.mem_def, Option.bind_eq_some] at h ⊢
+      simp? [Bind.bind, Option.bind_eq_some_iff] at h ⊢ says
+        simp only [bind, Option.mem_def, Option.bind_eq_some_iff] at h ⊢
       exact h.imp fun a => And.imp (hg _ _) (hf _ _)
     · -- prec cf cg
       revert h
       simp only [unpaired, bind, Option.mem_def]
-      induction n.unpair.2 <;> simp [Option.bind_eq_some]
+      induction n.unpair.2 <;> simp [Option.bind_eq_some_iff]
       · apply hf
       · exact fun y h₁ h₂ => ⟨y, evaln_mono hl' h₁, hg _ _ h₂⟩
     · -- rfind' cf
-      simp? [Bind.bind, Option.bind_eq_some] at h ⊢ says
+      simp? [Bind.bind, Option.bind_eq_some_iff] at h ⊢ says
         simp only [unpaired, bind, pair_unpair, Option.pure_def, Option.mem_def,
-          Option.bind_eq_some] at h ⊢
+          Option.bind_eq_some_iff] at h ⊢
       refine h.imp fun x => And.imp (hf _ _) ?_
       by_cases x0 : x = 0 <;> simp [x0]
       exact evaln_mono hl'
@@ -401,7 +372,7 @@ theorem evaln_sound : ∀ {k c n x}, x ∈ evaln O k c n → x ∈ eval O c n
   | 0, _, n, x, h => by simp [evaln] at h
   | k + 1, c, n, x, h => by
     induction' c with cf cg hf hg cf cg hf hg cf cg hf hg cf hf generalizing x n <;>
-        simp [eval, evaln, Option.bind_eq_some, Seq.seq] at h ⊢ <;>
+        simp [eval, evaln, Option.bind_eq_some_iff, Seq.seq] at h ⊢ <;>
       obtain ⟨_, h⟩ := h
     iterate 5 simpa [pure, PFun.pure, eq_comm] using h
     · -- pair cf cg
@@ -412,11 +383,11 @@ theorem evaln_sound : ∀ {k c n x}, x ∈ evaln O k c n → x ∈ eval O c n
       exact ⟨_, hg _ _ eg, hf _ _ ef⟩
     · -- prec cf cg
       revert h
-      induction' n.unpair.2 with m IH generalizing x <;> simp [Option.bind_eq_some]
+      induction' n.unpair.2 with m IH generalizing x <;> simp [Option.bind_eq_some_iff]
       · apply hf
       · refine fun y h₁ h₂ => ⟨y, IH _ ?_, ?_⟩
         · have := evaln_mono k.le_succ h₁
-          simp [evaln, Option.bind_eq_some] at this
+          simp [evaln, Option.bind_eq_some_iff] at this
           exact this.2
         · exact hg _ _ h₂
     · -- rfind' cf
@@ -440,7 +411,7 @@ theorem evaln_complete {c n x} : x ∈ eval O c n ↔ ∃ k, x ∈ evaln O k c n
   rsuffices ⟨k, h⟩ : ∃ k, x ∈ evaln O (k + 1) c n
   · exact ⟨k + 1, h⟩
   induction c generalizing n x with
-      simp [eval, evaln, pure, PFun.pure, Seq.seq, Option.bind_eq_some] at h ⊢
+      simp [eval, evaln, pure, Seq.seq, Option.bind_eq_some_iff] at h ⊢
   | pair cf cg hf hg =>
     rcases h with ⟨x, hx, y, hy, rfl⟩
     rcases hf hx with ⟨k₁, hk₁⟩; rcases hg hy with ⟨k₂, hk₂⟩
@@ -460,7 +431,7 @@ theorem evaln_complete {c n x} : x ∈ eval O c n ↔ ∃ k, x ∈ evaln O k c n
   | prec cf cg hf hg =>
     revert h
     generalize n.unpair.1 = n₁; generalize n.unpair.2 = n₂
-    induction' n₂ with m IH generalizing x n <;> simp [Option.bind_eq_some]
+    induction' n₂ with m IH generalizing x n <;> simp [Option.bind_eq_some_iff]
     · intro h
       rcases hf h with ⟨k, hk⟩
       exact ⟨_, le_max_left _ _, evaln_mono (Nat.succ_le_succ <| le_max_right _ _) hk⟩
@@ -473,18 +444,18 @@ theorem evaln_complete {c n x} : x ∈ eval O c n ↔ ∃ k, x ∈ evaln O k c n
             le_trans (le_max_left _ (Nat.pair n₁ m)) nk₁, y,
           evaln_mono (Nat.succ_le_succ <| le_max_left _ _) ?_,
           evaln_mono (Nat.succ_le_succ <| Nat.le_succ_of_le <| le_max_right _ _) hk₂⟩
-      simp only [evaln, bind, unpaired, unpair_pair, Option.mem_def, Option.bind_eq_some,
+      simp only [evaln, bind, unpaired, unpair_pair, Option.mem_def, Option.bind_eq_some_iff,
         Option.guard_eq_some', exists_and_left, exists_const]
       exact ⟨le_trans (le_max_right _ _) nk₁, hk₁⟩
 
   | rfind' cf hf =>
     rcases h with ⟨y, ⟨hy₁, hy₂⟩, rfl⟩
     suffices ∃ k, y + n.unpair.2 ∈ evaln O (k + 1) (rfind' cf) (Nat.pair n.unpair.1 n.unpair.2) by
-      simpa [evaln, Option.bind_eq_some]
+      simpa [evaln, Option.bind_eq_some_iff]
     revert hy₁ hy₂
     generalize n.unpair.2 = m
     intro hy₁ hy₂
-    induction' y with y IH generalizing m <;> simp [evaln, Option.bind_eq_some]
+    induction' y with y IH generalizing m <;> simp [evaln, Option.bind_eq_some_iff]
     · simp at hy₁
       rcases hf hy₁ with ⟨k, hk⟩
       exact ⟨_, Nat.le_of_lt_succ <| evaln_bound hk, _, hk, by simp⟩
