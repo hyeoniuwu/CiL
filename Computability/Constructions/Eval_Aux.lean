@@ -20,7 +20,7 @@ theorem rfind'_eqv_rfind : ((Nat.unpaired fun a m => (Nat.rfind fun n => (fun m 
 def c_rfind : Computability.Code→Computability.Code := fun c => (rfind' c).comp (pair c_id zero)
 
 /-- Given a code `c` -/
-abbrev rfind (O:ℕ→ℕ) : ℕ→ℕ→.ℕ := fun c => fun a=> Nat.rfind fun n => (fun m => m = 0) <$> eval O c (Nat.pair a n)
+abbrev rfind (O:ℕ→ℕ) : Code→ℕ→.ℕ := fun c => fun a=> Nat.rfind fun n => (fun m => m = 0) <$> eval O c (Nat.pair a n)
 theorem c_rfind_prop : eval O (c_rfind c) a = (rfind O c a) := by
   unfold c_rfind
   unfold rfind

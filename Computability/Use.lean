@@ -3586,13 +3586,13 @@ use O₁ c x = use O₂ c x
   rw [usen_sound' (en2un h4)]
   simp [this]
 
-theorem use_principle_evaln {O₁ O₂:ℕ→ℕ} {s c x:ℕ} (hh:(evaln O₁ s c x).isSome) (hO: ∀ i<(usen O₁ c s x).get (en2un hh), O₁ i = O₂ i) : evaln O₁ s c x = evaln O₂ s c x :=
+theorem use_principle_evaln {O₁ O₂:ℕ→ℕ} {s c x} (hh:(evaln O₁ s c x).isSome) (hO: ∀ i<(usen O₁ c s x).get (en2un hh), O₁ i = O₂ i) : evaln O₁ s c x = evaln O₂ s c x :=
   (up_to_usen hh hO).left
-theorem use_principle_usen {O₁ O₂:ℕ→ℕ} {s c x:ℕ} (hh:(evaln O₁ s c x).isSome) (hO: ∀ i<(usen O₁ c s x).get (en2un hh), O₁ i = O₂ i) : usen O₁ c s x = usen O₂ c s x :=
+theorem use_principle_usen {O₁ O₂:ℕ→ℕ} {s c x} (hh:(evaln O₁ s c x).isSome) (hO: ∀ i<(usen O₁ c s x).get (en2un hh), O₁ i = O₂ i) : usen O₁ c s x = usen O₂ c s x :=
   (up_to_usen hh hO).right
-theorem use_principle_eval {O₁ O₂:ℕ→ℕ} {c x:ℕ} (hh:(eval O₁ c x).Dom) (hO: ∀ i<(use O₁ c x).get (e2u hh), O₁ i = O₂ i) : eval O₁ c x = eval O₂ c x :=
+theorem use_principle_eval {O₁ O₂:ℕ→ℕ} {c x} (hh:(eval O₁ c x).Dom) (hO: ∀ i<(use O₁ c x).get (e2u hh), O₁ i = O₂ i) : eval O₁ c x = eval O₂ c x :=
   (up_to_use hh hO).left
-theorem use_principle_use {O₁ O₂:ℕ→ℕ} {c x:ℕ} (hh:(eval O₁ c x).Dom) (hO: ∀ i<(use O₁ c x).get (e2u hh), O₁ i = O₂ i) : use O₁ c x = use O₂ c x :=
+theorem use_principle_use {O₁ O₂:ℕ→ℕ} {c x} (hh:(eval O₁ c x).Dom) (hO: ∀ i<(use O₁ c x).get (e2u hh), O₁ i = O₂ i) : use O₁ c x = use O₂ c x :=
   (up_to_use hh hO).right
 
 

@@ -67,12 +67,13 @@ def c_id := left.pair right
 @[cp] theorem c_id_ev_pr:code_prim c_id := by
   unfold c_id
   apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
-@[simp] theorem c_id_evp:eval_prim O c_id n= n := by simp [c_id,eval_prim]
+@[simp] theorem c_id_evp:eval_prim O c_id n = n := by simp [c_id,eval_prim]
+theorem c_id_evp':eval_prim O c_id = id := by funext x; simp
 @[simp] theorem c_id_ev:eval O c_id n = n := by simp [c_id,eval,Seq.seq]
   -- #check @eval_prim_eq_eval c_id O c_id_ev_pr
   -- apply (@eval_prim_eq_eval c_id O c_id_ev_pr)
 end Computability.Code
--- theorem Nat.PrimrecIn.id:Nat.PrimrecIn O Nat.id := by ...
+theorem Nat.PrimrecIn.id:Nat.PrimrecIn O id := by rw [← c_id_evp']; exact code_prim_prop
 -- theorem Nat.Primrec.id:Nat.Primrec Nat.id := by ...
 end id
 section const
@@ -154,8 +155,6 @@ def c_sg' := comp (prec (c_const 1) (((zero).comp left).comp left)) (pair zero c
 end Computability.Code
 theorem Nat.PrimrecIn.sg:Nat.PrimrecIn O Nat.sg := by rw [←c_sg_evp]; exact code_prim_prop
 theorem Nat.PrimrecIn.sg':Nat.PrimrecIn O Nat.sg' := by rw [←c_sg'_evp]; exact code_prim_prop
-theorem Nat.Primrec.sg:Nat.Primrec Nat.sg := by exact PrimrecIn.PrimrecIn_Empty PrimrecIn.sg
-theorem Nat.Primrec.sg':Nat.Primrec Nat.sg' := by exact PrimrecIn.PrimrecIn_Empty PrimrecIn.sg'
 
 @[simp] abbrev c_not := c_sg'
 
@@ -517,7 +516,7 @@ end mul2
 
 
 namespace Computability.Code
-def c_zero := c_const zero
+def c_zero := c_const (c2n zero)
 @[cp] theorem c_zero_ev_pr:code_prim c_zero := by
   unfold c_zero
   apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
@@ -525,7 +524,7 @@ def c_zero := c_const zero
 @[simp] theorem c_zero_evp' : eval_prim O c_zero = fun _:ℕ => c2n (zero) := by funext x; simp
 @[simp] theorem c_zero_ev:eval O c_zero x = c2n zero := by rw [← eval_prim_eq_eval c_zero_ev_pr]; simp
 @[simp] theorem Nat.PrimrecIn.c_zero : Nat.PrimrecIn O (fun _:ℕ => c2n zero) := by rw [←c_zero_evp']; exact code_prim_prop
-def c_succ := c_const succ
+def c_succ := c_const (c2n succ)
 @[cp] theorem c_succ_ev_pr:code_prim c_succ := by
   unfold c_succ
   apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
@@ -533,7 +532,7 @@ def c_succ := c_const succ
 @[simp] theorem c_succ_evp' : eval_prim O c_succ = fun _:ℕ => c2n (succ) := by funext x; simp
 @[simp] theorem c_succ_ev:eval O c_succ x = c2n succ := by rw [← eval_prim_eq_eval c_succ_ev_pr]; simp
 @[simp] theorem Nat.PrimrecIn.c_succ : Nat.PrimrecIn O (fun _:ℕ => c2n succ) := by rw [←c_succ_evp']; exact code_prim_prop
-def c_left := c_const left
+def c_left := c_const (c2n left)
 @[cp] theorem c_left_ev_pr:code_prim c_left := by
   unfold c_left
   apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
@@ -541,7 +540,7 @@ def c_left := c_const left
 @[simp] theorem c_left_evp' : eval_prim O c_left = fun _:ℕ => c2n (left) := by funext x; simp
 @[simp] theorem c_left_ev:eval O c_left x = c2n left := by rw [← eval_prim_eq_eval c_left_ev_pr]; simp
 @[simp] theorem Nat.PrimrecIn.c_left : Nat.PrimrecIn O (fun _:ℕ => c2n left) := by rw [←c_left_evp']; exact code_prim_prop
-def c_right := c_const right
+def c_right := c_const (c2n right)
 @[cp] theorem c_right_ev_pr:code_prim c_right := by
   unfold c_right
   apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
@@ -549,7 +548,7 @@ def c_right := c_const right
 @[simp] theorem c_right_evp' : eval_prim O c_right = fun _:ℕ => c2n (right) := by funext x; simp
 @[simp] theorem c_right_ev:eval O c_right x = c2n right := by rw [← eval_prim_eq_eval c_right_ev_pr]; simp
 @[simp] theorem Nat.PrimrecIn.c_right : Nat.PrimrecIn O (fun _:ℕ => c2n right) := by rw [←c_right_evp']; exact code_prim_prop
-def c_oracle := c_const oracle
+def c_oracle := c_const (c2n oracle)
 @[cp] theorem c_oracle_ev_pr:code_prim c_oracle := by
   unfold c_oracle
   apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
@@ -562,37 +561,37 @@ def c_pair := c_add.comp₂ (c_mul2.comp $ c_mul2) (c_const 5)
 @[cp] theorem c_pair_ev_pr:code_prim c_pair := by
   unfold c_pair
   apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
-@[simp] theorem c_pair_evp : eval_prim O c_pair (Nat.pair a b) = c2n (pair a b) := by simp [c2n, c_pair, Nat.mul_comm]
-@[simp] theorem c_pair_evp' : eval_prim O c_pair = fun ab:ℕ => c2n (pair ab.l ab.r) := by simp [c2n, c_pair, Nat.mul_comm]
-@[simp] theorem c_pair_ev:eval O c_pair (Nat.pair a b) = c2n (pair a b) := by rw [← eval_prim_eq_eval c_pair_ev_pr]; simp
-@[simp] theorem Nat.PrimrecIn.c_pair : Nat.PrimrecIn O (fun ab:ℕ => c2n (pair ab.l ab.r)) := by rw [←c_pair_evp']; exact code_prim_prop
+@[simp] theorem c_pair_evp : eval_prim O c_pair (Nat.pair a b) = c2n (pair (n2c a) (n2c b)) := by simp [c2n, c_pair, Nat.mul_comm]
+@[simp] theorem c_pair_evp' : eval_prim O c_pair = fun ab:ℕ => c2n (pair (n2c ab.l) (n2c ab.r)) := by simp [c2n, c_pair, Nat.mul_comm]
+@[simp] theorem c_pair_ev:eval O c_pair (Nat.pair a b) = c2n (pair (n2c a) (n2c b)) := by rw [← eval_prim_eq_eval c_pair_ev_pr]; simp
+@[simp] theorem Nat.PrimrecIn.c_pair : Nat.PrimrecIn O (fun ab:ℕ => c2n (pair (n2c ab.l) (n2c ab.r))) := by rw [←c_pair_evp']; exact code_prim_prop
 
 def c_comp := c_add.comp₂ (c_mul2.comp $ c_mul2) (c_const 6)
 @[cp] theorem c_comp_ev_pr:code_prim c_comp := by
   unfold c_comp
   apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
-@[simp] theorem c_comp_evp : eval_prim O c_comp (Nat.pair a b) = c2n (comp a b) := by simp [c2n, c_comp, Nat.mul_comm]
-@[simp] theorem c_comp_evp' : eval_prim O c_comp = fun ab:ℕ => c2n (comp ab.l ab.r) := by simp [c2n, c_comp, Nat.mul_comm]
-@[simp] theorem c_comp_ev:eval O c_comp (Nat.pair a b) = c2n (comp a b) := by rw [← eval_prim_eq_eval c_comp_ev_pr]; simp
-@[simp] theorem Nat.PrimrecIn.c_comp : Nat.PrimrecIn O (fun ab:ℕ => c2n (comp ab.l ab.r)) := by rw [←c_comp_evp']; exact code_prim_prop
+@[simp] theorem c_comp_evp : eval_prim O c_comp (Nat.pair a b) = c2n (comp (n2c a) (n2c b)) := by simp [c2n, c_comp, Nat.mul_comm]
+@[simp] theorem c_comp_evp' : eval_prim O c_comp = fun ab:ℕ => c2n (comp (n2c ab.l) (n2c ab.r)) := by simp [c2n, c_comp, Nat.mul_comm]
+@[simp] theorem c_comp_ev:eval O c_comp (Nat.pair a b) = c2n (comp (n2c a) (n2c b)) := by rw [← eval_prim_eq_eval c_comp_ev_pr]; simp
+@[simp] theorem Nat.PrimrecIn.c_comp : Nat.PrimrecIn O (fun ab:ℕ => c2n (comp (n2c ab.l) (n2c ab.r))) := by rw [←c_comp_evp']; exact code_prim_prop
 
 def c_prec := c_add.comp₂ (c_mul2.comp $ c_mul2) (c_const 7)
 @[cp] theorem c_prec_ev_pr:code_prim c_prec := by
   unfold c_prec
   apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
-@[simp] theorem c_prec_evp : eval_prim O c_prec (Nat.pair a b) = c2n (prec a b) := by simp [c2n, c_prec, Nat.mul_comm]; exact rfl
-@[simp] theorem c_prec_evp' : eval_prim O c_prec = fun ab:ℕ => c2n (prec ab.l ab.r) := by simp [c2n, c_prec, Nat.mul_comm]; exact rfl
-@[simp] theorem Nat.PrimrecIn.c_prec : Nat.PrimrecIn O (fun ab:ℕ => c2n (prec ab.l ab.r)) := by rw [←c_prec_evp']; exact code_prim_prop
-@[simp] theorem c_prec_ev:eval O c_prec (Nat.pair a b) = c2n (prec a b) := by rw [← eval_prim_eq_eval c_prec_ev_pr]; simp
+@[simp] theorem c_prec_evp : eval_prim O c_prec (Nat.pair a b) = c2n (prec (n2c a) (n2c b)) := by simp [c2n, c_prec, Nat.mul_comm]; exact rfl
+@[simp] theorem c_prec_evp' : eval_prim O c_prec = fun ab:ℕ => c2n (prec (n2c ab.l) (n2c ab.r)) := by simp [c2n, c_prec, Nat.mul_comm]; exact rfl
+@[simp] theorem Nat.PrimrecIn.c_prec : Nat.PrimrecIn O (fun ab:ℕ => c2n (prec (n2c ab.l) (n2c ab.r))) := by rw [←c_prec_evp']; exact code_prim_prop
+@[simp] theorem c_prec_ev:eval O c_prec (Nat.pair a b) = c2n (prec (n2c a) (n2c b)) := by rw [← eval_prim_eq_eval c_prec_ev_pr]; simp
 
 def c_rfind' := c_add.comp₂ (c_mul2.comp $ c_mul2) (c_const 8)
 @[cp] theorem c_rfind'_ev_pr:code_prim c_rfind' := by
   unfold c_rfind'
   apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
-@[simp] theorem c_rfind'_evp : eval_prim O c_rfind' c = c2n (rfind' c) := by simp [c2n, c_rfind', Nat.mul_comm]; exact rfl
-@[simp] theorem c_rfind'_ev:eval O c_rfind' c = c2n (rfind' c) := by rw [← eval_prim_eq_eval c_rfind'_ev_pr]; simp
+@[simp] theorem c_rfind'_evp : eval_prim O c_rfind' c = c2n (rfind' $ n2c c) := by simp [c2n, c_rfind', Nat.mul_comm]; exact rfl
+@[simp] theorem c_rfind'_ev:eval O c_rfind' c = c2n (rfind' $ n2c c) := by rw [← eval_prim_eq_eval c_rfind'_ev_pr]; simp
 
-def c_c_const := (c_nat_iterate (c_comp.comp₂ (c_const succ) (c_id))).comp₂ zero c_id
+def c_c_const := (c_nat_iterate (c_comp.comp₂ (c_const $ c2n succ) (c_id))).comp₂ zero c_id
 @[cp] theorem c_c_const_ev_pr:code_prim c_c_const := by
   unfold c_c_const
   apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
@@ -619,10 +618,10 @@ def c_ev_const := c_comp.comp₂ left (c_c_const.comp right)
 @[cp] theorem c_ev_const_ev_pr:code_prim c_ev_const := by
   unfold c_ev_const
   apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
-theorem c_ev_const_evp' : eval_prim O c_ev_const x = c2n (comp x.l (c_const x.r)) := by simp [c_ev_const]
-@[simp] theorem c_ev_const_evp : eval_prim O c_ev_const (Nat.pair e x) = c2n (comp e (c_const x)) := by simp [c_ev_const_evp']
-theorem c_ev_const_ev':eval O c_ev_const x = c2n (comp x.l (c_const x.r)) := by rw [← eval_prim_eq_eval c_ev_const_ev_pr]; simp [c_ev_const_evp']
-@[simp] theorem c_ev_const_ev:eval O c_ev_const (Nat.pair e x) = c2n (comp e (c_const x)) := by rw [← eval_prim_eq_eval c_ev_const_ev_pr]; simp
+theorem c_ev_const_evp' : eval_prim O c_ev_const x = c2n (comp (n2c x.l) (c_const x.r)) := by simp [c_ev_const]
+@[simp] theorem c_ev_const_evp : eval_prim O c_ev_const (Nat.pair e x) = c2n (comp (n2c e) (c_const x)) := by simp [c_ev_const_evp']
+theorem c_ev_const_ev':eval O c_ev_const x = c2n (comp (n2c x.l) (c_const x.r)) := by rw [← eval_prim_eq_eval c_ev_const_ev_pr]; simp [c_ev_const_evp']
+@[simp] theorem c_ev_const_ev:eval O c_ev_const (Nat.pair e x) = c2n (comp (n2c e) (c_const x)) := by rw [← eval_prim_eq_eval c_ev_const_ev_pr]; simp
 end Computability.Code
 
 section max

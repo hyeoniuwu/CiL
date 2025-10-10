@@ -1,4 +1,5 @@
 import Computability.Jump
+import Computability.RinT
 import Computability.Constructions.Eval
 import Computability.Constructions.Dovetail
 import Computability.Use
@@ -94,6 +95,7 @@ lemma some_comp_simp (a:Part ℕ) {f:ℕ→ℕ} {h:a.Dom}:  (Part.some (f (a.get
   rw [Part.bind]
   exact Eq.symm (Part.assert_pos h)
 
+namespace Code
 section SetJumpTheorems
 theorem χ_leq_χSetK0 {O:Set ℕ} : Nat.RecursiveIn (χ (SetK0 O)) (χ O) := by
   let χK0 : ℕ→ℕ := fun ex ↦ if (eval (χ O) ex.l ex.r).Dom then 1 else 0
@@ -130,7 +132,7 @@ theorem χ_leq_χSetK0 {O:Set ℕ} : Nat.RecursiveIn (χ (SetK0 O)) (χ O) := by
     refine Nat.RecursiveIn.someTotal (↑χK0) (fun x ↦ χK0 (Nat.pair index_g x)) ?_
     refine Nat.RecursiveIn.totalComp' ?_ ?_
     · exact Nat.RecursiveIn.oracle
-    · apply Nat.RecursiveIn.of_primrec Nat.Primrec.pair_proj
+    · apply Nat.RecursiveIn.of_primrecIn Nat.PrimrecIn.pair_proj
 
   rw [h0]
   rw [f_eq_f']
@@ -146,7 +148,7 @@ theorem χSetK0_leq_K0χ {O:Set ℕ} : Nat.RecursiveIn (K0 (χ O)) (χ (SetK0 O)
     simp only [Function.comp_apply, Nat.sg, K0, dite_eq_right_iff, Nat.add_eq_zero, one_ne_zero, and_false, imp_false, ite_not]
   have construction_constructible : Nat.RecursiveIn (K0 (χ O)) construction := by
     simp only [construction]
-    exact Nat.RecursiveIn.totalComp (Nat.RecursiveIn.of_primrec Nat.Primrec.sg) Nat.RecursiveIn.oracle
+    exact Nat.RecursiveIn.totalComp (Nat.RecursiveIn.of_primrecIn Nat.PrimrecIn.sg) Nat.RecursiveIn.oracle
 
   rw [h0]
   rw [construction_eq_goal]
@@ -215,7 +217,7 @@ theorem χ_leq_χSetK (O:Set ℕ) : Nat.RecursiveIn (χ (SetK O)) (χ O) := by
   have f_eq_f': (χ O) = f' := by
     simp only [f']
     funext xs
-    simp only [χK, c_evconst_ev]
+    simp [χK, c_evconst_ev]
 
     rw [index_g_is_g]
     simp only [g]
@@ -233,9 +235,11 @@ theorem χ_leq_χSetK (O:Set ℕ) : Nat.RecursiveIn (χ (SetK O)) (χ O) := by
     refine Nat.RecursiveIn.someTotal (↑χK) (fun x ↦ χK (c_evconst (Nat.pair index_g x))) ?_
     refine Nat.RecursiveIn.totalComp' ?_ ?_
     · exact Nat.RecursiveIn.oracle
-    · refine Nat.RecursiveIn.totalComp' ?_ ?_
-      · apply Nat.RecursiveIn.of_primrecIn c_evconst_pr
-      · apply Nat.RecursiveIn.of_primrec Nat.Primrec.pair_proj
+    · 
+      apply exists_code.mpr
+      use (c_ev_const.comp₂ (c_const index_g) c_id)
+      simp [Seq.seq, c_evconst]
+      exact rfl
 
   rw [h0]
   rw [f_eq_f']
@@ -269,6 +273,7 @@ theorem Kχ_leq_χSetK (O:Set ℕ) : Nat.RecursiveIn (χ (SetK O)) (K (χ O)) :=
       apply some_comp_simp
 
   have h5 : Nat.RecursiveIn (χ O) (fun x ↦ eval (↑(χ O)) (n2c x) x) := by
+    
     apply Nat.RecursiveIn.eval_K_computable
 
   rw [h0]
@@ -285,7 +290,7 @@ theorem χSetK_leq_χSetK0 (O:Set ℕ) : Nat.RecursiveIn (χ (SetK0 O)) (χ (Set
     simp only [χ, SetK, Set.mem_setOf_eq, SetK0, Function.comp_apply]
     simp
   rw [main]
-  exact Nat.RecursiveIn.totalComp Nat.RecursiveIn.oracle (Nat.RecursiveIn.of_primrec (Nat.Primrec.pair Nat.Primrec.id Nat.Primrec.id))
+  exact Nat.RecursiveIn.totalComp Nat.RecursiveIn.oracle (Nat.RecursiveIn.of_primrecIn (Nat.PrimrecIn.pair Nat.PrimrecIn.id Nat.PrimrecIn.id))
 theorem χSetK_eq_Kχ (O:Set ℕ) : (χ (SetK O)) ≡ᵀᶠ (K (χ O)) := ⟨trans (χSetK_leq_χSetK0 O) $ trans (χSetK0_leq_K0χ) $ trans (K0_leq_K (χ O)) $ Nat.RecursiveIn.oracle , Kχ_leq_χSetK O⟩
 theorem Kχ_eq_χSetK (O:Set ℕ) : (K (χ O)) ≡ᵀᶠ (χ (SetK O)) := (χSetK_eq_Kχ O).symm
 -- #check χK_eq_Kχ
@@ -357,8 +362,6 @@ end dom_to_ran
 
 
 section ran_to_dom
-namespace Code
--- #check evaln₁
 
 noncomputable def ran_to_dom (O:ℕ→ℕ) : (ℕ→Code) := fun c => dovetail (c_if_eq'.comp₂ left ((c_eval₁ O).comp₂ (c_const c) right))
 
@@ -413,6 +416,5 @@ theorem ran_to_dom_prop : (WR O e) = (W O (ran_to_dom (χ O) e)) := by
     have := ran_to_dom_ev.mp (Part.mem_imp_dom hy)
     exact this
 
-end Code
 
 end ran_to_dom

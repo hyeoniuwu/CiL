@@ -117,7 +117,7 @@ theorem c_usen_evp_aux_x_0_0 : eval_prim O (c_usen) (Nat.pair x (Nat.pair 0 0)) 
   | zero => simp
   | succ n => simp
 
-theorem c_usen_evp_aux_0_np1 : eval_prim O (c_usen) (Nat.pair x (Nat.pair (n+1) 0)) = o2n (usen O (n+1:ℕ) 0 x) := by
+theorem c_usen_evp_aux_0_np1 : eval_prim O (c_usen) (Nat.pair x (Nat.pair (n+1) 0)) = o2n (usen O (n+1).n2c 0 x) := by
   unfold c_usen; unfold c_usen_aux
   lift_lets
   extract_lets
@@ -157,7 +157,7 @@ theorem c_usen_evp_aux_0_np1 : eval_prim O (c_usen) (Nat.pair x (Nat.pair (n+1) 
 theorem c_usen_evp_aux (hcode_val:code≤4) :
   eval_prim O (c_usen) (Nat.pair x (Nat.pair code (s+1)))
     =
-  o2n (usen O (code:ℕ) (s+1) x)
+  o2n (usen O code.n2c (s+1) x)
   := by
 
   unfold c_usen; unfold c_usen_aux
@@ -275,7 +275,7 @@ theorem c_usen_evp_aux_nMod4 :
   let opt_comp elem := o2n do
     guard (elem≤s);
     let usen_cg ← n2o (pc_mr_s left elem)
-    let evaln_cg ← evaln O (s+1) mr elem
+    let evaln_cg ← evaln O (s+1) mr.n2c elem
     let usen_cf  ← n2o (pc_ml_s left evaln_cg)
     Nat.max usen_cf usen_cg
 
@@ -294,7 +294,7 @@ theorem c_usen_evp_aux_nMod4 :
   let opt_rfind' x := (o2n do
     guard (x≤s);
     let usen_base  ← n2o $ pc_m_s left x
-    let evaln_base ← evaln O (s+1) m x
+    let evaln_base ← evaln O (s+1) m.n2c x
     if evaln_base=0 then usen_base else
     let usen_indt  ← n2o $ pc_c_sM1 left (Nat.pair x.l (x.r+1))
     return Nat.max usen_base usen_indt)
@@ -611,7 +611,7 @@ theorem c_usen_evp_aux_nMod4 :
 
 
 @[simp] theorem c_usen_evp: eval_prim O (c_usen) (Nat.pair x (Nat.pair code s)) =
-  o2n (usen O code s x) := by
+  o2n (usen O code.n2c s x) := by
 
   let code_s:=Nat.pair code s
   rw [show Nat.pair code s = code_s by rfl]
@@ -812,7 +812,7 @@ theorem c_usen_evp_aux_nMod4 :
 
   apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
 
-@[simp] theorem c_usen_ev: eval O c_usen (Nat.pair x (Nat.pair code s)) = o2n (usen O code s x) := by
+@[simp] theorem c_usen_ev: eval O c_usen (Nat.pair x (Nat.pair code s)) = o2n (usen O code.n2c s x) := by
   rw [← eval_prim_eq_eval c_usen_ev_pr];
   simp only [PFun.coe_val, c_usen_evp, Part.coe_some]
 end Computability.Code
@@ -824,7 +824,7 @@ end usen
 section use
 namespace Computability.Code
 def c_use := (c_rfindOpt (c_usen.comp₃ (right.comp left) (left.comp left) right))
-@[simp] theorem c_use_ev: eval O c_use (Nat.pair c x) = use O c x := by
+@[simp] theorem c_use_ev: eval O c_use (Nat.pair c x) = use O c.n2c x := by
   simp only [c_use, comp₃, comp₂]
   have : code_total O ((c_usen.comp ((right.comp left).pair ((left.comp left).pair right)))) := by
     apply prim_total

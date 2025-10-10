@@ -1,6 +1,6 @@
-import Computability.Encoding
 import Computability.Label
-import Computability.Basic
+-- import Computability.Basic
+import Computability.Encoding
 import Mathlib.Data.PFun
 import Mathlib.Data.Nat.Dist
 
@@ -174,30 +174,30 @@ instance : Coe (Code→Code) (ℕ→ℕ) := ⟨Computability.Code.cc_to_nn.lift�
 end Computability.Code.cc_to_nn
 
 -- conversions between oracle and non-oracle versions
-lemma PrimrecIn.PrimrecIn_Empty (h:Nat.PrimrecIn (λ _ ↦ 0) f):Nat.Primrec f := by
-  induction' h with g hg g h _ _ ih₁ ih₂ g h _ _ ih₁ ih₂ g h _ _ ih₁ ih₂ g _ ih
-  repeat {constructor}
-  · (expose_names; exact Nat.Primrec.pair a_ih a_ih_1)
-  repeat {constructor; assumption; try assumption}
-  (expose_names; exact Nat.Primrec.prec a_ih a_ih_1)
-lemma PrimrecIn.PrimrecIn₂_Empty {f:α→β→σ} (h:PrimrecIn₂ (λ _ ↦ 0) f):Primrec₂ f := by
-  unfold PrimrecIn₂ at h
-  unfold Primrec₂
-  apply PrimrecIn.PrimrecIn_Empty
-  exact h
-theorem Primrec.to_PrimrecIn₂ {f:α→β→σ} (h:Primrec₂ f):PrimrecIn₂ O f := by
-  unfold Primrec₂ at h
-  unfold PrimrecIn₂
-  apply Primrec.to_PrimrecIn
-  exact h
-theorem PrimrecIn.PrimrecIn₂_iff_Primrec₂ {f:α→β→σ}:(∀O,PrimrecIn₂ O f) ↔ Primrec₂ f := by
-  constructor
-  · exact fun a ↦ PrimrecIn₂_Empty (a fun x ↦ 0)
-  · exact fun a O ↦ Primrec.to_PrimrecIn₂ a
-theorem PrimrecIn.PrimrecIn_iff_Primrec:(∀O,Nat.PrimrecIn O f) ↔ Nat.Primrec f := by
-  constructor
-  · exact fun a ↦ PrimrecIn.PrimrecIn_Empty (a fun x ↦ 0)
-  · exact fun a O ↦ Nat.Primrec.to_PrimrecIn a
+-- lemma PrimrecIn.PrimrecIn_Empty (h:Nat.PrimrecIn (λ _ ↦ 0) f):Nat.Primrec f := by
+--   induction' h with g hg g h _ _ ih₁ ih₂ g h _ _ ih₁ ih₂ g h _ _ ih₁ ih₂ g _ ih
+--   repeat {constructor}
+--   · (expose_names; exact Nat.Primrec.pair a_ih a_ih_1)
+--   repeat {constructor; assumption; try assumption}
+--   (expose_names; exact Nat.Primrec.prec a_ih a_ih_1)
+-- lemma PrimrecIn.PrimrecIn₂_Empty {f:α→β→σ} (h:PrimrecIn₂ (λ _ ↦ 0) f):Primrec₂ f := by
+--   unfold PrimrecIn₂ at h
+--   unfold Primrec₂
+--   apply PrimrecIn.PrimrecIn_Empty
+--   exact h
+-- theorem Primrec.to_PrimrecIn₂ {f:α→β→σ} (h:Primrec₂ f):PrimrecIn₂ O f := by
+--   unfold Primrec₂ at h
+--   unfold PrimrecIn₂
+--   apply Primrec.to_PrimrecIn
+--   exact h
+-- theorem PrimrecIn.PrimrecIn₂_iff_Primrec₂ {f:α→β→σ}:(∀O,PrimrecIn₂ O f) ↔ Primrec₂ f := by
+--   constructor
+--   · exact fun a ↦ PrimrecIn₂_Empty (a fun x ↦ 0)
+--   · exact fun a O ↦ Primrec.to_PrimrecIn₂ a
+-- theorem PrimrecIn.PrimrecIn_iff_Primrec:(∀O,Nat.PrimrecIn O f) ↔ Nat.Primrec f := by
+--   constructor
+--   · exact fun a ↦ PrimrecIn.PrimrecIn_Empty (a fun x ↦ 0)
+--   · exact fun a O ↦ Nat.Primrec.to_PrimrecIn a
 
 -- templates for primrec constructions as codes
 namespace Computability.Code
@@ -422,6 +422,17 @@ theorem eval_prim_eq_eval_ext (h:code_prim c): eval O c x = eval_prim O c x := c
 
   -- | rfind' cf hcf =>
   --   sorry
+@[simp 1000] theorem RecursiveIn_of_eval : Nat.RecursiveIn O (eval O c) := by
+  induction c with
+  | zero => exact Nat.RecursiveIn.zero
+  | succ => exact Nat.RecursiveIn.succ
+  | left => exact Nat.RecursiveIn.left
+  | right => exact Nat.RecursiveIn.right
+  | oracle => exact Nat.RecursiveIn.oracle
+  | pair ha hb ha_ih hb_ih => unfold eval; exact Nat.RecursiveIn.pair (ha_ih) (hb_ih)
+  | comp ha hb ha_ih hb_ih => unfold eval; exact Nat.RecursiveIn.comp (ha_ih) (hb_ih)
+  | prec ha hb ha_ih hb_ih => unfold eval; exact Nat.RecursiveIn.prec (ha_ih) (hb_ih)
+  | rfind' ha ha_ih => unfold eval; exact RecursiveIn.rfind ha_ih
 @[simp 1000] theorem code_prim_prop : Nat.PrimrecIn O (eval_prim O c) := by
   induction c with
   | zero => exact Nat.PrimrecIn.zero
@@ -470,10 +481,10 @@ theorem Primrec.projection {f:α → β → σ} {a:α} (h:Primrec₂ f):Primrec 
   refine Primrec₂.comp h ?_ ?_
   · exact const a
   · exact Primrec.id
-theorem PrimrecIn.projection {f:α → β → σ} {a:α} (h:PrimrecIn₂ O f):PrimrecIn O (f a) := by
-  refine PrimrecIn₂.comp h ?_ ?_
-  · exact const a
-  · exact PrimrecIn.id
+-- theorem PrimrecIn.projection {f:α → β → σ} {a:α} (h:PrimrecIn₂ O f):PrimrecIn O (f a) := by
+--   refine PrimrecIn₂.comp h ?_ ?_
+--   · exact const a
+--   · exact PrimrecIn.id
 lemma Nat.Primrec.pair_proj:Nat.Primrec (Nat.pair x) := by
   refine Primrec.nat_iff.mp ?_
   apply Primrec.projection

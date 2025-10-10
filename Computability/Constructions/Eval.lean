@@ -115,7 +115,7 @@ theorem c_evaln_evp_aux_x_0_0 : eval_prim O (c_evaln) (Nat.pair x (Nat.pair 0 0)
   | zero => simp
   | succ n => simp
 
-theorem c_evaln_evp_aux_0_np1 : eval_prim O (c_evaln) (Nat.pair x (Nat.pair (n+1) 0)) = o2n (evaln O 0 (n+1:ℕ) x) := by
+theorem c_evaln_evp_aux_0_np1 : eval_prim O (c_evaln) (Nat.pair x (Nat.pair (n+1) 0)) = o2n (evaln O 0 (n+1).n2c x) := by
   unfold c_evaln; unfold c_evaln_aux
   lift_lets
   extract_lets
@@ -156,7 +156,7 @@ theorem c_evaln_evp_aux_0_np1 : eval_prim O (c_evaln) (Nat.pair x (Nat.pair (n+1
 theorem c_evaln_evp_aux (hcode_val:code≤4) :
   eval_prim O (c_evaln) (Nat.pair x (Nat.pair code (s+1)))
     =
-  o2n (evaln O (s+1) (code:ℕ) x)
+  o2n (evaln O (s+1) code.n2c x)
   := by
 
   unfold c_evaln; unfold c_evaln_aux
@@ -262,7 +262,7 @@ theorem c_evaln_evp_aux (hcode_val:code≤4) :
   | 0 =>
     simp [hzero_mapped]
     cases Classical.em (x<s+1) with
-    | inl h => simp [h, n2c, evaln, le_of_lt_succ h]
+    | inl h => simp [h, n2c, evaln, le_of_lt_succ h];
     | inr h => simp [h, n2c, evaln, Nat.not_le_of_lt (not_lt.mp h), Option.bind]
   | 1 =>
     simp [hsucc_mapped]
@@ -656,7 +656,7 @@ theorem c_evaln_evp_aux_nMod4 :
     simp at contrad
 
 @[simp] theorem c_evaln_evp: eval_prim O (c_evaln) (Nat.pair x (Nat.pair code s)) =
-  o2n (evaln O s code x) := by
+  o2n (evaln O s code.n2c x) := by
 
   let code_s:=Nat.pair code s
   rw [show Nat.pair code s = code_s by rfl]
@@ -877,11 +877,11 @@ theorem c_evaln_evp_aux_nMod4 :
   unfold c_evaln
   apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
 
-@[simp] theorem c_evaln_ev: eval O c_evaln (Nat.pair x (Nat.pair code s)) = o2n (evaln O s code x) := by
+@[simp] theorem c_evaln_ev: eval O c_evaln (Nat.pair x (Nat.pair code s)) = o2n (evaln O s code.n2c x) := by
   rw [← eval_prim_eq_eval c_evaln_ev_pr];
   simp only [PFun.coe_val, c_evaln_evp, Part.coe_some]
 
-@[simp] theorem c_evaln_evp': eval_prim O (c_evaln) = fun x => o2n $ evaln O x.r.r x.r.l x.l := by
+@[simp] theorem c_evaln_evp': eval_prim O (c_evaln) = fun x => o2n $ evaln O x.r.r x.r.l.n2c x.l := by
   funext x
   have : x = (Nat.pair x.l (Nat.pair x.r.l x.r.r)) := by simp
   rw (config:={occs:=.pos [1]}) [this]
@@ -896,7 +896,7 @@ end evaln
 section eval
 namespace Computability.Code
 def c_eval := (c_rfindOpt (c_evaln.comp₃ (right.comp left) (left.comp left) right))
-@[simp] theorem c_eval_ev: eval O c_eval (Nat.pair c x) = eval O c x := by
+@[simp] theorem c_eval_ev: eval O c_eval (Nat.pair c x) = eval O c.n2c x := by
   simp only [c_eval, comp₃, comp₂]
   have : code_total O ((c_evaln.comp ((right.comp left).pair ((left.comp left).pair right)))) := by
     apply prim_total
@@ -904,7 +904,7 @@ def c_eval := (c_rfindOpt (c_evaln.comp₃ (right.comp left) (left.comp left) ri
   simp [c_rfindOpt_ev this]
   rw [eval_eq_rfindOpt]
   simp [eval,Seq.seq]
-theorem Computability.eval:Nat.RecursiveIn O (fun ex => eval O ex.l ex.r) := by
+theorem Computability.eval:Nat.RecursiveIn O (fun ex => eval O ex.l.n2c ex.r) := by
   apply exists_code.mpr
   use c_eval
   funext x

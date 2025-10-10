@@ -394,17 +394,27 @@ end div2
 
 section replace_oracle
 namespace Computability.Code
-def c2n_replace_oracle (o:ℕ) : Code → ℕ
-| Code.zero        => 0
-| Code.succ        => 1
-| Code.left        => 2
-| Code.right       => 3
+-- def c2n_replace_oracle (o:ℕ) : Code → ℕ
+-- | Code.zero        => 0
+-- | Code.succ        => 1
+-- | Code.left        => 2
+-- | Code.right       => 3
+-- | Code.oracle      => o
+-- | Code.pair cf cg  => 2*(2*(Nat.pair (c2n_replace_oracle o cf) (c2n_replace_oracle o cg))  )   + 5
+-- | Code.comp cf cg  => 2*(2*(Nat.pair (c2n_replace_oracle o cf) (c2n_replace_oracle o cg))  )+1 + 5
+-- | Code.prec cf cg  => 2*(2*(Nat.pair (c2n_replace_oracle o cf) (c2n_replace_oracle o cg))+1)   + 5
+-- | Code.rfind' cf   => 2*(2*(c2n_replace_oracle o cf                            )+1)+1 + 5
+-- def replace_oracle (o:ℕ) := fun n => (c2n_replace_oracle o (n2c n))
+def replace_oracle (o:Code) : Code → Code
+| Code.zero        => Code.zero
+| Code.succ        => Code.succ
+| Code.left        => Code.left
+| Code.right       => Code.right
 | Code.oracle      => o
-| Code.pair cf cg  => 2*(2*(Nat.pair (c2n_replace_oracle o cf) (c2n_replace_oracle o cg))  )   + 5
-| Code.comp cf cg  => 2*(2*(Nat.pair (c2n_replace_oracle o cf) (c2n_replace_oracle o cg))  )+1 + 5
-| Code.prec cf cg  => 2*(2*(Nat.pair (c2n_replace_oracle o cf) (c2n_replace_oracle o cg))+1)   + 5
-| Code.rfind' cf   => 2*(2*(c2n_replace_oracle o cf                            )+1)+1 + 5
-def replace_oracle (o:ℕ) := fun n => (c2n_replace_oracle o (n2c n))
+| Code.pair cf cg  => Code.pair (replace_oracle o cf) (replace_oracle o cg)
+| Code.comp cf cg  => Code.comp (replace_oracle o cf) (replace_oracle o cg)
+| Code.prec cf cg  => Code.prec (replace_oracle o cf) (replace_oracle o cg)
+| Code.rfind' cf   => Code.rfind' (replace_oracle o cf)
 
 /-- `eval c_replace_oracle (o,code)` = `code` but with calls to oracle replaced with calls to code `o` -/
 def c_replace_oracle_aux :=
@@ -460,7 +470,7 @@ def c_replace_oracle := c_list_getLastI.comp c_replace_oracle_aux
 
 -- expanding lets: ~70ms
 -- not expanding lets: ~20ms
-theorem c_replace_oracle_evp_aux (hx:x≤4): eval_prim O (c_replace_oracle) (Nat.pair o x) = replace_oracle o x := by
+theorem c_replace_oracle_evp_aux (hx:x≤4): eval_prim O (c_replace_oracle) (Nat.pair o x) = c2n (replace_oracle (n2c o) (n2c x)) := by
   unfold c_replace_oracle
   unfold c_replace_oracle_aux
   lift_lets
@@ -471,11 +481,11 @@ theorem c_replace_oracle_evp_aux (hx:x≤4): eval_prim O (c_replace_oracle) (Nat
   have ho {x hist} : eval_prim O o_1 (Nat.pair o (Nat.pair (x) hist)) = o := by simp [o_1]
 
   match x with
-  | 0 => simp [hinput_to_decode, ho]; simp only [replace_oracle, c2n_replace_oracle, n2c]
-  | 1 => simp [hinput_to_decode, ho]; simp only [replace_oracle, c2n_replace_oracle, n2c]
-  | 2 => simp [hinput_to_decode, ho]; simp only [replace_oracle, c2n_replace_oracle, n2c]
-  | 3 => simp [hinput_to_decode, ho]; simp only [replace_oracle, c2n_replace_oracle, n2c]
-  | 4 => simp [hinput_to_decode, ho]; simp only [replace_oracle, c2n_replace_oracle, n2c]
+  | 0 => simp [hinput_to_decode, ho]; simp only [replace_oracle, replace_oracle, n2c, c2n]
+  | 1 => simp [hinput_to_decode, ho]; simp only [replace_oracle, replace_oracle, n2c, c2n]
+  | 2 => simp [hinput_to_decode, ho]; simp only [replace_oracle, replace_oracle, n2c, c2n]
+  | 3 => simp [hinput_to_decode, ho]; simp only [replace_oracle, replace_oracle, n2c, c2n]
+  | 4 => simp [hinput_to_decode, ho]; simp only [replace_oracle, replace_oracle, n2c, c2n_n2c]
   | n+5 => simp at hx
 
 lemma c_replace_oracle_evp_aux_nMod4_bounds1 : (n/2/2).l≤n+4 := by exact le_add_right_of_le (Nat.le_trans (unpair_left_le (n/2/2)) (le_trans (Nat.div_le_self _ _) (Nat.div_le_self _ _)))
@@ -642,7 +652,7 @@ theorem nMod4_eq_3 (hno:n.bodd=true ) (hn2o:n.div2.bodd=true ) : n%4=3 := by rw 
 
 -- set_option maxHeartbeats 1000000 in
 -- set_option maxHeartbeats 3 in
-@[simp] theorem c_replace_oracle_evp: eval_prim O (c_replace_oracle) = unpaired2 replace_oracle := by
+@[simp] theorem c_replace_oracle_evp: eval_prim O (c_replace_oracle) = λ x ↦c2n (replace_oracle (n2c x.l) (n2c x.r)) := by
   funext oc
   let o:=oc.l
   let c:=oc.r
@@ -675,42 +685,42 @@ theorem nMod4_eq_3 (hno:n.bodd=true ) (hn2o:n.div2.bodd=true ) : n%4=3 := by rw 
         -- pair
         | false =>
           have h0: n%4=0 := nMod4_eq_0 hno hn2o
-          simp [replace_oracle, c2n_replace_oracle, n2c, hno, hn2o] -- simplify the rhs
+          simp [replace_oracle, replace_oracle, n2c, c2n, hno, hn2o] -- simplify the rhs
           -- rw [c_replace_oracle_evp_aux_nMod4_0 h0]
           rw [c_replace_oracle_evp_aux_nMod4]
           simp [h0]
           constructor
-          · rw [ih m.l _m1]; simp [replace_oracle, m]
-          · rw [ih m.r _m2]; simp [replace_oracle, m]
+          · rw [ih m.l _m1];
+          · rw [ih m.r _m2];
 
         -- prec
         | true =>
           have h0: n%4=2 := nMod4_eq_2 hno hn2o
-          simp [replace_oracle, c2n_replace_oracle, n2c, hno, hn2o] -- simplify the rhs
+          simp [replace_oracle, replace_oracle, n2c, c2n, hno, hn2o] -- simplify the rhs
           rw [c_replace_oracle_evp_aux_nMod4]
           simp [h0]
           constructor
-          · rw [ih m.l _m1]; simp [replace_oracle, m]
-          · rw [ih m.r _m2]; simp [replace_oracle, m]
+          · rw [ih m.l _m1];
+          · rw [ih m.r _m2];
 
       | true => cases hn2o:n.div2.bodd with
         -- comp
         | false =>
           have h0: n%4=1 := nMod4_eq_1 hno hn2o
-          simp [replace_oracle, c2n_replace_oracle, n2c, hno, hn2o] -- simplify the rhs
+          simp [replace_oracle, replace_oracle, n2c, c2n, hno, hn2o] -- simplify the rhs
           rw [c_replace_oracle_evp_aux_nMod4]
           simp [h0]
           constructor
-          · rw [ih m.l _m1]; simp [replace_oracle, m]
-          · rw [ih m.r _m2]; simp [replace_oracle, m]
+          · rw [ih m.l _m1];
+          · rw [ih m.r _m2];
 
         -- rfind
         | true =>
           have h0: n%4=3 := nMod4_eq_3 hno hn2o
-          simp [replace_oracle, c2n_replace_oracle, n2c, hno, hn2o] -- simplify the rhs
+          simp [replace_oracle, replace_oracle, n2c, c2n, hno, hn2o] -- simplify the rhs
           rw [c_replace_oracle_evp_aux_nMod4]
           simp [h0]
-          rw [ih m hm]; simp [replace_oracle, m]
+          rw [ih m hm];
           -- constructor
           -- · rw [ih m.l _m1]; simp [replace_oracle, m]
           -- · rw [ih m.r _m2]; simp [replace_oracle, m]
@@ -719,22 +729,17 @@ theorem nMod4_eq_3 (hno:n.bodd=true ) (hn2o:n.div2.bodd=true ) : n%4=3 := by rw 
 
 
 
-@[simp] theorem c_replace_oracle_ev:eval O (c_replace_oracle) = unpaired2 replace_oracle := by rw [← eval_prim_eq_eval c_replace_oracle_ev_pr]; simp only [c_replace_oracle_evp];
+@[simp] theorem c_replace_oracle_ev:eval O (c_replace_oracle) = λ x:ℕ ↦ c2n (replace_oracle (n2c x.l) (n2c x.r)) := by rw [← eval_prim_eq_eval c_replace_oracle_ev_pr]; simp only [c_replace_oracle_evp];
 
-
-
-theorem eval_replace_oracle_prop {O o c} (ho:code_total O o) : eval O (replace_oracle o c) = eval (λ x ↦ (eval O o x).get (ho x)) c := by
-  -- funext x
-  simp [replace_oracle]
-  induction n2c c <;> (simp [n2c, c2n_replace_oracle, eval]; try simp_all )
-  funext o
+@[simp] theorem plift_eq (ho:code_total O o) : (@PFun.lift ℕ ℕ fun x ↦ (eval O o x).get (ho x) )= eval O o := by
+  ext a b : 1
   simp_all only [PFun.coe_val, Part.some_get]
 
-
-
+theorem eval_replace_oracle_prop {O o c} (ho:code_total O o) : eval O (replace_oracle o c) = eval (λ x ↦ (eval O o x).get (ho x)) c := by
+  unfold replace_oracle
+  induction c <;> (simp [eval]; try (unfold replace_oracle; simp_all))
 
 
 end Computability.Code
-theorem Nat.PrimrecIn.replace_oracle:Nat.PrimrecIn O (unpaired2 replace_oracle) := by rw [← c_replace_oracle_evp]; exact code_prim_prop
-theorem Nat.Primrec.replace_oracle:Nat.Primrec (unpaired2 replace_oracle) := by exact PrimrecIn.PrimrecIn_Empty PrimrecIn.replace_oracle
+-- theorem Nat.PrimrecIn.replace_oracle:Nat.PrimrecIn O (λ x ↦c2n (replace_oracle (n2c x.l) (n2c x.r))) := by rw [← c_replace_oracle_evp]; exact code_prim_prop
 end replace_oracle

@@ -1,4 +1,5 @@
-import Computability.Oracle
+import Computability.Oracle2
+import Mathlib.Order.Antisymmetrization
 
 @[simp] abbrev TuringReducible (f g : ℕ → ℕ) : Prop := Nat.RecursiveIn g f
 @[simp] abbrev TuringReducibleStrict (f g : ℕ → ℕ) : Prop := Nat.RecursiveIn g f ∧ ¬ Nat.RecursiveIn f g
@@ -69,54 +70,54 @@ private instance : Preorder (ℕ→ℕ) where
 
 -- helper funcs:
 
-@[simp] lemma Nat.RecursiveIn.partCompTotal {O:ℕ→ℕ} {f:ℕ→.ℕ} {g:ℕ→ℕ} (h1: Nat.RecursiveIn O f) (h2: Nat.RecursiveIn O g):(Nat.RecursiveIn O ↑(f∘g)) := by
-  have h3:(↑(f∘g):ℕ→.ℕ) = fun x => g x >>= (↑f:ℕ→.ℕ) := by
-    funext xs
-    simp only [Function.comp_apply, Part.coe_some, Part.bind_eq_bind, Part.bind_some]
-  rw [h3]
-  exact comp h1 h2
-@[simp] lemma Nat.RecursiveIn.totalComp {O:ℕ→ℕ} {f g:ℕ→ℕ} (h1: Nat.RecursiveIn O f) (h2: Nat.RecursiveIn O g):(Nat.RecursiveIn O ↑(f∘g)) := by
-  have h3:(↑(f∘g):ℕ→.ℕ) = fun x => g x >>= (↑f:ℕ→.ℕ) := by
-    funext xs
-    simp only [PFun.coe_val, Function.comp_apply, Part.coe_some, Part.bind_eq_bind, Part.bind_some]
-  rw [h3]
-  exact comp h1 h2
-@[simp] lemma Nat.RecursiveIn.id {O:ℕ→ℕ}:Nat.RecursiveIn O fun x => x := by apply of_primrec Nat.Primrec.id
-@[simp] lemma Nat.RecursiveIn.someTotal (O:ℕ→ℕ) (f:ℕ→ℕ) (h1: Nat.RecursiveIn O f): Nat.RecursiveIn O fun x => Part.some (f x) := by
-  apply Nat.RecursiveIn.totalComp
-  · exact h1
-  · apply Nat.RecursiveIn.id
-@[simp] lemma Nat.RecursiveIn.pair' (f g:ℕ→ℕ):((↑fun x ↦ Nat.pair (f x) (g x)):ℕ→.ℕ)= fun (x:ℕ) => (Nat.pair <$> (f x) <*> (g x)) := by
-  simp [Seq.seq]
-  funext xs
-  simp only [PFun.coe_val]
-@[simp] lemma Nat.RecursiveIn.totalComp' {O:ℕ→ℕ} {f g:ℕ→ℕ} (hf: Nat.RecursiveIn O f) (hg: Nat.RecursiveIn O g): (Nat.RecursiveIn O (fun x => (f (g x)):ℕ→ℕ) ) := by apply Nat.RecursiveIn.totalComp (hf) (hg)
-@[simp] lemma Nat.RecursiveIn.comp₂ {O:ℕ→ℕ} {f:ℕ→ℕ→.ℕ} {g h:ℕ→ℕ} (hf: Nat.RecursiveIn O fun x => f x.unpair.1 x.unpair.2) (hg: Nat.RecursiveIn O g) (hh: Nat.RecursiveIn O h): (Nat.RecursiveIn O (fun x => (f (g x) (h x))) ) := by
-  have main:(fun x => (f (g x) (h x))) = ((fun x => f x.unpair.1 x.unpair.2) ∘ (fun n ↦ Nat.pair (g n) (h n))) := by
-    funext xs
-    simp only [Function.comp_apply, unpair_pair]
-  rw [main]
-  refine partCompTotal hf ?_
-  · rw [Nat.RecursiveIn.pair']
-    apply Nat.RecursiveIn.pair hg hh
-@[simp] lemma Nat.RecursiveIn.totalComp₂ {O:ℕ→ℕ} {f:ℕ→ℕ→ℕ} {g h:ℕ→ℕ} (hf: Nat.RecursiveIn O fun x => f x.unpair.1 x.unpair.2) (hg: Nat.RecursiveIn O g) (hh: Nat.RecursiveIn O h): (Nat.RecursiveIn O (fun x => (f (g x) (h x)):ℕ→ℕ) ) := by
-  have main:(fun x => (f (g x) (h x)):ℕ→ℕ) = ((fun x => f x.unpair.1 x.unpair.2) ∘ (fun n ↦ Nat.pair (g n) (h n))) := by
-    funext xs
-    simp only [Function.comp_apply, Nat.unpair_pair]
-  rw [main]
-  apply Nat.RecursiveIn.totalComp
-  · exact hf
-  · rw [Nat.RecursiveIn.pair']
-    apply Nat.RecursiveIn.pair hg hh
+-- @[simp] lemma Nat.RecursiveIn.partCompTotal {O:ℕ→ℕ} {f:ℕ→.ℕ} {g:ℕ→ℕ} (h1: Nat.RecursiveIn O f) (h2: Nat.RecursiveIn O g):(Nat.RecursiveIn O ↑(f∘g)) := by
+--   have h3:(↑(f∘g):ℕ→.ℕ) = fun x => g x >>= (↑f:ℕ→.ℕ) := by
+--     funext xs
+--     simp only [Function.comp_apply, Part.coe_some, Part.bind_eq_bind, Part.bind_some]
+--   rw [h3]
+--   exact comp h1 h2
+-- @[simp] lemma Nat.RecursiveIn.totalComp {O:ℕ→ℕ} {f g:ℕ→ℕ} (h1: Nat.RecursiveIn O f) (h2: Nat.RecursiveIn O g):(Nat.RecursiveIn O ↑(f∘g)) := by
+--   have h3:(↑(f∘g):ℕ→.ℕ) = fun x => g x >>= (↑f:ℕ→.ℕ) := by
+--     funext xs
+--     simp only [PFun.coe_val, Function.comp_apply, Part.coe_some, Part.bind_eq_bind, Part.bind_some]
+--   rw [h3]
+--   exact comp h1 h2
+-- @[simp] lemma Nat.RecursiveIn.id {O:ℕ→ℕ}:Nat.RecursiveIn O fun x => x := by apply of_primrec Nat.Primrec.id
+-- @[simp] lemma Nat.RecursiveIn.someTotal (O:ℕ→ℕ) (f:ℕ→ℕ) (h1: Nat.RecursiveIn O f): Nat.RecursiveIn O fun x => Part.some (f x) := by
+--   apply Nat.RecursiveIn.totalComp
+--   · exact h1
+--   · apply Nat.RecursiveIn.id
+-- @[simp] lemma Nat.RecursiveIn.pair' (f g:ℕ→ℕ):((↑fun x ↦ Nat.pair (f x) (g x)):ℕ→.ℕ)= fun (x:ℕ) => (Nat.pair <$> (f x) <*> (g x)) := by
+--   simp [Seq.seq]
+--   funext xs
+--   simp only [PFun.coe_val]
+-- @[simp] lemma Nat.RecursiveIn.totalComp' {O:ℕ→ℕ} {f g:ℕ→ℕ} (hf: Nat.RecursiveIn O f) (hg: Nat.RecursiveIn O g): (Nat.RecursiveIn O (fun x => (f (g x)):ℕ→ℕ) ) := by apply Nat.RecursiveIn.totalComp (hf) (hg)
+-- @[simp] lemma Nat.RecursiveIn.comp₂ {O:ℕ→ℕ} {f:ℕ→ℕ→.ℕ} {g h:ℕ→ℕ} (hf: Nat.RecursiveIn O fun x => f x.unpair.1 x.unpair.2) (hg: Nat.RecursiveIn O g) (hh: Nat.RecursiveIn O h): (Nat.RecursiveIn O (fun x => (f (g x) (h x))) ) := by
+--   have main:(fun x => (f (g x) (h x))) = ((fun x => f x.unpair.1 x.unpair.2) ∘ (fun n ↦ Nat.pair (g n) (h n))) := by
+--     funext xs
+--     simp only [Function.comp_apply, unpair_pair]
+--   rw [main]
+--   refine partCompTotal hf ?_
+--   · rw [Nat.RecursiveIn.pair']
+--     apply Nat.RecursiveIn.pair hg hh
+-- @[simp] lemma Nat.RecursiveIn.totalComp₂ {O:ℕ→ℕ} {f:ℕ→ℕ→ℕ} {g h:ℕ→ℕ} (hf: Nat.RecursiveIn O fun x => f x.unpair.1 x.unpair.2) (hg: Nat.RecursiveIn O g) (hh: Nat.RecursiveIn O h): (Nat.RecursiveIn O (fun x => (f (g x) (h x)):ℕ→ℕ) ) := by
+--   have main:(fun x => (f (g x) (h x)):ℕ→ℕ) = ((fun x => f x.unpair.1 x.unpair.2) ∘ (fun n ↦ Nat.pair (g n) (h n))) := by
+--     funext xs
+--     simp only [Function.comp_apply, Nat.unpair_pair]
+--   rw [main]
+--   apply Nat.RecursiveIn.totalComp
+--   · exact hf
+--   · rw [Nat.RecursiveIn.pair']
+--     apply Nat.RecursiveIn.pair hg hh
 
-@[simp] lemma Nat.PrimrecIn.totalComp {O:ℕ→ℕ} {f g:ℕ→ℕ} (h1: Nat.PrimrecIn O f) (h2: Nat.PrimrecIn O g):(Nat.PrimrecIn O ↑(f∘g)) := by
-  rw [show (f∘g) = fun x => f (g x) from rfl]
-  exact comp h1 h2
-@[simp] lemma Nat.PrimrecIn.comp₂ {O:ℕ→ℕ} {f:ℕ→ℕ→ℕ} {g h:ℕ→ℕ} (hf: Nat.PrimrecIn O fun x => f x.unpair.1 x.unpair.2) (hg: Nat.PrimrecIn O g) (hh: Nat.PrimrecIn O h): (Nat.PrimrecIn O (fun x => (f (g x) (h x)):ℕ→ℕ) ) := by
-  have main:(fun x => (f (g x) (h x)):ℕ→ℕ) = ((fun x => f x.unpair.1 x.unpair.2) ∘ (fun n ↦ Nat.pair (g n) (h n))) := by
-    funext xs
-    simp only [Function.comp_apply, Nat.unpair_pair]
-  rw [main]
-  apply Nat.PrimrecIn.totalComp
-  · exact hf
-  · apply Nat.PrimrecIn.pair hg hh
+-- @[simp] lemma Nat.PrimrecIn.totalComp {O:ℕ→ℕ} {f g:ℕ→ℕ} (h1: Nat.PrimrecIn O f) (h2: Nat.PrimrecIn O g):(Nat.PrimrecIn O ↑(f∘g)) := by
+--   rw [show (f∘g) = fun x => f (g x) from rfl]
+--   exact comp h1 h2
+-- @[simp] lemma Nat.PrimrecIn.comp₂ {O:ℕ→ℕ} {f:ℕ→ℕ→ℕ} {g h:ℕ→ℕ} (hf: Nat.PrimrecIn O fun x => f x.unpair.1 x.unpair.2) (hg: Nat.PrimrecIn O g) (hh: Nat.PrimrecIn O h): (Nat.PrimrecIn O (fun x => (f (g x) (h x)):ℕ→ℕ) ) := by
+--   have main:(fun x => (f (g x) (h x)):ℕ→ℕ) = ((fun x => f x.unpair.1 x.unpair.2) ∘ (fun n ↦ Nat.pair (g n) (h n))) := by
+--     funext xs
+--     simp only [Function.comp_apply, Nat.unpair_pair]
+--   rw [main]
+--   apply Nat.PrimrecIn.totalComp
+--   · exact hf
+--   · apply Nat.PrimrecIn.pair hg hh
