@@ -1,6 +1,6 @@
 import Computability.Constructions.Basic
 import Computability.Constructions.Primitive
-import Computability.Basic
+import Computability.Order
 
 open Computability
 open Classical

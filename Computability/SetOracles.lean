@@ -1,5 +1,5 @@
 import Computability.Jump
-import Computability.RinT
+import Computability.Rin
 import Computability.Constructions.Eval
 import Computability.Constructions.Dovetail
 import Computability.Use

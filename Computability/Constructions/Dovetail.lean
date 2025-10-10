@@ -1,4 +1,4 @@
-import Computability.Basic
+-- import Computability.Basic
 import Computability.Constructions.Eval
 
 open Nat Part

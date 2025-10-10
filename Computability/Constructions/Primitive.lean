@@ -1,4 +1,4 @@
-import Computability.RecursiveInTheorems
+import Computability.Basic
 
 open Computability.Code
 open Nat
