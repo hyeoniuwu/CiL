@@ -1,7 +1,9 @@
 -- import Computability.Oracle
-import Computability.Oracle2
+import Computability.Oracle
 -- import Computability.PrimrecIn
 import Mathlib.Data.Option.Basic
+import Mathlib.Logic.Encodable.Pi
+import Mathlib.Algebra.Order.Ring.Nat
 
 open Nat
 open Encodable Denumerable
@@ -10,7 +12,7 @@ open Encodable Denumerable
 -- namespace Nat.RecursiveIn
 
 
-#check Computable.comp
+-- #check Computable.comp
 
 -- theorem Nat.RecursiveIn.rfind' {f} (hf : Nat.RecursiveIn O f) :
 --     Nat.RecursiveIn O

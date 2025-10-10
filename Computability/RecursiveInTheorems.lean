@@ -132,8 +132,8 @@ lemma Part.not_none_iff_dom : (¬o=Part.none)↔(o.Dom) := by
 lemma Part.ne_of_get_ne {p1 p2:Part ℕ} {h1:p1.Dom} {h2:p2.Dom} (h:p1.get h1≠p2.get h2) : (p1≠p2) := by aesop
 lemma Part.ne_of_get_ne' {p1:Part ℕ} {h1:p1.Dom} (h:p1.get h1≠x) : (p1≠Part.some x) := by aesop
 
-variable {α:Type*} {β:Type*} {σ:Type*}
-variable [Primcodable α] [Primcodable β] [Primcodable σ]
+-- variable {α:Type*} {β:Type*} {σ:Type*}
+-- variable [Primcodable α] [Primcodable β] [Primcodable σ]
 
 -- @[simp] abbrev Nat.l (n:ℕ) := n.unpair.1
 -- @[simp] abbrev Nat.r (n:ℕ) := n.unpair.2
@@ -477,15 +477,15 @@ end Computability.Code
 
 
 
-theorem Primrec.projection {f:α → β → σ} {a:α} (h:Primrec₂ f):Primrec (f a) := by
-  refine Primrec₂.comp h ?_ ?_
-  · exact const a
-  · exact Primrec.id
+-- theorem Primrec.projection {f:α → β → σ} {a:α} (h:Primrec₂ f):Primrec (f a) := by
+--   refine Primrec₂.comp h ?_ ?_
+--   · exact const a
+--   · exact Primrec.id
 -- theorem PrimrecIn.projection {f:α → β → σ} {a:α} (h:PrimrecIn₂ O f):PrimrecIn O (f a) := by
 --   refine PrimrecIn₂.comp h ?_ ?_
 --   · exact const a
 --   · exact PrimrecIn.id
-lemma Nat.Primrec.pair_proj:Nat.Primrec (Nat.pair x) := by
-  refine Primrec.nat_iff.mp ?_
-  apply Primrec.projection
-  exact Primrec₂.natPair
+-- lemma Nat.Primrec.pair_proj:Nat.Primrec (Nat.pair x) := by
+--   refine Primrec.nat_iff.mp ?_
+--   apply Primrec.projection
+--   exact Primrec₂.natPair

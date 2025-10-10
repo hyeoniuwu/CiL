@@ -1,4 +1,4 @@
-import Computability.Oracle2
+import Computability.Oracle
 import Mathlib.Order.Antisymmetrization
 
 @[simp] abbrev TuringReducible (f g : ℕ → ℕ) : Prop := Nat.RecursiveIn g f
