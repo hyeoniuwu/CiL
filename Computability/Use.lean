@@ -3334,8 +3334,7 @@ usen O₁ c s x = usen O₂ c s x
     rw [ih_cg.left]
     rw [ih_cg.right]
     simp [isSome.bind aux0]
-    simp [ih_cf.left]
-    simp [ih_cf.right]
+    simp [ih_cf]
 
   | hprec cf cg s hcf hcg x ih =>
     -- start with simple unfolding of terms
@@ -3355,14 +3354,12 @@ usen O₁ c s x = usen O₂ c s x
       simp only [rec_zero]
       rw [hxr] at hh
       simp only [hxr] at hO
-      have aux0 : (evaln O₁ (s-1+1) cf x.l).isSome := evaln_prec_dom' hh
-      have aux1 : (usen O₁ cf (s-1+1) x.l).isSome := en2un aux0
-      have aux2 : (∀ i < (usen O₁ cf (s-1+1) x.l).get aux1, O₁ i = O₂ i) := by
-        intro xx
-        intro hxx
-        have hxx2 := le_trans hxx (usen_mono_prec' (en2un hh))
-        exact hO xx hxx2
-      simp [hcf x.l aux0 aux2]
+
+      have ih_cf := hcf x.l ?_ ?_; rotate_left
+      · exact evaln_prec_dom' hh
+      · exact λ x h ↦ hO x (le_trans h (usen_mono_prec' (en2un hh)))
+
+      simp [ih_cf]
     | succ xrM1 =>
       -- rewriting/simplifying
       rw [hxr] at hh ih
@@ -3370,63 +3367,61 @@ usen O₁ c s x = usen O₂ c s x
       simp only []
 
       -- we want to show that the subexpression involving evaln and usen are equivalent, using the inductive hypothesis.
-      have aux00 : (evaln O₁ (s-1) (cf.prec cg) (Nat.pair x.l xrM1)).isSome := by exact evaln_prec_dom_aux hh
-      have aux02 : (∀ i < (usen O₁ (cf.prec cg) (s-1) (Nat.pair x.l xrM1)).get (en2un aux00), O₁ i = O₂ i) := by
-        intro xx
-        intro hxx
-        have hxx2 := le_trans hxx (usen_mono_prec_1 (en2un hh))
-        exact hO xx hxx2
+      have aux00 := evaln_prec_dom_aux hh
+      have aux02 := λ x h ↦ hO x (le_trans h (usen_mono_prec_1 (en2un hh)))
       have : s-1-1+1=s-1 := by exact Eq.symm (evaln_sG1 aux00)
       simp (config:={singlePass:=true}) [←this] at aux00 aux02
-      have aux03 := ih (s-1) (sub_le s 1) (Nat.pair x.l xrM1) (pair_lt_pair_right x.l (lt_add_one xrM1)) aux00 aux02
-      simp [this] at aux03 aux00 aux02
-      have aux11 := evaln_prec_dom hh
-      simp at aux11
 
-      rw [←aux03.left]
-      rw [←aux03.right]
+      have ih_c := ih (s-1) ?_ (Nat.pair x.l xrM1) ?_ ?_ ?_; rotate_left
+      · exact sub_le s 1
+      · exact pair_lt_pair_right x.l (lt_add_one xrM1)
+      · exact aux00
+      · exact aux02
+
+      simp [this] at ih_c aux00
+      have aux11 := evaln_prec_dom hh
+
+      have ih_cg := hcg
+        (Nat.pair x.l (Nat.pair xrM1 ((evaln O₁ (s-1) (cf.prec cg) (Nat.pair x.l xrM1)).get (aux00)))) (aux11.right)
+        λ x h ↦ hO x (le_trans h (usen_mono_prec (en2un hh)).right)
+
+      rw [← ih_c.left]
+      rw [← ih_c.right]
       simp only [isSome.bind aux00]
       simp only [isSome.bind $ en2un aux00]
-      have ih1 := hcg
-        (Nat.pair x.l (Nat.pair xrM1 ((evaln O₁ (s-1) (cf.prec cg) (Nat.pair x.l xrM1)).get (aux00)))) (aux11.right)
-        (λ xx hxx ↦ hO xx (le_trans hxx (usen_mono_prec (en2un hh)).right))
+      simp [ih_cg]
 
-      simp [ih1.left]
-      simp [ih1.right]
   | hrfind' cf s x hcf =>
     rcases nrfind'_obtain_prop hh with ⟨nrop1,nrop2,nrop3⟩
     let nro := nrfind'_obtain hh
     have rwnro : nrfind'_obtain hh = nro := rfl
-    simp [rwnro] at nrop1 nrop2
+    simp only [rwnro, Option.mem_def] at nrop1 nrop2
     have ihAll : ∀ j ≤ nro,
       evaln O₁ (s-1+1-j) cf  (Nat.pair x.l (j + x.r)) = evaln O₂ (s-1+1-j) cf (Nat.pair x.l (j + x.r))
       ∧
       usen O₁ cf (s-1+1-j)  (Nat.pair x.l (j + x.r)) = usen O₂ cf (s-1+1-j) (Nat.pair x.l (j + x.r))
     := by
-      intro j
-      intro hjro
+      intro j hjro
+      have sG1j : s-1+1-j-1+1 = s-1+1-j := by exact (evaln_sG1 (nrop2 j hjro)).symm
+      rw [←sG1j]
 
-      have sG1j :  s-1+1-j-1+1 =  s-1+1-j := by exact (evaln_sG1 (nrop2 j hjro)).symm
       have aux1 : (evaln O₁ (s-1+1-j-1+1) cf (Nat.pair x.l (j + x.r))).isSome := by
         rw [sG1j]
         exact nrop2 j hjro
-      have aux2 : (∀ i < (usen O₁ cf (s-1+1-j-1+1) (Nat.pair x.l (j + x.r))).get (en2un aux1), O₁ i = O₂ i) := by
+
+      apply hcf (Nat.pair x.l (j + x.r)) ((s-1+1-j)) ?_ ?_; rotate_left
+      ·
         simp [sG1j]
-        intro xx
-        intro hxx
-        have := usen_mono_rfind' (en2un hh) (show j≤nrfind'_obtain hh from hjro)
-        have hxx2 := le_trans hxx this
-        exact hO xx hxx2
-      rw [←sG1j]
-      exact hcf (Nat.pair x.l (j + x.r)) ((s-1+1-j)) aux1 aux2
+        exact λ x h ↦ hO x (le_trans h (usen_mono_rfind' (en2un hh) (show j≤nrfind'_obtain hh from hjro)))
+      · exact aux1
 
     have aux0 : (evaln O₂ (s-1+1) cf.rfind' x).isSome := by
       apply evaln_rfind_as_eval_rfind_reverse
       simp
       use nro
       constructor
-      rw [←(ihAll nro le_rfl).left]
-      exact nrop1
+      · rw [←(ihAll nro le_rfl).left]
+        exact nrop1
       intro j hjro
       have hjro : j≤nro := by exact le_of_succ_le hjro
       rw [←(ihAll j hjro).left]
@@ -3459,6 +3454,8 @@ usen O₁ c s x = usen O₂ c s x
         exact nrop3 j hjro
 
     simp [main1]
+
+    -- we rephrase the proof to be of the for loop form found in use, rather than the inductive form of usen
     suffices
     (do
   guard (x≤s-1);
@@ -3488,17 +3485,13 @@ usen O₁ c s x = usen O₂ c s x
     simp
 
     simp [evaln_xles hh]
-    have bcrw := (ihAll 0 (Nat.zero_le nro)).left
-    have bcrw2 := (ihAll 0 (Nat.zero_le nro)).right
-    simp at bcrw
-    simp at bcrw2
     rw [←main1]
     simp [isSome.bind hh]
 
     have a2 := λ j hj ↦ (ihAll j hj).right
     have a0 : (evaln O₁ (s - 1 + 1) cf.rfind' x).get hh - x.r = nro := by exact rwnro
     rw [a0]
-    clear rwnro nrop3 nrop1 bcrw bcrw2 aux0 hO a0 main1 hcf ihAll
+    clear rwnro nrop3 nrop1 aux0 hO a0 main1 hcf ihAll
 
     have a4 := a2 0 (Nat.zero_le nro)
     simp at a4
@@ -3513,17 +3506,15 @@ usen O₁ c s x = usen O₂ c s x
       simp (config:={singlePass:=true}) [listrwgen]; simp
 
       have := a2 (nron+1) (le_rfl)
-      simp at this
-      simp [←this]
+      simp at this; simp [←this]; clear this
 
       have := en2un $ nrop2 (nron+1) (Nat.le_refl (nron + 1))
       simp at this
       simp [isSome.bind this]
-      have ih1 := @ih
+      exact @ih
         ((b.max ((usen O₁ cf (s - 1 - nron) (Nat.pair x.l (nron + 1 + x.r))).get this)))
         (λ j hj ↦ a2 j (le_add_right_of_le hj))
         (λ j hj ↦ nrop2 j (le_add_right_of_le hj))
-      exact ih1
 
 lemma usen_sing'' : (usen O c s1 x).get h1 = (use O c x).get h2 := by
   rcases usen_complete.mp (Part.get_mem h2) with ⟨h3,h4⟩
