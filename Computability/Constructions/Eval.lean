@@ -11,7 +11,7 @@ namespace Computability.Code
 `eval c_evaln_aux (_, (c,s)).last` is the list of computations of code c for s steps on all inputs x=0 to s.
 -/
 def c_evaln_aux :=
-  let code_s  := (succ.comp (left.comp right))
+  let code_s    := (succ.comp (left.comp right))
   let code      := left.comp code_s
   let s         := right.comp code_s
   let sM1       := c_pred.comp s
@@ -32,10 +32,10 @@ def c_evaln_aux :=
   let opt_right  := c_if_gt_te.comp₄ ele (sM1.comp right) (c_const 0) $ succ.comp (right.comp    ele)
   let opt_oracle := c_if_gt_te.comp₄ ele (sM1.comp right) (c_const 0) $ succ.comp (oracle.comp   ele)
 
-  let zero_mapped := ((c_list_map' opt_zero).comp₂ (c_list_range.comp s) c_id)
-  let succ_mapped := ((c_list_map' opt_succ).comp₂ (c_list_range.comp s) c_id)
-  let left_mapped := ((c_list_map' opt_left).comp₂ (c_list_range.comp s) c_id)
-  let right_mapped := ((c_list_map' opt_right).comp₂ (c_list_range.comp s) c_id)
+  let zero_mapped   := ((c_list_map' opt_zero).comp₂   (c_list_range.comp s) c_id)
+  let succ_mapped   := ((c_list_map' opt_succ).comp₂   (c_list_range.comp s) c_id)
+  let left_mapped   := ((c_list_map' opt_left).comp₂   (c_list_range.comp s) c_id)
+  let right_mapped  := ((c_list_map' opt_right).comp₂  (c_list_range.comp s) c_id)
   let oracle_mapped := ((c_list_map' opt_oracle).comp₂ (c_list_range.comp s) c_id)
 
   -- `=[c]ₛ(x)`
