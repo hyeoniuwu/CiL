@@ -3260,10 +3260,10 @@ def up_to_usen.induction
       fun s =>
         hprec cf cg s (ihcf s) (ihcg s) x' (fun s' hle x'' hx'' => ih_x' x'' hx'' s'))
     | rfind' cf ihcf => exact fun s x ↦ hrfind' cf s x fun x' s' ↦ ihcf s' x'
-theorem up_to_usen (hh:(evaln O₁ s c x).isSome) (hO: ∀ i<(usen O₁ c s x).get (en2un hh), O₁ i = O₂ i) :
-evaln O₁ s c x = evaln O₂ s c x
-∧
-usen O₁ c s x = usen O₂ c s x
+theorem usen_principle {O₁ O₂} {s c x}
+  (hh:(evaln O₁ s c x).isSome)
+  (hO: ∀ i<(usen O₁ c s x).get (en2un hh), O₁ i = O₂ i) :
+  evaln O₁ s c x = evaln O₂ s c x ∧ usen O₁ c s x = usen O₂ c s x
 := by
   have sG1 := evaln_sG1 hh
   have xles : x≤s-1 := evaln_xles' hh
@@ -3273,9 +3273,7 @@ usen O₁ c s x = usen O₂ c s x
     exact fun i a ↦ hO i a
 
   expose_names
-  clear hO_1 hh_1
-  clear sG1
-  clear xles
+  clear hO_1 hh_1 sG1 xles
 
   induction c,s,x using up_to_usen.induction with
   | hzero s x => simp [evaln, usen]
@@ -3532,7 +3530,7 @@ lemma usen_sound' (h:(usen O c s x).isSome) : use O c x = Part.some ((usen O c s
   have := usen_sound (Option.get_mem h)
   exact Part.eq_some_iff.mpr this
 
-theorem up_to_use
+theorem use_principle {O₁ O₂} {c x}
 (hh:(eval O₁ c x).Dom)
 (hO: ∀ i<(use O₁ c x).get (e2u hh), O₁ i = O₂ i) :
 eval O₁ c x = eval O₂ c x
@@ -3544,7 +3542,7 @@ use O₁ c x = use O₂ c x
   have userepl : (use O₁ c x).get (e2u hh) = (usen O₁ c s x).get h3 := by exact Eq.symm usen_sing''
   have h2 : (evaln O₁ s c x).isSome := by exact Option.isSome_of_mem h1
   rw [userepl] at hO
-  have := @up_to_usen O₁ s c x O₂ h2 hO
+  have := @usen_principle O₁ O₂ s c x h2 hO
   have h4 := h2
   rw [this.left] at h4
   rw [evaln_sound' h2]
@@ -3554,13 +3552,13 @@ use O₁ c x = use O₂ c x
   simp [this]
 
 theorem use_principle_evaln {O₁ O₂:ℕ→ℕ} {s c x} (hh:(evaln O₁ s c x).isSome) (hO: ∀ i<(usen O₁ c s x).get (en2un hh), O₁ i = O₂ i) : evaln O₁ s c x = evaln O₂ s c x :=
-  (up_to_usen hh hO).left
+  (usen_principle hh hO).left
 theorem use_principle_usen {O₁ O₂:ℕ→ℕ} {s c x} (hh:(evaln O₁ s c x).isSome) (hO: ∀ i<(usen O₁ c s x).get (en2un hh), O₁ i = O₂ i) : usen O₁ c s x = usen O₂ c s x :=
-  (up_to_usen hh hO).right
+  (usen_principle hh hO).right
 theorem use_principle_eval {O₁ O₂:ℕ→ℕ} {c x} (hh:(eval O₁ c x).Dom) (hO: ∀ i<(use O₁ c x).get (e2u hh), O₁ i = O₂ i) : eval O₁ c x = eval O₂ c x :=
-  (up_to_use hh hO).left
+  (use_principle hh hO).left
 theorem use_principle_use {O₁ O₂:ℕ→ℕ} {c x} (hh:(eval O₁ c x).Dom) (hO: ∀ i<(use O₁ c x).get (e2u hh), O₁ i = O₂ i) : use O₁ c x = use O₂ c x :=
-  (up_to_use hh hO).right
+  (use_principle hh hO).right
 
 
 /-
