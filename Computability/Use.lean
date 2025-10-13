@@ -3283,96 +3283,72 @@ usen O₁ c s x = usen O₂ c s x
   | hleft s x => simp [evaln, usen]
   | hright s x => simp [evaln, usen]
   | horacle s x =>
-    have h1:x<(usen O₁ oracle (s-1+1) x).get (en2un hh) := by simp [usen]
-    simp [evaln]
-    simp [usen]
+    simp [evaln, usen]
     simp [evaln_xles hh]
-    exact hO x h1
+    apply hO x ?_
+    · simp [usen]
   | hpair cf cg s x hcf hcg =>
-    simp only [evaln]
-    simp only [usen]
-    have h1:
-    (∀ i < (usen O₁ cf (s-1+1) x).get (en2un (evaln_pair_dom hh).left), O₁ i = O₂ i)
-    :=by
-      intro xx
-      intro hxx
-      have hxx2 := le_trans hxx (usen_mono_pair (en2un hh)).left
-      exact hO xx hxx2
-    have h2:
-    (∀ i < (usen O₁ cg (s-1+1) x).get (en2un (evaln_pair_dom hh).right), O₁ i = O₂ i)
-    :=by
-      intro xx
-      intro hxx
-      have hxx2 := le_trans hxx (usen_mono_pair (en2un hh)).right
-      exact hO xx hxx2
-    rw [(hcf (evaln_pair_dom hh).left h1).left]
-    rw [(hcf (evaln_pair_dom hh).left h1).right]
-    rw [(hcg (evaln_pair_dom hh).right h2).left]
-    rw [(hcg (evaln_pair_dom hh).right h2).right]
-    exact Prod.mk_inj.mp rfl
-    -- rw [hcf (evaln_pair_dom hh).left h1]
-    -- rw [hcg (evaln_pair_dom hh).right h2]
+    -- start with simple unfolding of terms
+    simp only [evaln, usen]
+
+    have ih_cf := hcf ?_ ?_; rotate_left
+    · exact (evaln_pair_dom hh).left
+    · exact λ x h ↦ hO x (le_trans h (usen_mono_pair (en2un hh)).left)
+    have ih_cg := hcg ?_ ?_; rotate_left
+    · exact (evaln_pair_dom hh).right
+    · exact λ x h ↦ hO x (le_trans h (usen_mono_pair (en2un hh)).right)
+
+    simp [
+      ih_cf.left,
+      ih_cf.right,
+      ih_cg.left,
+      ih_cg.right
+      ]
   | hcomp cf cg x s hcg hcf =>
-    simp only [evaln]
-    simp only [usen]
-    if hhhhh:¬x≤s-1 then
-    simp [hhhhh,Option.bind]
+    -- start with simple unfolding of terms
+    simp only [evaln, usen];
+
+    -- deal with trivial case where functions diverge immediately
+    if h:¬x≤s-1 then simp [h,Option.bind]
     else
-    simp at hhhhh
-    simp [hhhhh]
-    have h1:
-    (∀ i < (usen O₁ cg (s-1+1) x).get (en2un (evaln_comp_dom hh).left), O₁ i = O₂ i)
-    :=by
-      intro xx
-      intro hxx
-      have hxx2 := le_trans hxx (usen_mono_comp (en2un hh)).left
-      exact hO xx hxx2
-    have ih1 := hcg (evaln_comp_dom hh).left h1
-    rw [ih1.left]
-    rw [ih1.right]
+    simp at h; simp [h]; clear h
 
-    have h2:
-    (∀ i < (usen O₁ cf (s-1+1) ((evaln O₁ (s-1+1) cg x).get (evaln_comp_dom_aux hh))).get (en2un (evaln_comp_dom hh).right), O₁ i = O₂ i)
-    :=by
-      intro xx
-      intro hxx
-      have hxx2 := le_trans hxx (usen_mono_comp (en2un hh)).right
-
-      exact hO xx hxx2
+    have ih_cg := hcg ?_ ?_; rotate_left
+    · exact (evaln_comp_dom hh).left
+    · exact λ x h ↦ hO x (le_trans h (usen_mono_comp (en2un hh)).left)
 
     have aux0 : (evaln O₂ (s-1+1) cg x).isSome := by
-      have aux00 := evaln_comp_dom_aux hh
-      rwa [ih1.left] at aux00
+      have := evaln_comp_dom_aux hh
+      rwa [ih_cg.left] at this
     have aux2 : (evaln O₁ (s-1+1) cf ((evaln O₂ (s-1+1) cg x).get aux0)).isSome := by
-      have aux10 :=(evaln_comp_dom hh).right
-      rwa [Option.get_inj.mpr ih1.left] at aux10
-    have aux4 :(usen O₁ cf ((s-1+1)) ((evaln O₁ (s-1+1) cg x).get (evaln_comp_dom_aux hh))).get (en2un (evaln_comp_dom hh).right) = (usen O₁ cf ((s-1+1)) ((evaln O₂ (s-1+1) cg x).get aux0)).get (en2un aux2) := by
-      simp_all only [implies_true]
-    have h3:
-    (∀ i < (usen O₁ cf ((s-1+1)) ((evaln O₂ (s-1+1) cg x).get aux0)).get (en2un aux2), O₁ i = O₂ i)
-    := by
-      have aux := h2
+      have this := (evaln_comp_dom hh).right
+      rwa [Option.get_inj.mpr ih_cg.left] at this
+    have aux4 : (usen O₁ cf ((s-1+1)) ((evaln O₁ (s-1+1) cg x).get (evaln_comp_dom_aux hh))).get (en2un (evaln_comp_dom hh).right) = (usen O₁ cf ((s-1+1)) ((evaln O₂ (s-1+1) cg x).get aux0)).get (en2un aux2) := by
+      simp_all only []
+
+    have ih_cf := hcf ((evaln O₂ (s-1+1) cg x).get aux0) ?_ ?_; rotate_left
+    · exact aux2
+    · have aux := λ x h ↦ hO x (le_trans h (usen_mono_comp (en2un hh)).right)
       rwa [aux4] at aux
 
-    have ih2 := hcf ((evaln O₂ (s-1+1) cg x).get aux0) aux2 h3
+    rw [ih_cg.left]
+    rw [ih_cg.right]
     simp [isSome.bind aux0]
-    simp [ih2.left]
-    simp [ih2.right]
+    simp [ih_cf.left]
+    simp [ih_cf.right]
 
   | hprec cf cg s hcf hcg x ih =>
-    rw [evaln]
-    rw [evaln]
-    rw [usen]
-    rw [usen]
-    rw [show x=Nat.pair x.l x.r from by simp] at hh ⊢ ih
+    -- start with simple unfolding of terms
+    rewrite [evaln];rewrite [evaln]
+    rewrite [usen]; rewrite [usen]
+    rewrite [show x=Nat.pair x.l x.r from by simp] at hh ⊢ ih
     simp (config := { singlePass := true }) only [show x=Nat.pair x.l x.r from by simp] at hO
+    simp? says simp only [pair_lr, unpaired, unpair1_to_l, Option.bind_eq_bind, unpair2_to_r, Option.pure_def]
 
-    simp
-    if hhhhh:¬x≤s-1 then
-    simp [hhhhh,Option.bind]
+    -- deal with trivial case where functions diverge immediately
+    if h:¬x≤s-1 then simp [h,Option.bind]
     else
-    simp at hhhhh
-    simp [hhhhh]
+    simp at h; simp [h]; clear h
 
     cases hxr:x.r with
     | zero =>
@@ -3388,13 +3364,13 @@ usen O₁ c s x = usen O₂ c s x
         exact hO xx hxx2
       simp [hcf x.l aux0 aux2]
     | succ xrM1 =>
-
+      -- rewriting/simplifying
       rw [hxr] at hh ih
-      simp only [hxr] at hO
-      simp
+      simp only [hxr] at hO;
+      simp only []
 
+      -- we want to show that the subexpression involving evaln and usen are equivalent, using the inductive hypothesis.
       have aux00 : (evaln O₁ (s-1) (cf.prec cg) (Nat.pair x.l xrM1)).isSome := by exact evaln_prec_dom_aux hh
-
       have aux02 : (∀ i < (usen O₁ (cf.prec cg) (s-1) (Nat.pair x.l xrM1)).get (en2un aux00), O₁ i = O₂ i) := by
         intro xx
         intro hxx
