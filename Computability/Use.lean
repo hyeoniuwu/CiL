@@ -491,9 +491,6 @@ theorem nrfind'_obtain_prop_6' (h:(evaln O (s+1) (rfind' cf) x).isSome) :
   rw [←nrop_eq_rop h]
   exact fun j a ↦ nrfind'_obtain_prop_6 h j a
 
--- TODO:
--- the below theorem should follow more or less straightforwardly from n_rfind'_obtain_prop.
--- #check evaln_sound
 theorem evaln_complete' (h:(evaln O s c x).isSome) : (y∈eval O c x)→(y∈evaln O s c x) := by
   intro hh
   rcases evaln_complete.mp hh with ⟨h1,h2⟩
@@ -516,8 +513,6 @@ theorem evaln_sound''' (h:(evaln O s c x).isSome) : (y∉evaln O s c x)→(y∉e
   contrapose
   simp
   exact fun h2 => evaln_complete' h h2
-
---   sorry
 
 theorem rfind'_obtain_prop
 (h:(eval O (rfind' cf) x).Dom) :
@@ -3260,6 +3255,8 @@ def up_to_usen.induction
       fun s =>
         hprec cf cg s (ihcf s) (ihcg s) x' (fun s' hle x'' hx'' => ih_x' x'' hx'' s'))
     | rfind' cf ihcf => exact fun s x ↦ hrfind' cf s x fun x' s' ↦ ihcf s' x'
+
+-- At a high level, this is an induction proof, using the inductive hypothesis on subterms obtained from unfolding evaln and usen.
 theorem usen_principle {O₁ O₂} {s c x}
   (hh:(evaln O₁ s c x).isSome)
   (hO: ∀ i<(usen O₁ c s x).get (en2un hh), O₁ i = O₂ i) :

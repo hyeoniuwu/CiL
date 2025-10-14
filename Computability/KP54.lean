@@ -38,8 +38,8 @@ theorem c_kp54_aux_evp :
   simp [Seq.seq, -Denumerable.list_ofNat_succ]
 theorem c_kp54_aux_2 (halts:(eval Nat.fzero (dovetail (c_kp54_aux i lb)) Aₚ).Dom) :
   have dvt := (eval Nat.fzero (dovetail (c_kp54_aux i lb)) Aₚ).get halts
-  (evals ((n2l Aₚ) ++ (n2l (dvt.l+1))) i lb).Dom := by
-    have := dovetail_ev_0' halts
+  (evals ((n2l Aₚ) ++ (n2l (dvt+1))) i lb).Dom := by
+    have := dovetail_ev_0 halts
     extract_lets at this ⊢
     expose_names
     simp only [c_kp54_aux_evp] at this
@@ -65,7 +65,7 @@ match s with
   if (s+1)%2=0 then -- then s+1=2i+2, and we will work on Rᵢ.
     let dvt := eval Nat.fzero (dovetail (c_kp54_aux i lb)) Aₚ
     if halts:dvt.Dom then
-      let rf := (dvt.get halts).l -- rf is a natural such that (eval_string ((n2l A) ++ (n2l rf)) i n).Dom.
+      let rf := dvt.get halts -- rf is a natural such that (eval_string ((n2l A) ++ (n2l rf)) i n).Dom.
       let Aₛ := (n2l Aₚ) ++ (n2l (rf+1))
       let A_result := (evals Aₛ i lb).get (c_kp54_aux_2 halts)
       Nat.pair Aₛ ((n2l Bₚ).concat (Nat.sg' A_result))
@@ -74,7 +74,7 @@ match s with
   else -- then s+1=2i+1, and we will work on Sᵢ.
     let dvt := eval Nat.fzero (dovetail (c_kp54_aux i la)) Bₚ
     if halts:dvt.Dom then
-      let rf := (dvt.get halts).l
+      let rf := dvt.get halts
       let Bₛ := (n2l Bₚ) ++ (n2l (rf+1))
       let B_result := (evals (Bₛ) i la).get (c_kp54_aux_2 halts)
       Nat.pair ((n2l Aₚ).concat (Nat.sg' B_result)) Bₛ
@@ -315,7 +315,7 @@ private theorem R_aux_0 (i:ℕ) (h:(evals (As (2*i+1+1)) i (R_wt i)).Dom):
   simp (config := {zeta:=false}) only [←hdvt]
 
   if halts: dvt.Dom then
-    let (eq:=hrf) rf  := (dvt.get halts).l -- rf is a natural such that (eval_string ((n2l A) ++ (n2l rf)) i n).Dom.
+    let (eq:=hrf) rf  := dvt.get halts -- rf is a natural such that (eval_string ((n2l A) ++ (n2l rf)) i n).Dom.
     simp (config := {zeta:=false}) only [←hrf]
     let (eq:=hAₛ) Aₛ := (n2l Aₚ) ++ (n2l (rf+1))
     simp (config := {zeta:=false}) only [←hAₛ]

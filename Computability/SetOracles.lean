@@ -370,21 +370,21 @@ theorem ran_to_dom_ev : (eval O (ran_to_dom O c) y).Dom ↔ ∃ x, y ∈ eval O 
   constructor
   ·
     intro h
-    have := dovetail_ev_0' h
+    have := dovetail_ev_0 h
     let dvt := ((eval O (c_if_eq'.comp₂ left ((c_eval₁ O).comp₂ (c_const c) right)).dovetail y).get h)
     rw [show ((eval O (c_if_eq'.comp₂ left ((c_eval₁ O).comp₂ (c_const c) right)).dovetail y).get h) = dvt from rfl] at this
     simp at this
     simp [eval] at this
     simp [Seq.seq] at this
-    have s1 : ((eval₁ O (Nat.pair c dvt.l))).Dom := by
+    have s1 : ((eval₁ O (Nat.pair c dvt))).Dom := by
       contrapose this
       simp [Part.eq_none_iff'.mpr this]
     simp [Part.Dom.bind s1] at this
     simp [eval₁] at this s1
-    use dvt.l
+    use dvt
 
-    suffices y = (eval O (n2c c) dvt.l).get s1 from by
-      exact (@Part.get_eq_iff_mem ℕ (eval O (n2c c) dvt.l) y s1).mp this.symm
+    suffices y = (eval O (n2c c) dvt).get s1 from by
+      exact (@Part.get_eq_iff_mem ℕ (eval O (n2c c) dvt) y s1).mp this.symm
     exact this
 
   ·

@@ -12,18 +12,24 @@ section kp54
   unfold c_c_rfind
   apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
 @[simp] theorem c_c_rfind_evp : eval_prim O c_c_rfind = fun x:ℕ => c2n (c_rfind x) := by simp [c_c_rfind, c_rfind]
-def c_dovetail :=
+def c_dovetailn :=
   c_c_rfind.comp $
   c_comp₂.comp₃
   (c_const c_if_eq')
   (c_comp₃.comp₄ (c_const c_evaln) (c_pair.comp₂ c_left (c_comp.comp₂ c_left c_right)) (c_c_const) (c_comp.comp₂ c_right c_right))
   (c_const (c_const 1))
+@[cp] theorem c_dovetailn_ev_pr : code_prim c_dovetailn := by
+  unfold c_dovetailn
+  apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+@[simp] theorem c_dovetailn_evp : eval_prim O c_dovetailn = λ x ↦ c2n (dovetailn $ n2c x) := by
+  -- just doing simp [c_dovetailn, dovetailn] should work, but gives a kernel recursion error. why?
+  -- this was fixed by moving simp from def of comp_n to the comp_n_evp theorems.
+  simp [c_dovetailn, dovetailn]
+def c_dovetail := c_comp.comp₂ c_left c_dovetailn
 @[cp] theorem c_dovetail_ev_pr : code_prim c_dovetail := by
   unfold c_dovetail
   apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
 @[simp] theorem c_dovetail_evp : eval_prim O c_dovetail = λ x ↦ c2n (dovetail $ n2c x) := by
-  -- just doing simp [c_dovetail, dovetail] should work, but gives a kernel recursion error. why?
-  -- this was fixed by moving simp from def of comp_n to the comp_n_evp theorems.
   simp [c_dovetail, dovetail]
 
 
@@ -77,7 +83,7 @@ def c_kp54_main :=
     c_ifz.comp₃ q0
     (pair (c_list_concat.comp₂ Aₚ zero) (c_list_concat.comp₂ Bₚ zero))
     (
-      let rf := left.comp (c_pred.comp q0)
+      let rf := c_pred.comp q0
       let Aₛ := c_list_append.comp₂ Aₚ (succ.comp rf)
       let A_result := c_pred.comp $ oracle.comp₂ c_c_evals (pair Aₛ (pair i lb))
       pair Aₛ (c_list_concat.comp₂ Bₚ (c_sg'.comp A_result))
@@ -88,7 +94,7 @@ def c_kp54_main :=
     c_ifz.comp₃ q0
     (pair (c_list_concat.comp₂ Aₚ zero) (c_list_concat.comp₂ Bₚ zero))
     (
-      let rf := left.comp (c_pred.comp q0)
+      let rf := c_pred.comp q0
       let Bₛ := c_list_append.comp₂ Bₚ (succ.comp rf)
       let B_result := c_pred.comp $ oracle.comp₂ c_c_evals (pair Bₛ (pair i la))
       pair (c_list_concat.comp₂ Aₚ (c_sg'.comp B_result)) Bₛ
@@ -187,7 +193,7 @@ def c_kp54 :=
             simp [dvt] at this
             simp [hAₛ, hi, hlb] at h2
             have contra : (evals Aₛ_1 (n2c i_1) lb_1).Dom := by
-              have a0 := dovetail_ev_0' this
+              have a0 := dovetail_ev_0 this
               simp [KP54.c_kp54_aux_evp, -Denumerable.list_ofNat_succ] at a0
               exact a0
             simp [contra] at h2
@@ -219,7 +225,7 @@ def c_kp54 :=
             simp [dvt_1] at this
             simp [hBₛ, hi, hla] at h2
             have contra : (evals Bₛ_1 (n2c i_1) la_1).Dom := by
-              have a0 := dovetail_ev_0' this
+              have a0 := dovetail_ev_0 this
               simp [KP54.c_kp54_aux_evp, -Denumerable.list_ofNat_succ] at a0
               exact a0
             simp [contra] at h2
