@@ -39,15 +39,15 @@ theorem simple_above_empty (h:simple A): ∅<ᵀA := by sorry
 
 /--`[c_ran_to_dom_aux](x)=0 if x.1.2+1=[x.1.1:O,x.2.2](x.2.1) else 0`-/
 noncomputable def c_simple_aux (O:Set ℕ) := c_if_eq'.comp (pair (succ.comp $ right.comp left) ((c_evalnSet₁ O).comp (pair (left.comp left) right)))
-@[simp] theorem c_simple_aux_evp (O:Set ℕ) : eval_prim (χ O) (c_simple_aux O) ab = if (Nat.succ ab.l.r=evalnSet₁ O (Nat.pair ab.l.l ab.r)) then 0 else 1 := by
-  simp [c_simple_aux, eval_prim]
-@[simp]theorem c_simple_aux_ev_pr : code_prim (c_simple_aux O) := by
+@[simp] theorem c_simple_aux_evp (O:Set ℕ) : evalp (χ O) (c_simple_aux O) ab = if (Nat.succ ab.l.r=evalnSet₁ O (Nat.pair ab.l.l ab.r)) then 0 else 1 := by
+  simp [c_simple_aux, evalp]
+@[simp]theorem c_simple_aux_prim : code_prim (c_simple_aux O) := by
   simp only [c_simple_aux]
   repeat constructor
-  exact c_evalnSet₁_ev_pr
+  exact c_evalnSet₁_prim
   repeat constructor
 theorem c_simple_aux_ev : eval (χ O) (c_simple_aux O) ab = if (Nat.succ ab.l.r=evalnSet₁ O (Nat.pair ab.l.l ab.r)) then 0 else 1 := by
-  rw [←@eval_prim_eq_eval (c_simple_aux O) (χ O) c_simple_aux_ev_pr]
+  rw [←@evalp_eq_eval (c_simple_aux O) (χ O) c_simple_aux_prim]
   simp only [PFun.coe_val, c_simple_aux_evp]
   exact apply_ite Part.some (ab.l.r.succ = evalnSet₁ O (Nat.pair ab.l.l ab.r)) 0 1
 def f_simple_ran (O:Set ℕ) : ℕ→ℕ := fun c => curry (c_rfind (c_ifevaleq (ef $ c_evalnSet₁ O))) c

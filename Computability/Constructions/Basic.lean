@@ -17,7 +17,7 @@ theorem _root_.Nat.RecursiveIn.none : Nat.RecursiveIn O fun _ => Part.none := by
   exact RecursiveIn_of_eval
 
 def c_pair_proj (x:ℕ) := pair (c_const x) c_id
-theorem c_pair_proj_evp : eval_prim O (c_pair_proj x) = Nat.pair x := by simp [c_pair_proj]
+theorem c_pair_proj_evp : evalp O (c_pair_proj x) = Nat.pair x := by simp [c_pair_proj]
 lemma _root_.Nat.PrimrecIn.pair_proj : Nat.PrimrecIn O (Nat.pair x) := by
   rw [←c_pair_proj_evp]
   exact code_prim_prop
@@ -81,7 +81,7 @@ def c_if_le_te' (c1 c2 c3 c4:Code) := c_ite (c_sub.comp₂ c1 c2) c3 c4
 @[simp] theorem c_if_le_te'_ev (hc1:code_total O c1) (hc2:code_total O c2) : eval O (c_if_le_te' c1 c2 c3 c4) x = if (eval O c1 x).get (hc1 x) ≤ (eval O c2 x).get (hc2 x) then (eval O c3 x) else (eval O c4 x) := by
   simp [c_if_le_te']
   have : code_total O (c_sub.comp₂ c1 c2) := by
-    apply total_comp_of $ prim_total c_sub_ev_pr
+    apply total_comp_of $ prim_total c_sub_prim
     apply total_pair_of hc1 hc2
   simp [this]
   congr
@@ -108,7 +108,7 @@ def c_ifdom (c a:Computability.Code) := c_add.comp₂ (zero.comp c) a
 def eval₁ (O:ℕ→ℕ):ℕ→.ℕ := fun ex => eval O ex.l.n2c ex.r
 def c_evaln₁ := c_evaln.comp₃ (left.comp right) (left) (right.comp right)
 def evaln₁ (O:ℕ→ℕ):ℕ→ℕ := fun abc => Encodable.encode (evaln O abc.r.r abc.l.n2c abc.r.l)
-theorem c_evaln₁_evp : eval_prim O c_evaln₁ = evaln₁ O := by
+theorem c_evaln₁_evp : evalp O c_evaln₁ = evaln₁ O := by
   simp [c_evaln₁]
   exact rfl
 theorem rec_eval₁:Nat.RecursiveIn O (eval₁ O) := Computability.eval
@@ -122,7 +122,7 @@ namespace Computability.Code
 /-- c_evconst takes as input a natural `(e,x)`, and returns an index to a program which calculates `[e](x)` regardless of its input. -/
 def c_evconst (ex:ℕ) : Code := comp ex.l.n2c (c_const ex.r)
 def c_c_evconst := c_comp.comp₂ left (c_c_const.comp right)
-@[simp] theorem c_c_evconst_evp : eval_prim O c_c_evconst = fun x:ℕ => c2n (c_evconst (x.n2c)) := by
+@[simp] theorem c_c_evconst_evp : evalp O c_c_evconst = fun x:ℕ => c2n (c_evconst (x.n2c)) := by
   unfold c_evconst
   funext x
   simp [c_c_evconst]

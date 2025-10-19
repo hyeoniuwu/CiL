@@ -1,5 +1,5 @@
 import Computability.SetOracles
-
+-- import Mathlib.Computability.Encoding
 open Nat.RecursiveIn.Code
 open Classical
 open Computability
@@ -24,6 +24,10 @@ and here i can just directly work with a list of nat anyways, interpreting 0 as 
 -- the proofs later however are simplified if A_s,B_s are treated as List Bool...
 -- /mnt/Q/Mathematics/LaTeX/Writings/Computability.pdf
 -- c_kp54_aux check if x.r+1 is a finite extension to A for the computation [i](n).
+theorem list_foldl {g : α → σ} {h : α → σ × β → σ} :
+    Primrec f →
+      Primrec g → Primrec₂ h → Primrec fun a => (f a).foldl (fun s b => h a (s, b)) (g a) 
+
 def c_kp54_aux (i n:ℕ) := zero
 theorem c_kp54_aux_evp :
   eval Nat.fzero (c_kp54_aux i n) x

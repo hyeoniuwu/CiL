@@ -9,7 +9,7 @@ open Computability.Code
 @[simp] noncomputable def K0 (O : ℕ → ℕ) : ℕ → ℕ := λ n =>
   let part := eval O n.l n.r
   if h:part.Dom then part.get h+1 else 0
-@[simp] noncomputable def K (O:ℕ→ℕ) : ℕ → ℕ := λ n =>
+@[simp] noncomputable def K (O : ℕ → ℕ) : ℕ → ℕ := λ n =>
   let part := eval O n n
   if h:part.Dom then part.get h + 1 else 0
 noncomputable abbrev jump (O:ℕ→ℕ) : ℕ → ℕ := K0 O
@@ -34,7 +34,7 @@ theorem c_jump_decode_ev' (hc:code_total O c): eval O (c_jump_decode c) = fun x 
   exact c_jump_decode_ev hc
 
 theorem O_le_K0 (O:ℕ→ℕ) :  O ≤ᵀᶠ (K0 O) := by
-  apply exists_code.mpr  -- change goal to: ∃ c, eval (K0 O) c = O
+  apply exists_code.mpr  -- changes goal to: ∃ c, eval (K0 O) c = O
   let q := oracle.comp (pair (c_const oracle) c_id)
   use c_jump_decode q
 
@@ -71,18 +71,18 @@ theorem K_eq_K0 {O} : (K O)  ≡ᵀᶠ (K0 O) := ⟨K_leq_K0 O,K0_leq_K O⟩
 theorem K0_eq_K {O} : (K0 O) ≡ᵀᶠ (K O)  := K_eq_K0.symm
 theorem O_le_K (O:ℕ→ℕ) : O ≤ᵀᶠ (K O) := TuringReducible.trans (O_le_K0 O) (K0_leq_K O)
 
-theorem jump_not_leq_f (f:ℕ→ℕ) : ¬(f⌜ ≤ᵀᶠ f) := by
+theorem jump_not_le_id (O:ℕ→ℕ) : ¬(O⌜ ≤ᵀᶠ O) := by
   intro h
-  rcases exists_code.mp h with ⟨c_jf,hc_jh⟩
-  let g := c_ite (c_jf.comp (pair c_id c_id)) (zero) c_diverge
-  have fg : eval f g =  fun (x:ℕ) => if (f⌜) (Nat.pair x x) = 0 then Part.some 0 else Part.none := by
+  rcases exists_code.mp h with ⟨c_jO,hc_jO⟩
+  let g := c_ite (c_jO.comp (pair c_id c_id)) zero c_diverge
+  have fg : eval O g = fun (x:ℕ) => if (O⌜) (Nat.pair x x) = 0 then Part.some 0 else Part.none := by
     unfold g
     funext x
-    have : code_total f (c_jf.comp (pair c_id c_id)) := by intro x; simp [eval,hc_jh,Seq.seq]
-    simp [c_ite_ev this, eval, hc_jh, Seq.seq]
+    have : code_total O (c_jO.comp (pair c_id c_id)) := by intro x; simp [eval,hc_jO,Seq.seq]
+    simp [c_ite_ev this, eval, hc_jO, Seq.seq]
   -- why does this blow up lean?
   -- nvm, fixed [25-09-24 00:10:28]
-  cases Classical.em (eval f g g).Dom with
+  cases Classical.em (eval O g g).Dom with
   | inl hh =>
     have hh2 := hh
     rw [fg] at hh2
@@ -95,7 +95,7 @@ theorem jump_not_leq_f (f:ℕ→ℕ) : ¬(f⌜ ≤ᵀᶠ f) := by
 
 theorem K_nle_O (O:ℕ→ℕ) : ¬(K O ≤ᵀᶠ O) := by
   intro h
-  apply jump_not_leq_f
+  apply jump_not_le_id
   exact TuringReducible.trans (K0_leq_K O) h
 
-theorem O_lt_K0 {O:ℕ→ℕ} : O <ᵀᶠ (K0 O) := ⟨O_le_J O,jump_not_leq_f O⟩
+theorem O_lt_K0 {O:ℕ→ℕ} : O <ᵀᶠ (K0 O) := ⟨O_le_J O,jump_not_le_id O⟩

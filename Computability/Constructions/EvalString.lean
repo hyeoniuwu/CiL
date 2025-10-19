@@ -20,16 +20,16 @@ def c_evalnc :=
   c_opt_bind
   (c_usen.comp₃ x0 c0 s0) $
   c_if_le_te.comp₄ right u1 (c_evaln.comp₃ x1 c1 s1) zero
-@[simp, aesop safe] theorem c_evalnc_ev_pr : code_prim c_evalnc := by
+@[simp, aesop safe] theorem c_evalnc_prim : code_prim c_evalnc := by
   unfold c_evalnc;
   apply_rules (config := {maxDepth:=90, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
-@[simp] theorem c_evalnc_evp:eval_prim O c_evalnc (Nat.pair (Nat.pair u s) (Nat.pair c x)) = o2n (evalnc O u s c x) := by
-  simp [c_evalnc,eval_prim];
+@[simp] theorem c_evalnc_evp:evalp O c_evalnc (Nat.pair (Nat.pair u s) (Nat.pair c x)) = o2n (evalnc O u s c x) := by
+  simp [c_evalnc,evalp];
   simp [evalnc]
   congr; funext a_0
   simp only [apply_ite]
   aesop
-@[simp] theorem c_evalnc_ev:eval O c_evalnc (Nat.pair (Nat.pair u s) (Nat.pair c x)) = o2n (evalnc O u s c x) := by simp [← eval_prim_eq_eval c_evalnc_ev_pr]
+@[simp] theorem c_evalnc_ev:eval O c_evalnc (Nat.pair (Nat.pair u s) (Nat.pair c x)) = o2n (evalnc O u s c x) := by simp [← evalp_eq_eval c_evalnc_prim]
 end Computability.Code
 -- theorem Nat.PrimrecIn.evalnc:Nat.PrimrecIn O evalnc := by ...
 -- theorem Nat.Primrec.evalnc:Nat.Primrec Nat.evalnc := by ...
@@ -84,10 +84,10 @@ theorem c_evalo_ev (ho:code_total O o) : eval O c_evalo (Nat.pair o (Nat.pair c 
 
 
 def c_evals_oracle (o:Code):= c_sg.comp $ c_list_getD.comp₃ (c_const o) c_id (c_const whatever)
-@[cp] theorem c_evals_oracle_ev_pr : code_prim (c_evals_oracle o) := by
+@[cp] theorem c_evals_oracle_prim : code_prim (c_evals_oracle o) := by
   unfold c_evals_oracle
   apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
-theorem c_evals_oracle_evp : eval_prim O (c_evals_oracle o) =
+theorem c_evals_oracle_evp : evalp O (c_evals_oracle o) =
 λ x:ℕ ↦ b2n $ n2b $ (n2l o).getD x whatever := by
   simp [c_evals_oracle]
   funext x
@@ -101,7 +101,7 @@ theorem c_evals_oracle_evp : eval_prim O (c_evals_oracle o) =
 theorem c_evals_oracle_ev : eval O (c_evals_oracle o) =
 λ x:ℕ ↦ b2n $ n2b $ (n2l o).getD x whatever
 := by
-  simp [← eval_prim_eq_eval c_evals_oracle_ev_pr]
+  simp [← evalp_eq_eval c_evals_oracle_prim]
   simp [c_evals_oracle_evp]
 
 def c_comp₂ :=
@@ -109,33 +109,33 @@ def c_comp₂ :=
   let b := left.comp right
   let c := right.comp right
   c_comp.comp₂ a $ c_pair.comp₂ b c
-@[cp] theorem c_comp₂_ev_pr : code_prim c_comp₂ := by
+@[cp] theorem c_comp₂_prim : code_prim c_comp₂ := by
   unfold c_comp₂
   apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
-@[simp] theorem c_comp₂_evp : eval_prim O c_comp₂ (Nat.pair a (Nat.pair b c)) = c2n (comp₂ a b c) := by
+@[simp] theorem c_comp₂_evp : evalp O c_comp₂ (Nat.pair a (Nat.pair b c)) = c2n (comp₂ a b c) := by
   simp [c_comp₂]; rfl
-@[simp] theorem c_comp₂_ev:eval O c_comp₂ (Nat.pair a (Nat.pair b c)) = c2n (comp₂ a b c) := by rw [← eval_prim_eq_eval c_comp₂_ev_pr]; simp
+@[simp] theorem c_comp₂_ev:eval O c_comp₂ (Nat.pair a (Nat.pair b c)) = c2n (comp₂ a b c) := by rw [← evalp_eq_eval c_comp₂_prim]; simp
 def c_comp₃ :=
   let a := left.comp left
   let b := left.comp right
   let c := right.comp left
   let d := right.comp right
   c_comp.comp₂ (a) (c_pair.comp₂ c (c_pair.comp₂ b d))
-@[cp] theorem c_comp₃_ev_pr : code_prim c_comp₃ := by
+@[cp] theorem c_comp₃_prim : code_prim c_comp₃ := by
   unfold c_comp₃
   apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
-@[simp] theorem c_comp₃_evp : eval_prim O c_comp₃ (Nat.pair (Nat.pair a b) (Nat.pair c d)) = c2n (comp₃ a b c d) := by
+@[simp] theorem c_comp₃_evp : evalp O c_comp₃ (Nat.pair (Nat.pair a b) (Nat.pair c d)) = c2n (comp₃ a b c d) := by
   simp [c_comp₃]; rfl
-@[simp] theorem c_comp₃_ev:eval O c_comp₃ (Nat.pair (Nat.pair a b) (Nat.pair c d)) = c2n (comp₃ a b c d) := by rw [← eval_prim_eq_eval c_comp₃_ev_pr]; simp
+@[simp] theorem c_comp₃_ev:eval O c_comp₃ (Nat.pair (Nat.pair a b) (Nat.pair c d)) = c2n (comp₃ a b c d) := by rw [← evalp_eq_eval c_comp₃_prim]; simp
 
 def c_c_evals_oracle := c_comp.comp₂ (c_const c_sg) (c_comp₃.comp₄ (c_const c_list_getD) (c_c_const.comp left) (c_const c_id) (c_const $ c_const whatever))
-@[cp] def c_c_evals_oracle_ev_pr : code_prim c_c_evals_oracle := by
+@[cp] def c_c_evals_oracle_prim : code_prim c_c_evals_oracle := by
   unfold c_c_evals_oracle
   apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
-@[simp] theorem c_c_evals_oracle_evp : eval_prim O c_c_evals_oracle (Nat.pair o (Nat.pair c x)) =
+@[simp] theorem c_c_evals_oracle_evp : evalp O c_c_evals_oracle (Nat.pair o (Nat.pair c x)) =
 c2n (c_evals_oracle o) := by simp [c_c_evals_oracle, c_evals_oracle]
 
-theorem c_c_evals_oracle_ev : eval O c_c_evals_oracle (Nat.pair o (Nat.pair c x)) = c2n (c_evals_oracle o) := by simp [← eval_prim_eq_eval c_c_evals_oracle_ev_pr]
+theorem c_c_evals_oracle_ev : eval O c_c_evals_oracle (Nat.pair o (Nat.pair c x)) = c2n (c_evals_oracle o) := by simp [← evalp_eq_eval c_c_evals_oracle_prim]
 
 def c_evals_code := c_evalc.comp₂ (c_list_length.comp left) right
 
@@ -159,11 +159,11 @@ def c_evals :=
 
   simp [Seq.seq]
 
-  have t1 : code_total O c_c_evals_oracle := prim_total c_c_evals_oracle_ev_pr
+  have t1 : code_total O c_c_evals_oracle := prim_total c_c_evals_oracle_prim
   have : code_total O ((eval O c_c_evals_oracle (Nat.pair o (Nat.pair c x))).get (t1 (Nat.pair o (Nat.pair c x)))) := by
     simp [c_c_evals_oracle_ev]
     apply prim_total
-    exact c_evals_oracle_ev_pr
+    exact c_evals_oracle_prim
   simp [Part.Dom.bind $ t1 (Nat.pair o (Nat.pair c x))]
   have := @c_evalo_ev O _ (c_evals_code.c2n) (Nat.pair o (Nat.pair c x)) this
   simp at this

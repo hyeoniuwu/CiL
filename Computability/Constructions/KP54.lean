@@ -8,28 +8,28 @@ open Computability
 section kp54
 
 @[irreducible] def c_c_rfind := c_comp.comp₂ c_rfind' (c_pair.comp₂ (c_const c_id) (c_zero))
-@[cp] theorem c_c_rfind_ev_pr : code_prim c_c_rfind := by
+@[cp] theorem c_c_rfind_prim : code_prim c_c_rfind := by
   unfold c_c_rfind
   apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
-@[simp] theorem c_c_rfind_evp : eval_prim O c_c_rfind = fun x:ℕ => c2n (c_rfind x) := by simp [c_c_rfind, c_rfind]
+@[simp] theorem c_c_rfind_evp : evalp O c_c_rfind = fun x:ℕ => c2n (c_rfind x) := by simp [c_c_rfind, c_rfind]
 def c_dovetailn :=
   c_c_rfind.comp $
   c_comp₂.comp₃
   (c_const c_if_eq')
   (c_comp₃.comp₄ (c_const c_evaln) (c_pair.comp₂ c_left (c_comp.comp₂ c_left c_right)) (c_c_const) (c_comp.comp₂ c_right c_right))
   (c_const (c_const 1))
-@[cp] theorem c_dovetailn_ev_pr : code_prim c_dovetailn := by
+@[cp] theorem c_dovetailn_prim : code_prim c_dovetailn := by
   unfold c_dovetailn
   apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
-@[simp] theorem c_dovetailn_evp : eval_prim O c_dovetailn = λ x ↦ c2n (dovetailn $ n2c x) := by
+@[simp] theorem c_dovetailn_evp : evalp O c_dovetailn = λ x ↦ c2n (dovetailn $ n2c x) := by
   -- just doing simp [c_dovetailn, dovetailn] should work, but gives a kernel recursion error. why?
   -- this was fixed by moving simp from def of comp_n to the comp_n_evp theorems.
   simp [c_dovetailn, dovetailn]
 def c_dovetail := c_comp.comp₂ c_left c_dovetailn
-@[cp] theorem c_dovetail_ev_pr : code_prim c_dovetail := by
+@[cp] theorem c_dovetail_prim : code_prim c_dovetail := by
   unfold c_dovetail
   apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
-@[simp] theorem c_dovetail_evp : eval_prim O c_dovetail = λ x ↦ c2n (dovetail $ n2c x) := by
+@[simp] theorem c_dovetail_evp : evalp O c_dovetail = λ x ↦ c2n (dovetail $ n2c x) := by
   simp [c_dovetail, dovetail]
 
 
@@ -39,16 +39,16 @@ def c_c_evals :=
   (c_const c_c_evals_oracle)
   (c_const $ c_const c_evals_code)
   (c_const c_id)
-@[cp] theorem c_c_evals_ev_pr : code_prim c_c_evals := by
+@[cp] theorem c_c_evals_prim : code_prim c_c_evals := by
   unfold c_c_evals
   apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
-@[simp] theorem c_c_evals_evp : eval_prim O c_c_evals x = c_evals := by simp [c_c_evals, c_evals]
+@[simp] theorem c_c_evals_evp : evalp O c_c_evals x = c_evals := by simp [c_c_evals, c_evals]
 def c_c_ifdom :=
   c_comp₂.comp₃ (c_const c_add) (c_comp.comp₂ c_zero left) (right)
-@[cp] theorem c_c_ifdom_ev_pr : code_prim c_c_ifdom := by
+@[cp] theorem c_c_ifdom_prim : code_prim c_c_ifdom := by
   unfold c_c_ifdom
   apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
-@[simp] theorem c_c_ifdom_evp : eval_prim O c_c_ifdom = λ x ↦ c2n (c_ifdom x.l x.r) := by
+@[simp] theorem c_c_ifdom_evp : evalp O c_c_ifdom = λ x ↦ c2n (c_ifdom x.l x.r) := by
   simp [c_c_ifdom, c_ifdom]
 def c_c_kp54_aux :=
   c_dovetail.comp $
@@ -61,11 +61,11 @@ def c_c_kp54_aux :=
     (c_c_const.comp right)
   )
   c_zero
-@[cp] theorem c_c_kp54_aux_ev_pr : code_prim c_c_kp54_aux := by
+@[cp] theorem c_c_kp54_aux_prim : code_prim c_c_kp54_aux := by
   unfold c_c_kp54_aux
   apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
 
-@[simp] theorem c_c_kp54_aux_evp : eval_prim O c_c_kp54_aux = λ x:ℕ ↦ c2n (dovetail (KP54.c_kp54_aux x.l x.r)) := by
+@[simp] theorem c_c_kp54_aux_evp : evalp O c_c_kp54_aux = λ x:ℕ ↦ c2n (dovetail (KP54.c_kp54_aux x.l x.r)) := by
   simp [c_c_kp54_aux, KP54.c_kp54_aux]
 
 
@@ -108,7 +108,7 @@ def c_kp54 :=
   ).comp₂ zero c_id
 -- theorem c_kp54_t : code_total O c_kp54 := by sorry
 
-@[cp] theorem c_kp54_ev_pr : code_prim c_kp54 := by
+@[cp] theorem c_kp54_prim : code_prim c_kp54 := by
   unfold c_kp54
   unfold c_kp54_main
   extract_lets
@@ -132,7 +132,7 @@ def c_kp54 :=
 
   apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
 
-@[simp] theorem c_kp54_evp : eval_prim (K0 Nat.fzero) c_kp54 x = KP54.KP54 x := by
+@[simp] theorem c_kp54_evp : evalp (K0 (λ_↦0)) c_kp54 x = KP54.KP54 x := by
   induction x with
   | zero =>
     simp [c_kp54]
@@ -141,7 +141,7 @@ def c_kp54 :=
   | succ s_1 ih =>
     unfold c_kp54
     simp
-    have : (Nat.rec 0 (fun y IH ↦ eval_prim (K0 Nat.fzero) c_kp54_main (Nat.pair y IH)) s_1) = eval_prim (K0 Nat.fzero) c_kp54 s_1 := by
+    have : (Nat.rec 0 (fun y IH ↦ evalp (K0 (λ_↦0)) c_kp54_main (Nat.pair y IH)) s_1) = evalp (K0 (λ_↦0)) c_kp54 s_1 := by
       unfold c_kp54
       cases s_1 <;> simp
     -- we are careful with the rewriting/unfolding order here.
@@ -154,13 +154,13 @@ def c_kp54 :=
 
     let (eq:=hinp) inp := (Nat.pair s_1 (KP54.KP54 s_1))
 
-    have hs : eval_prim (K0 Nat.fzero) s inp = s_1 := by simp [s, inp]
-    have hi : eval_prim (K0 Nat.fzero) i inp = i_1 := by simp [i, i_1, hs]
-    have hKP54s : eval_prim (K0 Nat.fzero) KP54s inp = KP54.KP54 s_1 := by simp [KP54s, inp]
-    have hAₚ : eval_prim (K0 Nat.fzero) Aₚ inp = Aₚ_1 := by simp [Aₚ, Aₚ_1, hKP54s]
-    have hBₚ : eval_prim (K0 Nat.fzero) Bₚ inp = Bₚ_1 := by simp [Bₚ, Bₚ_1, hKP54s]
-    have hla : eval_prim (K0 Nat.fzero) la inp = la_1 := by simp [la, la_1, hAₚ]
-    have hlb : eval_prim (K0 Nat.fzero) lb inp = lb_1 := by simp [lb, lb_1, hBₚ]
+    have hs : evalp (K0 (λ_↦0)) s inp = s_1 := by simp [s, inp]
+    have hi : evalp (K0 (λ_↦0)) i inp = i_1 := by simp [i, i_1, hs]
+    have hKP54s : evalp (K0 (λ_↦0)) KP54s inp = KP54.KP54 s_1 := by simp [KP54s, inp]
+    have hAₚ : evalp (K0 (λ_↦0)) Aₚ inp = Aₚ_1 := by simp [Aₚ, Aₚ_1, hKP54s]
+    have hBₚ : evalp (K0 (λ_↦0)) Bₚ inp = Bₚ_1 := by simp [Bₚ, Bₚ_1, hKP54s]
+    have hla : evalp (K0 (λ_↦0)) la inp = la_1 := by simp [la, la_1, hAₚ]
+    have hlb : evalp (K0 (λ_↦0)) lb inp = lb_1 := by simp [lb, lb_1, hBₚ]
 
     simp (config := {zeta:=false}) [←hinp]
     simp (config := {zeta:=false}) [hs]
@@ -176,15 +176,15 @@ def c_kp54 :=
         have : dvt.Dom := by simp [q0, hi, hlb, hAₚ] at h1; exact h1
         simp (config := {zeta:=false}) [this]
         lift_lets; extract_lets; expose_names
-        have hrf : eval_prim (K0 Nat.fzero) rf inp = rf_2 := by
+        have hrf : evalp (K0 (λ_↦0)) rf inp = rf_2 := by
           simp [rf, rf_2,q0]
           split
           next h2 => simp [hi, hlb, hAₚ]; congr
           next h2 =>
             simp [hi, hlb, hAₚ] at h2
             simp [dvt, h2] at this
-        have hAₛ : eval_prim (K0 Nat.fzero) Aₛ inp = Aₛ_1 := by simp [Aₛ, Aₛ_1, hAₚ, hrf, -Denumerable.list_ofNat_succ]
-        have hA_result : eval_prim (K0 Nat.fzero) A_result inp = A_result_1 := by
+        have hAₛ : evalp (K0 (λ_↦0)) Aₛ inp = Aₛ_1 := by simp [Aₛ, Aₛ_1, hAₚ, hrf, -Denumerable.list_ofNat_succ]
+        have hA_result : evalp (K0 (λ_↦0)) A_result inp = A_result_1 := by
           simp [A_result, A_result_1]
           split
           next h2 => simp [hAₛ, hi, hlb]
@@ -208,15 +208,15 @@ def c_kp54 :=
         have : dvt_1.Dom := by simp [q0_1, hi, hla, hBₚ] at h1; exact h1
         simp (config := {zeta:=false}) [this]
         lift_lets; extract_lets; expose_names
-        have hrf : eval_prim (K0 Nat.fzero) rf_1 inp = rf_2 := by
+        have hrf : evalp (K0 (λ_↦0)) rf_1 inp = rf_2 := by
           simp [rf_1, rf_2,q0_1]
           split
           next h2 => simp [hi]; congr
           next h2 =>
             simp [hi, hla, hBₚ] at h2
             simp [dvt_1, h2] at this
-        have hBₛ : eval_prim (K0 Nat.fzero) Bₛ inp = Bₛ_1 := by simp [Bₛ, Bₛ_1, hBₚ, hrf, -Denumerable.list_ofNat_succ]
-        have hB_result : eval_prim (K0 Nat.fzero) B_result inp = B_result_1 := by
+        have hBₛ : evalp (K0 (λ_↦0)) Bₛ inp = Bₛ_1 := by simp [Bₛ, Bₛ_1, hBₚ, hrf, -Denumerable.list_ofNat_succ]
+        have hB_result : evalp (K0 (λ_↦0)) B_result inp = B_result_1 := by
           simp [B_result, B_result_1]
           split
           next h2 => simp [hBₛ, hi, hla]
@@ -237,14 +237,14 @@ def c_kp54 :=
 section n2b
 namespace Computability.Code
 def c_n2b := c_sg
-@[cp] theorem c_n2b_ev_pr : code_prim c_n2b := by
+@[cp] theorem c_n2b_prim : code_prim c_n2b := by
   unfold c_n2b
   apply_rules (config := {maxDepth:=10, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
-@[simp] theorem c_n2b_evp:eval_prim O c_n2b = fun x => if n2b x = true then 1 else 0 := by
+@[simp] theorem c_n2b_evp:evalp O c_n2b = fun x => if n2b x = true then 1 else 0 := by
   simp [c_n2b]
   unfold Nat.sg; unfold n2b
   aesop
-@[simp] theorem c_n2b_ev:eval O c_n2b = fun x => if n2b x = true then 1 else 0 := by rw [← eval_prim_eq_eval c_n2b_ev_pr]; simp only [c_n2b_evp]; funext x; aesop
+@[simp] theorem c_n2b_ev:eval O c_n2b = fun x => if n2b x = true then 1 else 0 := by rw [← evalp_eq_eval c_n2b_prim]; simp only [c_n2b_evp]; funext x; aesop
 end Computability.Code
 -- theorem Nat.PrimrecIn.n2b:Nat.PrimrecIn O Nat.n2b := by ...
 -- theorem Nat.Primrec.n2b:Nat.Primrec Nat.n2b := by ...
@@ -254,33 +254,33 @@ end n2b
   unfold List.getI
   simp [h]
 
-theorem fzero_eq_χempty : Nat.fzero = χ ∅ := by unfold χ; simp
+theorem fzero_eq_χempty : (λ_↦0) = χ ∅ := by unfold χ; simp
 
 def c_kp54_A := c_n2b.comp $ c_list_getI.comp₂ (left.comp $ c_kp54.comp succ) c_id
-@[cp] theorem c_kp54_A_ev_pr : code_prim c_kp54_A := by
+@[cp] theorem c_kp54_A_prim : code_prim c_kp54_A := by
   unfold c_kp54_A
   apply_rules (config := {maxDepth:=20, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
-@[simp] theorem c_kp54_A_evp : eval_prim (K0 Nat.fzero) c_kp54_A = χ KP54.A := by
+@[simp] theorem c_kp54_A_evp : evalp (K0 (λ_↦0)) c_kp54_A = χ KP54.A := by
   funext x
   simp [c_kp54_A]; congr
   exact getI_eq_getElem
-@[simp] theorem c_kp54_A_ev :eval (K0 Nat.fzero) c_kp54_A = χ KP54.A := by simp [← eval_prim_eq_eval c_kp54_A_ev_pr];
-theorem A_le_J1_aux : (χ KP54.A) ≤ᵀᶠ K0 Nat.fzero := exists_code.mpr ⟨c_kp54_A, c_kp54_A_ev⟩
+@[simp] theorem c_kp54_A_ev :eval (K0 (λ_↦0)) c_kp54_A = χ KP54.A := by simp [← evalp_eq_eval c_kp54_A_prim];
+theorem A_le_J1_aux : (χ KP54.A) ≤ᵀᶠ K0 (λ_↦0) := exists_code.mpr ⟨c_kp54_A, c_kp54_A_ev⟩
 theorem A_le_J1 : KP54.A ≤ᵀ ∅⌜ := by
   apply TR_Set_iff_Fn.mpr
   apply _root_.trans (A_le_J1_aux)
   rw [fzero_eq_χempty]
   exact (K0χ_eq_χSetK ∅).1
 def c_kp54_B := c_n2b.comp $ c_list_getI.comp₂ (right.comp $ c_kp54.comp succ) c_id
-@[cp] theorem c_kp54_B_ev_pr : code_prim c_kp54_B := by
+@[cp] theorem c_kp54_B_prim : code_prim c_kp54_B := by
   unfold c_kp54_B
   apply_rules (config := {maxDepth:=20, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
-@[simp] theorem c_kp54_B_evp : eval_prim (K0 Nat.fzero) c_kp54_B = χ KP54.B := by
+@[simp] theorem c_kp54_B_evp : evalp (K0 (λ_↦0)) c_kp54_B = χ KP54.B := by
   funext x
   simp [c_kp54_B]; congr
   exact getI_eq_getElem
-@[simp] theorem c_kp54_B_ev :eval (K0 Nat.fzero) c_kp54_B = χ KP54.B := by simp [← eval_prim_eq_eval c_kp54_B_ev_pr];
-theorem B_le_J1_aux : (χ KP54.B) ≤ᵀᶠ K0 Nat.fzero := exists_code.mpr ⟨c_kp54_B, c_kp54_B_ev⟩
+@[simp] theorem c_kp54_B_ev :eval (K0 (λ_↦0)) c_kp54_B = χ KP54.B := by simp [← evalp_eq_eval c_kp54_B_prim];
+theorem B_le_J1_aux : (χ KP54.B) ≤ᵀᶠ K0 (λ_↦0) := exists_code.mpr ⟨c_kp54_B, c_kp54_B_ev⟩
 theorem B_le_J1 : KP54.B ≤ᵀ ∅⌜ := by
   apply TR_Set_iff_Fn.mpr
   apply _root_.trans (B_le_J1_aux)

@@ -3215,7 +3215,7 @@ theorem usen_mono_rfind'
   simp [aux92] at this
   apply le_trans main2 this
 
-def up_to_usen.induction
+def usen_principle.induction
   {motive : Code → ℕ → ℕ → Prop}
   (hzero : ∀ x s, motive .zero x s)
   (hsucc : ∀ x s, motive .succ x s)
@@ -3236,8 +3236,7 @@ def up_to_usen.induction
     (∀ x, ( ∀ s' ≤ s, ∀ x' < x, motive (.prec cf cg) s' x') → motive (.prec cf cg) s x))
   (hrfind' : ∀ cf s x,
     (∀ x' s', motive cf s' x') →
-    motive (.rfind' cf) s x
-    )
+    motive (.rfind' cf) s x)
   : ∀ c s x, motive c s x := by
     intro c
     induction c with
@@ -3272,7 +3271,7 @@ theorem usen_principle {O₁ O₂} {s c x}
   expose_names
   clear hO_1 hh_1 sG1 xles
 
-  induction c,s,x using up_to_usen.induction with
+  induction c,s,x using usen_principle.induction with
   | hzero s x => simp [evaln, usen]
   | hsucc s x => simp [evaln, usen]
   | hleft s x => simp [evaln, usen]

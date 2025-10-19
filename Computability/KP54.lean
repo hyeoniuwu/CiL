@@ -29,15 +29,15 @@ and here i can just directly work with a list of nat anyways, interpreting 0 as 
   (c_evals.comp₃ (c_list_append.comp₂ left (succ.comp right)) (c_const i) (c_const n))
   zero
 theorem c_kp54_aux_evp :
-  eval Nat.fzero (c_kp54_aux i n) x
+  eval (λ_↦0) (c_kp54_aux i n) x
     =
   if (evals ((n2l x.l) ++ (n2l (x.r+1))) i n).Dom then Part.some 0 else Part.none
 := by
   simp [c_kp54_aux, -Denumerable.list_ofNat_succ]
   simp [Computability.eval, -Denumerable.list_ofNat_succ]
   simp [Seq.seq, -Denumerable.list_ofNat_succ]
-theorem c_kp54_aux_2 (halts:(eval Nat.fzero (dovetail (c_kp54_aux i lb)) Aₚ).Dom) :
-  have dvt := (eval Nat.fzero (dovetail (c_kp54_aux i lb)) Aₚ).get halts
+theorem c_kp54_aux_2 (halts:(eval (λ_↦0) (dovetail (c_kp54_aux i lb)) Aₚ).Dom) :
+  have dvt := (eval (λ_↦0) (dovetail (c_kp54_aux i lb)) Aₚ).get halts
   (evals ((n2l Aₚ) ++ (n2l (dvt+1))) i lb).Dom := by
     have := dovetail_ev_0 halts
     extract_lets at this ⊢
@@ -63,7 +63,7 @@ match s with
   have la := (n2l Aₚ).length
 
   if (s+1)%2=0 then -- then s+1=2i+2, and we will work on Rᵢ.
-    let dvt := eval Nat.fzero (dovetail (c_kp54_aux i lb)) Aₚ
+    let dvt := eval (λ_↦0) (dovetail (c_kp54_aux i lb)) Aₚ -- this is the step where we search for a finite extension.
     if halts:dvt.Dom then
       let rf := dvt.get halts -- rf is a natural such that (eval_string ((n2l A) ++ (n2l rf)) i n).Dom.
       let Aₛ := (n2l Aₚ) ++ (n2l (rf+1))
@@ -72,7 +72,7 @@ match s with
     else
       Nat.pair (l2n $ (n2l Aₚ).concat 0) (l2n $ (n2l Bₚ).concat 0)
   else -- then s+1=2i+1, and we will work on Sᵢ.
-    let dvt := eval Nat.fzero (dovetail (c_kp54_aux i la)) Bₚ
+    let dvt := eval (λ_↦0) (dovetail (c_kp54_aux i la)) Bₚ
     if halts:dvt.Dom then
       let rf := dvt.get halts
       let Bₛ := (n2l Bₚ) ++ (n2l (rf+1))
@@ -311,7 +311,7 @@ private theorem R_aux_0 (i:ℕ) (h:(evals (As (2*i+1+1)) i (R_wt i)).Dom):
   lift_lets; extract_lets; expose_names
   have i_1_simp: i_1 = i := rfl
 
-  let (eq:=hdvt) dvt := (Computability.eval Nat.fzero (c_kp54_aux i_1 lb).dovetail Aₚ)
+  let (eq:=hdvt) dvt := (Computability.eval (λ_↦0) (c_kp54_aux i_1 lb).dovetail Aₚ)
   simp (config := {zeta:=false}) only [←hdvt]
 
   if halts: dvt.Dom then

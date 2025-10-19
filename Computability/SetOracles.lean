@@ -15,11 +15,11 @@ namespace Computability
 -- definitions
 noncomputable def χ (O:Set ℕ) : ℕ→ℕ := fun x ↦ if x ∈ O then 1 else 0
 theorem χsimp {O} : χ O = fun x ↦ if x ∈ O then 1 else 0 := by exact rfl
-@[simp] abbrev SetRecursiveIn (O:Set ℕ) (f:ℕ→.ℕ): Prop := Nat.RecursiveIn (χ O) f
-@[simp] abbrev SetTuringReducible (A O:Set ℕ) : Prop := Nat.RecursiveIn (χ O) (χ A)
-@[simp] abbrev SetTuringReducibleStrict (A O:Set ℕ) : Prop := Nat.RecursiveIn (χ O) (χ A) ∧ ¬ Nat.RecursiveIn (χ A) (χ O)
+@[simp] abbrev SetRecursiveIn (O:Set ℕ) (f:ℕ→.ℕ) : Prop := RecursiveIn (χ O) f
+@[simp] abbrev SetTuringReducible (A O:Set ℕ) : Prop := RecursiveIn (χ O) (χ A)
+@[simp] abbrev SetTuringReducibleStrict (A O:Set ℕ) : Prop := RecursiveIn (χ O) (χ A) ∧ ¬ RecursiveIn (χ A) (χ O)
 @[simp] abbrev SetTuringEquivalent (O A:Set ℕ) : Prop := AntisymmRel SetTuringReducible O A
-noncomputable def evalSet (O:Set ℕ) : Computability.Code → ℕ→.ℕ := Computability.eval (χ O)
+noncomputable def evalSet (O:Set ℕ) : Code → ℕ→.ℕ := eval (χ O)
 @[simp] noncomputable def evalSet₁ (O:Set ℕ) : ℕ→.ℕ := eval₁ (χ O)
 @[simp] noncomputable def evalnSet₁ (O:Set ℕ) : ℕ→ℕ := evaln₁ (χ O)
 theorem prim_evalnSet₁:Nat.PrimrecIn (χ O) (evalnSet₁ O) := by simp only [evalnSet₁]; exact prim_evaln₁
@@ -31,7 +31,7 @@ def jumpn : ℕ → Set ℕ → Set ℕ
 | i+1 => SetJump ∘ jumpn i
 
 -- from TuringDegree.lean
-protected theorem SetTuringReducible.refl (A:Set ℕ) : SetTuringReducible A A := by exact Nat.RecursiveIn.oracle
+protected theorem SetTuringReducible.refl (A:Set ℕ) : SetTuringReducible A A := by exact RecursiveIn.oracle
 protected theorem SetTuringReducible.rfl (A:Set ℕ) : SetTuringReducible A A := SetTuringReducible.refl _
 instance : IsRefl (Set ℕ) SetTuringReducible where refl _ := by (expose_names; exact SetTuringReducible.refl x)
 theorem SetTuringReducible.trans {A B C:Set ℕ} (hg : SetTuringReducible A B) (hh : SetTuringReducible B C) : SetTuringReducible A C := by
@@ -71,11 +71,11 @@ noncomputable def c_evalSet₁ (O:Set ℕ) := choose (@exists_code_for_evalSet�
 @[simp] theorem c_evalSet₁_ev2 : Computability.eval (χ O) (c_evalSet₁ O) = evalSet₁ O := by exact choose_spec exists_code_for_evalSet₁
 
 private theorem exists_code_for_evalnSet₁ {O:Set ℕ} : ∃ c:Computability.Code, evalSet O c = evalnSet₁ O := by apply ((exists_code_for_evalSet O (evalnSet₁ O)).mp) (Nat.RecursiveIn.of_primrecIn prim_evaln₁)
-private theorem exists_prim_code_for_evalnSet₁ : ∃ c, c.code_prim ∧ evalnSet₁ O = eval_prim (χ O) c := by exact code_prim_of_primrecIn prim_evalnSet₁
+private theorem exists_prim_code_for_evalnSet₁ : ∃ c, c.code_prim ∧ evalnSet₁ O = evalp (χ O) c := by exact code_prim_of_primrecIn prim_evalnSet₁
 noncomputable def c_evalnSet₁ (O:Set ℕ) := choose (@exists_prim_code_for_evalnSet₁ O)
-@[simp] theorem c_evalnSet₁_evp : eval_prim (χ O) (c_evalnSet₁ O) = evalnSet₁ O := by exact (choose_spec exists_prim_code_for_evalnSet₁).right.symm
-@[simp] theorem c_evalnSet₁_ev_pr : code_prim (c_evalnSet₁ O) := by exact (choose_spec exists_prim_code_for_evalnSet₁).left
-@[simp] theorem c_evalnSet₁_ev2 : eval (χ O) (c_evalnSet₁ O) = evalnSet₁ O := by rw [←@eval_prim_eq_eval (c_evalnSet₁ O) (χ O) c_evalnSet₁_ev_pr]; simp
+@[simp] theorem c_evalnSet₁_evp : evalp (χ O) (c_evalnSet₁ O) = evalnSet₁ O := by exact (choose_spec exists_prim_code_for_evalnSet₁).right.symm
+@[simp] theorem c_evalnSet₁_prim : code_prim (c_evalnSet₁ O) := by exact (choose_spec exists_prim_code_for_evalnSet₁).left
+@[simp] theorem c_evalnSet₁_ev2 : eval (χ O) (c_evalnSet₁ O) = evalnSet₁ O := by rw [←@evalp_eq_eval (c_evalnSet₁ O) (χ O) c_evalnSet₁_prim]; simp
 @[simp] theorem c_evalnSet₁_ev : evalSet O (c_evalnSet₁ O) = evalnSet₁ O := by simp [evalSet]
 
 private theorem exists_code_for_eval₁ {O:ℕ→ℕ} : ∃ c:Computability.Code, eval O c = eval₁ O := by apply (exists_code.mp) rec_eval₁

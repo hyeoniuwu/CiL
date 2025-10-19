@@ -8,15 +8,16 @@ open Encodable Denumerable
 
 
 namespace Computability
+
 inductive Code : Type
-| zero : Code
-| succ : Code
-| left : Code
-| right : Code
+| zero   : Code
+| succ   : Code
+| left   : Code
+| right  : Code
 | oracle : Code
-| pair : Code → Code → Code
-| comp : Code → Code → Code
-| prec : Code → Code → Code
+| pair   : Code → Code → Code
+| comp   : Code → Code → Code
+| prec   : Code → Code → Code
 | rfind' : Code → Code
 
 
@@ -27,7 +28,6 @@ end Computability
 
 -- namespace Nat.RecursiveIn.Code
 namespace Computability.Code
-
 
 instance instInhabited : Inhabited Code :=
   ⟨zero⟩
@@ -189,16 +189,13 @@ open Code
   for `b < a`
 -/
 def eval (O : ℕ → ℕ) : Code → ℕ →. ℕ
--- | zero => pure 0
 | .zero => λ _ ↦ Part.some 0
-| .succ => fun n => some (n + 1)
-| .left => fun n => some (Nat.unpair n).1
-| .right => fun n => some (Nat.unpair n).2
+| .succ => λ n ↦ some (n + 1)
+| .left => λ n ↦ some (Nat.unpair n).1
+| .right => λ n ↦ some (Nat.unpair n).2
 | .oracle => O
-| .pair cf cg =>
-    fun n => Nat.pair <$> eval O cf n <*> eval O cg n
-| .comp cf cg =>
-    fun n => eval O cg n >>= eval O cf
+| .pair cf cg => λ n ↦ Nat.pair <$> eval O cf n <*> eval O cg n
+| .comp cf cg => λ n ↦ eval O cg n >>= eval O cf
 | .prec cf cg =>
     Nat.unpaired fun a n =>
       n.rec (eval O cf a) fun y IH => do
@@ -206,7 +203,7 @@ def eval (O : ℕ → ℕ) : Code → ℕ →. ℕ
         eval O cg (Nat.pair a (Nat.pair y i))
 | .rfind' cf =>
     Nat.unpaired fun a m =>
-      (Nat.rfind fun n => (fun x => x = 0) <$> eval O cf (Nat.pair a (n + m))).map (· + m)
+      (Nat.rfind λ n ↦ (fun x => x = 0) <$> eval O cf (Nat.pair a (n + m))).map (· + m)
 
 /-- Helper lemma for the evaluation of `prec` in the base case. -/
 @[simp]
