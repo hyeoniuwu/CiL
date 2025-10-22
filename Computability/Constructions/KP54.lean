@@ -291,7 +291,7 @@ theorem B_le_J1 : KP54.B ≤ᵀ ∅⌜ := by
 end kp54
 
 
-theorem ex_incomparable_sets : ∃ A B:Set ℕ, A≤ᵀ∅⌜ ∧ B≤ᵀ∅⌜ ∧ A|ᵀB := by
+theorem ex_incomparable_sets_below_j1 : ∃ A B:Set ℕ, A≤ᵀ∅⌜ ∧ B≤ᵀ∅⌜ ∧ A|ᵀB := by
   use KP54.A
   use KP54.B
   constructor
@@ -304,12 +304,10 @@ theorem ex_incomparable_sets : ∃ A B:Set ℕ, A≤ᵀ∅⌜ ∧ B≤ᵀ∅⌜ 
     unfold SetTuringReducible at h
     apply exists_code_nat.mp at h
     rcases h with ⟨c,hc⟩
-    have contrad := KP54.S c
-    exact contrad hc
+    exact KP54.S c hc
   · change ¬SetTuringReducible KP54.B KP54.A
     intro h
     unfold SetTuringReducible at h
     apply exists_code_nat.mp at h
     rcases h with ⟨c,hc⟩
-    have contrad := KP54.R c
-    exact contrad hc
+    exact KP54.R c hc

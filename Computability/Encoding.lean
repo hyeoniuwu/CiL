@@ -279,45 +279,43 @@ undecidability, `evaln` takes a parameter `k` and fails if it encounters a numbe
 of its execution. Other than this, the semantics are the same as in `Nat.RecursiveIn.Code.eval`.
 -/
 def evaln (O:ℕ→ℕ) : ℕ → Code → ℕ → Option ℕ
-  | 0, _ => fun _ => Option.none
-  | k + 1, .zero => fun n => do
-    guard (n ≤ k)
-    return 0
-  | k + 1, .succ => fun n => do
-    guard (n ≤ k)
-    return (Nat.succ n)
-  | k + 1, .left => fun n => do
-    guard (n ≤ k)
-    return n.unpair.1
-  | k + 1, .right => fun n => do
-    guard (n ≤ k)
-    pure n.unpair.2
-  | k + 1, .oracle => fun n => do
-    guard (n ≤ k)
-    -- (O n).toOption
-    -- umm. this is a contradiction. um.
-    pure (O n)
-  | k + 1, .pair cf cg => fun n => do
-    guard (n ≤ k)
-    Nat.pair <$> evaln O (k + 1) cf n <*> evaln O (k + 1) cg n
-  | k + 1, .comp cf cg => fun n => do
-    guard (n ≤ k)
-    let x ← evaln O (k + 1) cg n
-    evaln O (k + 1) cf x
-  | k + 1, .prec cf cg => fun n => do
-    guard (n ≤ k)
-    n.unpaired fun a n =>
-      n.casesOn (evaln O (k + 1) cf a) fun y => do
-        let i ← evaln O k (prec cf cg) (Nat.pair a y)
-        evaln O (k + 1) cg (Nat.pair a (Nat.pair y i))
-  | k + 1, .rfind' cf => fun n => do
-    guard (n ≤ k)
-    n.unpaired fun a m => do
-      let x ← evaln O (k + 1) cf (Nat.pair a m)
-      if x = 0 then
-        pure m
-      else
-        evaln O k (rfind' cf) (Nat.pair a (m + 1))
+| 0, _ => fun _ => Option.none
+| k + 1, .zero => fun n => do
+  guard (n ≤ k)
+  return 0
+| k + 1, .succ => fun n => do
+  guard (n ≤ k)
+  return (Nat.succ n)
+| k + 1, .left => fun n => do
+  guard (n ≤ k)
+  return n.unpair.1
+| k + 1, .right => fun n => do
+  guard (n ≤ k)
+  pure n.unpair.2
+| k + 1, .oracle => fun n => do
+  guard (n ≤ k)
+  pure (O n)
+| k + 1, .pair cf cg => fun n => do
+  guard (n ≤ k)
+  Nat.pair <$> evaln O (k + 1) cf n <*> evaln O (k + 1) cg n
+| k + 1, .comp cf cg => fun n => do
+  guard (n ≤ k)
+  let x ← evaln O (k + 1) cg n
+  evaln O (k + 1) cf x
+| k + 1, .prec cf cg => fun n => do
+  guard (n ≤ k)
+  n.unpaired fun a n =>
+    n.casesOn (evaln O (k + 1) cf a) fun y => do
+      let i ← evaln O k (prec cf cg) (Nat.pair a y)
+      evaln O (k + 1) cg (Nat.pair a (Nat.pair y i))
+| k + 1, .rfind' cf => fun n => do
+  guard (n ≤ k)
+  n.unpaired fun a m => do
+    let x ← evaln O (k + 1) cf (Nat.pair a m)
+    if x = 0 then
+      pure m
+    else
+      evaln O k (rfind' cf) (Nat.pair a (m + 1))
 
 theorem evaln_bound : ∀ {k c n x}, x ∈ evaln O k c n → n < k
   | 0, c, n, x, h => by simp [evaln] at h
