@@ -324,8 +324,6 @@ abbrev W (O:Set ℕ) (e : ℕ) := (evalSet O e).Dom
 abbrev WR (O:Set ℕ) (e : ℕ) := (evalSet O e).ran
 
 section dom_to_ran
-
-
 def c_dom_to_ran (e:ℕ) := c_ifdom (c_eval.comp₂ (c_const e) c_id) c_id
 theorem dom_to_ran_prop : (W O e) = (WR O (c_dom_to_ran e)) := by
   ext xs
@@ -353,19 +351,10 @@ theorem dom_to_ran_prop : (W O e) = (WR O (c_dom_to_ran e)) := by
     split at h1
     · (expose_names; exact Part.dom_iff_mem.mp h)
     · simp_all only [Part.notMem_none]
-
 end dom_to_ran
 
-
-
-
-
-
 section ran_to_dom
-
 noncomputable def ran_to_dom (O:ℕ→ℕ) : (ℕ→Code) := fun c => dovetail (c_if_eq'.comp₂ left ((c_eval₁ O).comp₂ (c_const c) right))
-
-
 theorem ran_to_dom_ev : (eval O (ran_to_dom O c) y).Dom ↔ ∃ x, y ∈ eval O c x := by
   constructor
   ·
@@ -415,6 +404,15 @@ theorem ran_to_dom_prop : (WR O e) = (W O (ran_to_dom (χ O) e)) := by
     rw [WR]
     have := ran_to_dom_ev.mp (Part.mem_imp_dom hy)
     exact this
-
-
 end ran_to_dom
+
+theorem W_le_SetK0 : ∀ c, W O c ≤ᵀ SetK0 O := by
+  intro c
+  unfold W
+  refine TR_Set_iff_Fn.mpr ?_
+  refine (exists_code_for_evalSet (SetK0 O) ↑(χ (evalSet O (n2c c)).Dom)).mpr ?_
+  use oracle.comp $ pair (c_const c) c_id
+  funext x
+  simp [evalSet, eval, Seq.seq, SetK0, χ]
+  have : ((eval (χ O) (n2c c) x).Dom) ↔ (∃ y, y ∈ eval (χ O) (n2c c) x) := Part.dom_iff_mem
+  exact if_ctx_congr this (congrFun rfl) (congrFun rfl)

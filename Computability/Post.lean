@@ -14,6 +14,13 @@ theorem partfun_eq_χgraph {f:ℕ→ℕ} : f ≡ᵀᶠ χ (total_graph f) := by 
 def CEin (O:Set ℕ) (A:Set ℕ) : Prop := ∃ c:ℕ, A = W O c
 @[simp] abbrev CE (A:Set ℕ) := CEin ∅ A
 @[simp] theorem CEin_trivial : CEin O (W O a) := exists_apply_eq_apply' (W O) a
+theorem CEIn_deg (h:CEin O A) : A ≤ᵀ O⌜ := by
+  rcases h with ⟨c,h⟩
+  refine TR_Set_iff_Fn.mpr ?_
+  rw [h]
+  unfold χ
+  simp
+  sorry
 theorem CEin_range : CEin O A ↔ ∃ c:ℕ, A = WR O c := by
   simp only [CEin]
   constructor
@@ -33,10 +40,17 @@ theorem Cin_iff_CEin_CEin' : A≤ᵀB ↔ (CEin B A ∧ CEin B Aᶜ) := by sorry
 
 /-- immuneIn O A := A is immune in O -/
 def immuneIn (O:Set ℕ) (A:Set ℕ) : Prop := (A.Infinite) ∧ (∀c:ℕ, (W O c).Infinite → ¬(W O c ⊆ A))
+theorem immuneIn_not_CEIn (h:immuneIn O A) : ¬ CEin O A := by
+  unfold CEin
+  unfold immuneIn at h
+  aesop
 /-- simpleIn O A := A is simple in O -/
 def simpleIn (O:Set ℕ) (A:Set ℕ) : Prop := (CEin O A) ∧ immuneIn O Aᶜ
 abbrev simple := simpleIn ∅
-theorem simple_above_empty (h:simple A): ∅<ᵀA := by sorry
+theorem simpleIn_above_oracle (h:simpleIn O A): O<ᵀA := by
+  
+  sorry
+theorem simple_above_empty (h:simple A): ∅<ᵀA := simpleIn_above_oracle h
 theorem simpleInReq_aux {α} (A B : Set α) : A ∩ B ≠ ∅ ↔ ¬ A ⊆ Bᶜ := by
   constructor
   · intro h1
@@ -106,24 +120,30 @@ theorem exists_simple_set : ∃ A:Set ℕ, simpleIn O A := by
 
 
 -- in cooper p.220 theres the requirement also that A≤ᵀjumpn 1 ∅. is this necessary?
-def lowN (n:ℕ) (A:Set ℕ) : Prop := jumpn n A = jumpn n ∅
+def lowNIn (n:ℕ) (A O:Set ℕ) : Prop := jumpn n A = jumpn n O
+def lowN (n:ℕ) (A:Set ℕ) : Prop := lowNIn n A ∅
 abbrev low := lowN 1
+abbrev lowIn := lowNIn 1
 
 theorem low_below_K (h:lowN 1 A) : A<ᵀ∅⌜ := by
-  simp [lowN, jumpn] at h
+  simp [lowN, lowNIn, jumpn] at h
   have h0 : A⌜≡ᵀ∅⌜ := by exact Eq.antisymmRel (congrArg (toAntisymmetrization SetTuringReducible) h)
-  have h1 : A<ᵀA⌜ := by exact Set_lt_SetJump
+  have h1 : A<ᵀA⌜ := by exact Set_lt_SetJump A
+  exact lt_of_lt_of_eq h1 (congrArg (toAntisymmetrization SetTuringReducible) h)
+theorem low_below_K (h:lowN 1 A) : A<ᵀ∅⌜ := by
+  simp [lowN, lowNIn, jumpn] at h
+  have h0 : A⌜≡ᵀ∅⌜ := by exact Eq.antisymmRel (congrArg (toAntisymmetrization SetTuringReducible) h)
+  have h1 : A<ᵀA⌜ := by exact Set_lt_SetJump A
   exact lt_of_lt_of_eq h1 (congrArg (toAntisymmetrization SetTuringReducible) h)
 
-theorem exists_low_simple_set : ∃ A:Set ℕ, simple A ∧ low A := by
+theorem exists_low_simple_set (O : Set ℕ) : ∃ A:Set ℕ, simpleIn O A ∧ lowIn O A := by
   sorry
 
-theorem posts_problem_solution : ∃ A:Set ℕ, CE A ∧ ∅<ᵀA ∧ A<ᵀ∅⌜ := by
-  rcases exists_low_simple_set with ⟨A,hA⟩
+theorem posts_problem_solution (O : Set ℕ) : ∃ A:Set ℕ, CEin O A ∧ O<ᵀA ∧ A<ᵀO⌜ := by
+  rcases (exists_low_simple_set O) with ⟨A,h0,h1⟩
   use A
-  have ⟨h0,h1⟩ := hA
   constructor
   · sorry
   constructor
-  · exact simple_above_empty h0
+  · exact simpleIn_above_oracle h0
   · exact low_below_K h1
