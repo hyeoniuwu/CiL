@@ -306,6 +306,8 @@ theorem K0χ_eq_χSetK (O:Set ℕ) : (K0 (χ O)) ≡ᵀᶠ (χ (SetK O)) := (χS
 
 theorem TR_Set_iff_Fn {O₁ O₂} : O₁ ≤ᵀ O₂ ↔ (χ O₁) ≤ᵀᶠ (χ O₂) := Eq.to_iff rfl
 
+theorem SetK0_eq_Jump (O:Set ℕ) : SetK0 O ≡ᵀ O⌜ := SetK0_eq_SetK O
+
 theorem SetJump_not_leq_Set (O:Set ℕ) : ¬O⌜≤ᵀO := by
   intro h
   simp only [SetJump] at h
@@ -416,3 +418,9 @@ theorem W_le_SetK0 : ∀ c, W O c ≤ᵀ SetK0 O := by
   simp [evalSet, eval, Seq.seq, SetK0, χ]
   have : ((eval (χ O) (n2c c) x).Dom) ↔ (∃ y, y ∈ eval (χ O) (n2c c) x) := Part.dom_iff_mem
   exact if_ctx_congr this (congrFun rfl) (congrFun rfl)
+
+theorem W_le_Jump : ∀ c, W O c ≤ᵀ O⌜ := by
+  intro c
+  have := @W_le_SetK0 O c
+  have h2 := SetK0_eq_Jump O
+  exact LE.le.trans_antisymmRel this h2
