@@ -1,7 +1,7 @@
 import Computability.SetOracles
 
 open Computability
-open Nat.RecursiveIn.Code
+open Computability.Code
 
 
 def PFun.nat_graph (f : ℕ→.ℕ) : Set ℕ := { xy | xy.unpair.2 ∈ f xy.unpair.1 }
@@ -13,6 +13,7 @@ theorem partfun_eq_χgraph {f:ℕ→ℕ} : f ≡ᵀᶠ χ (total_graph f) := by 
 /-- `CEin O A` means that `A` is c.e. in `O`. -/
 def CEin (O:Set ℕ) (A:Set ℕ) : Prop := ∃ c:ℕ, A = W O c
 @[simp] abbrev CE (A:Set ℕ) := CEin ∅ A
+@[simp] theorem CEin_trivial : CEin O (W O a) := exists_apply_eq_apply' (W O) a
 theorem CEin_range : CEin O A ↔ ∃ c:ℕ, A = WR O c := by
   simp only [CEin]
   constructor
@@ -23,7 +24,7 @@ theorem CEin_range : CEin O A ↔ ∃ c:ℕ, A = WR O c := by
     exact hc
   · intro h
     rcases h with ⟨c,hc⟩
-    use ran_to_dom c
+    use ran_to_dom (χ O) c
     rw [←ran_to_dom_prop]
     exact hc
 
@@ -36,6 +37,45 @@ def immuneIn (O:Set ℕ) (A:Set ℕ) : Prop := (A.Infinite) ∧ (∀c:ℕ, (W O 
 def simpleIn (O:Set ℕ) (A:Set ℕ) : Prop := (CEin O A) ∧ immuneIn O Aᶜ
 abbrev simple := simpleIn ∅
 theorem simple_above_empty (h:simple A): ∅<ᵀA := by sorry
+theorem simpleInReq_aux {α} (A B : Set α) : A ∩ B ≠ ∅ ↔ ¬ A ⊆ Bᶜ := by
+  constructor
+  · intro h1
+    have : ∃ a:α, a ∈ A ∧ a ∈ B := by
+      contrapose h1
+      simp_all
+      ext x : 1
+      simp_all
+    contrapose this
+    simp at this ⊢
+    exact fun x a ↦ this a
+  · intro h1
+    have : ∃ a:α, a ∈ A ∧ a ∈ B := by
+      contrapose h1
+      simp_all
+      exact h1
+    exact Set.nonempty_iff_ne_empty.mp this
+theorem simpleInReq : ((W O a)ᶜ.Infinite ∧ ∀ c:ℕ, (W O c).Infinite → (W O c ∩ W O a ≠ ∅)) ↔ simpleIn O (W O a) := by
+  constructor
+  · intro ⟨h1,h2⟩
+    unfold simpleIn
+    constructor
+    simp
+    unfold immuneIn
+    constructor
+    exact h1
+    intro c h3
+    have := h2 c h3
+    exact (simpleInReq_aux (W O c) (W O a)).mp (h2 c h3)
+  intro h
+  unfold simpleIn at h
+  rcases h with ⟨h1,h2⟩
+  unfold immuneIn at h2
+  rcases h2 with ⟨h3,h4⟩
+  constructor
+  exact h3
+  intro c h5
+  have := h4 c h5
+  exact (simpleInReq_aux (W O c) (W O a)).mpr (h4 c h5)
 
 /--`[c_ran_to_dom_aux](x)=0 if x.1.2+1=[x.1.1:O,x.2.2](x.2.1) else 0`-/
 noncomputable def c_simple_aux (O:Set ℕ) := c_if_eq'.comp (pair (succ.comp $ right.comp left) ((c_evalnSet₁ O).comp (pair (left.comp left) right)))
