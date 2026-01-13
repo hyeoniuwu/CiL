@@ -235,7 +235,7 @@ theorem χ_leq_χSetK (O:Set ℕ) : Nat.RecursiveIn (χ (SetK O)) (χ O) := by
     refine Nat.RecursiveIn.someTotal (↑χK) (fun x ↦ χK (c_evconst (Nat.pair index_g x))) ?_
     refine Nat.RecursiveIn.totalComp' ?_ ?_
     · exact Nat.RecursiveIn.oracle
-    · 
+    ·
       apply exists_code.mpr
       use (c_ev_const.comp₂ (c_const index_g) c_id)
       simp [Seq.seq, c_evconst]
@@ -273,7 +273,7 @@ theorem Kχ_leq_χSetK (O:Set ℕ) : Nat.RecursiveIn (χ (SetK O)) (K (χ O)) :=
       apply some_comp_simp
 
   have h5 : Nat.RecursiveIn (χ O) (fun x ↦ eval (↑(χ O)) (n2c x) x) := by
-    
+
     apply Nat.RecursiveIn.eval_K_computable
 
   rw [h0]
@@ -324,6 +324,23 @@ end SetJumpTheorems
 abbrev W (O:Set ℕ) (e : ℕ) := (evalSet O e).Dom
 /-- `WR O e` := range of e^th oracle program -/
 abbrev WR (O:Set ℕ) (e : ℕ) := (evalSet O e).ran
+
+theorem W_le_SetK0 : ∀ c, W O c ≤ᵀ SetK0 O := by
+  intro c
+  unfold W
+  refine TR_Set_iff_Fn.mpr ?_
+  refine (exists_code_for_evalSet (SetK0 O) ↑(χ (evalSet O (n2c c)).Dom)).mpr ?_
+  use oracle.comp $ pair (c_const c) c_id
+  funext x
+  simp [evalSet, eval, Seq.seq, SetK0, χ]
+  have : ((eval (χ O) (n2c c) x).Dom) ↔ (∃ y, y ∈ eval (χ O) (n2c c) x) := Part.dom_iff_mem
+  exact if_ctx_congr this (congrFun rfl) (congrFun rfl)
+
+theorem W_le_Jump : ∀ c, W O c ≤ᵀ O⌜ := by
+  intro c
+  have := @W_le_SetK0 O c
+  have h2 := SetK0_eq_Jump O
+  exact LE.le.trans_antisymmRel this h2
 
 section dom_to_ran
 def c_dom_to_ran (e:ℕ) := c_ifdom (c_eval.comp₂ (c_const e) c_id) c_id
@@ -408,19 +425,9 @@ theorem ran_to_dom_prop : (WR O e) = (W O (ran_to_dom (χ O) e)) := by
     exact this
 end ran_to_dom
 
-theorem W_le_SetK0 : ∀ c, W O c ≤ᵀ SetK0 O := by
-  intro c
-  unfold W
-  refine TR_Set_iff_Fn.mpr ?_
-  refine (exists_code_for_evalSet (SetK0 O) ↑(χ (evalSet O (n2c c)).Dom)).mpr ?_
-  use oracle.comp $ pair (c_const c) c_id
-  funext x
-  simp [evalSet, eval, Seq.seq, SetK0, χ]
-  have : ((eval (χ O) (n2c c) x).Dom) ↔ (∃ y, y ∈ eval (χ O) (n2c c) x) := Part.dom_iff_mem
-  exact if_ctx_congr this (congrFun rfl) (congrFun rfl)
+section join
 
-theorem W_le_Jump : ∀ c, W O c ≤ᵀ O⌜ := by
-  intro c
-  have := @W_le_SetK0 O c
-  have h2 := SetK0_eq_Jump O
-  exact LE.le.trans_antisymmRel this h2
+def join (A B : Set ℕ) : Set ℕ := {2*x | x∈A} ∪ {2*x+1 | x∈B}
+
+
+end join
