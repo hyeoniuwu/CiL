@@ -30,7 +30,8 @@ def jumpn : ℕ → Set ℕ → Set ℕ
 | 0 => id
 | i+1 => SetJump ∘ jumpn i
 
--- from TuringDegree.lean
+-- Order between sets is written in the way below, to be able to make use of automation with ordering thms.
+-- that is why we don't write: scoped[Computability] infix:50 "≤ᵀ" => SetTuringReducible
 protected theorem SetTuringReducible.refl (A:Set ℕ) : SetTuringReducible A A := by exact RecursiveIn.oracle
 protected theorem SetTuringReducible.rfl (A:Set ℕ) : SetTuringReducible A A := SetTuringReducible.refl _
 instance : IsRefl (Set ℕ) SetTuringReducible where refl _ := by (expose_names; exact SetTuringReducible.refl x)
@@ -53,16 +54,20 @@ private instance : Preorder (Set ℕ) where
   lt := SetTuringReducibleStrict
 instance TuringDegree.PO : PartialOrder TuringDegree := instPartialOrderAntisymmetrization
 notation:100 A"⌜" => SetJump A
-@[reducible,simp] def SetTuringDegreeLE (A B : Set ℕ) : Prop := TuringDegree.PO.le ⟦A⟧ ⟦B⟧
-@[reducible,simp] def SetTuringDegreeLT (A B : Set ℕ) : Prop := TuringDegree.PO.lt ⟦A⟧ ⟦B⟧
-@[reducible,simp] def SetTuringDegreeEQ (A B : Set ℕ) : Prop := AntisymmRel TuringDegree.PO.le ⟦A⟧ ⟦B⟧
-@[reducible,simp] def SetTuringDegreeIN (A B : Set ℕ) : Prop := (¬TuringDegree.PO.le ⟦A⟧ ⟦B⟧)∧(¬TuringDegree.PO.le ⟦B⟧ ⟦A⟧)
--- @[reducible,simp] scoped[Computability] infix:50 "≤ᵀ" => SetTuringReducible
-@[reducible,simp] scoped[Computability] infix:50 "≤ᵀ" => SetTuringDegreeLE
-@[reducible,simp] scoped[Computability] infix:50 "<ᵀ" => SetTuringDegreeLT
-@[reducible,simp] scoped[Computability] infix:50 "≡ᵀ" => SetTuringDegreeEQ
-@[reducible,simp] scoped[Computability] infix:50 "|ᵀ" => SetTuringDegreeIN
-
+def SetTuringDegreeLE (A B : Set ℕ) : Prop := TuringDegree.PO.le ⟦A⟧ ⟦B⟧
+def SetTuringDegreeNLE (A B : Set ℕ) : Prop := ¬ TuringDegree.PO.le ⟦A⟧ ⟦B⟧
+def SetTuringDegreeLT (A B : Set ℕ) : Prop := TuringDegree.PO.lt ⟦A⟧ ⟦B⟧
+def SetTuringDegreeEQ (A B : Set ℕ) : Prop := AntisymmRel TuringDegree.PO.le ⟦A⟧ ⟦B⟧
+def SetTuringDegreeIN (A B : Set ℕ) : Prop := (¬TuringDegree.PO.le ⟦A⟧ ⟦B⟧)∧(¬TuringDegree.PO.le ⟦B⟧ ⟦A⟧)
+scoped[Computability] infix:50 "≤ᵀ" => SetTuringDegreeLE
+scoped[Computability] infix:50 "≰ᵀ" => SetTuringDegreeNLE
+scoped[Computability] infix:50 "<ᵀ" => SetTuringDegreeLT
+scoped[Computability] infix:50 "≡ᵀ" => SetTuringDegreeEQ
+scoped[Computability] infix:50 "|ᵀ" => SetTuringDegreeIN
+@[simp] theorem NotSetTuringDegreeNLE_SetTuringDegreeLE : ¬ A ≰ᵀ B ↔ A ≤ᵀ B := by
+  unfold SetTuringDegreeNLE
+  unfold SetTuringDegreeLE
+  simp
 section evalSettheorems
 theorem exists_code_for_evalSet (O:Set ℕ) (f:ℕ→.ℕ) : SetRecursiveIn O f ↔ ∃ c:Computability.Code, evalSet O c = f := Computability.exists_code
 private theorem exists_code_for_evalSet₁ {O:Set ℕ} : ∃ c:Computability.Code, evalSet O c = evalSet₁ O := by apply ((exists_code_for_evalSet O (evalSet₁ O)).mp) rec_eval₁
@@ -423,4 +428,5 @@ theorem W_le_Jump : ∀ c, W O c ≤ᵀ O⌜ := by
   intro c
   have := @W_le_SetK0 O c
   have h2 := SetK0_eq_Jump O
+  
   exact LE.le.trans_antisymmRel this h2

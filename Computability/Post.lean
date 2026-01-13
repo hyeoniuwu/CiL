@@ -16,11 +16,8 @@ def CEin (O:Set ℕ) (A:Set ℕ) : Prop := ∃ c:ℕ, A = W O c
 @[simp] theorem CEin_trivial : CEin O (W O a) := exists_apply_eq_apply' (W O) a
 theorem CEIn_deg (h:CEin O A) : A ≤ᵀ O⌜ := by
   rcases h with ⟨c,h⟩
-  refine TR_Set_iff_Fn.mpr ?_
   rw [h]
-  unfold χ
-  simp
-  sorry
+  exact W_le_Jump c
 theorem CEin_range : CEin O A ↔ ∃ c:ℕ, A = WR O c := by
   simp only [CEin]
   constructor
@@ -35,7 +32,40 @@ theorem CEin_range : CEin O A ↔ ∃ c:ℕ, A = WR O c := by
     rw [←ran_to_dom_prop]
     exact hc
 
-theorem Cin_iff_CEin_CEin' : A≤ᵀB ↔ (CEin B A ∧ CEin B Aᶜ) := by sorry
+theorem reducible_iff_code : A≤ᵀB ↔ ∃ c, evalSet B c = χ A := by
+  simp [TR_Set_iff_Fn, exists_code, evalSet]
+theorem reducible_imp_W : A≤ᵀB → ∃ c, W B c = A := by
+  simp [reducible_iff_code]
+  intro c
+  simp [evalSet]
+  intro h
+  use c_ite c c_diverge zero
+  have hc : code_total (χ B) c := by simp_all [code_total]
+  simp [W, evalSet, PFun.Dom, c_ite_ev hc]
+  simp [h, eval]
+  unfold χ
+  aesop
+
+theorem Cin_iff_Cin' : A≤ᵀB ↔ Aᶜ≤ᵀB := by
+  constructor
+  intro h
+  simp [reducible_iff_code] at *
+  rcases h with ⟨c,hc⟩
+  use c_sg'.comp c
+  simp [evalSet] at *
+  simp [eval]
+  simp [hc]
+  funext x
+  simp
+  
+  
+theorem Cin_iff_CEin_CEin' : A≤ᵀB ↔ (CEin B A ∧ CEin B Aᶜ) := by
+  constructor
+  intro h
+  simp [CEin]
+  have := reducible_imp_W h
+  simp [reducible_iff_code] at h
+  sorry
 
 
 /-- immuneIn O A := A is immune in O -/
@@ -47,10 +77,16 @@ theorem immuneIn_not_CEIn (h:immuneIn O A) : ¬ CEin O A := by
 /-- simpleIn O A := A is simple in O -/
 def simpleIn (O:Set ℕ) (A:Set ℕ) : Prop := (CEin O A) ∧ immuneIn O Aᶜ
 abbrev simple := simpleIn ∅
-theorem simpleIn_above_oracle (h:simpleIn O A): O<ᵀA := by
+theorem simpleIn_not_reducible (h:simpleIn O A): A ≰ᵀ O := by
+  contrapose h
+  simp at h
+  unfold simpleIn
+  simp
+  intro h2
+  unfold immuneIn
+  simp
   
-  sorry
-theorem simple_above_empty (h:simple A): ∅<ᵀA := simpleIn_above_oracle h
+theorem simple_above_empty (h:simple A): ∅<ᵀA := by sorry
 theorem simpleInReq_aux {α} (A B : Set α) : A ∩ B ≠ ∅ ↔ ¬ A ⊆ Bᶜ := by
   constructor
   · intro h1
