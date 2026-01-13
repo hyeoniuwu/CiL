@@ -136,7 +136,8 @@ theorem Cin_iff_CEin_CEin' : A≤ᵀB ↔ (CEin B A ∧ CEin B Aᶜ) := by
         simp [dvtthm]
       simp [dvt] at this
       exact Part.get_eq_iff_eq_some.mp this
-  ·
+
+  · -- essentialy the same as the x∈A case.
     have hx' : x∈Aᶜ := hx
     have dvtthm := @dovetail_ev_0 (χ B) d x ?_
     extract_lets at dvtthm; expose_names
@@ -167,11 +168,16 @@ theorem Cin_iff_CEin_CEin' : A≤ᵀB ↔ (CEin B A ∧ CEin B Aᶜ) := by
 
 
 /-- immuneIn O A := A is immune in O -/
-def immuneIn (O:Set ℕ) (A:Set ℕ) : Prop := (A.Infinite) ∧ (∀c:ℕ, (W O c).Infinite → ¬(W O c ⊆ A))
-theorem immuneIn_not_CEIn (h:immuneIn O A) : ¬ CEin O A := by
+def immuneIn (O:Set ℕ) (A:Set ℕ) : Prop := (A.Infinite) ∧ (∀c, (W O c).Infinite → ¬(W O c ⊆ A))
+theorem immuneIn_not_CEIn : immuneIn O A → ¬ CEin O A := by
+  intro h
   unfold CEin
   unfold immuneIn at h
   aesop
+theorem immuneIn_not_CEIn_contrapositive :  CEin O A → ¬ immuneIn O A  := by
+  contrapose
+  simp
+  exact fun a ↦ immuneIn_not_CEIn a
 /-- simpleIn O A := A is simple in O -/
 def simpleIn (O:Set ℕ) (A:Set ℕ) : Prop := (CEin O A) ∧ immuneIn O Aᶜ
 abbrev simple := simpleIn ∅
@@ -180,9 +186,9 @@ theorem simpleIn_not_reducible (h:simpleIn O A): A ≰ᵀ O := by
   simp at h
   unfold simpleIn
   simp
-  intro h2
-  unfold immuneIn
-  simp
+  intro _
+  rcases Cin_iff_CEin_CEin'.mp h with ⟨h1,h2⟩
+  exact immuneIn_not_CEIn_contrapositive h2
 
 theorem simple_above_empty (h:simple A): ∅<ᵀA := by sorry
 theorem simpleInReq_aux {α} (A B : Set α) : A ∩ B ≠ ∅ ↔ ¬ A ⊆ Bᶜ := by
