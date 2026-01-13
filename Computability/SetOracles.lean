@@ -330,9 +330,9 @@ theorem reducible_iff_code : A≤ᵀB ↔ ∃ c, eval (χ B) c = χ A := by
   simp [TR_Set_iff_Fn, exists_code]
 
 /-- `W O e` := domain of e^th oracle program -/
-abbrev W (O:Set ℕ) (e : ℕ) := (evalSet O e).Dom
+abbrev W (O:Set ℕ) (e : Code) := (evalSet O e).Dom
 /-- `WR O e` := range of e^th oracle program -/
-abbrev WR (O:Set ℕ) (e : ℕ) := (evalSet O e).ran
+abbrev WR (O:Set ℕ) (e : Code) := (evalSet O e).ran
 
 theorem W_le_SetK0 : ∀ c, W O c ≤ᵀ SetK0 O := by
   intro c
@@ -341,7 +341,7 @@ theorem W_le_SetK0 : ∀ c, W O c ≤ᵀ SetK0 O := by
   use oracle.comp $ pair (c_const c) c_id
   funext x
   simp [evalSet, eval, Seq.seq, SetK0, χ]
-  have : ((eval (χ O) (n2c c) x).Dom) ↔ (∃ y, y ∈ eval (χ O) (n2c c) x) := Part.dom_iff_mem
+  have : ((eval (χ O) c x).Dom) ↔ (∃ y, y ∈ eval (χ O) c x) := Part.dom_iff_mem
   exact if_ctx_congr this (congrFun rfl) (congrFun rfl)
 
 theorem W_le_Jump : ∀ c, W O c ≤ᵀ O⌜ := by
@@ -351,7 +351,7 @@ theorem W_le_Jump : ∀ c, W O c ≤ᵀ O⌜ := by
   exact LE.le.trans_antisymmRel this h2
 
 section dom_to_ran
-def c_dom_to_ran (e:ℕ) := c_ifdom (c_eval.comp₂ (c_const e) c_id) c_id
+def c_dom_to_ran (e:Code) := c_ifdom (c_eval.comp₂ (c_const e) c_id) c_id
 theorem dom_to_ran_prop : (W O e) = (WR O (c_dom_to_ran e)) := by
   ext xs
   simp [c_dom_to_ran]
@@ -381,7 +381,7 @@ theorem dom_to_ran_prop : (W O e) = (WR O (c_dom_to_ran e)) := by
 end dom_to_ran
 
 section ran_to_dom
-noncomputable def ran_to_dom (O:ℕ→ℕ) : (ℕ→Code) := fun c => dovetail (c_if_eq'.comp₂ left ((c_eval₁ O).comp₂ (c_const c) right))
+noncomputable def ran_to_dom (O:ℕ→ℕ) : (Code→Code) := fun c => dovetail (c_if_eq'.comp₂ left ((c_eval₁ O).comp₂ (c_const c) right))
 theorem ran_to_dom_ev : (eval O (ran_to_dom O c) y).Dom ↔ ∃ x, y ∈ eval O c x := by
   constructor
   ·
@@ -399,8 +399,8 @@ theorem ran_to_dom_ev : (eval O (ran_to_dom O c) y).Dom ↔ ∃ x, y ∈ eval O 
     simp [eval₁] at this s1
     use dvt
 
-    suffices y = (eval O (n2c c) dvt).get s1 from by
-      exact (@Part.get_eq_iff_mem ℕ (eval O (n2c c) dvt) y s1).mp this.symm
+    suffices y = (eval O c dvt).get s1 from by
+      exact (@Part.get_eq_iff_mem ℕ (eval O c dvt) y s1).mp this.symm
     exact this
 
   ·
