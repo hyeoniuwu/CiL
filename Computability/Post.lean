@@ -190,7 +190,7 @@ theorem simpleIn_not_reducible (h:simpleIn O A): A ≰ᵀ O := by
   rcases Cin_iff_CEin_CEin'.mp h with ⟨h1,h2⟩
   exact immuneIn_not_CEIn_contrapositive h2
 
-theorem simple_above_empty (h:simple A): ∅<ᵀA := by sorry
+theorem simple_above_empty (h:simple A): ∅<ᵀA := ⟨empty_le A, simpleIn_not_reducible h⟩
 theorem simpleInReq_aux {α} (A B : Set α) : A ∩ B ≠ ∅ ↔ ¬ A ⊆ Bᶜ := by
   constructor
   · intro h1

@@ -486,3 +486,10 @@ theorem join_least (A B C : Set ℕ) : A ≤ᵀ C ∧ B ≤ᵀ C → (A ∨ B) �
     simp [even_odd_2]
 
 end join
+
+theorem empty_le : ∀ A : Set ℕ, ∅ ≤ᵀ A := by
+  intro A
+  apply reducible_iff_code.mpr
+  use zero
+  unfold χ; simp [eval]
+  rfl
