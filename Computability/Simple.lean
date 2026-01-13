@@ -1,5 +1,7 @@
 import Computability.SetOracles
 
+import Mathlib.Data.Nat.BitIndices
+
 open Computability
 open Computability.Code
 
@@ -208,7 +210,7 @@ theorem simpleInReq_aux {α} (A B : Set α) : A ∩ B ≠ ∅ ↔ ¬ A ⊆ Bᶜ 
       simp_all
       exact h1
     exact Set.nonempty_iff_ne_empty.mp this
-theorem simpleInReq : ((W O a)ᶜ.Infinite ∧ ∀ c:ℕ, (W O c).Infinite → (W O c ∩ W O a ≠ ∅)) ↔ simpleIn O (W O a) := by
+theorem simpleInReq : ((W O a)ᶜ.Infinite ∧ ∀ c, (W O c).Infinite → (W O c ∩ W O a ≠ ∅)) ↔ simpleIn O (W O a) := by
   constructor
   · intro ⟨h1,h2⟩
     unfold simpleIn
@@ -231,28 +233,67 @@ theorem simpleInReq : ((W O a)ᶜ.Infinite ∧ ∀ c:ℕ, (W O c).Infinite → (
   have := h4 c h5
   exact (simpleInReq_aux (W O c) (W O a)).mpr (h4 c h5)
 
-/--`[c_ran_to_dom_aux](x)=0 if x.1.2+1=[x.1.1:O,x.2.2](x.2.1) else 0`-/
-noncomputable def c_simple_aux (O:Set ℕ) := c_if_eq'.comp (pair (succ.comp $ right.comp left) ((c_evalnSet₁ O).comp (pair (left.comp left) right)))
-@[simp] theorem c_simple_aux_evp (O:Set ℕ) : evalp (χ O) (c_simple_aux O) ab = if (Nat.succ ab.l.r=evalnSet₁ O (Nat.pair ab.l.l ab.r)) then 0 else 1 := by
-  simp [c_simple_aux, evalp]
-@[simp]theorem c_simple_aux_prim : code_prim (c_simple_aux O) := by
-  simp only [c_simple_aux]
-  repeat constructor
-  exact c_evalnSet₁_prim
-  repeat constructor
-theorem c_simple_aux_ev : eval (χ O) (c_simple_aux O) ab = if (Nat.succ ab.l.r=evalnSet₁ O (Nat.pair ab.l.l ab.r)) then 0 else 1 := by
-  rw [←@evalp_eq_eval (c_simple_aux O) (χ O) c_simple_aux_prim]
-  simp only [PFun.coe_val, c_simple_aux_evp]
-  exact apply_ite Part.some (ab.l.r.succ = evalnSet₁ O (Nat.pair ab.l.l ab.r)) 0 1
-def f_simple_ran (O:Set ℕ) : ℕ→ℕ := fun c => curry (c_rfind (c_ifevaleq (ef $ c_evalnSet₁ O))) c
-#check c_ef
-/-
-rfind $ code for function that when given input (e,config):
-  runs (evaln e config; if halt, return configinput+1 else 0), and checks: 1. it is non-zero; 2. it is larger than 2e)
-  i.e. output >= 2e+1
-find the smallest input x which halts when dovetailing e, and such that also x≥2e
--/
 
+-- def c_bdd_total_search (c:Code) := zero
+-- theorem c_bdd_total_search_evp : evalp O (c_bdd_total_search c) x = 0 ↔ ∀ y≤x, evalp O c y = 0 := by
+--   sorry
+
+#check Nat.bit
+#check 0b00010
+#eval Nat.testBit 0b00010 0
+#eval Nat.bitIndices 0b100010
+#eval 2^1
+abbrev fs_in := Nat.testBit
+abbrev fs_add : ℕ→ℕ→ℕ := λ a x ↦ a ||| (2^x)
+
+def C_aux (R:ℕ) : Code := zero
+theorem C_aux_evp_0 : Nat.pair x j ∈ (evalp Nat.fzero (C_aux R) s : Option ℕ) → j ≤ s ∧ Nat.testBit R j ∧  x ∈ Wn ∅ j s ∧ x > 2*j := by
+  sorry
+theorem C_aux_evp_2 : (∃ j ≤ s, Nat.testBit R j ∧ ∃ x ∈ Wn ∅ j s, x ≤ 2*j) → (evalp Nat.fzero (C_aux R) s : Option ℕ).isSome := by
+  sorry
+theorem C_aux_evp_1 : evalp Nat.fzero (C_aux R) s = 0 ↔ (∀ j ≤ s, Nat.testBit R j → ∀ x ∈ Wn ∅ j s, x ≤ 2*j) := by
+  sorry
+
+namespace Computability.Simple
+-- /--
+-- C for construction.
+-- Input: stage `s`
+-- Output: (natural representing the simple set A built so far, natural representing set of requirements satisfied so far)
+-- -/
+noncomputable def C : ℕ→ℕ := λ s ↦
+match s with
+| 0 => Nat.pair 0 0
+| s+1 =>
+  have Aₚ := (C s).l
+  have Rₚ := (C s).r
+
+  let search : Option ℕ := evalp Nat.fzero (C_aux Rₚ) s
+  if halts:search.isSome then
+    -- let ⟨x,i⟩ := search.get halts
+    let rf := search.get halts
+    let Aₛ := fs_add Aₚ rf.l
+    let Rₛ := fs_add Rₚ rf.r
+    Nat.pair Aₛ Rₛ
+  else
+    Nat.pair Aₚ Rₚ
+
+  -- search for all i ≤ s:
+  -- check i is not already satisfied.
+  -- -- first, let i be the smallest unsatisfied requirement P.
+  -- now, check if there is a x ∈ W_i,s s.t. x>2i.
+  -- if so:
+  -- Aₛ = Aₚ + x
+  -- Rₛ = Rₚ + i
+  -- return Nat.pair Aₛ Rₛ
+  -- 0
+
+def A : Set ℕ := ∅
+theorem P (i:ℕ) : (W O i).Infinite → (W O i ∩ W O a ≠ ∅) := by
+  sorry
+theorem N (i:ℕ) : (W O i).Infinite → (W O i ∩ W O a ≠ ∅) := by
+  sorry
+
+end Computability.Simple
 
 theorem exists_simple_set : ∃ A:Set ℕ, simpleIn O A := by
   sorry

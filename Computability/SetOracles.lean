@@ -22,6 +22,7 @@ theorem χsimp {O} : χ O = fun x ↦ if x ∈ O then 1 else 0 := by exact rfl
 @[simp] abbrev SetTuringReducibleStrict (A O:Set ℕ) : Prop := RecursiveIn (χ O) (χ A) ∧ ¬ RecursiveIn (χ A) (χ O)
 @[simp] abbrev SetTuringEquivalent (O A:Set ℕ) : Prop := AntisymmRel SetTuringReducible O A
 noncomputable def evalSet (O:Set ℕ) : Code → ℕ→.ℕ := eval (χ O)
+noncomputable def evalnSet (O:Set ℕ) := evaln (χ O)
 @[simp] noncomputable def evalSet₁ (O:Set ℕ) : ℕ→.ℕ := eval₁ (χ O)
 @[simp] noncomputable def evalnSet₁ (O:Set ℕ) : ℕ→ℕ := evaln₁ (χ O)
 theorem prim_evalnSet₁:Nat.PrimrecIn (χ O) (evalnSet₁ O) := by simp only [evalnSet₁]; exact prim_evaln₁
@@ -333,6 +334,10 @@ theorem reducible_iff_code : A≤ᵀB ↔ ∃ c, eval (χ B) c = χ A := by
 abbrev W (O:Set ℕ) (e : Code) := (evalSet O e).Dom
 /-- `WR O e` := range of e^th oracle program -/
 abbrev WR (O:Set ℕ) (e : Code) := (evalSet O e).ran
+/-- `Wn O e s` := domain of e^th oracle program ran for s steps -/
+abbrev Wn (O:Set ℕ) (e : Code) (s : ℕ) := { x | (evalnSet O s e x).isSome }
+/-- `WRn O e s` := range of e^th oracle program ran for s steps -/
+abbrev WRn (O:Set ℕ) (e : Code) (s : ℕ) := { y | ∃ x, y ∈ evalnSet O s e x }
 
 theorem W_le_SetK0 : ∀ c, W O c ≤ᵀ SetK0 O := by
   intro c
