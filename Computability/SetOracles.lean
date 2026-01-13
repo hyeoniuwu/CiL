@@ -6,6 +6,8 @@ import Computability.Use
 import Computability.EvalString
 import Mathlib.Order.Basic
 
+import Computability.Constructions.CovRec
+
 open Nat
 open scoped Computability
 open Classical
@@ -324,6 +326,8 @@ theorem Set_lt_SetJump (O:Set ℕ) : O<ᵀO⌜ := by
   · exact SetJump_not_leq_Set O
 end SetJumpTheorems
 
+theorem reducible_iff_code : A≤ᵀB ↔ ∃ c, eval (χ B) c = χ A := by
+  simp [TR_Set_iff_Fn, exists_code]
 
 /-- `W O e` := domain of e^th oracle program -/
 abbrev W (O:Set ℕ) (e : ℕ) := (evalSet O e).Dom
@@ -333,8 +337,7 @@ abbrev WR (O:Set ℕ) (e : ℕ) := (evalSet O e).ran
 theorem W_le_SetK0 : ∀ c, W O c ≤ᵀ SetK0 O := by
   intro c
   unfold W
-  refine TR_Set_iff_Fn.mpr ?_
-  refine (exists_code_for_evalSet (SetK0 O) ↑(χ (evalSet O (n2c c)).Dom)).mpr ?_
+  apply reducible_iff_code.mpr
   use oracle.comp $ pair (c_const c) c_id
   funext x
   simp [evalSet, eval, Seq.seq, SetK0, χ]
@@ -433,6 +436,53 @@ end ran_to_dom
 section join
 
 def join (A B : Set ℕ) : Set ℕ := {2*x | x∈A} ∪ {2*x+1 | x∈B}
+scoped[Computability] infix:50 "∨" => join
 
+theorem even_odd_1 : (1 + y * 2 = x * 2) ↔ False := by grind
+theorem even_odd_2 : (y * 2 = 1 + x * 2) ↔ False := by grind
+
+theorem join_upper (A B : Set ℕ) : A ≤ᵀ (A ∨ B) ∧ B ≤ᵀ (A ∨ B) := by
+  constructor
+  apply reducible_iff_code.mpr
+  use oracle.comp c_mul2
+  unfold χ
+  funext x
+  simp [eval, join]
+  ac_nf; simp [even_odd_1]
+
+  apply reducible_iff_code.mpr
+  use oracle.comp (succ.comp c_mul2)
+  unfold χ
+  funext x
+  simp [eval, join]
+  ac_nf; simp [even_odd_2]
+
+theorem bodd_false_mod2 (h:n.bodd=false) : n%2=0 := by
+  rw [← codes_aux_aux_0 h]
+  exact mul_mod_right 2 n.div2
+theorem bodd_true_mod2 (h:n.bodd=true) : n%2=1 := by
+  rw [← codes_aux_aux_1 h]
+  omega
+theorem join_least (A B C : Set ℕ) : A ≤ᵀ C ∧ B ≤ᵀ C → (A ∨ B) ≤ᵀ C := by
+  intro ⟨h1,h2⟩
+  rcases reducible_iff_code.mp h1 with ⟨c1,hc1⟩
+  rcases reducible_iff_code.mp h2 with ⟨c2,hc2⟩
+  apply reducible_iff_code.mpr
+
+  use c_ifz.comp₃ (c_mod.comp₂ c_id (c_const 2)) (c1.comp c_div2) (c2.comp c_div2)
+
+  simp [Seq.seq, eval, hc1, hc2]
+  unfold χ; simp [join]
+  funext x; simp
+
+  cases hx:x.bodd
+  ·
+    rw [← codes_aux_aux_0 hx]; simp
+    ac_nf
+    simp [even_odd_1]
+  ·
+    rw [← codes_aux_aux_1 hx]; simp
+    ac_nf
+    simp [even_odd_2]
 
 end join

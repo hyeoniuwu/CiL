@@ -32,12 +32,9 @@ theorem CEin_range : CEin O A ↔ ∃ c:ℕ, A = WR O c := by
     rw [←ran_to_dom_prop]
     exact hc
 
-theorem reducible_iff_code : A≤ᵀB ↔ ∃ c, evalSet B c = χ A := by
-  simp [TR_Set_iff_Fn, exists_code, evalSet]
 theorem reducible_imp_W : A≤ᵀB → ∃ c, W B c = A := by
   simp [reducible_iff_code]
   intro c
-  simp [evalSet]
   intro h
   use c_ite c c_diverge zero
   have hc : code_total (χ B) c := by simp_all [code_total]
@@ -47,18 +44,28 @@ theorem reducible_imp_W : A≤ᵀB → ∃ c, W B c = A := by
   aesop
 
 theorem Cin_iff_Cin' : A≤ᵀB ↔ Aᶜ≤ᵀB := by
+  have main (A B) : A≤ᵀB → Aᶜ≤ᵀB := by
+    intro h
+    simp [reducible_iff_code] at *
+    rcases h with ⟨c,hc⟩
+    use c_sg'.comp c
+    simp [eval]
+    simp [hc]
+    funext x
+    unfold χ
+    simp
+    aesop
+
   constructor
-  intro h
-  simp [reducible_iff_code] at *
-  rcases h with ⟨c,hc⟩
-  use c_sg'.comp c
-  simp [evalSet] at *
-  simp [eval]
-  simp [hc]
-  funext x
-  simp
-  
-  
+  exact fun a ↦ main A B a
+  have := fun a ↦ main Aᶜ B a
+  simp at this
+  exact this
+
+
+
+
+
 theorem Cin_iff_CEin_CEin' : A≤ᵀB ↔ (CEin B A ∧ CEin B Aᶜ) := by
   constructor
   intro h
@@ -85,7 +92,7 @@ theorem simpleIn_not_reducible (h:simpleIn O A): A ≰ᵀ O := by
   intro h2
   unfold immuneIn
   simp
-  
+
 theorem simple_above_empty (h:simple A): ∅<ᵀA := by sorry
 theorem simpleInReq_aux {α} (A B : Set α) : A ∩ B ≠ ∅ ↔ ¬ A ⊆ Bᶜ := by
   constructor
