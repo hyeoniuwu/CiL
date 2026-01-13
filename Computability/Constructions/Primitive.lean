@@ -9,12 +9,9 @@ def comp₂ : Code→Code→Code→Code := fun c1 c2 c3 => c1.comp (pair c2 c3)
 @[cp] theorem comp₂_prim {c1 c2 c3} (hc1 : code_prim c1) (hc2 : code_prim c2) (hc3 : code_prim c3)  : code_prim (comp₂ c1 c2 c3) := by
   unfold comp₂
   apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
--- theorem comp₂_evp:evalp O (comp₂ c1 c2 c3) x = evalp O c1 (Nat.pair (evalp O (c2) x) (evalp O (c3) x))  := by simp [comp₂,evalp];
-@[simp] theorem comp₂_evp {O c1 c2 c3}:evalp O (comp₂ c1 c2 c3) = fun x => evalp O c1 (Nat.pair (evalp O (c2) x) (evalp O (c3) x))  := by simp [comp₂,evalp];
-@[simp] theorem comp₂_ev {O c1 c2 c3} : eval O (comp₂ c1 c2 c3) = fun x => (Nat.pair <$> (eval O (c2) x) <*> (eval O (c3) x)) >>= (eval O c1) := by simp [eval, comp₂, Seq.seq]
+@[simp] theorem comp₂_evp {O c1 c2 c3} : evalp O (comp₂ c1 c2 c3) = fun x => evalp O c1 ⟪evalp O c2 x, evalp O c3 x⟫  := by simp [comp₂,evalp];
+@[simp] theorem comp₂_ev {O c1 c2 c3} : eval O (comp₂ c1 c2 c3) = fun x => ⟪eval O c2 x, eval O c3 x⟫ >>= (eval O c1) := by simp [eval, comp₂, Seq.seq]
 end Computability.Code
--- theorem Nat.PrimrecIn.comp₂:Nat.PrimrecIn O Nat.comp₂ := by ...
--- theorem Nat.Primrec.comp₂:Nat.Primrec Nat.comp₂ := by ...
 end comp₂
 section comp₄
 namespace Computability.Code
@@ -23,19 +20,14 @@ def comp₄ : Code→Code→Code→Code→Code→Code := fun c1 c2 c3 c4 c5 => c
   unfold comp₄
   apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
 @[simp] theorem comp₄_evp {O c1 c2 c3 c4 c5} : evalp O (comp₄ c1 c2 c3 c4 c5) = λ x ↦
-  evalp O c1 (Nat.pair (Nat.pair (evalp O c2 x) (evalp O c3 x)) (Nat.pair (evalp O c4 x) (evalp O c5 x))) := by
+  evalp O c1 ⟪ ⟪evalp O c2 x, evalp O c3 x⟫, ⟪evalp O c4 x, evalp O c5 x⟫ ⟫ := by
   simp [comp₄,evalp, comp₂];
 @[simp] theorem comp₄_ev : eval O (comp₄ c1 c2 c3 c4 c5) =
-  fun x => Nat.pair <$>
-  (Nat.pair <$> (eval O (c2) x) <*> (eval O (c3) x))
-  <*>
-  (Nat.pair <$> (eval O (c4) x) <*> (eval O (c5) x))
+  fun x => ⟪ ⟪eval O c2 x, eval O c3 x⟫, ⟪eval O c4 x, eval O c5 x⟫ ⟫
    >>= (eval O c1) := by
     simp [comp₄, eval, comp₂, Seq.seq]
 
 end Computability.Code
--- theorem Nat.PrimrecIn.comp₄:Nat.PrimrecIn O Nat.comp₄ := by ...
--- theorem Nat.Primrec.comp₄:Nat.Primrec Nat.comp₄ := by ...
 end comp₄
 section comp₃
 namespace Computability.Code
@@ -44,22 +36,15 @@ def comp₃ : Code→Code→Code→Code→Code := fun c1 c2 c3 c4 => c1.comp₂ 
   unfold comp₃
   apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
 @[simp] theorem comp₃_evp:evalp O (comp₃ c1 c2 c3 c4) = λ x ↦
-  evalp O c1 (Nat.pair (evalp O (c2) x) ((Nat.pair (evalp O (c3) x) (evalp O (c4) x)))) := by
+  evalp O c1 ⟪evalp O c2 x, evalp O c3 x, evalp O c4 x⟫ := by
   simp [comp₃,evalp]
 @[simp] theorem comp₃_ev : eval O (comp₃ c1 c2 c3 c4) = λ x ↦
-Nat.pair <$>
-  (eval O c2 x)
-  <*>
-  (Nat.pair <$> (eval O c3 x) <*> (eval O c4 x))
-  >>= (eval O c1)
+  ⟪eval O c2 x, eval O c3 x, eval O c4 x⟫ >>= (eval O c1)
    := by
     simp [comp₃, eval, comp₂, Seq.seq]
 
 end Computability.Code
--- theorem Nat.PrimrecIn.comp₃:Nat.PrimrecIn O Nat.comp₃ := by ...
--- theorem Nat.Primrec.comp₃:Nat.Primrec Nat.comp₃ := by ...
 end comp₃
-
 
 section id
 namespace Computability.Code
@@ -118,8 +103,8 @@ theorem _curry_eq_c_curry : c_curry = curry := by
   rw [_id_eq_c_id]
   rw [_const_eq_c_const]
 -- @[simp] theorem c_curry_prim : code_prim (c_curry c n) := by
-@[simp] theorem c_curry_evp: evalp O (c_curry c n) x = evalp O c (Nat.pair n x) := by simp [c_curry,evalp]
-@[simp] theorem c_curry_ev: eval O (c_curry c n) x = eval O c (Nat.pair n x) := by rw [_curry_eq_c_curry]; exact eval_curry c n x
+@[simp] theorem c_curry_evp: evalp O (c_curry c n) x = evalp O c ⟪n, x⟫ := by simp [c_curry,evalp]
+@[simp] theorem c_curry_ev: eval O (c_curry c n) x = eval O c ⟪n, x⟫ := by rw [_curry_eq_c_curry]; exact eval_curry c n x
 
 end Computability.Code
 -- theorem Nat.PrimrecIn.curry:Nat.PrimrecIn O Nat.curry := by ...
@@ -325,12 +310,12 @@ def c_if_eq_te :=
 -- with the old (first|assumption|simp|constructor), this takes 245 calls.
 
 
-@[simp] theorem c_if_eq_te_evp:evalp O c_if_eq_te (Nat.pair (Nat.pair a b) (Nat.pair c d)) = if a=b then c else d := by
+@[simp] theorem c_if_eq_te_evp:evalp O c_if_eq_te ⟪⟪a, b⟫, ⟪c, d⟫⟫ = if a=b then c else d := by
   simp [c_if_eq_te,evalp];
   cases Classical.em (a=b) with
   | inl h => simp [h]
   | inr h => simp [h]
-@[simp] theorem c_if_eq_te_ev:eval O c_if_eq_te (Nat.pair (Nat.pair a b) (Nat.pair c d)) = if a=b then c else d  := by
+@[simp] theorem c_if_eq_te_ev:eval O c_if_eq_te ⟪⟪a, b⟫, ⟪c, d⟫⟫ = if a=b then c else d  := by
   rw [← evalp_eq_eval c_if_eq_te_prim];
   simp
 theorem c_if_eq_te_evp':evalp O c_if_eq_te = fun x => if x.l.l=x.l.r then x.r.l else x.r.r := by
@@ -366,7 +351,7 @@ def c_if_lt_te :=
   (c_mul.comp₂ (c_not.comp lt) (left.comp right))
 @[cp] theorem c_if_lt_te_prim : code_prim c_if_lt_te := by
   repeat (first|assumption|apply_rules using cp|simp|constructor)
-@[simp] theorem c_if_lt_te_evp:evalp O c_if_lt_te (Nat.pair (Nat.pair a b) (Nat.pair c d)) = if a<b then c else d := by
+@[simp] theorem c_if_lt_te_evp:evalp O c_if_lt_te ⟪⟪a, b⟫, ⟪c, d⟫⟫ = if a<b then c else d := by
   simp [c_if_lt_te,evalp];
   -- funext xs
   cases Classical.em (a<b) with
@@ -375,7 +360,7 @@ def c_if_lt_te :=
     have h1: a+1-b>0 := by exact tsub_pos_iff_not_le.mpr h
     have h0: ¬(a+1-b=0) := by exact Nat.ne_zero_of_lt h1
     simp [h, h0]
-@[simp] theorem c_if_lt_te_ev:eval O c_if_lt_te (Nat.pair (Nat.pair a b) (Nat.pair c d)) = if a<b then c else d := by
+@[simp] theorem c_if_lt_te_ev:eval O c_if_lt_te ⟪⟪a, b⟫, ⟪c, d⟫⟫ = if a<b then c else d := by
   rw [← evalp_eq_eval c_if_lt_te_prim]; simp
 end Computability.Code
 -- theorem Nat.PrimrecIn.if_lt_te:Nat.PrimrecIn O Nat.if_lt_te := by ...
@@ -392,13 +377,13 @@ def c_if_le_te := c_if_lt_te.comp (pair (pair (left.comp left) (succ.comp $ righ
 @[cp] theorem c_if_le_te_prim : code_prim c_if_le_te := by
   unfold c_if_le_te
   apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
-@[simp] theorem c_if_le_te_evp:evalp O c_if_le_te (Nat.pair (Nat.pair a b) (Nat.pair c d)) = if a≤b then c else d := by
+@[simp] theorem c_if_le_te_evp:evalp O c_if_le_te ⟪⟪a, b⟫, ⟪c, d⟫⟫ = if a≤b then c else d := by
   simp [c_if_le_te,evalp];
   -- funext xs
   cases Classical.em (a<b+1) with
   | inl h => simp [h, Nat.lt_add_one_iff.mp h]
   | inr h => simp [h, Nat.lt_add_one_iff.not.mp h]
-@[simp] theorem c_if_le_te_ev:eval O c_if_le_te (Nat.pair (Nat.pair a b) (Nat.pair c d)) = if a≤b then c else d := by
+@[simp] theorem c_if_le_te_ev:eval O c_if_le_te ⟪⟪a, b⟫, ⟪c, d⟫⟫ = if a≤b then c else d := by
   rw [← evalp_eq_eval c_if_le_te_prim]; simp
 end Computability.Code
 -- theorem Nat.PrimrecIn.if_le_te:Nat.PrimrecIn O Nat.if_le_te := by ...
@@ -412,9 +397,9 @@ def c_flip := pair right left
 @[cp] theorem c_flip_prim : code_prim c_flip := by
   unfold c_flip
   apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
-@[simp] theorem c_flip_evp:evalp O c_flip (Nat.pair a b) = Nat.pair b a := by
+@[simp] theorem c_flip_evp:evalp O c_flip ⟪a, b⟫ = ⟪b, a⟫ := by
   simp [c_flip,evalp];
-@[simp] theorem c_flip_ev:eval O c_flip (Nat.pair a b) = Nat.pair b a := by
+@[simp] theorem c_flip_ev:eval O c_flip ⟪a, b⟫ = ⟪b, a⟫ := by
   rw [← evalp_eq_eval c_flip_prim]; simp
 end Computability.Code
 -- theorem Nat.PrimrecIn.flip:Nat.PrimrecIn O Nat.flip := by ...
@@ -429,8 +414,8 @@ def c_if_gt_te := c_if_lt_te.comp (pair (c_flip.comp left) right)
 @[cp] theorem c_if_gt_te_prim : code_prim c_if_gt_te := by
   unfold c_if_gt_te
   apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
-@[simp] theorem c_if_gt_te_evp:evalp O c_if_gt_te (Nat.pair (Nat.pair a b) (Nat.pair c d)) = if a>b then c else d := by simp [c_if_gt_te,evalp];
-@[simp] theorem c_if_gt_te_ev:eval O c_if_gt_te (Nat.pair (Nat.pair a b) (Nat.pair c d)) = if a>b then c else d := by
+@[simp] theorem c_if_gt_te_evp:evalp O c_if_gt_te ⟪⟪a, b⟫, ⟪c, d⟫⟫ = if a>b then c else d := by simp [c_if_gt_te,evalp];
+@[simp] theorem c_if_gt_te_ev:eval O c_if_gt_te ⟪⟪a, b⟫, ⟪c, d⟫⟫ = if a>b then c else d := by
   rw [← evalp_eq_eval c_if_gt_te_prim]; simp
 end Computability.Code
 -- theorem Nat.PrimrecIn.if_gt_te:Nat.PrimrecIn O Nat.if_gt_te := by ...
@@ -443,8 +428,8 @@ def c_if_ge_te := c_if_le_te.comp (pair (c_flip.comp left) right)
 @[cp] theorem c_if_ge_te_prim : code_prim c_if_ge_te := by
   unfold c_if_ge_te
   apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
-@[simp] theorem c_if_ge_te_evp:evalp O c_if_ge_te (Nat.pair (Nat.pair a b) (Nat.pair c d)) = if a≥b then c else d := by simp [c_if_ge_te,evalp];
-@[simp] theorem c_if_ge_te_ev:eval O c_if_ge_te (Nat.pair (Nat.pair a b) (Nat.pair c d)) = if a≥b then c else d := by
+@[simp] theorem c_if_ge_te_evp:evalp O c_if_ge_te ⟪⟪a, b⟫, ⟪c, d⟫⟫ = if a≥b then c else d := by simp [c_if_ge_te,evalp];
+@[simp] theorem c_if_ge_te_ev:eval O c_if_ge_te ⟪⟪a, b⟫, ⟪c, d⟫⟫ = if a≥b then c else d := by
   rw [← evalp_eq_eval c_if_ge_te_prim]; simp
 end Computability.Code
 -- theorem Nat.PrimrecIn.if_ge_te:Nat.PrimrecIn O Nat.if_ge_te := by ...
@@ -484,14 +469,14 @@ def c_nat_iterate (cf:Code) :=
 @[cp] theorem c_nat_iterate_prim (hcf : code_prim cf) : code_prim (c_nat_iterate cf) := by
   unfold c_nat_iterate
   apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
-@[simp] theorem c_nat_iterate_evp : evalp O (c_nat_iterate cf) (Nat.pair input i) = (evalp O cf)^[i] (input) := by
+@[simp] theorem c_nat_iterate_evp : evalp O (c_nat_iterate cf) ⟪input, i⟫ = (evalp O cf)^[i] (input) := by
   simp [c_nat_iterate]
   induction i with
   | zero => simp
   | succ n ih =>
     simp [ih]
     exact Eq.symm (Function.iterate_succ_apply' (evalp O cf) n input)
--- @[simp] theorem c_nat_iterate_ev :eval O (c_nat_iterate cf) (Nat.pair input i) = (evalp O cf)^[i] (input) := by
+-- @[simp] theorem c_nat_iterate_ev :eval O (c_nat_iterate cf) ⟪input, i⟫ = (evalp O cf)^[i] (input) := by
 --     simp [← evalp_eq_eval c_nat_iterate_prim]
 end Computability.Code
 end nat_iterate
@@ -561,28 +546,28 @@ def c_pair := c_add.comp₂ (c_mul2.comp $ c_mul2) (c_const 5)
 @[cp] theorem c_pair_prim : code_prim c_pair := by
   unfold c_pair
   apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
-@[simp] theorem c_pair_evp : evalp O c_pair (Nat.pair a b) = c2n (pair (n2c a) (n2c b)) := by simp [c2n, c_pair, Nat.mul_comm]
+@[simp] theorem c_pair_evp : evalp O c_pair ⟪a, b⟫ = c2n (pair (n2c a) (n2c b)) := by simp [c2n, c_pair, Nat.mul_comm]
 @[simp] theorem c_pair_evp' : evalp O c_pair = fun ab:ℕ => c2n (pair (n2c ab.l) (n2c ab.r)) := by simp [c2n, c_pair, Nat.mul_comm]
-@[simp] theorem c_pair_ev:eval O c_pair (Nat.pair a b) = c2n (pair (n2c a) (n2c b)) := by rw [← evalp_eq_eval c_pair_prim]; simp
+@[simp] theorem c_pair_ev:eval O c_pair ⟪a, b⟫ = c2n (pair (n2c a) (n2c b)) := by rw [← evalp_eq_eval c_pair_prim]; simp
 @[simp] theorem Nat.PrimrecIn.c_pair : Nat.PrimrecIn O (fun ab:ℕ => c2n (pair (n2c ab.l) (n2c ab.r))) := by rw [←c_pair_evp']; exact code_prim_prop
 
 def c_comp := c_add.comp₂ (c_mul2.comp $ c_mul2) (c_const 6)
 @[cp] theorem c_comp_prim : code_prim c_comp := by
   unfold c_comp
   apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
-@[simp] theorem c_comp_evp : evalp O c_comp (Nat.pair a b) = c2n (comp (n2c a) (n2c b)) := by simp [c2n, c_comp, Nat.mul_comm]
+@[simp] theorem c_comp_evp : evalp O c_comp ⟪a, b⟫ = c2n (comp (n2c a) (n2c b)) := by simp [c2n, c_comp, Nat.mul_comm]
 @[simp] theorem c_comp_evp' : evalp O c_comp = fun ab:ℕ => c2n (comp (n2c ab.l) (n2c ab.r)) := by simp [c2n, c_comp, Nat.mul_comm]
-@[simp] theorem c_comp_ev:eval O c_comp (Nat.pair a b) = c2n (comp (n2c a) (n2c b)) := by rw [← evalp_eq_eval c_comp_prim]; simp
+@[simp] theorem c_comp_ev:eval O c_comp ⟪a, b⟫ = c2n (comp (n2c a) (n2c b)) := by rw [← evalp_eq_eval c_comp_prim]; simp
 @[simp] theorem Nat.PrimrecIn.c_comp : Nat.PrimrecIn O (fun ab:ℕ => c2n (comp (n2c ab.l) (n2c ab.r))) := by rw [←c_comp_evp']; exact code_prim_prop
 
 def c_prec := c_add.comp₂ (c_mul2.comp $ c_mul2) (c_const 7)
 @[cp] theorem c_prec_prim : code_prim c_prec := by
   unfold c_prec
   apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
-@[simp] theorem c_prec_evp : evalp O c_prec (Nat.pair a b) = c2n (prec (n2c a) (n2c b)) := by simp [c2n, c_prec, Nat.mul_comm]; exact rfl
+@[simp] theorem c_prec_evp : evalp O c_prec ⟪a, b⟫ = c2n (prec (n2c a) (n2c b)) := by simp [c2n, c_prec, Nat.mul_comm]; exact rfl
 @[simp] theorem c_prec_evp' : evalp O c_prec = fun ab:ℕ => c2n (prec (n2c ab.l) (n2c ab.r)) := by simp [c2n, c_prec, Nat.mul_comm]; exact rfl
 @[simp] theorem Nat.PrimrecIn.c_prec : Nat.PrimrecIn O (fun ab:ℕ => c2n (prec (n2c ab.l) (n2c ab.r))) := by rw [←c_prec_evp']; exact code_prim_prop
-@[simp] theorem c_prec_ev:eval O c_prec (Nat.pair a b) = c2n (prec (n2c a) (n2c b)) := by rw [← evalp_eq_eval c_prec_prim]; simp
+@[simp] theorem c_prec_ev:eval O c_prec ⟪a, b⟫ = c2n (prec (n2c a) (n2c b)) := by rw [← evalp_eq_eval c_prec_prim]; simp
 
 def c_rfind' := c_add.comp₂ (c_mul2.comp $ c_mul2) (c_const 8)
 @[cp] theorem c_rfind'_prim : code_prim c_rfind' := by
@@ -619,9 +604,9 @@ def c_ev_const := c_comp.comp₂ left (c_c_const.comp right)
   unfold c_ev_const
   apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
 theorem c_ev_const_evp' : evalp O c_ev_const x = c2n (comp (n2c x.l) (c_const x.r)) := by simp [c_ev_const]
-@[simp] theorem c_ev_const_evp : evalp O c_ev_const (Nat.pair e x) = c2n (comp (n2c e) (c_const x)) := by simp [c_ev_const_evp']
+@[simp] theorem c_ev_const_evp : evalp O c_ev_const ⟪e, x⟫ = c2n (comp (n2c e) (c_const x)) := by simp [c_ev_const_evp']
 theorem c_ev_const_ev':eval O c_ev_const x = c2n (comp (n2c x.l) (c_const x.r)) := by rw [← evalp_eq_eval c_ev_const_prim]; simp [c_ev_const_evp']
-@[simp] theorem c_ev_const_ev:eval O c_ev_const (Nat.pair e x) = c2n (comp (n2c e) (c_const x)) := by rw [← evalp_eq_eval c_ev_const_prim]; simp
+@[simp] theorem c_ev_const_ev:eval O c_ev_const ⟪e, x⟫ = c2n (comp (n2c e) (c_const x)) := by rw [← evalp_eq_eval c_ev_const_prim]; simp
 end Computability.Code
 
 section max

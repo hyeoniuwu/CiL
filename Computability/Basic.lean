@@ -137,6 +137,10 @@ lemma Part.ne_of_get_ne' {p1:Part ℕ} {h1:p1.Dom} (h:p1.get h1≠x) : (p1≠Par
 
 -- @[simp] abbrev Nat.l (n:ℕ) := n.unpair.1
 -- @[simp] abbrev Nat.r (n:ℕ) := n.unpair.2
+notation "⟪" x "," y "⟫" => Nat.pair x y
+notation "⟪" x "," y "⟫" => Nat.pair <$> x <*> y
+notation "⟪" x "," y "," z "⟫" => Nat.pair x (Nat.pair y z)
+notation "⟪" x "," y "," z "⟫" => Nat.pair <$> x <*> (Nat.pair <$> y <*> z)
 def Nat.l (n:ℕ) := n.unpair.1
 def Nat.r (n:ℕ) := n.unpair.2
 @[simp] theorem pair_l : (Nat.pair x y).l = x := by simp [Nat.l]

@@ -245,6 +245,7 @@ theorem simpleInReq : ((W O a)ᶜ.Infinite ∧ ∀ c, (W O c).Infinite → (W O 
 #eval 2^1
 abbrev fs_in := Nat.testBit
 abbrev fs_add : ℕ→ℕ→ℕ := λ a x ↦ a ||| (2^x)
+#check Nat.pair
 
 def C_aux (R:ℕ) : Code := zero
 theorem C_aux_evp_0 : Nat.pair x j ∈ (evalp Nat.fzero (C_aux R) s : Option ℕ) → j ≤ s ∧ Nat.testBit R j ∧  x ∈ Wn ∅ j s ∧ x > 2*j := by
@@ -262,20 +263,19 @@ namespace Computability.Simple
 -- -/
 noncomputable def C : ℕ→ℕ := λ s ↦
 match s with
-| 0 => Nat.pair 0 0
+| 0 => ⟪0, 0⟫
 | s+1 =>
   have Aₚ := (C s).l
   have Rₚ := (C s).r
 
   let search : Option ℕ := evalp Nat.fzero (C_aux Rₚ) s
   if halts:search.isSome then
-    -- let ⟨x,i⟩ := search.get halts
-    let rf := search.get halts
-    let Aₛ := fs_add Aₚ rf.l
-    let Rₛ := fs_add Rₚ rf.r
-    Nat.pair Aₛ Rₛ
+    let ⟨x,j⟩ := (search.get halts).unpair
+    let Aₛ := fs_add Aₚ x
+    let Rₛ := fs_add Rₚ j
+    ⟪Aₛ, Rₛ⟫
   else
-    Nat.pair Aₚ Rₚ
+    ⟪Aₚ, Rₚ⟫
 
   -- search for all i ≤ s:
   -- check i is not already satisfied.
