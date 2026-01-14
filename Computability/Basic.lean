@@ -1,17 +1,21 @@
 import Computability.Label
--- import Computability.Basic
 import Computability.Encoding
 import Mathlib.Data.PFun
 import Mathlib.Data.Nat.Dist
+
+/-!
+# Notations, helper functions
+
+In this file we define helper functions which will be used later on.
+-/
 
 open Classical
 open Computability.Code
 open Nat
 
-
 -- general helper functions
 theorem pair_nonzero_right_pos_aux : ¬ (Nat.pair x (s+1)=0) := by
-  rw  [show 0=Nat.pair 0 0 from rfl]
+  rw [show 0=Nat.pair 0 0 from rfl]
   rw [pair_eq_pair]
   intro h
   have hr := h.right
@@ -52,7 +56,7 @@ protected theorem isSome.bind {o : Option α} (h : o.isSome) (f : α → Option 
   simp only [Option.bind_some]
   exact h2
 theorem listrwgen (n): (List.range (n + 1)).reverse = n :: (List.range n).reverse := by
-  simp
+  simp only [List.reverse_eq_cons_iff, List.reverse_reverse]
   exact List.range_succ
 theorem ne_of_mem_imp_not_mem {y:Part ℕ} (h:x∈y) (h2:x≠z) : z∉y := by
   have aux: y=Part.some x := by exact Part.eq_some_iff.mpr h
@@ -132,28 +136,19 @@ lemma Part.not_none_iff_dom : (¬o=Part.none)↔(o.Dom) := by
 lemma Part.ne_of_get_ne {p1 p2:Part ℕ} {h1:p1.Dom} {h2:p2.Dom} (h:p1.get h1≠p2.get h2) : (p1≠p2) := by aesop
 lemma Part.ne_of_get_ne' {p1:Part ℕ} {h1:p1.Dom} (h:p1.get h1≠x) : (p1≠Part.some x) := by aesop
 
--- variable {α:Type*} {β:Type*} {σ:Type*}
--- variable [Primcodable α] [Primcodable β] [Primcodable σ]
-
--- @[simp] abbrev Nat.l (n:ℕ) := n.unpair.1
--- @[simp] abbrev Nat.r (n:ℕ) := n.unpair.2
 notation "⟪" x "," y "⟫" => Nat.pair x y
 notation "⟪" x "," y "⟫" => Nat.pair <$> x <*> y
 notation "⟪" x "," y "," z "⟫" => Nat.pair x (Nat.pair y z)
 notation "⟪" x "," y "," z "⟫" => Nat.pair <$> x <*> (Nat.pair <$> y <*> z)
 def Nat.l (n:ℕ) := n.unpair.1
 def Nat.r (n:ℕ) := n.unpair.2
-@[simp] theorem pair_l : (Nat.pair x y).l = x := by simp [Nat.l]
-@[simp] theorem pair_r : (Nat.pair x y).r = y := by simp [Nat.r]
-@[simp] theorem pair_lr : (Nat.pair x.l x.r) = x := by simp [Nat.r, Nat.l]
-@[simp] theorem unpair1_to_l {n:ℕ} : (n.unpair.1) = n.l := by simp [Nat.l]
-@[simp] theorem unpair2_to_r {n:ℕ} : (n.unpair.2) = n.r := by simp [Nat.r]
-@[simp, reducible]
-def Nat.unpaired2 {α} (f : ℕ → ℕ → α) (n : ℕ) : α := f n.l n.r
--- @[simp, reducible]
--- def unpaired {α} (f : ℕ → ℕ → α) (n : ℕ) : α := f n.unpair.1 n.unpair.2
-@[simp] abbrev Nat.fzero:ℕ→ℕ:=λ_↦0
-
+@[simp] theorem pair_l {x y} : (Nat.pair x y).l = x := by simp [Nat.l]
+@[simp] theorem pair_r {x y} : (Nat.pair x y).r = y := by simp [Nat.r]
+@[simp] theorem pair_lr {x} : (Nat.pair x.l x.r) = x := by simp [Nat.r, Nat.l]
+@[simp] theorem unpair1_to_l {n : ℕ} : (n.unpair.1) = n.l := by simp [Nat.l]
+@[simp] theorem unpair2_to_r {n : ℕ} : (n.unpair.2) = n.r := by simp [Nat.r]
+@[simp, reducible] def Nat.unpaired2 {α} (f : ℕ → ℕ → α) (n : ℕ) : α := f n.l n.r
+@[simp] abbrev Nat.fzero : ℕ→ℕ := λ_↦0
 def n2b (n:ℕ) : Bool := if n=0 then false else true
 def b2n (b:Bool) : ℕ := if b then 1 else 0
 def n2b' (n:ℕ) : Bool := if n=0 then true else false
@@ -163,7 +158,6 @@ open Encodable
 abbrev n2o := @ofNat (Option ℕ) _
 abbrev o2n := @encode (Option ℕ) _
 
--- TODO: maybe delete the below?
 namespace Computability.Code.nc_to_nn
 @[coe] protected def lift (f:ℕ→Code) : ℕ→ℕ := fun x => c2n (f x)
 instance : Coe (ℕ→Code) (ℕ→ℕ) := ⟨Computability.Code.nc_to_nn.lift⟩
@@ -176,32 +170,6 @@ namespace Computability.Code.cc_to_nn
 @[coe] protected def lift (f:Code→Code) : ℕ→ℕ := c2n ∘ f ∘ n2c
 instance : Coe (Code→Code) (ℕ→ℕ) := ⟨Computability.Code.cc_to_nn.lift⟩
 end Computability.Code.cc_to_nn
-
--- conversions between oracle and non-oracle versions
--- lemma PrimrecIn.PrimrecIn_Empty (h:Nat.PrimrecIn (λ _ ↦ 0) f):Nat.Primrec f := by
---   induction' h with g hg g h _ _ ih₁ ih₂ g h _ _ ih₁ ih₂ g h _ _ ih₁ ih₂ g _ ih
---   repeat {constructor}
---   · (expose_names; exact Nat.Primrec.pair a_ih a_ih_1)
---   repeat {constructor; assumption; try assumption}
---   (expose_names; exact Nat.Primrec.prec a_ih a_ih_1)
--- lemma PrimrecIn.PrimrecIn₂_Empty {f:α→β→σ} (h:PrimrecIn₂ (λ _ ↦ 0) f):Primrec₂ f := by
---   unfold PrimrecIn₂ at h
---   unfold Primrec₂
---   apply PrimrecIn.PrimrecIn_Empty
---   exact h
--- theorem Primrec.to_PrimrecIn₂ {f:α→β→σ} (h:Primrec₂ f):PrimrecIn₂ O f := by
---   unfold Primrec₂ at h
---   unfold PrimrecIn₂
---   apply Primrec.to_PrimrecIn
---   exact h
--- theorem PrimrecIn.PrimrecIn₂_iff_Primrec₂ {f:α→β→σ}:(∀O,PrimrecIn₂ O f) ↔ Primrec₂ f := by
---   constructor
---   · exact fun a ↦ PrimrecIn₂_Empty (a fun x ↦ 0)
---   · exact fun a O ↦ Primrec.to_PrimrecIn₂ a
--- theorem PrimrecIn.PrimrecIn_iff_Primrec:(∀O,Nat.PrimrecIn O f) ↔ Nat.Primrec f := by
---   constructor
---   · exact fun a ↦ PrimrecIn.PrimrecIn_Empty (a fun x ↦ 0)
---   · exact fun a O ↦ Nat.Primrec.to_PrimrecIn a
 
 -- templates for primrec constructions as codes
 namespace Computability.Code

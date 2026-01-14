@@ -2,6 +2,14 @@ import Computability.Use
 open Computability.Code
 open Classical
 
+/-!
+# Strings as oracles
+
+In this file we define the evaluation function `evals`, which is like `eval` but takes a (finite) *string* as an oracle, rather than a set.
+
+This is done via defining "clamped" evaluation, where a computation diverges if its use exceeds a set limit.
+-/
+
 namespace Computability.Code
 
 -- stands for "evaln clamped"

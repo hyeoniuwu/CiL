@@ -2,6 +2,14 @@ import Mathlib.Data.Nat.Pairing
 import Mathlib.Data.PFun
 import Mathlib.Data.Nat.Find
 
+/-!
+# Oracle.lean
+
+This file takes only the necessary definitions and theorems from Mathlib/Computability/Partrec.lean and relativises them.
+
+The two main predicates defined are `PrimrecIn` and `RecursiveIn`, from which we define the Turing degrees in Order.lean.
+-/
+
 open Part
 
 namespace Nat
@@ -150,7 +158,7 @@ inductive RecursiveIn (O : ℕ → ℕ) : (ℕ →. ℕ) → Prop
 --         Nat.rfind fun n => (fun m => m = 0) <$> f (Nat.pair a n)
 
 /-- The primitive recursive functions `ℕ → ℕ`. -/
-protected inductive PrimrecIn (O:ℕ→ℕ) : (ℕ → ℕ) → Prop
+protected inductive PrimrecIn (O : ℕ → ℕ) : (ℕ → ℕ) → Prop
   | zero : Nat.PrimrecIn O fun _ => 0
   | protected succ : Nat.PrimrecIn O succ
   | left : Nat.PrimrecIn O fun n => n.unpair.1
