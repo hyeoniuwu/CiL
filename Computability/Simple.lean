@@ -247,6 +247,8 @@ abbrev fs_in := Nat.testBit
 abbrev fs_add : ℕ→ℕ→ℕ := λ a x ↦ a ||| (2^x)
 #check Nat.pair
 
+-- def c_bdd_search :=
+
 def C_aux (R:ℕ) : Code := zero
 theorem C_aux_evp_0 : Nat.pair x j ∈ (evalp Nat.fzero (C_aux R) s : Option ℕ) → j ≤ s ∧ Nat.testBit R j ∧  x ∈ Wn ∅ j s ∧ x > 2*j := by
   sorry

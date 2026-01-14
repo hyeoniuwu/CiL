@@ -1,6 +1,12 @@
 import Computability.SetOracles
 import Computability.Constructions.EvalString
 
+/-!
+# KP54
+
+In this file we specify the construction procedure in the KP54 proof, and show that the sets it defines are incomparable.
+-/
+
 open Computability.Code
 open Classical
 open Computability
@@ -12,19 +18,8 @@ end Computability.Code
 set_option linter.dupNamespace false
 namespace KP54
 
-/-
-bsunion doesnt work bc it changes prev values
-it should actually just be... join!
-so itd be convenient to use lists of bool
-but i defined c_list functions for list of naturals...
-which is fine. (i think i remember doing that on purpose, because you can interpret the natural that you get from the list afterwards.)
-and here i can just directly work with a list of nat anyways, interpreting 0 as false and anything else as true.
--/
--- the proofs later however are simplified if A_s,B_s are treated as List Bool...
--- /mnt/Q/Mathematics/LaTeX/Writings/Computability.pdf
 -- c_kp54_aux check if x.r+1 is a finite extension to A for the computation [i](n).
 @[irreducible] noncomputable def c_kp54_aux (i n:ℕ) :=
-  -- zero
   c_ifdom
   (c_evals.comp₃ (c_list_append.comp₂ left (succ.comp right)) (c_const i) (c_const n))
   zero
@@ -48,13 +43,19 @@ theorem c_kp54_aux_2 (halts:(eval (λ_↦0) (dovetail (c_kp54_aux i lb)) Aₚ).D
     exact this
 
 open Nat List in
--- /--
--- Input: stage `s`
--- Output: (code for `Aₛ`, code for `Bₛ`)
--- -/
-noncomputable def KP54 : ℕ→ℕ := λ s ↦
+/--
+The construction procedure in the KP54 proof.
+
+Input: stage `s`
+Output: (string `Aₛ`, string `Bₛ`)
+
+(The strings are encoded as a list of naturals.)
+
+Each string `Aₛ` and `Bₛ` increase in length by at least 1 every stage.
+-/
+noncomputable def KP54 : ℕ → ℕ := λ s ↦
 match s with
-| 0 => Nat.pair 0 0
+| 0 => ⟪0, 0⟫
 | s+1 =>
   have i  := s.div2
   have Aₚ := (KP54 s).l
@@ -83,19 +84,11 @@ match s with
 @[simp] theorem KP54_0_r : n2l (KP54 0).r = [] := by simp [KP54]
 @[simp] theorem KP54_0_l : n2l (KP54 0).l = [] := by simp [KP54]
 
-/-
-`KP54(s)=(a,b)` where `D a, D b` correspond to sets `A` and `B` at stage `s`.
-We note that:
- · by stage 2n,   `χ_B(n)` is bound to be defined.
- · by stage 2n+1, `χ_A(n)` is bound to be defined.
-
-actually now i changed it so that i think
- · by stage n,   `χ_B(n)` is bound to be defined.
- · by stage n,   `χ_A(n)` is bound to be defined.
--/
 noncomputable def As (s:ℕ) := n2l (KP54 s).l
 noncomputable def Bs (s:ℕ) := n2l (KP54 s).r
 
+
+-- We prove a bunch of theorems about the monotonicity of growth of the strings `As` and `Bs`, and their sizes.
 theorem AsBs_Mono_0 : (As i) <+: (As (i+1)) ∧ (Bs i) <+: (Bs (i+1)) := by
   unfold As
   unfold Bs
@@ -266,6 +259,7 @@ theorem AsBsSize : i≤(As i).length ∧ i≤(Bs i).length := by
 @[simp] theorem AsSize : i<(As (i+1)).length := (@AsBsSize (i+1)).left
 @[simp] theorem BsSize : i<(Bs (i+1)).length := (@AsBsSize (i+1)).right
 
+-- wt stands for witness. R_wt i is the natural that witnesses requirement `R i`.
 private noncomputable def R_wt (i:ℕ) := (Bs (2*(i+1)-1)).length
 @[simp] theorem BsSize_o2e' : R_wt i < (Bs (2 * (i + 1))).length := by
   rw [show R_wt i = (Bs (2*(i+1)-1)).length from rfl]
@@ -281,32 +275,19 @@ private noncomputable def R_wt (i:ℕ) := (Bs (2*(i+1)-1)).length
 --   rw [show S_wt i = (As (2*(i+1)-1)).length from rfl]
 --   exact AsSize_mono'
 
-
+-- The "completed" sets `A` and `B`, defined from `As` and `Bs` noting that by stage `x+1`, index `x` is defined by the monotonicty theorems above.
+-- The [x] 's require the theorems AsSize and BsSize above.
 def A := { x | n2b (As (x+1))[x] }
 def B := { x | n2b (Bs (x+1))[x] }
 
-theorem i2iP1 {i:ℕ} : 2*(i+1) = 2*i+1+1 := by exact rfl
-
-
--- private theorem S_aux_0 (i:ℕ) (h:(evals (Bs (2*(i+1))) i (S_wt i)).Dom):
--- (evals (Bs (2*(i+1))) i (S_wt i)).get h ≠ b2n (n2b $ ((As (2*(i+1)))[S_wt i]'(by exact AsSize_o2e'))) := by
-
--- set_option diagnostics true in
--- private theorem R_aux_0 (i:ℕ) (h:(evals (As (2*(i+1))) i (R_wt i)).Dom):
--- (evals (As (2*(i+1))) i (R_wt i)).get h ≠ b2n (n2b $ (Bs (2*(i+1)))[R_wt i]'(@BsSize_o2e' i)) := by
 private theorem R_aux_0 (i:ℕ) (h:(evals (As (2*i+1+1)) i (R_wt i)).Dom):
 (evals (As (2*i+1+1)) i (R_wt i)).get h ≠ b2n (n2b $ (Bs (2*i+1+1))[R_wt i]'(@BsSize_o2e' i)) := by
-
-  -- rw [@i2iP1 i] at h ⊢
   unfold Bs
   unfold As
   unfold KP54
-  -- extract_lets
-  -- simp (config := {zeta:=false}) only [i2iP1]
   simp (config := {zeta:=false})
   simp (config := {zetaHave:=false}) only []
   -- memory blows up if i lift the non-have lets. why?
-
 
   lift_lets; extract_lets; expose_names
   have i_1_simp: i_1 = i := rfl
