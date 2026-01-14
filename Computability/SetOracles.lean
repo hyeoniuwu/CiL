@@ -293,7 +293,7 @@ theorem Kχ_leq_χSetK (O:Set ℕ) : Nat.RecursiveIn (χ (SetK O)) (K (χ O)) :=
     · exact Nat.RecursiveIn.succ
     · apply TuringReducible.trans' h5 (χ_leq_χSetK O)
 theorem χSetK_leq_χSetK0 (O:Set ℕ) : Nat.RecursiveIn (χ (SetK0 O)) (χ (SetK O)) := by
-  have main : (χ (SetK O)) = (χ (SetK0 O)) ∘ fun x=> Nat.pair x x := by
+  have main : (χ (SetK O)) = (χ (SetK0 O)) ∘ fun x => Nat.pair x x := by
     funext xs
     simp only [χ, SetK, Set.mem_setOf_eq, SetK0, Function.comp_apply]
     simp

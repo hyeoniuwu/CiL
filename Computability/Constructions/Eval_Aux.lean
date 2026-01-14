@@ -10,8 +10,8 @@ open List
 section rfindOpt
 namespace Computability.Code
 
-theorem rfind'_eqv_rfind : ((Nat.unpaired fun a m => (Nat.rfind fun n => (fun m => m = 0) <$> eval O c (Nat.pair a (n + m))).map (· + m)) (Nat.pair x 0)) = (Nat.rfind fun n => (fun m => m = 0) <$> eval O c (Nat.pair x n)) := by
--- theorem rfind'_eqv_rfind : ((Nat.unpaired fun a m => (Nat.rfind fun n => (fun m => m = 0) <$> eval O c (Nat.pair a (n + m))).map (· + m)) ∘ (Nat.pair <$> (fun (n:ℕ)=>n) <*> Part.some 0)) x = (Nat.rfind fun n => (fun m => m = 0) <$> eval O c (Nat.pair x n)) := by
+theorem rfind'_eqv_rfind : ((Nat.unpaired fun a m => (Nat.rfind fun n => (fun m => m = 0) <$> eval O c (Nat.pair a (n + m))).map (· + m)) (Nat.pair x 0)) = (Nat.rfind fun n => (fun m => m = 0) <$> eval O c ⟪x, n⟫) := by
+-- theorem rfind'_eqv_rfind : ((Nat.unpaired fun a m => (Nat.rfind fun n => (fun m => m = 0) <$> eval O c (Nat.pair a (n + m))).map (· + m)) ∘ (Nat.pair <$> (fun (n:ℕ)=>n) <*> Part.some 0)) x = (Nat.rfind fun n => (fun m => m = 0) <$> eval O c ⟪x, n⟫) := by
   simp only [Nat.unpaired]
   simp only [Nat.unpair_pair, add_zero, Part.map_eq_map]
   exact rfl
@@ -75,28 +75,23 @@ def c_rfindOpt (c:Code) := (c_ofOption c).comp₂ c_id (c_rfind (c_isSome.comp (
   simp [n2b']
   simp [b'2n]
 
-  have : ((fun x_1 ↦ (eval O c (Nat.pair x x_1)).bind fun y ↦ Part.some !decide (n2o y = Option.none))) = ((fun n ↦ Part.some (n2o ((eval O c (Nat.pair x n)).get (hc1 (Nat.pair x n)))).isSome)) := by
+  have : ((fun x_1 ↦ (eval O c (Nat.pair x x_1)).bind fun y ↦ Part.some !decide (n2o y = Option.none))) = ((fun n ↦ Part.some (n2o ((eval O c ⟪x, n⟫).get (hc1 ⟪x, n⟫))).isSome)) := by
 
     funext n
-    simp [Part.Dom.bind (hc1 (Nat.pair x n))]
-    cases n2o ((eval O c (Nat.pair x n)).get (hc1 (Nat.pair x n))) with
+    simp [Part.Dom.bind (hc1 ⟪x, n⟫)]
+    cases n2o ((eval O c ⟪x, n⟫).get (hc1 ⟪x, n⟫)) with
     | none => simp
     | some val => simp
 
   rw [this]
-  if hh: (Nat.rfind fun n ↦ Part.some (n2o ((eval O c (Nat.pair x n)).get (hc1 (Nat.pair x n)))).isSome).Dom then
+  if hh: (Nat.rfind fun n ↦ Part.some (n2o ((eval O c ⟪x, n⟫).get (hc1 ⟪x, n⟫))).isSome).Dom then
   simp [Part.Dom.bind hh]
   simp [Seq.seq]
   simp [c_ofOption_ev hc1]
   simp [Part.Dom.bind hh]
-  -- have : ((eval O c ((Nat.rfind fun n ↦ Part.some (n2o ((eval O c (Nat.pair x n)).get (hc1 (Nat.pair x n)))).isSome).get hh))).Dom := by exact hc1 ((Nat.rfind fun n ↦ Part.some (n2o ((eval O c (Nat.pair x n)).get (hc1 (Nat.pair x n)))).isSome).get hh)
-  -- congr
-
 
   else
   simp [Part.eq_none_iff'.mpr hh]
   simp [Seq.seq]
 end Computability.Code
--- -- theorem Nat.PrimrecIn.rfindOpt:Nat.PrimrecIn O Nat.rfindOpt := by ...
--- -- theorem Nat.Primrec.rfindOpt:Nat.Primrec Nat.rfindOpt := by ...
 end rfindOpt
