@@ -339,6 +339,25 @@ abbrev Wn (O:Set ℕ) (e : Code) (s : ℕ) := { x | (evalnSet O s e x).isSome }
 /-- `WRn O e s` := range of e^th oracle program ran for s steps -/
 abbrev WRn (O:Set ℕ) (e : Code) (s : ℕ) := { y | ∃ x, y ∈ evalnSet O s e x }
 
+theorem Wn_mono {O} : ∀ {k₁ k₂ c x}, k₁ ≤ k₂ → x ∈ Wn O c k₁ → x ∈ Wn O c k₂ := λ a b ↦ evaln_mono_dom a b
+theorem Wn_sound {O} : ∀ {k c x}, x ∈ Wn O c k → x ∈ W O c := by
+  simp [evalnSet, evalSet]
+  intro k c x h
+  have := evaln_sound' h
+  rw [this]
+  exact Part.dom_iff_mem.mp trivial
+theorem evaln_complete_dom : (eval (χ O) c x).Dom ↔ ∃ k, (evaln (χ O) k c x).isSome := by
+  constructor
+  · intro h
+    rcases Part.dom_iff_mem.mp h with ⟨y,hy⟩
+    rcases evaln_complete.mp hy with ⟨k,hk⟩
+    exact ⟨k, Option.isSome_of_mem hk⟩
+  · rintro ⟨y, hy⟩
+    exact en2e hy
+theorem Wn_complete {O} {c x} : x ∈ W O c ↔ ∃ k, x ∈ Wn O c k := by
+  simp [evalnSet, evalSet]
+  exact Iff.trans (Iff.symm Part.dom_iff_mem) (@evaln_complete_dom O c x)
+  
 theorem W_le_SetK0 : ∀ c, W O c ≤ᵀ SetK0 O := by
   intro c
   unfold W

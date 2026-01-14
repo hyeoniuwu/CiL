@@ -247,30 +247,80 @@ abbrev fs_in := Nat.testBit
 abbrev fs_add : ℕ→ℕ→ℕ := λ a x ↦ a ||| (2^x)
 #check Nat.pair
 
--- def c_bdd_search :=
+/-
+`c_bdd_search c` is a primrec code that, on input `⟪x, l⟫`, evaluates:
+  `[c](x,0)`
+  `[c](x,1)`
+  ... up to
+  `[c](x,l)`,
+  until one of the computations return a non-zero output. Suppose `[c](x,i)` is the first such computation.
 
-def C_aux (R:ℕ) : Code := zero
-theorem C_aux_evp_0 : Nat.pair x j ∈ (evalp Nat.fzero (C_aux R) s : Option ℕ) → j ≤ s ∧ Nat.testBit R j ∧  x ∈ Wn ∅ j s ∧ x > 2*j := by
+  Then, `some ⟪i, [c](x,i)⟫` is returned.
+
+  If no such value is found, `none` is returned.
+
+  The code `c` must be total.
+-/
+def c_bdd_search (c:Code) := prec
+  (
+    pair zero $ c_eval.comp₂ c (pair c_id (c_const 0))
+  ) -- abusing the fact that ⟪0,0⟫ = 0 = Option.none
+  (
+    let prev_comp := right.comp right
+    let iP1 := left.comp right
+    let computation := c_eval.comp₂ c (pair c_id iP1)
+
+    c_ifz.comp₃ prev_comp
+    (c_ifz.comp₃ computation zero (pair iP1 computation))
+    prev_comp
+    -- pair zero $ c_eval.comp₂ c (pair c_id iP1)
+  )
+theorem c_bdd_search_evp_total (h:code_total O c) : code_total O (c_bdd_search c) := by
   sorry
-theorem C_aux_evp_2 : (∃ j ≤ s, Nat.testBit R j ∧ ∃ x ∈ Wn ∅ j s, x ≤ 2*j) → (evalp Nat.fzero (C_aux R) s : Option ℕ).isSome := by
+theorem c_bdd_search_evp_0 (h:code_total O c) :
+  (eval O (c_bdd_search c) ⟪x, l⟫).get (c_bdd_search_evp_total h ⟪x, l⟫) = 0
+  ↔
+  ∀ i ≤ l, (eval O c ⟪x,i⟫).get (h ⟪x,i⟫) = 0 := by
   sorry
-theorem C_aux_evp_1 : evalp Nat.fzero (C_aux R) s = 0 ↔ (∀ j ≤ s, Nat.testBit R j → ∀ x ∈ Wn ∅ j s, x ≤ 2*j) := by
+
+theorem c_bdd_search_evp_1 (h:code_total O c) :
+  ⟪i, r⟫ ∈ ((eval O (c_bdd_search c) ⟪x, l⟫).get (c_bdd_search_evp_total h ⟪x, l⟫) : Option ℕ)
+  ↔
+  r ∈ ((eval O c ⟪x,i⟫).get (h ⟪x,i⟫) : Option ℕ) ∧ ∀ j ≤ i,(eval O c ⟪x,j⟫).get (h ⟪x,j⟫) = 0 := by
+  sorry
+--   by sorry
+
+/-
+`C_aux` is a code that checks, on input `⟪i, s, R⟫`, the following:
+  1. i ≤ s
+  2. ¬ fs_in R i
+  3. ∃ x ∈ Wn ∅ i s, x > 2*i,
+  and returns such a `x` in condition 3.
+-/
+def C_aux : Code := zero
+theorem C_aux_evp_0 : x ∈ (evalp Nat.fzero C_aux ⟪⟪s,R⟫, i⟫ : Option ℕ) → i ≤ s ∧ ¬ fs_in R i ∧ x ∈ Wn ∅ i s ∧ x > 2*i := by
+  sorry
+theorem C_aux_evp_2 : (i ≤ s ∧ ¬ fs_in R i ∧ ∃ x ∈ Wn ∅ i s, x > 2*i) → (evalp Nat.fzero C_aux ⟪⟪s,R⟫, i⟫ : Option ℕ).isSome := by
+  sorry
+theorem C_aux_evp_1 : evalp Nat.fzero C_aux ⟪⟪s,R⟫, i⟫ = 0 ↔ (¬ fs_in R i → ∀ x ∈ Wn ∅ i s, x ≤ 2*i) := by
+  sorry
+theorem C_aux_total : code_total O C_aux := by
   sorry
 
 namespace Computability.Simple
 -- /--
--- C for construction.
+-- C stands for construction.
 -- Input: stage `s`
 -- Output: (natural representing the simple set A built so far, natural representing set of requirements satisfied so far)
 -- -/
-noncomputable def C : ℕ→ℕ := λ s ↦
+noncomputable def C : ℕ → ℕ := λ s ↦
 match s with
 | 0 => ⟪0, 0⟫
 | s+1 =>
   have Aₚ := (C s).l
   have Rₚ := (C s).r
 
-  let search : Option ℕ := evalp Nat.fzero (C_aux Rₚ) s
+  let search : Option ℕ := (eval Nat.fzero (c_bdd_search C_aux) ⟪⟪s,Rₚ⟫, s⟫).get (c_bdd_search_evp_total C_aux_total ⟪⟪s,Rₚ⟫, s⟫)
   if halts:search.isSome then
     let ⟨x,j⟩ := (search.get halts).unpair
     let Aₛ := fs_add Aₚ x
@@ -279,18 +329,34 @@ match s with
   else
     ⟪Aₚ, Rₚ⟫
 
-  -- search for all i ≤ s:
-  -- check i is not already satisfied.
-  -- -- first, let i be the smallest unsatisfied requirement P.
-  -- now, check if there is a x ∈ W_i,s s.t. x>2i.
-  -- if so:
-  -- Aₛ = Aₚ + x
-  -- Rₛ = Rₚ + i
-  -- return Nat.pair Aₛ Rₛ
-  -- 0
+/-
+  search for all i ≤ s:
+    1. check i is not already satisfied.
+    2. now, check if there is a x ∈ W_i,s s.t. x>2i.
+    3. if so:
+      Aₛ = Aₚ + x
+      Rₛ = Rₚ + i
+      return Nat.pair Aₛ Rₛ
+  if there is no such i ≤ s, skip to the next stage.
+-/
 
-def A : Set ℕ := ∅
-theorem P (i:ℕ) : (W O i).Infinite → (W O i ∩ W O a ≠ ∅) := by
+def A : Set ℕ := {x | ∃ s, fs_in (C s).l x}
+
+-- theorem RP : fs_in (C s).r x ↔ 
+
+theorem P0 : (W O 0).Infinite → (W O 0 ∩ A ≠ ∅) := by
+  intro h
+  unfold A
+  suffices ∃ x ∈ W O 0, ∃ s, fs_in (C s).l x from by exact Set.nonempty_iff_ne_empty.mp this
+  by_contra h1
+  simp at h1
+  sorry
+theorem P (i:ℕ) : (W O i).Infinite → (W O i ∩ A ≠ ∅) := by
+  intro h
+  induction' i using Nat.strong_induction_on with i ih
+  have : ∃ x ∈ W O i, x > 2*i := by sorry
+  rcases this with ⟨x, hx0, hx1⟩
+  -- have : ¬ fs_in R i := by sorry
   sorry
 theorem N (i:ℕ) : (W O i).Infinite → (W O i ∩ W O a ≠ ∅) := by
   sorry
@@ -308,11 +374,6 @@ def lowN (n:ℕ) (A:Set ℕ) : Prop := lowNIn n A ∅
 abbrev low := lowN 1
 abbrev lowIn := lowNIn 1
 
-theorem low_below_K (h:lowN 1 A) : A<ᵀ∅⌜ := by
-  simp [lowN, lowNIn, jumpn] at h
-  have h0 : A⌜≡ᵀ∅⌜ := by exact Eq.antisymmRel (congrArg (toAntisymmetrization SetTuringReducible) h)
-  have h1 : A<ᵀA⌜ := by exact Set_lt_SetJump A
-  exact lt_of_lt_of_eq h1 (congrArg (toAntisymmetrization SetTuringReducible) h)
 theorem low_below_K (h:lowN 1 A) : A<ᵀ∅⌜ := by
   simp [lowN, lowNIn, jumpn] at h
   have h0 : A⌜≡ᵀ∅⌜ := by exact Eq.antisymmRel (congrArg (toAntisymmetrization SetTuringReducible) h)
