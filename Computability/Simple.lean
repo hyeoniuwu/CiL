@@ -311,7 +311,7 @@ theorem C_aux_total : code_total O C_aux := by
 
 #check Nat.find
 namespace Computability.Simple
-def cond (s i : ℕ) : Prop := ∃ x ∈ Wn ∅ i s, x > 2*i
+-- def cond (s i : ℕ) : Prop := ∃ x ∈ Wn O i s, x > 2*i
 #check Nat.iterate
 -- /--
 -- C stands for construction.
@@ -371,11 +371,11 @@ match s with
 -/
 
 
-theorem step_preserves_R_mem (h:fs_in prev.r j) :
-fs_in (step s i prev).r j := by
-  simp [step]
-  aesop
-theorem step_preserves_R_not_mem (h:¬fs_in prev.r j) (hk:k<j) :
+theorem step_preserves_R_mem {j s i prev} (h:fs_in prev.r j) : fs_in (step s i prev).r j := by
+  simp [step]; aesop
+theorem step_preserves_A_mem {j s i prev} (h:fs_in prev.l j) : fs_in (step s i prev).l j := by
+  simp [step]; aesop
+theorem step_preserves_R_not_mem {j k s prev} (h:¬fs_in prev.r j) (hk:k<j) :
 ¬ fs_in (step s k prev).r j := by
   simp [step]
   -- aesop? says
@@ -392,14 +392,13 @@ theorem step_preserves_R_not_mem (h:¬fs_in prev.r j) (hk:k<j) :
       exact Nat.testBit_two_pow_of_ne this
     next h_2 => simp_all only [gt_iff_lt, not_exists, not_and, not_lt]
   next h_1 => simp_all only [Bool.not_eq_false]
-  -- aesop
 
-theorem asd (h:fs_in R j) : fs_in (List.foldr (step s) ⟪A,R⟫ l).r j := by
+theorem split_upper (h:fs_in R j) : fs_in (List.foldr (step s) ⟪A,R⟫ l).r j := by
   induction l with
   | nil => simpa
   | cons head tail ih => exact step_preserves_R_mem ih
 
-theorem asd4 (h:¬fs_in R j) (hk:k≤ j):
+theorem split_lower (h:¬fs_in R j) (hk : k ≤ j):
 ¬ fs_in (List.foldr (step s) ⟪A,R⟫ (List.reverse $ List.range k)).r j := by
   induction k with
   | zero => simp at *; assumption
@@ -408,33 +407,18 @@ theorem asd4 (h:¬fs_in R j) (hk:k≤ j):
     have kk : k≤ j := by exact Nat.le_of_succ_le hk
     have kk2 : k< j := by exact hk
     have ih1 := ih kk; clear ih
-    
-    -- simp [-List.foldr_reverse] at ih1
+
     have := @step_preserves_R_not_mem j k s _ ih1 kk2
     simp at this
     simp
     exact this
 
-theorem asd5 (h:¬fs_in R j) (h2: ∃ x ∈ Wn ∅ j s, x > 2*j) :
+theorem split_middle (h:¬fs_in R j) (h2: ∃ x ∈ Wn ∅ j s, x > 2*j) :
 fs_in ((step s) j ⟪A,R⟫).r j := by
   simp at h2
   simp [step, h, h2]
 
-#check List.append
-theorem foldr_split :
-  List.foldr f init (l1++l2)
-    =
-  List.foldr f
-    (List.foldr f init (l2))
-    (l1) := by
-  exact List.foldr_append
-  sorry
-
-#eval List.range (5+1)
-#eval List.range' 0 4
-#eval List.range' (4+1) (5-4)
-
-theorem asd3 (h:¬fs_in R j) (h2: ∃ x ∈ Wn ∅ j s, x > 2*j) (hs:j<s):
+theorem R_foldr (h:¬fs_in R j) (h2: ∃ x ∈ Wn ∅ j s, x > 2*j) (hs:j<s):
 fs_in (List.foldr (step s) ⟪A,R⟫ (List.reverse $ List.range (s+1))).r j := by
   have : (List.reverse $ List.range (s+1)) = (List.range' (j+1) (s-j)).reverse ++ [j] ++ (List.range' 0 j).reverse := by
     simp
@@ -447,10 +431,22 @@ fs_in (List.foldr (step s) ⟪A,R⟫ (List.reverse $ List.range (s+1))).r j := b
     congr 1
     grind
   rw [this]
-  simp
-  have := 
+  simp [-List.foldr_reverse]
 
-  sorry
+  rw [show List.range' 0 j = List.range j from by exact Eq.symm List.range_eq_range'] at *
+  let fold_lower := (List.foldr (step s) ⟪A,R⟫ (List.range j).reverse)
+
+  have a0 := @split_lower R j j s A h (Nat.le_refl j)
+  rw [show  (List.foldr (step s) ⟪A,R⟫ (List.range j).reverse) = fold_lower from rfl] at ⊢ a0
+  have a1 := @split_middle _ j s (fold_lower.l) a0 h2
+  simp at a1
+
+  have a2 := @split_upper _ _  s ((step s j fold_lower).l) ((List.range' (j + 1) (s - j)).reverse) a1
+
+  simp at a2
+  simp
+  exact a2
+
 
 def A : Set ℕ := {x | ∃ s, fs_in (C s).l x}
 
@@ -459,12 +455,12 @@ def A : Set ℕ := {x | ∃ s, fs_in (C s).l x}
 theorem inf_imp_mem {A:Set ℕ} (h:A.Infinite) : ∃ y, y ∈ A := by
   simpa using h.nonempty
 
-theorem P {O} (i:ℕ) : (W O i).Infinite → (∃ s, fs_in (C s).r i ∧ ∃ y ∈ W O i, fs_in (C s).l y) := by
+theorem P (i:ℕ) : (W ∅ i).Infinite → (∃ s, fs_in (C s).r i ∧ ∃ y ∈ W ∅ i, fs_in (C s).l y) := by
   intro h
   -- induction' i using Nat.strong_induction_on with i ih
 
   -- sorry
--- theorem P {O} (i:ℕ) : (W O i).Infinite → (W O i ∩ A ≠ ∅) := by
+-- theorem P {∅} (i:ℕ) : (W ∅ i).Infinite → (W ∅ i ∩ A ≠ ∅) := by
 --   intro h
   /-
   the argument goes like this.
@@ -478,8 +474,8 @@ theorem P {O} (i:ℕ) : (W O i).Infinite → (∃ s, fs_in (C s).r i ∧ ∃ y �
 --   -- i dont think doing induction on i like this works. we need to know that all things below i are exhausted in R
 --   induction' i using Nat.strong_induction_on with i ih
 
-  have : ∃ x ∈ W O i, x > 2*i := by
-    have : ((W O i) \ {x | x ≤ 2*i}).Infinite := by
+  have : ∃ x ∈ W ∅ i, x > 2*i := by
+    have : ((W ∅ i) \ {x | x ≤ 2*i}).Infinite := by
       have : {x | x ≤ 2*i}.Finite := by exact Set.finite_le_nat (2 * i)
       exact Set.Infinite.diff h this
     rcases inf_imp_mem this with ⟨y,hy1,hy2⟩
@@ -487,18 +483,22 @@ theorem P {O} (i:ℕ) : (W O i).Infinite → (∃ s, fs_in (C s).r i ∧ ∃ y �
 
   rcases this with ⟨x, hx0, hx1⟩
   rcases Wn_complete.mp hx0 with ⟨s,hs⟩
-
-  use s+1
+  have si1 : s ≤ s+i+1 := by omega
+  have si2 : i < s+i+1 := by omega
+  have ex0 :  ∃ x ∈ Wn ∅ (n2c i) (s+i+1), x > 2 * i := by
+    exact ⟨x,Wn_mono (si1) hs, hx1⟩
+  use s+i+1+1
   unfold C
   constructor
   -- cases fs in prev R
   lift_lets; extract_lets; expose_names
   by_cases h1:fs_in R i
   ·
-    exact asd h1
+    exact split_upper h1
   ·
+    have := @R_foldr _ _ _ A h1 ex0 si2
+    exact this
 
-    sorry
 
 
 --   have main : ∃ y, fs_in (C (s+i)).l y ∧ y ∈ W O i := by
