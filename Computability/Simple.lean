@@ -1,6 +1,7 @@
 import Computability.SetOracles
 
 import Mathlib.Data.Nat.BitIndices
+import Mathlib.Data.Set.Finite.Basic
 
 open Computability
 open Computability.Code
@@ -290,12 +291,13 @@ theorem c_bdd_search_evp_1 (h:code_total O c) :
   sorry
 --   by sorry
 
+-- note. i can offload some of the conditions below to C, from C_aux
 /-
 `C_aux` is a code that checks, on input `⟪i, s, R⟫`, the following:
   1. i ≤ s
   2. ¬ fs_in R i
   3. ∃ x ∈ Wn ∅ i s, x > 2*i,
-  and returns such a `x` in condition 3.
+  and returns the minimal `x` in condition 3.
 -/
 def C_aux : Code := zero
 theorem C_aux_evp_0 : x ∈ (evalp Nat.fzero C_aux ⟪⟪s,R⟫, i⟫ : Option ℕ) → i ≤ s ∧ ¬ fs_in R i ∧ x ∈ Wn ∅ i s ∧ x > 2*i := by
@@ -307,56 +309,206 @@ theorem C_aux_evp_1 : evalp Nat.fzero C_aux ⟪⟪s,R⟫, i⟫ = 0 ↔ (¬ fs_in
 theorem C_aux_total : code_total O C_aux := by
   sorry
 
+#check Nat.find
 namespace Computability.Simple
+def cond (s i : ℕ) : Prop := ∃ x ∈ Wn ∅ i s, x > 2*i
+#check Nat.iterate
 -- /--
 -- C stands for construction.
 -- Input: stage `s`
 -- Output: (natural representing the simple set A built so far, natural representing set of requirements satisfied so far)
 -- -/
+open Classical in
+noncomputable def step (s:ℕ) := λ i prev ↦
+  let Aₚ := prev.l
+  let Rₚ := prev.r
+  if ¬ fs_in Rₚ i then
+    if found : ∃ x ∈ Wn ∅ i s, x > 2*i then
+      let x := Nat.find found
+      ⟪fs_add Aₚ x, fs_add Rₚ i⟫
+    else prev
+  else prev
+open Classical in
 noncomputable def C : ℕ → ℕ := λ s ↦
 match s with
 | 0 => ⟪0, 0⟫
 | s+1 =>
-  have Aₚ := (C s).l
-  have Rₚ := (C s).r
+  let A := (C s).l
+  let R := (C s).r
 
-  let search : Option ℕ := (eval Nat.fzero (c_bdd_search C_aux) ⟪⟪s,Rₚ⟫, s⟫).get (c_bdd_search_evp_total C_aux_total ⟪⟪s,Rₚ⟫, s⟫)
-  if halts:search.isSome then
-    let ⟨x,j⟩ := (search.get halts).unpair
-    let Aₛ := fs_add Aₚ x
-    let Rₛ := fs_add Rₚ j
-    ⟪Aₛ, Rₛ⟫
-  else
-    ⟪Aₚ, Rₚ⟫
+  -- let AR := {(x,i) : ℕ×ℕ |
+  --   i ≤ s ∧
+  --   ¬ fs_in R i ∧
+  --   (if found : ∃ x ∈ Wn ∅ i (s+1), x > 2*i then x = Nat.find found else true)
+  -- }
+  -- 0
 
+  List.foldr (step s) ⟪A,R⟫ (List.reverse $ List.range (s+1))
+
+  -- if found : ∃ i ≤ s+1, ∃ x ∈ Wn ∅ i s, x > 2*i then
+  --   let i := Nat.find found
+  --   let hi := Nat.find_spec found
+  --   let x := Nat.find hi.right
+  --   ⟪fs_add Aₚ x, fs_add Rₚ i⟫
+  -- else
+  -- let search : Option ℕ := (eval Nat.fzero (c_bdd_search C_aux) ⟪⟪s,Rₚ⟫, s⟫).get (c_bdd_search_evp_total C_aux_total ⟪⟪s,Rₚ⟫, s⟫)
+  -- if halts:search.isSome then
+  --   let ⟨x,j⟩ := (search.get halts).unpair
+  --   let Aₛ := fs_add Aₚ x
+  --   let Rₛ := fs_add Rₚ j
+  --   ⟪Aₛ, Rₛ⟫
+  -- else
+      -- ⟪Aₚ, Rₚ⟫
+  -- 0
 /-
-  search for all i ≤ s:
+  for each i ≤ s:
     1. check i is not already satisfied.
     2. now, check if there is a x ∈ W_i,s s.t. x>2i.
     3. if so:
-      Aₛ = Aₚ + x
-      Rₛ = Rₚ + i
-      return Nat.pair Aₛ Rₛ
-  if there is no such i ≤ s, skip to the next stage.
+      A = A ++ x
+      R = R ++ i
+  return Nat.pair A R
 -/
+
+
+theorem step_preserves_R_mem (h:fs_in prev.r j) :
+fs_in (step s i prev).r j := by
+  simp [step]
+  aesop
+theorem step_preserves_R_not_mem (h:¬fs_in prev.r j) (hk:k<j) :
+¬ fs_in (step s k prev).r j := by
+  simp [step]
+  -- aesop? says
+  simp_all only [Bool.not_eq_true, gt_iff_lt]
+  split
+  next h_1 =>
+    split
+    next h_2 =>
+      simp_all only [pair_r, Nat.testBit_or, Bool.false_or]
+      simp_all only [gt_iff_lt]
+      obtain ⟨w, h_2⟩ := h_2
+      obtain ⟨left, right⟩ := h_2
+      have : k≠j := by exact Nat.ne_of_lt hk
+      exact Nat.testBit_two_pow_of_ne this
+    next h_2 => simp_all only [gt_iff_lt, not_exists, not_and, not_lt]
+  next h_1 => simp_all only [Bool.not_eq_false]
+  -- aesop
+
+theorem asd (h:fs_in R j) : fs_in (List.foldr (step s) ⟪A,R⟫ l).r j := by
+  induction l with
+  | nil => simpa
+  | cons head tail ih => exact step_preserves_R_mem ih
+
+theorem asd4 (h:¬fs_in R j) (hk:k<j):
+¬ fs_in (List.foldr (step s) ⟪A,R⟫ (List.reverse $ List.range k)).r j := by
+  induction k with
+  | zero => simp at *; assumption
+  | succ k ih =>
+    simp [listrwgen, -List.foldr_reverse]
+    have kk : k<j := by exact Nat.lt_of_succ_lt hk
+    have ih1 := ih kk; clear ih
+    -- simp [-List.foldr_reverse] at ih1
+    have := @step_preserves_R_not_mem j k s _ ih1 kk
+    simp at this
+    simp
+    exact this
+
+theorem asd5 (h:¬fs_in R j) (h2: ∃ x ∈ Wn ∅ j s, x > 2*j) :
+fs_in ((step s) j ⟪A,R⟫).r j := by
+  simp at h2
+  simp [step, h, h2]
+
+#check List.append
+theorem foldr_split :
+  List.foldr f init (l1++l2)
+    =
+  List.foldr f
+    (List.foldr f init (l2))
+    (l1) := by
+  exact List.foldr_append
+  sorry
+
+#eval List.range (5+1)
+#eval List.range' 0 4
+#eval List.range' (4+1) (5-4)
+
+theorem asd3 (h:¬fs_in R j) (h2: ∃ x ∈ Wn ∅ j s, x > 2*j) (hs:j<s):
+fs_in (List.foldr (step s) ⟪A,R⟫ (List.reverse $ List.range (s+1))).r j := by
+  have : (List.reverse $ List.range (s+1)) = (List.range' (j+1) (s-j)).reverse ++ [j] ++ (List.range' 0 j).reverse := by
+    simp
+    have : j :: List.range' (j + 1) (s - j) = List.range' (0+j) (s - j +1) := by aesop
+    rw [this]
+    have : List.range (s + 1) = List.range' 0 (s + 1) := by exact List.range_eq_range'
+    rw [this]
+    have := @List.range'_append_1 0 j (s-j+1)
+    rw [this]
+    congr 1
+    grind
+  rw [this]
+  simp
+  have := 
+
+  sorry
 
 def A : Set ℕ := {x | ∃ s, fs_in (C s).l x}
 
--- theorem RP : fs_in (C s).r x ↔ 
+-- theorem RP : fs_in (C s).r x ↔
 
-theorem P0 : (W O 0).Infinite → (W O 0 ∩ A ≠ ∅) := by
+theorem inf_imp_mem {A:Set ℕ} (h:A.Infinite) : ∃ y, y ∈ A := by
+  simpa using h.nonempty
+
+theorem P {O} (i:ℕ) : (W O i).Infinite → (∃ s, fs_in (C s).r i ∧ ∃ y ∈ W O i, fs_in (C s).l y) := by
   intro h
-  unfold A
-  suffices ∃ x ∈ W O 0, ∃ s, fs_in (C s).l x from by exact Set.nonempty_iff_ne_empty.mp this
-  by_contra h1
-  simp at h1
-  sorry
-theorem P (i:ℕ) : (W O i).Infinite → (W O i ∩ A ≠ ∅) := by
-  intro h
-  induction' i using Nat.strong_induction_on with i ih
-  have : ∃ x ∈ W O i, x > 2*i := by sorry
+  -- induction' i using Nat.strong_induction_on with i ih
+
+  -- sorry
+-- theorem P {O} (i:ℕ) : (W O i).Infinite → (W O i ∩ A ≠ ∅) := by
+--   intro h
+  /-
+  the argument goes like this.
+  suppose W_i is infinite.
+  by infinitue of W_i, we can find some x>2i in it eventually.
+  say x is in W_i by stage s.
+  sp fs_in fails by stage s/s-1,
+  then it will succeed in s+1/s
+  -/
+  -- sorry
+--   -- i dont think doing induction on i like this works. we need to know that all things below i are exhausted in R
+--   induction' i using Nat.strong_induction_on with i ih
+
+  have : ∃ x ∈ W O i, x > 2*i := by
+    have : ((W O i) \ {x | x ≤ 2*i}).Infinite := by
+      have : {x | x ≤ 2*i}.Finite := by exact Set.finite_le_nat (2 * i)
+      exact Set.Infinite.diff h this
+    rcases inf_imp_mem this with ⟨y,hy1,hy2⟩
+    exact ⟨y, hy1, Nat.gt_of_not_le hy2⟩
+
   rcases this with ⟨x, hx0, hx1⟩
-  -- have : ¬ fs_in R i := by sorry
+  rcases Wn_complete.mp hx0 with ⟨s,hs⟩
+
+  use s+1
+  unfold C
+  constructor
+  -- cases fs in prev R
+  lift_lets; extract_lets; expose_names
+  by_cases h1:fs_in R i
+  ·
+    exact asd h1
+  ·
+
+    sorry
+
+
+--   have main : ∃ y, fs_in (C (s+i)).l y ∧ y ∈ W O i := by
+--     sorry
+
+--   suffices ∃ y ∈ W O i, ∃ s, fs_in (C s).l y from by exact Set.nonempty_iff_ne_empty.mp this
+--   -- unfold A
+--   -- unfold C
+
+--   -- unfold A
+
+--   -- have : ¬ fs_in R i := by sorry
   sorry
 theorem N (i:ℕ) : (W O i).Infinite → (W O i ∩ W O a ≠ ∅) := by
   sorry
