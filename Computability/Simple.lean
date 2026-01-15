@@ -399,16 +399,18 @@ theorem asd (h:fs_in R j) : fs_in (List.foldr (step s) ⟪A,R⟫ l).r j := by
   | nil => simpa
   | cons head tail ih => exact step_preserves_R_mem ih
 
-theorem asd4 (h:¬fs_in R j) (hk:k<j):
+theorem asd4 (h:¬fs_in R j) (hk:k≤ j):
 ¬ fs_in (List.foldr (step s) ⟪A,R⟫ (List.reverse $ List.range k)).r j := by
   induction k with
   | zero => simp at *; assumption
   | succ k ih =>
     simp [listrwgen, -List.foldr_reverse]
-    have kk : k<j := by exact Nat.lt_of_succ_lt hk
+    have kk : k≤ j := by exact Nat.le_of_succ_le hk
+    have kk2 : k< j := by exact hk
     have ih1 := ih kk; clear ih
+    
     -- simp [-List.foldr_reverse] at ih1
-    have := @step_preserves_R_not_mem j k s _ ih1 kk
+    have := @step_preserves_R_not_mem j k s _ ih1 kk2
     simp at this
     simp
     exact this
