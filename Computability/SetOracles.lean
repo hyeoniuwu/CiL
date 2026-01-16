@@ -517,3 +517,6 @@ theorem empty_le : ∀ A : Set ℕ, ∅ ≤ᵀ A := by
   use zero
   unfold χ; simp [eval]
   rfl
+
+theorem evalnSet_mono_dom : ∀ {k₁ k₂ : ℕ} {c n}, k₁ ≤ k₂ → (evalnSet O k₁ c n).isSome → (evalnSet O k₂ c n).isSome := by
+  exact fun {k₁ k₂} {c} {n} a a_1 ↦ evaln_mono_dom a a_1

@@ -943,7 +943,6 @@ theorem evaln_mono_dom : ∀ {k₁ k₂ c n}, k₁ ≤ k₂ → (evaln O k₁ c 
   intro k1 k2 c n k1k2 h1
   exact Option.isSome_of_mem (evaln_mono k1k2 (Option.get_mem h1))
 
-
 lemma part_add {x y : ℕ}: Part.some x + Part.some y = Part.some (x+y) := by
   exact Part.some_add_some x y
 theorem use_dom_iff_eval_dom : (use O c x).Dom ↔ (eval O c x).Dom := by
