@@ -311,7 +311,7 @@ theorem C_aux_evp_1 : evalp Nat.fzero C_aux ⟪⟪s,R⟫, i⟫ = 0 ↔ (¬ fs_in
 theorem C_aux_total : code_total O C_aux := by
   sorry
 
-
+section Computability.Simple
 -- /--
 -- C stands for construction.
 -- Input: stage `s`
@@ -533,31 +533,44 @@ def fs_size := List.length.comp Nat.bitIndices
 #eval fs_size 0b011000111
 #check Set
 theorem Na (i:ℕ) :  Set.ncard (A ∩ {x | x ≤ 2*i}) ≤ i := by
-
+  sorry
+theorem Na2 (i:ℕ) : Set.ncard (Aᶜ ∩ {x | x ≤ 2*i}) > i := by
+  have := Na i
+  sorry
+theorem Na3 {i} {A:Finset ℕ}: A.card > i → ∃ y∈A, y≥i := by
+  sorry
+theorem Na4 {i} {A:Set ℕ}: A.ncard > i → ∃ y∈A, y≥i := by
   sorry
 
-theorem infinite_iff_unbounded {A : Set ℕ} : Infinite A ↔ (∀ x, ∃ y∈A,y>x) := by
+theorem infinite_iff_unbounded {A : Set ℕ} : Infinite A ↔ (∀ x, ∃ y∈A, y≥x) := by
   constructor
   · intro h x
     contrapose h
     simp at h
     simp
-    exact Finite.Set.subset {i | i ≤ x} h
+    exact Finite.Set.subset {i | i < x} h
 
   · intro h
-    contrapose h
-    simp at h
-    simp
-    let m := o2n (Set.Finite.toFinset h).max
-    use m
-    unfold m
-    simp [o2n]
-    sorry
+    classical
+    by_contra hfin
+    simp at hfin
+    have hA : Finite A := hfin
+    have hne : A.Nonempty := by
+      obtain ⟨y, hy, _⟩ := h 0
+      exact ⟨y, hy⟩
+    let m := (Set.Finite.toFinset hA).max' ((Set.Finite.toFinset_nonempty hA).mpr hne)
+    let hm := Finset.le_max' (Set.Finite.toFinset hA)
+    obtain ⟨y, hyA, hy⟩ := h (m+1+1)
+    have : y ≤ m := hm y ((Set.Finite.mem_toFinset hA).mpr hyA)
+    have a1 : y < m+1 := by exact Order.lt_add_one_iff.mpr this
+    exact lt_asymm hy a1
+
 theorem NC : Infinite (Set.compl A) := by
   apply infinite_iff_unbounded.mpr
   intro x
+  have := Na4 (Na2 x)
+  aesop
 
-  sorry
 theorem N (i:ℕ) : (W O i).Infinite → (W O i ∩ W O a ≠ ∅) := by
   sorry
 
