@@ -2,6 +2,8 @@ import Computability.SetOracles
 
 import Mathlib.Data.Nat.BitIndices
 import Mathlib.Data.Set.Finite.Basic
+import Mathlib.Data.Set.Card.Arithmetic
+import Mathlib.Order.Interval.Finset.Defs
 
 open Computability
 open Computability.Code
@@ -309,10 +311,7 @@ theorem C_aux_evp_1 : evalp Nat.fzero C_aux ⟪⟪s,R⟫, i⟫ = 0 ↔ (¬ fs_in
 theorem C_aux_total : code_total O C_aux := by
   sorry
 
-#check Nat.find
-namespace Computability.Simple
--- def cond (s i : ℕ) : Prop := ∃ x ∈ Wn O i s, x > 2*i
-#check Nat.iterate
+
 -- /--
 -- C stands for construction.
 -- Input: stage `s`
@@ -328,6 +327,7 @@ noncomputable def step (s:ℕ) := λ i prev ↦
       ⟪fs_add Aₚ x, fs_add Rₚ i⟫
     else prev
   else prev
+
 open Classical in
 noncomputable def C : ℕ → ℕ := λ s ↦
 match s with
@@ -336,30 +336,7 @@ match s with
   let A := (C s).l
   let R := (C s).r
 
-  -- let AR := {(x,i) : ℕ×ℕ |
-  --   i ≤ s ∧
-  --   ¬ fs_in R i ∧
-  --   (if found : ∃ x ∈ Wn ∅ i (s+1), x > 2*i then x = Nat.find found else true)
-  -- }
-  -- 0
-
   foldr (step s) ⟪A,R⟫ (range s).reverse
-
-  -- if found : ∃ i ≤ s+1, ∃ x ∈ Wn ∅ i s, x > 2*i then
-  --   let i := Nat.find found
-  --   let hi := Nat.find_spec found
-  --   let x := Nat.find hi.right
-  --   ⟪fs_add Aₚ x, fs_add Rₚ i⟫
-  -- else
-  -- let search : Option ℕ := (eval Nat.fzero (c_bdd_search C_aux) ⟪⟪s,Rₚ⟫, s⟫).get (c_bdd_search_evp_total C_aux_total ⟪⟪s,Rₚ⟫, s⟫)
-  -- if halts:search.isSome then
-  --   let ⟨x,j⟩ := (search.get halts).unpair
-  --   let Aₛ := fs_add Aₚ x
-  --   let Rₛ := fs_add Rₚ j
-  --   ⟪Aₛ, Rₛ⟫
-  -- else
-      -- ⟪Aₚ, Rₚ⟫
-  -- 0
 /-
   for each i ≤ s:
     1. check i is not already satisfied.
@@ -370,10 +347,7 @@ match s with
   return Nat.pair A R
 -/
 
-
 theorem step_preserves_R_mem {j s i prev} (h:fs_in prev.r j) : fs_in (step s i prev).r j := by
-  simp [step]; aesop
-theorem step_preserves_A_mem {j s i prev} (h:fs_in prev.l j) : fs_in (step s i prev).l j := by
   simp [step]; aesop
 theorem step_preserves_R_not_mem {j k s prev} (h:¬fs_in prev.r j) (hk:k<j) :
 ¬ fs_in (step s k prev).r j := by
@@ -392,16 +366,10 @@ theorem step_preserves_R_not_mem {j k s prev} (h:¬fs_in prev.r j) (hk:k<j) :
       exact Nat.testBit_two_pow_of_ne this
     next h_2 => simp_all only [gt_iff_lt, not_exists, not_and, not_lt]
   next h_1 => simp_all only [Bool.not_eq_false]
-
 theorem fold_preserves_R_mem (h:fs_in R j) : fs_in (foldr (step s) ⟪A,R⟫ l).r j := by
   induction l with
   | nil => simpa
   | cons head tail ih => exact step_preserves_R_mem ih
-theorem fold_preserves_A_mem (h:fs_in A j) : fs_in (foldr (step s) ⟪A,R⟫ l).l j := by
-  induction l with
-  | nil => simpa
-  | cons head tail ih => exact step_preserves_A_mem ih
-
 theorem split_lower (h : ¬ fs_in R j) (hk : k ≤ j):
 ¬ fs_in (foldr (step s) ⟪A,R⟫ (range k).reverse).r j := by
   induction k with
@@ -416,38 +384,11 @@ theorem split_lower (h : ¬ fs_in R j) (hk : k ≤ j):
     simp at this
     simp
     exact this
-
-theorem split_middle_R (h:¬fs_in R j) (h2: ∃ x ∈ Wn ∅ j s, x > 2*j) :
+theorem split_middle (h:¬fs_in R j) (h2: ∃ x ∈ Wn ∅ j s, x > 2*j) :
 fs_in ((step s) j ⟪A,R⟫).r j := by
   simp at h2
   simp [step, h, h2]
-
-theorem split_middle_A {j:ℕ}
-  (h: ¬ (∃ x ∈ Wn ∅ j s, fs_in A x))
-  (h2: ∃ x ∈ Wn ∅ j s, x > 2*j)
-  (hj:¬fs_in R j) -- this is where interaction w A and R comes in the proof
-  :
-  -- ∃ x ∈ Wn ∅ j s, fs_in ((step s) j ⟪A,R⟫).l x := by
-  fs_in ((step s) j ⟪A,R⟫).l (Nat.find h2) := by
-  simp at h2
-  simp [step, h2]
-
-  let x := Nat.find h2
-  let ⟨hx0, hx1⟩ := Nat.find_spec h2
-  -- use x
-  aesop
-
-theorem range_3way_split {s j} (hs:j<s) : (range (s+1)).reverse = (range' (j+1) (s-j)).reverse ++ [j] ++ (range' 0 j).reverse := by
-  simp
-  have : j :: range' (j + 1) (s - j) = range' (0+j) (s - j +1) := by aesop
-  rw [this]
-  have : range (s + 1) = range' 0 (s + 1) := by exact range_eq_range'
-  rw [this]
-  have := @range'_append_1 0 j (s-j+1)
-  rw [this]
-  congr 1
-  grind
-theorem range_3way_split2 {s j} (hs:j+1<s) : (range s).reverse = (range' (j+1) (s-1-j)).reverse ++ [j] ++ (range' 0 j).reverse := by
+theorem range_3way_split {s j} (hs:j+1<s) : (range s).reverse = (range' (j+1) (s-1-j)).reverse ++ [j] ++ (range' 0 j).reverse := by
   simp
   have : j :: range' (j + 1) (s-1 - j) = range' (0+j) (s-1 - j +1) := by aesop
   rw [this]
@@ -457,10 +398,9 @@ theorem range_3way_split2 {s j} (hs:j+1<s) : (range s).reverse = (range' (j+1) (
   rw [this]
   congr 1
   grind
-
 theorem R_foldr (h:¬fs_in R j) (h2: ∃ x ∈ Wn ∅ j s, x > 2*j) (hs:j+1<s):
 fs_in (foldr (step s) ⟪A,R⟫ (range s).reverse).r j := by
-  rw [range_3way_split2 hs]
+  rw [range_3way_split hs]
   simp [-foldr_reverse]
 
   rw [show range' 0 j = range j from by exact Eq.symm range_eq_range'] at *
@@ -468,19 +408,17 @@ fs_in (foldr (step s) ⟪A,R⟫ (range s).reverse).r j := by
 
   have a0 := @split_lower R j j s A h (Nat.le_refl j)
   rw [show  (foldr (step s) ⟪A,R⟫ (range j).reverse) = fold_lower from rfl] at ⊢ a0
-  have a1 := @split_middle_R _ j s (fold_lower.l) a0 h2
+  have a1 := @split_middle _ j s (fold_lower.l) a0 h2
   simp at a1
 
   have a2 := @fold_preserves_R_mem _ _  s (step s j fold_lower).l ((range' (j + 1) (s-1-j)).reverse) a1
 
   simp only [pair_lr] at a2
-  -- simp only []
   exact a2
-
 
 /-- R implies A -/
 def RiA (R A s : ℕ) := ∀ j, fs_in R j → ∃ x ∈ Wn ∅ (n2c j) s, fs_in A x
-theorem R_imp_A_prop_step (R A s : ℕ) : RiA R A s → ∀ k, RiA (step s k ⟪A,R⟫).r (step s k ⟪A,R⟫).l s := by
+theorem RiA_step (R A s : ℕ) : RiA R A s → ∀ k, RiA (step s k ⟪A,R⟫).r (step s k ⟪A,R⟫).l s := by
   simp [RiA]
   simp [step]
 
@@ -510,24 +448,16 @@ theorem R_imp_A_prop_step (R A s : ℕ) : RiA R A s → ∀ k, RiA (step s k ⟪
         simp only [Nat.testBit_two_pow_self, or_true]
     next h_1 =>
       simp_all only [gt_iff_lt, ↓reduceDIte, pair_r, not_exists, not_and, not_lt, pair_l]
-      -- exact (h0 j a).elim λ x hx ↦ ⟨x, @evaln_mono_dom (χ ∅) s s j x (Nat.le_refl s) hx.1, hx.2⟩
   next h =>
     simp_all only [Bool.true_eq_false, ↓reduceIte, pair_r, Bool.not_eq_false, pair_l]
-    -- exact (h0 j a).elim λ x hx ↦ ⟨x, @evaln_mono_dom (χ ∅) s s j x (Nat.le_refl s) hx.1, hx.2⟩
 
-theorem RiA_foldr
--- foldr (step s) ⟪A,R⟫ (range j).reverse
-  -- (hbase : ¬∃ x ∈ Wn ∅ (n2c j) s, fs_in A x)
-  -- (hj:fs_in (foldr (step s) ⟪A,R⟫ (range j).reverse).r j) :
-  -- ∃ x ∈ Wn ∅ (n2c j) s, fs_in (foldr (step s) ⟪A,R⟫ (range j).reverse).l x = true := by sorry
-  : RiA R A s → ∀ j, RiA (foldr (step s) ⟪A,R⟫ (range j).reverse).r (foldr (step s) ⟪A,R⟫ (range j).reverse).l s := by
-    intro h
-    intro j
+theorem RiA_foldr : RiA R A s → ∀ j, RiA (foldr (step s) ⟪A,R⟫ (range j).reverse).r (foldr (step s) ⟪A,R⟫ (range j).reverse).l s := by
+    intro h j
     induction j with
     | zero => simpa
     | succ j ih =>
       simp [listrwgen, -foldr_reverse]
-      have := R_imp_A_prop_step _ _ s ih j
+      have := RiA_step _ _ s ih j
       simp only [pair_lr] at this
       exact this
 
@@ -542,70 +472,15 @@ theorem RiA_C : ∀ s, RiA (C s).r (C s).l s := by
     simp only [pair_lr] at this
     have := this h
     rcases this with ⟨x,hx0,hx1⟩
-    use x
-    constructor
-    simp at hx0
-    exact @evalnSet_mono_dom ∅ s (s+1) j x (Nat.le_add_right s 1) hx0
-    exact hx1
-
-
-theorem A_foldr {j s : ℕ}
-  (h  : ¬ (∃ x ∈ Wn ∅ j s, fs_in A x))
-  (h2 : ∃ x ∈ Wn ∅ j s, x > 2*j)
-  (hs : j<s) :
-  (∃ x ∈ Wn ∅ j s, fs_in (foldr (step s) ⟪A,R⟫ (range (s+1)).reverse).l x) := by
-
-  rw [range_3way_split hs]
-  simp [-foldr_reverse]
-
-  rw [show range' 0 j = range j from by exact Eq.symm range_eq_range'] at *
-  let fold_lower := (foldr (step s) ⟪A,R⟫ (range j).reverse)
-  rw [show  (foldr (step s) ⟪A,R⟫ (range j).reverse) = fold_lower from rfl] at ⊢
-  -- by_cases h3:fs_in fold_lower.l x
-  by_cases h3:(∃ x ∈ Wn ∅ j s, fs_in fold_lower.l x)
-  ·
-    obtain ⟨x,hx0,hx1⟩ := h3
-    use x
-    have a0 := @step_preserves_A_mem x s j fold_lower hx1
-    have a1 := @fold_preserves_A_mem _ _ s (step s j fold_lower).r (range' (j + 1) (s - j)).reverse a0
-    simp at a1
-    simp
-    exact ⟨hx0, a1⟩
-  ·
-    let x := Nat.find h2
-    let ⟨hx0, hx1⟩ := Nat.find_spec h2
-    use x
-
-    constructor
-    exact hx0
-
-    have a0 := @split_middle_A _ _ fold_lower.r _ h3 h2 ?_
-    simp at a0
-    -- rcases a0 with ⟨a2,a3,a4⟩
-
-    have a1 := @fold_preserves_A_mem _ _ s (step s j fold_lower).r (range' (j + 1) (s - j)).reverse a0
-
-    simp [-foldr_reverse] at a1
-    exact a1
-
-
-    sorry
-
+    exact ⟨x, @evalnSet_mono_dom ∅ s (s+1) j x (Nat.le_add_right s 1) hx0, hx1⟩
 
 def A : Set ℕ := {x | ∃ s, fs_in (C s).l x}
-
--- theorem RP : fs_in (C s).r x ↔
 
 theorem inf_imp_mem {A:Set ℕ} (h:A.Infinite) : ∃ y, y ∈ A := by
   simpa using h.nonempty
 
 theorem P (i:ℕ) : (W ∅ i).Infinite → (∃ s, fs_in (C s).r i ∧ ∃ y ∈ W ∅ i, fs_in (C s).l y) := by
   intro h
-  -- induction' i using Nat.strong_induction_on with i ih
-
-  -- sorry
--- theorem P {∅} (i:ℕ) : (W ∅ i).Infinite → (W ∅ i ∩ A ≠ ∅) := by
---   intro h
   /-
   the argument goes like this.
   suppose W_i is infinite.
@@ -614,9 +489,6 @@ theorem P (i:ℕ) : (W ∅ i).Infinite → (∃ s, fs_in (C s).r i ∧ ∃ y ∈
   sp fs_in fails by stage s/s-1,
   then it will succeed in s+1/s
   -/
-  -- sorry
---   -- i dont think doing induction on i like this works. we need to know that all things below i are exhausted in R
---   induction' i using Nat.strong_induction_on with i ih
 
   have : ∃ x ∈ W ∅ i, x > 2*i := by
     have : ((W ∅ i) \ {x | x ≤ 2*i}).Infinite := by
@@ -632,9 +504,7 @@ theorem P (i:ℕ) : (W ∅ i).Infinite → (∃ s, fs_in (C s).r i ∧ ∃ y ∈
   have ex0 :  ∃ x ∈ Wn ∅ (n2c i) (s+i+2), x > 2 * i := by
     exact ⟨x,Wn_mono (si1) hs, hx1⟩
   use s+i+2+1
-  -- constructor
   unfold C
-  -- cases fs in prev R
   lift_lets; extract_lets; expose_names
   by_cases h1:fs_in R i
   ·
@@ -642,48 +512,55 @@ theorem P (i:ℕ) : (W ∅ i).Infinite → (∃ s, fs_in (C s).r i ∧ ∃ y ∈
     constructor
     exact a0
 
-    have := @RiA_foldr R A (s+i+2) ?_ (s+i+2)
-    unfold RiA at this
-    have := this i a0
-    rcases this with ⟨w,hw0,hw1⟩
-    use w
-    constructor
-    exact Wn_sound hw0
-    exact hw1
-    exact RiA_C (s + i + 2)
-
-    -- exact @fold_preserves_R_mem R i (s+i+2) A (range (s + i + 2)).reverse h1
-    -- exact fold_preserves_R_mem h1
+    have := @RiA_foldr R A (s+i+2) (RiA_C (s + i + 2)) (s+i+2)
+    exact (this i a0).elim (λ w ⟨hw0,hw1⟩ ↦ ⟨w, Wn_sound hw0, hw1⟩)
   ·
     have a0 := @R_foldr _ _ _ A h1 ex0 si2
     constructor
     exact a0
-    
 
-    have := @RiA_foldr R A (s+i+2) ?_ (s+i+2)
-    unfold RiA at this
-    have := this i  a0
-    rcases this with ⟨w,hw0,hw1⟩
-    use w
-    constructor
-    exact Wn_sound hw0
-    exact hw1
-    exact RiA_C (s + i + 2)
+    have := @RiA_foldr R A (s+i+2) (RiA_C (s + i + 2)) (s+i+2)
+    exact (this i a0).elim (λ w ⟨hw0,hw1⟩ ↦ ⟨w, Wn_sound hw0, hw1⟩)
 
+theorem P2 (i:ℕ) : (W ∅ i).Infinite → (W ∅ i ∩ A).Nonempty := by
+  intro h
+  rcases P i h with ⟨s,hs0,hs1⟩
+  unfold A
+  apply Set.inter_nonempty.mpr
+  exact hs1.elim (λ x hx ↦ ⟨x,hx.1,by simp; use s; exact hx.2⟩)
 
---   have main : ∃ y, fs_in (C (s+i)).l y ∧ y ∈ W O i := by
---     sorry
+def fs_size := List.length.comp Nat.bitIndices
+#eval fs_size 0b011000111
+#check Set
+theorem Na (i:ℕ) :  Set.ncard (A ∩ {x | x ≤ 2*i}) ≤ i := by
 
---   suffices ∃ y ∈ W O i, ∃ s, fs_in (C s).l y from by exact Set.nonempty_iff_ne_empty.mp this
---   -- unfold A
---   -- unfold C
+  sorry
 
---   -- unfold A
+theorem infinite_iff_unbounded {A : Set ℕ} : Infinite A ↔ (∀ x, ∃ y∈A,y>x) := by
+  constructor
+  · intro h x
+    contrapose h
+    simp at h
+    simp
+    exact Finite.Set.subset {i | i ≤ x} h
 
---   -- have : ¬ fs_in R i := by sorry
-  
+  · intro h
+    contrapose h
+    simp at h
+    simp
+    let m := o2n (Set.Finite.toFinset h).max
+    use m
+    unfold m
+    simp [o2n]
+    sorry
+theorem NC : Infinite (Set.compl A) := by
+  apply infinite_iff_unbounded.mpr
+  intro x
+
+  sorry
 theorem N (i:ℕ) : (W O i).Infinite → (W O i ∩ W O a ≠ ∅) := by
   sorry
+
 
 end Computability.Simple
 
