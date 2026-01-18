@@ -538,13 +538,19 @@ theorem NaA : x ∈ A ↔ ∃ i s:ℕ, ( ¬fs_in (C s).r i ∧ i+1<s ∧
 theorem asddd (x y : ℕ): x=y ∨ x<y ∨ x>y := by
   have := lt_trichotomy x y
   -- aesop
-theorem test2 (hx:x∈A) : 2*x < (NaA.mp hx).choose := by
+theorem aux0 (hx:x∈A) : (NaA.mp hx).choose ≤ x/2 := by
   have hxs := (NaA.mp hx).choose_spec
   let xwit := (NaA.mp hx).choose
   rw [show (NaA.mp hx).choose = xwit from rfl] at *
-  
-  sorry
-theorem test (hx:x∈A) (hy:y∈A) (hxy:x≠y): (NaA.mp hx).choose ≠ (NaA.mp hy).choose := by
+  let s := hxs.choose
+  let hs := hxs.choose_spec
+  rw [show hxs.choose=s from rfl] at hs
+
+  have := hs.2.2.1.2
+  clear hs s hxs
+  omega
+
+theorem aux1 (hx:x∈A) (hy:y∈A) (hxy:x≠y) : (NaA.mp hx).choose ≠ (NaA.mp hy).choose := by
 
   have hxs := (NaA.mp hx).choose_spec
   have hys := (NaA.mp hy).choose_spec
@@ -589,8 +595,94 @@ theorem test (hx:x∈A) (hy:y∈A) (hxy:x≠y): (NaA.mp hx).choose ≠ (NaA.mp h
 def fs_size := List.length.comp Nat.bitIndices
 #eval fs_size 0b011000111
 #check Set
-theorem Na (i:ℕ) :  Set.ncard (A ∩ {x | x ≤ 2*i}) ≤ i := by
-  sorry
+noncomputable def f {i} : {x // x ∈ A ∧ x ≤ 2*i} → ℕ := fun x => (NaA.mp x.property.left).choose
+theorem hf_inj : ∀ i, Function.Injective (@f i) :=
+by
+  intro i x y h
+  unfold f at h
+  contrapose h
+  have := aux1 x.property.left y.property.left
+  simp at this
+  have := this ?_
+  · simp at this ⊢
+    exact this
+
+  aesop? says
+    obtain ⟨val, property⟩ := x
+    obtain ⟨val_1, property_1⟩ := y
+    obtain ⟨left, right⟩ := property
+    obtain ⟨left_1, right_1⟩ := property_1
+    simp_all only [Subtype.mk.injEq, not_false_eq_true, forall_const]
+
+theorem hf_le : ∀ x, @f i x ≤ i :=
+by
+  intro x
+  have a0 := aux0 x.property.left
+  have a1 := x.property.right
+  unfold f
+  simp at a0 ⊢
+  have : ↑x/2 ≤  i := by omega
+  linarith
+
+theorem hf_SetInj : Set.InjOn (@f i) ({x | ↑x∈A ∧ x ≤ 2*i}) := by
+  refine Function.Injective.injOn (hf_inj i)
+
+-- #check Set.ncard_le_ncard_of_injOn _ hf_SetInj
+
+theorem setrange_card (i : ℕ) : {x | x ≤ i}.ncard = i + 1 := by
+  have h_interval : {x | x ≤ i} = Set.Iio (i + 1) := by
+    ext x
+    simp [Nat.lt_succ_iff]
+  rw [h_interval]
+  rw [← Finset.coe_range (i + 1)]
+  rw [Set.ncard_coe_finset]
+  exact Finset.card_range (i + 1)
+
+theorem Na (i:ℕ) :  Set.ncard (A ∩ {x | x ≤ 2*i}) ≤ i+1 := by
+  have a0 := @Set.ncard_le_ncard_of_injOn _ _ _ ({x | x ≤ i}) (@f i) ?_ (@hf_SetInj i) ?_
+
+  -- have a1 : (A ∩ {x | x ≤ 2*i}) = ↑(@setOf { x // x ∈ A ∧ x ≤ 2 * i } fun x ↦ ↑x ∈ A ∧ ↑x ≤ 2 * i) := by sorry
+  let s : Set {x // x ∈ A ∧ x ≤ 2*i} := (@setOf { x // x ∈ A ∧ x ≤ 2 * i } fun x ↦ ↑x ∈ A ∧ ↑x ≤ 2 * i)
+  rw [show (@setOf { x // x ∈ A ∧ x ≤ 2 * i } fun x ↦ ↑x ∈ A ∧ ↑x ≤ 2 * i) = s from rfl] at a0
+  let t : Set ℕ := A ∩ {x | x ≤ 2*i}
+  rw [show A ∩ {x | x ≤ 2*i} = t from rfl]
+  let f : (a : {x // x ∈ A ∧ x ≤ 2*i}) → a ∈ s → ℕ := λ  a _ => a
+  have h₁ :
+  ∀ (a : {x // x ∈ A ∧ x ≤ 2*i}) (ha : a ∈ s),
+    f a ha ∈ t :=
+  by
+    intro a ha
+    exact a.property
+  have h₂ :
+  ∀ (a b : {x // x ∈ A ∧ x ≤ 2*i})
+    (ha : a ∈ s) (hb : b ∈ s),
+    f a ha = f b hb → a = b :=
+  by
+    intro a b ha hb h
+    cases a
+    cases b
+    cases h
+    rfl
+  have h₃ :
+  ∀ b ∈ t, ∃ a, ∃ ha : a ∈ s, f a ha = b :=
+    by
+      intro b hb
+      refine ⟨⟨b, hb⟩, ?_, rfl⟩
+      exact h₁ ⟨b, hb⟩ (h₁ ⟨b, hb⟩ (h₁ ⟨b, hb⟩ (h₁ ⟨b, hb⟩ hb)))
+      -- the remaining goal is `⟨b, hb⟩ ∈ s`, which is definitionally true
+  have :
+    s.ncard = t.ncard := Set.ncard_congr f h₁ h₂ h₃
+  rw [←this]
+
+
+  have a2 : {x | x ≤ i}.ncard = i+1 := by
+    exact setrange_card i
+  exact le_of_le_of_eq a0 a2
+
+  · simp [hf_le]
+  
+  exact Set.finite_le_nat i
+
 theorem Na2 (i:ℕ) : Set.ncard (Aᶜ ∩ {x | x ≤ 2*i}) > i := by
   have := Na i
   sorry
