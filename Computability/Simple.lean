@@ -529,6 +529,63 @@ theorem P2 (i:ℕ) : (W ∅ i).Infinite → (W ∅ i ∩ A).Nonempty := by
   apply Set.inter_nonempty.mpr
   exact hs1.elim (λ x hx ↦ ⟨x,hx.1,by simp; use s; exact hx.2⟩)
 
+theorem NaA : x ∈ A ↔ ∃ i s:ℕ, ( ¬fs_in (C s).r i ∧ i+1<s ∧
+  let cond t := t ∈ Wn ∅ i s ∧ t > 2*i
+  cond x ∧ ∀ t<x, ¬ cond t
+) := by sorry
+
+
+theorem asddd (x y : ℕ): x=y ∨ x<y ∨ x>y := by
+  have := lt_trichotomy x y
+  -- aesop
+theorem test2 (hx:x∈A) : 2*x < (NaA.mp hx).choose := by
+  have hxs := (NaA.mp hx).choose_spec
+  let xwit := (NaA.mp hx).choose
+  rw [show (NaA.mp hx).choose = xwit from rfl] at *
+  
+  sorry
+theorem test (hx:x∈A) (hy:y∈A) (hxy:x≠y): (NaA.mp hx).choose ≠ (NaA.mp hy).choose := by
+
+  have hxs := (NaA.mp hx).choose_spec
+  have hys := (NaA.mp hy).choose_spec
+  let xwit := (NaA.mp hx).choose
+  let ywit := (NaA.mp hy).choose
+  rw [show (NaA.mp hx).choose = xwit from rfl] at *
+  rw [show (NaA.mp hy).choose = ywit from rfl] at *
+
+  contrapose hxy
+  simp at hxy
+  rw [hxy] at hxs
+
+  let s := hxs.choose
+  let hs := hxs.choose_spec
+  rw [show hxs.choose=s from rfl] at hs
+
+  let s2 := hys.choose
+  let hs2 := hys.choose_spec
+  rw [show hys.choose=s2 from rfl] at hs2
+
+  have ss2 : s2 = s := by sorry
+  rw [ss2] at hs2
+  have hs := hs.2.2
+  have hs2 := hs2.2.2
+  extract_lets at hs hs2; expose_names
+
+  have tri := lt_trichotomy x y
+  cases tri with
+  | inl h =>
+    have a0 := (hs2.2 x h)
+    have a1 := hs.1
+    exact False.elim (a0 a1)
+  | inr h =>
+  cases h with
+  | inl h => exact fun a ↦ a h
+  | inr h =>
+    have a0 := (hs.2 y h)
+    have a1 := hs2.1
+    exact False.elim (a0 a1)
+
+
 def fs_size := List.length.comp Nat.bitIndices
 #eval fs_size 0b011000111
 #check Set
