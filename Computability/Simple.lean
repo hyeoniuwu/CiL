@@ -346,7 +346,8 @@ match s with
       R = R ++ i
   return Nat.pair A R
 -/
-
+theorem step_preserves_A_mem {j s i prev} (h:fs_in prev.l j) : fs_in (step s i prev).l j := by
+  simp [step]; aesop
 theorem step_preserves_R_mem {j s i prev} (h:fs_in prev.r j) : fs_in (step s i prev).r j := by
   simp [step]; aesop
 theorem step_preserves_R_not_mem {j k s prev} (h:¬fs_in prev.r j) (hk:k<j) :
@@ -370,6 +371,210 @@ theorem fold_preserves_R_mem (h:fs_in R j) : fs_in (foldr (step s) ⟪A,R⟫ l).
   induction l with
   | nil => simpa
   | cons head tail ih => exact step_preserves_R_mem ih
+theorem fold_preserves_A_mem (h:fs_in S.l j) : fs_in (foldr (step s) S l).l j := by
+  induction l with
+  | nil => simpa
+  | cons head tail ih => exact step_preserves_A_mem ih
+theorem foldr_prop
+  (p : β → Prop)
+  (hinit : p init)
+  (hstep : ∀ a b, p b → p (f a b)) :
+  ∀ l, p (List.foldr f init l) :=
+by
+  intro l
+  induction l with
+  | nil =>
+      simpa using hinit
+  | cons a t ih =>
+      simp [List.foldr, hstep a _ ih]
+theorem fs_in_singleton: fs_in (2^y) x ↔ y=x := by
+  grind
+theorem fs_in_singleton': Nat.testBit (2^y) x = false ↔ y≠x := by
+  grind
+-- only if there does not exist a single step in which ...
+theorem fold_preserves_A_not_mem
+(h:¬ fs_in (C s).l j)
+(h2:∀ (x_1 x_2 : ℕ),
+  ¬(fs_in (C x_2).r x_1 = false ∧
+      x_1 + 1 ≤ x_2 ∧
+        ((evalnSet ∅ x_2 (n2c x_1) j).isSome = true ∧ 2 * x_1 < j) ∧
+          ∀ t < j, ¬((evalnSet ∅ x_2 (n2c x_1) t).isSome = true ∧ 2 * x_1 < t)))
+-- : ¬ fs_in (foldr (step s) (C s) (range s).reverse).l j := by
+-- : ¬ fs_in (foldr (step s) (C s) (range ln).reverse).l j := by
+: ¬ fs_in (C (s+1)).l j := by
+  contrapose h2
+  simp at h2
+  simp
+  sorry
+theorem fold_preserves_A_not_mem
+(h:¬ fs_in (C s).l j)
+(h2:∀ (x_1 x_2 : ℕ),
+  ¬(fs_in (C x_2).r x_1 = false ∧
+      x_1 + 1 ≤ x_2 ∧
+        ((evalnSet ∅ x_2 (n2c x_1) j).isSome = true ∧ 2 * x_1 < j) ∧
+          ∀ t < j, ¬((evalnSet ∅ x_2 (n2c x_1) t).isSome = true ∧ 2 * x_1 < t)))
+-- : ¬ fs_in (foldr (step s) (C s) (range s).reverse).l j := by
+-- : ¬ fs_in (foldr (step s) (C s) (range ln).reverse).l j := by
+: ¬ fs_in (C (s+1)).l j := by
+-- : ¬ fs_in (foldr (step s) (C s) l).l j := by
+  -- induction ln with
+  -- | zero => simp; simp at h; exact h
+  -- | succ ln ih =>
+  --   simp [listrwgen, -foldr_reverse]
+  --   let prev := (foldr (step s) (C s) (range ln).reverse)
+  --   rw [show (foldr (step s) (C s) (range ln).reverse) = prev from rfl]
+  --   simp [step]
+
+  --   simp_all [prev, -foldr_reverse]
+  --   split
+  --   next h_1 =>
+  --     split
+  --     next h_2 =>
+  --       simp_all only [pair_l, Nat.testBit_or, Bool.false_or, -foldr_reverse]
+  --       obtain ⟨w, h_2⟩ := h_2
+  --       obtain ⟨left, right⟩ := h_2
+  --       -- rw [show (foldr (step s) (C s) (range ln).reverse) = prev from rfl] at h_1
+
+
+  --       sorry
+  --     next h_2 => simp_all only [gt_iff_lt, not_exists, not_and, not_lt]
+  --   next h_1 => simp_all only [Bool.not_eq_false]
+
+  --   sorry
+
+  unfold C
+  simp [-foldr_reverse]
+  have smth x := h2 x s
+
+  let p : (ℕ→Prop) := λ t ↦ ¬ fs_in t.l j
+  have hinit : p (C s) := by exact h
+  have hstep : ∀ a b, a+1≤b → p (b) → p (step s a (b)) := by
+    intro a b h
+    unfold step
+    simp
+    intro a_1
+    simp_all [p]
+    split
+    next h_2 =>
+      split
+      next h_3 =>
+        simp_all only [pair_l, Nat.testBit_or, Bool.false_or]
+        -- obtain ⟨w, h_3⟩ := h_3
+        -- obtain ⟨left, right⟩ := h_3
+        have := h2 a b
+
+        contrapose this
+        simp at this
+        simp
+        have a0 := Nat.find_spec h_3
+        -- have a2 (m) := @Nat.find_min m h_3
+        let a1 := Nat.find h_3
+        have a3 : j = a1 := by
+          have := fs_in_singleton.mp this
+          exact id (Eq.symm this)
+
+
+        rw [show Nat.find h_3 = a1 from rfl] at a0
+
+
+        sorry
+        apply fs_in_singleton'.mpr
+        contrapose this
+        simp at this ⊢
+        have a0 := Nat.find_spec h_3
+        -- have a2 (m) := @Nat.find_min m h_3
+        let a1 := Nat.find h_3
+        have a3 : j = a1 := by
+          exact id (Eq.symm this)
+
+        rw [show Nat.find h_3 = a1 from rfl] at a0
+        rw [a3]
+
+        constructor
+        exact a0.1
+        constructor
+        exact a0.2
+        intro x
+        have a5 := @Nat.find_min _ _ h_3 x
+        rw [show Nat.find h_3 = a1 from rfl] at this
+        intro hx
+        have a6 := a5 hx
+        simp at a6
+        exact fun a ↦ a6 a
+
+
+        -- suffices
+
+
+        -- sorry
+      next h_3 => simp_all only [gt_iff_lt, not_exists, not_and, not_lt]
+    next h_2 => simp_all only [Bool.not_eq_false]
+
+  -- have := foldr_prop p hinit hstep
+  -- let g := s
+  -- rw (config:={occs:=.pos [1,2]}) [show s = g from rfl]
+  -- rw (config:={occs:=.pos [1,2]}) [show s = g from rfl] at h
+
+  induction s with
+  | zero => simp [C]
+  | succ s ih =>
+    have a0 : ¬fs_in (C s).l j  := by sorry
+    simp [listrwgen, -foldr_reverse]
+
+    have ih1 := ih a0; clear ih
+    simp [C, -foldr_reverse]
+    simp [C, -foldr_reverse] at ih1
+    let prev := (foldr (step s) (C s) (range s).reverse)
+    rw [show (foldr (step s) (C s) (range s).reverse) = prev from rfl] at ih1 ⊢
+    -- aesop?
+  -- induction l with
+  -- | nil => simp; simp at h; exact h
+  -- | cons head tail ih =>
+  --   simp
+  --   let prev := (foldr (step s) (C s) tail)
+  --   rw [show (foldr (step s) (C s) tail) = prev from rfl] at ih ⊢
+  --   unfold step
+  --   simp
+  --   simp_all [prev]
+  --   split
+  --   next h_1 =>
+  --     split
+  --     next h_2 =>
+  --       simp_all only [pair_l, Nat.testBit_or, Bool.false_or]
+  --       obtain ⟨w, h_2⟩ := h_2
+  --       obtain ⟨left, right⟩ := h_2
+
+  --       have : C (s+1) = foldr (step s) (C s) (range s).reverse := by
+  --         simp [C]
+  --       rw [←this] at h_1
+
+  --       sorry
+  --     next h_2 => simp_all only [gt_iff_lt, not_exists, not_and, not_lt]
+  --   next h_1 => simp_all only [Bool.not_eq_false]
+
+
+-- open Classical in
+theorem A_step_middle {S:ℕ}
+(h2 : x ∈ Wn ∅ (n2c j) s ∧ x > 2 * j)
+(h3 : ∀ t < x, ¬(fun t ↦ t ∈ Wn ∅ (n2c j) s ∧ t > 2 * j) t)
+(h4 : ¬fs_in S.r j)
+: fs_in (step s j S).l x := by
+  have found : ∃ x, (evalnSet ∅ s (n2c j) x).isSome = true ∧ x > 2 * j := by
+    exact Exists.intro x h2
+  unfold step
+  simp [h4, found]
+  apply Or.inr
+  apply fs_in_singleton.mpr
+  have a0 : Nat.find found ≤ x := Nat.find_min' found h2
+  have a1 : x ≤ Nat.find found := by
+    contrapose h3
+    simp
+    use Nat.find found
+    constructor
+    exact Nat.gt_of_not_le h3
+    exact Nat.find_spec found
+  exact Eq.symm (Nat.le_antisymm a1 a0)
+
 theorem split_lower (h : ¬ fs_in R j) (hk : k ≤ j):
 ¬ fs_in (foldr (step s) ⟪A,R⟫ (range k).reverse).r j := by
   induction k with
@@ -388,7 +593,7 @@ theorem split_middle (h:¬fs_in R j) (h2: ∃ x ∈ Wn ∅ j s, x > 2*j) :
 fs_in ((step s) j ⟪A,R⟫).r j := by
   simp at h2
   simp [step, h, h2]
-theorem range_3way_split {s j} (hs:j+1<s) : (range s).reverse = (range' (j+1) (s-1-j)).reverse ++ [j] ++ (range' 0 j).reverse := by
+theorem range_3way_split {s j} (hs:j+1≤ s) : (range s).reverse = (range' (j+1) (s-1-j)).reverse ++ [j] ++ (range' 0 j).reverse := by
   simp
   have : j :: range' (j + 1) (s-1 - j) = range' (0+j) (s-1 - j +1) := by aesop
   rw [this]
@@ -398,7 +603,7 @@ theorem range_3way_split {s j} (hs:j+1<s) : (range s).reverse = (range' (j+1) (s
   rw [this]
   congr 1
   grind
-theorem R_foldr (h:¬fs_in R j) (h2: ∃ x ∈ Wn ∅ j s, x > 2*j) (hs:j+1<s):
+theorem R_foldr (h:¬fs_in R j) (h2: ∃ x ∈ Wn ∅ j s, x > 2*j) (hs:j+1≤s):
 fs_in (foldr (step s) ⟪A,R⟫ (range s).reverse).r j := by
   rw [range_3way_split hs]
   simp [-foldr_reverse]
@@ -418,6 +623,7 @@ fs_in (foldr (step s) ⟪A,R⟫ (range s).reverse).r j := by
 
 /-- R implies A -/
 def RiA (R A s : ℕ) := ∀ j, fs_in R j → ∃ x ∈ Wn ∅ (n2c j) s, fs_in A x
+
 theorem RiA_step (R A s : ℕ) : RiA R A s → ∀ k, RiA (step s k ⟪A,R⟫).r (step s k ⟪A,R⟫).l s := by
   simp [RiA]
   simp [step]
@@ -500,7 +706,7 @@ theorem P (i:ℕ) : (W ∅ i).Infinite → (∃ s, fs_in (C s).r i ∧ ∃ y ∈
   rcases this with ⟨x, hx0, hx1⟩
   rcases Wn_complete.mp hx0 with ⟨s,hs⟩
   have si1 : s ≤ s+i+2 := by omega
-  have si2 : i+1 < s+i+2 := by omega
+  have si2 : i+1 ≤ s+i+2 := by omega
   have ex0 :  ∃ x ∈ Wn ∅ (n2c i) (s+i+2), x > 2 * i := by
     exact ⟨x,Wn_mono (si1) hs, hx1⟩
   use s+i+2+1
@@ -529,15 +735,221 @@ theorem P2 (i:ℕ) : (W ∅ i).Infinite → (W ∅ i ∩ A).Nonempty := by
   apply Set.inter_nonempty.mpr
   exact hs1.elim (λ x hx ↦ ⟨x,hx.1,by simp; use s; exact hx.2⟩)
 
-theorem NaA : x ∈ A ↔ ∃ i s:ℕ, ( ¬fs_in (C s).r i ∧ i+1<s ∧
+theorem NaA : x ∈ A ↔ ∃ i s:ℕ, ( ¬fs_in (C s).r i ∧ i+1≤s ∧
   let cond t := t ∈ Wn ∅ i s ∧ t > 2*i
   cond x ∧ ∀ t<x, ¬ cond t
-) := by sorry
+) := by
+  constructor
+  ·
+    intro h
+    simp [A] at h
+    let s := Nat.find h
+    have hs := Nat.find_spec h
+    -- have hsm (m) := Nat.find_min h m
+    rw [show Nat.find h = s from rfl] at hs
+    have a0 : s > 0 := by
+      contrapose hs
+      simp at hs
+      simp [C, hs]
+    let sM1 := s-1
+    have a1 : s = sM1+1 := by exact (Nat.sub_eq_iff_eq_add a0).mp rfl
+    rw [a1] at hs
+    simp [C, -foldr_reverse] at hs
+
+    have a9 : ¬ fs_in (C sM1).l x := by
+      have a5 := @Nat.find_min _ _ h sM1 ?_
+      exact a5
+      exact Nat.sub_one_lt_of_lt a0
+    -- ah! i got it.
+    -- split the list into 3. find the minimal j.
+    have : sM1 > 0 := by
+      contrapose hs
+      simp at hs
+      simp [hs]
+      simp [C]
+
+    have a5 : ∃ j, j+1≤sM1 ∧
+    fs_in (foldr (step sM1) (C sM1) ((range' (j + 1) (sM1 - 1 - j)).reverse ++ [j] ++ (range' 0 j).reverse)).l x
+    ∧
+    fs_in (step sM1 j (foldr (step sM1) (C sM1) (range' 0 j).reverse)).l x
+    := by
+      use sM1-1
+      have a2 : sM1 - 1 + 1 ≤ sM1 := by
+        have : sM1-1+1 = sM1 := by exact Nat.sub_add_cancel this
+        exact Nat.le_of_eq this
+      constructor
+      exact a2
+
+      have a3 : (range sM1).reverse = (range' ((sM1-1) + 1) (sM1 - 1 - (sM1-1))).reverse ++ [(sM1-1)] ++ (range' 0 (sM1-1)).reverse := by
+        exact range_3way_split a2
+      have a4 : fs_in (foldr (step sM1) (C sM1) ((range' ((sM1-1) + 1) (sM1 - 1 - (sM1-1))).reverse ++ [(sM1-1)] ++ (range' 0 (sM1-1)).reverse)).l x := by
+        rw [←a3]
+        exact hs
+      constructor
+      exact a4
+      simp [-foldr_reverse] at a4
+      exact a4
+
+    let i := Nat.find a5
+    have hi := Nat.find_spec a5
+    have him := @Nat.find_min _ _ a5
+    rw [show Nat.find a5 = i from rfl] at hi him
+    use i
+    use sM1
+    let sM2 := sM1 - 1
+    have sM1rw : sM1 = sM2 + 1 := by exact Eq.symm (Nat.sub_add_cancel this)
+
+    cases hi2:i with
+    | zero =>
+      simp only [hi2] at *
+      simp [-foldr_reverse] at hi
+      have a7 := hi.2.2
+      simp [step] at a7
+      -- simp at a7
+
+      have r0 : (C sM1).r % 2 = 0 := by
+        contrapose a7
+        simp [a7]
+        exact Eq.symm ((fun {a b} ↦ Bool.not_not_eq.mp) fun a ↦ a9 (id (Eq.symm a)))
+      simp [r0] at a7
+
+      constructor
+      ·
+        simp
+        exact r0
+
+      constructor
+      ·
+        exact this
+
+      split at a7
+      next hn =>
+        have a10 : x = Nat.find hn := by
+          simp [a9] at a7
+          exact Eq.symm ((fun {y x} ↦ fs_in_singleton.mp) a7)
+        simp [a10]
+        have a11 := Nat.find_spec hn
+        have a12 := @Nat.find_min _ _ hn
+
+        constructor
+        · exact a11.1
+        ·
+
+          intro t ht
+          have := ht t (Nat.le_refl t)
+          exact fun a ↦ this a
+
+      next hn =>
+        contrapose hn
+        simp
+        simp at hn
+        exact False.elim (a9 a7)
+
+    | succ iM1 =>
+    have him1 := @him iM1 (?_)
+    rotate_left
+    · simp [hi2]
+    simp [-foldr_reverse] at him1
+    have hi22 := hi.2.2
+
+    have him2 := him1 ?_ ?_
+    rotate_left
+    ·
+      have := hi.1
+      rw [hi2] at this
+      omega
+    · have := hi.2.1
+      simp [-foldr_reverse] at this
+      have a12 : iM1+1 ≤ sM1 := by omega
+      have a13 := range_3way_split a12
+      have hs2 := hs
+      simp [a13, -foldr_reverse] at hs2
+      exact hs2
+    have a12 : iM1+1 ≤ i := by exact Nat.le_of_eq (id (Eq.symm hi2))
+    have a13 := range_3way_split a12
+    rw [range_eq_range'] at a13
+    rw [a13] at hi22
+    simp [-foldr_reverse] at hi22
+    have : i - 1 - iM1 = 0 := by omega
+    simp [this, -foldr_reverse] at hi22
+    clear this a13 a12 him1 him sM1rw sM2
+
+    let prev := (step sM1 iM1 (foldr (step sM1) (C sM1) (range' 0 iM1).reverse))
+    rw [show (step sM1 iM1 (foldr (step sM1) (C sM1) (range' 0 iM1).reverse)) = prev from rfl] at hi22 him2
+
+    have a16 : ¬ fs_in prev.r i := by
+      simp [step] at hi22
+      contrapose hi22
+      simp at hi22
+      simp [hi22]
+      exact him2
+    simp [step, a16] at hi22
+
+    constructor
+    ·
+      contrapose hi22
+      simp at hi22
+      rw [←hi2] at hi22
+      have a14 : fs_in (foldr (step sM1) (C sM1) (range' 0 iM1).reverse).r i := by
+        rw [←range_eq_range']
+        have := @fold_preserves_R_mem _ _ sM1 (C sM1).l (range iM1).reverse hi22
+        simp [-foldr_reverse] at this
+        exact this
+      have a15 : fs_in prev.r i := step_preserves_R_mem a14
+      exact fun a ↦ a16 a15
+    constructor
+    ·
+      omega
+    simp only []
+    split at hi22
+    next hh =>
+
+      have a18 := Nat.find_spec hh
+      have a19 := @Nat.find_min _ _ hh
+
+      have a17 : x = Nat.find hh := by
+        simp at hi22
+        simp [him2] at hi22
+        exact Eq.symm ((fun {y x} ↦ fs_in_singleton.mp) hi22)
+      rw [←a17] at a18 a19
+      rw [←hi2]
+      constructor
+      exact a18
+      intro t ht
+      exact a19 ht
+    next hh =>
+      simp [him2] at hi22
+
+  · intro h
+    rcases h with ⟨j,s,h0,h1,h2,h3⟩
+
+    simp [A]
+    use (s+1)
+    simp [C, -foldr_reverse]
+
+    rw [range_3way_split h1]
+    simp [-foldr_reverse]
+
+    rw [show range' 0 j = range j from by exact Eq.symm range_eq_range'] at *
+    let fold_lower := (foldr (step s) (C s) (range j).reverse)
+
+    have a0 := @split_lower (C s).r j j s (C s).l h0 (Nat.le_refl j)
+    simp only [pair_lr] at a0
+    rw [show  (foldr (step s) (C s) (range j).reverse) = fold_lower from rfl] at ⊢ a0
+    have a1 := @split_middle _ j s (fold_lower.l) a0 (Exists.intro x h2)
+    simp at a1
 
 
-theorem asddd (x y : ℕ): x=y ∨ x<y ∨ x>y := by
-  have := lt_trichotomy x y
-  -- aesop
+    have a2 := @fold_preserves_R_mem _ _  s (step s j fold_lower).l ((range' (j + 1) (s-1-j)).reverse) a1
+
+    simp only [pair_lr] at a2
+    by_cases h:fs_in fold_lower.l x
+    ·
+      exact fold_preserves_A_mem (@step_preserves_A_mem x s j fold_lower h)
+    ·
+      have := A_step_middle h2 h3 a0
+      exact fold_preserves_A_mem this
+
 theorem aux0 (hx:x∈A) : (NaA.mp hx).choose ≤ x/2 := by
   have hxs := (NaA.mp hx).choose_spec
   let xwit := (NaA.mp hx).choose
@@ -680,7 +1092,7 @@ theorem Na (i:ℕ) :  Set.ncard (A ∩ {x | x ≤ 2*i}) ≤ i+1 := by
   exact le_of_le_of_eq a0 a2
 
   · simp [hf_le]
-  
+
   exact Set.finite_le_nat i
 
 theorem Na2 (i:ℕ) : Set.ncard (Aᶜ ∩ {x | x ≤ 2*i}) > i := by
