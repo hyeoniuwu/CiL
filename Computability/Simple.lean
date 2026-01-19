@@ -605,7 +605,7 @@ theorem aux3
     simp
     have ih1 := ih ?_; clear ih
     rotate_left
-    · 
+    ·
       intro x a
       simp_all only [Bool.not_eq_true, mem_cons, or_true, implies_true, forall_const, forall_eq_or_imp]
     have := @step_preserves_R_not_mem ywit head s _ ih1 (hl head mem_cons_self)
@@ -888,7 +888,7 @@ theorem aux1 (hx:x∈A) (hy:y∈A) (hxy:x≠y) : choose (NaA.mp hx) ≠ choose (
     -- But this contradicts ~.
     have cs := cst hs.2.1 hs.1 hs.2.2.1
     have cs2 := cst hs2.2.1 hs2.1 hs2.2.2.1
-    
+
     have tri := lt_trichotomy s2 s
     cases tri with
     | inl h =>
@@ -1014,15 +1014,41 @@ theorem Na (i:ℕ) :  Set.ncard (A ∩ {x | x ≤ 2*i}) ≤ i+1 := by
 
   exact Set.finite_le_nat i
 
-theorem Na2 (i:ℕ) : Set.ncard (Aᶜ ∩ {x | x ≤ 2*i}) > i := by
-  have := Na i
-  sorry
-theorem Na3 {i} {A:Finset ℕ}: A.card > i → ∃ y∈A, y≥i := by
-  sorry
-theorem Na4 {i} {A:Set ℕ}: A.ncard > i → ∃ y∈A, y≥i := by
-  sorry
+theorem Na2 (i:ℕ) : Set.ncard (Aᶜ ∩ {x | x ≤ 2*i}) ≥ i := by
+  have a1 := Na i
+  have a0 := Set.le_ncard_diff (A ∩ {x | x ≤ 2 * i}) {x | x ≤ 2*i}
+  simp at a0
 
-theorem infinite_iff_unbounded {A : Set ℕ} : Infinite A ↔ (∀ x, ∃ y∈A, y≥x) := by
+  have a2 : (Aᶜ ∩ {x | x ≤ 2 * i}) = ({x | x ≤ 2 * i} \ A) := by
+    aesop
+  simp [a2]; clear a2
+  have a3 :  {x | x ≤ 2 * i}.ncard  = 2*i+1 := by exact setrange_card (2 * i)
+  rw [a3] at a0; clear a3
+
+  let x := (A ∩ {x | x ≤ 2 * i}).ncard
+  rw [show (A ∩ {x | x ≤ 2 * i}).ncard = x from rfl] at *
+  let y := ({x | x ≤ 2 * i} \ A).ncard
+  rw [show ({x | x ≤ 2 * i} \ A).ncard = y from rfl] at *
+  omega
+
+theorem Na4 {i} {A : Set ℕ} : A.ncard > i → ∃ y ∈ A, y ≥ i := by
+  contrapose
+  simp
+  intro h
+  have a0 : A ⊆ {x | x < i} := by
+    aesop
+  have a1 := Set.ncard_diff_add_ncard_of_subset a0
+  have a2 :  {x | x < i}.ncard = i := by
+    cases i with
+    | zero => simp
+    | succ i =>
+      have : {x | x < i + 1} = {x | x ≤ i} := by grind
+      rw [this]
+      exact setrange_card i
+  rw [a2] at a1
+  linarith
+
+theorem infinite_iff_unbounded {A : Set ℕ} : Set.Infinite A ↔ (∀ x, ∃ y∈A, y≥x) := by
   constructor
   · intro h x
     contrapose h
@@ -1045,20 +1071,32 @@ theorem infinite_iff_unbounded {A : Set ℕ} : Infinite A ↔ (∀ x, ∃ y∈A,
     have a1 : y < m+1 := by exact Order.lt_add_one_iff.mpr this
     exact lt_asymm hy a1
 
-theorem NC : Infinite (Set.compl A) := by
+theorem NC : Set.Infinite (Aᶜ) := by
   apply infinite_iff_unbounded.mpr
   intro x
-  have := Na4 (Na2 x)
+  have := Na4 (Na2 (x+1))
   aesop
 
-theorem N (i:ℕ) : (W O i).Infinite → (W O i ∩ W O a ≠ ∅) := by
-  sorry
+def c_simple := zero
+theorem c_simple_ev : W ∅ c_simple = A := by sorry
 
+theorem exists_simple_set : ∃ A:Set ℕ, simpleIn ∅ A := by
+  use A
+  rw [←c_simple_ev]
+  apply simpleInReq.mp
+  constructor
+  · 
+    rw [c_simple_ev]
+    exact NC
+  intro c inf
+  have a0 := P2 c
+  simp at a0
+  have := a0 inf
+  rw [c_simple_ev]
+  exact Set.nonempty_iff_ne_empty.mp (a0 inf)
 
 end Computability.Simple
 
-theorem exists_simple_set : ∃ A:Set ℕ, simpleIn O A := by
-  sorry
 
 
 
