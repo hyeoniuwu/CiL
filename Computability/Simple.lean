@@ -250,7 +250,7 @@ fs_size 0b111 = 3
 fs_size 0b011000111 = 5
 -/
 
-theorem fs_in_singleton: fs_in (2^y) x ↔ y=x := by grind
+theorem fs_in_singleton {x y}: fs_in (2^y) x ↔ x=y := by grind
 theorem fs_in_singleton': Nat.testBit (2^y) x = false ↔ y≠x := by grind
 end fs
 
@@ -297,6 +297,9 @@ noncomputable def C : ℕ → ℕ := λ s ↦
 match s with
 | 0 => ⟪0, 0⟫
 | s+1 => foldr (step s) (C s) (range s).reverse
+
+/-- The simple set built by our construction procedure. -/
+def A : Set ℕ := {x | ∃ s, fs_in (C s).l x}
 
 theorem step_preserves_A_mem {j s i X} (h:fs_in X.l j) : fs_in (step s i X).l j := by
   simp [step]; aesop
@@ -353,7 +356,6 @@ theorem split_lower {j k s X} (h : ¬ fs_in X.r j) (hk : k ≤ j):
 theorem split_middle (h:¬fs_in X.r j) (h2: ∃ x ∈ Wn ∅ j s, x > 2*j) :
 fs_in ((step s) j X).r j := by
   simp at h2; simp [step, h, h2]
--- theorem range_3_way_split {s j} (hs:j+1≤ s) : (range s).reverse = (range' (j+1) (s-1-j)).reverse ++ [j] ++ (range' 0 j).reverse := by
 theorem range_3_way_split {s j} (hs:j+1≤ s) : (range s).reverse = (range' (j+1) (s-1-j)).reverse ++ [j] ++ (range j).reverse := by
   simp only [append_assoc, cons_append, nil_append, reverse_eq_append_iff, reverse_cons,
     reverse_reverse]
@@ -366,41 +368,43 @@ theorem range_3_way_split {s j} (hs:j+1≤ s) : (range s).reverse = (range' (j+1
   rw [this]
   congr 1
   omega
+
+/--
+`R_foldr` states that when conditions are met, `j` will be added to `R` when executing the main foldr loop.
+-/
 theorem R_foldr (h:¬fs_in X.r j) (h2: ∃ x ∈ Wn ∅ j s, x > 2*j) (hs:j+1≤s):
 fs_in (foldr (step s) X (range s).reverse).r j := by
   rw [range_3_way_split hs]
   simp [-foldr_reverse]
-
-  -- rw [show range' 0 j = range j from by exact Eq.symm range_eq_range'] at *
-  let fold_lower := (foldr (step s) X (range j).reverse)
-
   have a0 := @split_lower j j s X h (Nat.le_refl j)
-  rw [show  (foldr (step s) X (range j).reverse) = fold_lower from rfl] at ⊢ a0
+  let fold_lower := (foldr (step s) X (range j).reverse)
+  rw [show (foldr (step s) X (range j).reverse) = fold_lower from rfl] at ⊢ a0
   have a1 := @split_middle j s fold_lower a0 h2
-  simp at a1
-  exact @fold_preserves_R_mem _  s (step s j fold_lower) ((range' (j + 1) (s-1-j)).reverse) a1
+  exact fold_preserves_R_mem a1
 
-/-- R implies A -/
+/--
+RiA establishes a relationship between the sets A and R.
+
+Where X represents the output of the construction at some stage `s`, RiA X asserts that:
+if some `j` was added to R, that must mean some element of `Wn ∅ (n2c j) s`
+was added to A.
+-/
 def RiA (X s : ℕ) := ∀ j, fs_in X.r j → ∃ x ∈ Wn ∅ (n2c j) s, fs_in X.l x
 
 theorem RiA_step (X s : ℕ) : RiA X s → ∀ k, RiA (step s k X) s := by
-  simp [RiA]
-  simp [step]
+  simp [RiA, step]
 
   -- proved by doing aesop?, then manually resolving dangling cases
   intro h0
   intro k j a
   split
   next h =>
-    simp_all only [↓reduceIte, gt_iff_lt]
+    simp_all only [↓reduceIte]
     split
     next h_1 =>
-      simp_all only [gt_iff_lt, ↓reduceDIte, pair_r, Nat.testBit_or, Bool.or_eq_true, pair_l]
-      -- obtain ⟨w, h_1⟩ := h_1
-      -- obtain ⟨left, right⟩ := h_1
+      simp_all only [↓reduceDIte, pair_r, Nat.testBit_or, Bool.or_eq_true, pair_l]
       cases a with
-      | inl h_3 =>
-        exact (h0 j h_3).elim λ x hx ↦ ⟨x, @evaln_mono_dom (χ ∅) s s j x (Nat.le_refl s) hx.1, Or.inl hx.2⟩
+      | inl h_3 => exact (h0 j h_3).elim λ x hx ↦ ⟨x, @evaln_mono_dom (χ ∅) s s j x (Nat.le_refl s) hx.1, Or.inl hx.2⟩
       | inr h_2 =>
         have kj : k=j := by contrapose h_2; simp [h_2]
         let x := Nat.find h_1
@@ -411,10 +415,8 @@ theorem RiA_step (X s : ℕ) : RiA X s → ∀ k, RiA (step s k X) s := by
         constructor
         exact @evaln_mono_dom (χ ∅) s s j x (Nat.le_refl s) (hx.1)
         simp only [Nat.testBit_two_pow_self, or_true]
-    next h_1 =>
-      simp_all only [gt_iff_lt, ↓reduceDIte, not_exists, not_and, not_lt]
-  next h =>
-    simp_all only [Bool.true_eq_false, ↓reduceIte, Bool.not_eq_false]
+    next h_1 => simp_all only [↓reduceDIte, not_exists, not_and, not_lt]
+  next h => simp_all only [Bool.true_eq_false, ↓reduceIte, Bool.not_eq_false]
 
 theorem RiA_foldr {X s} : RiA X s → ∀ j, RiA (foldr (step s) X (range j).reverse) s := by
   intro h j
@@ -434,59 +436,71 @@ theorem RiA_C : ∀ s, RiA (C s) s := by
     rcases @RiA_foldr (C s) s ih s j h with ⟨x,hx0,hx1⟩
     exact ⟨x, @evalnSet_mono_dom ∅ s (s+1) j x (Nat.le_add_right s 1) hx0, hx1⟩
 
-def A : Set ℕ := {x | ∃ s, fs_in (C s).l x}
-
 theorem inf_imp_inhabited {A:Set ℕ} (h:A.Infinite) : ∃ y, y ∈ A := by
   simpa using h.nonempty
 
-theorem P (i:ℕ) : (W ∅ i).Infinite → (∃ s, fs_in (C s).r i ∧ ∃ y ∈ W ∅ i, fs_in (C s).l y) := by
-  intro h
-  /-
-  the argument goes like this.
-  suppose W_i is infinite.
-  by infinitue of W_i, we can find some x>2i in it eventually.
-  say x is in W_i by stage s.
-  sp fs_in fails by stage s/s-1,
-  then it will succeed in s+1/s
-  -/
 
+/--
+Auxiliary theorem for theorem `P`, which asserts the positive requirement of the proof.
+
+`P_aux i` states that if `W ∅ i` is infinite, there is a stage at which it shares some element
+with `(C s).l`.
+
+the argument goes like this.
+  1. suppose W_i is infinite.
+  2. by infinitue of W_i, we can find some x>2i in it eventually.
+  3. say x is enumerated into W_i by stage s.
+  4. Now, we argue about what happens in (C (s+i+2+1)).
+     The high stage number is used to ensure that at this stage, x is enumerated into W_i, and
+     also that index `i` is considered in the foldr loop.
+  5. We ask. Was `i` in R the previous stage?
+  5A. If it was, we can use the "preserves" theorems above to show that the desired properties will hold.
+  5B. If not, the conditions are set up exactly for `i` to enumerated into `R`, by above theorems.
+-/
+lemma P_aux (i:ℕ) : (W ∅ i).Infinite → (∃ s, fs_in (C s).r i ∧ ∃ y ∈ W ∅ i, fs_in (C s).l y) := by
+  intro h -- 1.
+  -- 2.
   have : ∃ x ∈ W ∅ i, x > 2*i := by
     have : ((W ∅ i) \ {x | x ≤ 2*i}).Infinite := by
       have : {x | x ≤ 2*i}.Finite := by exact Set.finite_le_nat (2 * i)
       exact Set.Infinite.diff h this
     rcases inf_imp_inhabited this with ⟨y,hy1,hy2⟩
     exact ⟨y, hy1, Nat.gt_of_not_le hy2⟩
-
   rcases this with ⟨x, hx0, hx1⟩
+  -- 3.
   rcases Wn_complete.mp hx0 with ⟨s,hs⟩
   have si1 : s ≤ s+i+2 := by omega
   have si2 : i+1 ≤ s+i+2 := by omega
-  have ex0 :  ∃ x ∈ Wn ∅ (n2c i) (s+i+2), x > 2 * i := by
-    exact ⟨x,Wn_mono (si1) hs, hx1⟩
+  have ex0 : ∃ x ∈ Wn ∅ (n2c i) (s+i+2), x > 2 * i := by
+    exact ⟨x, Wn_mono si1 hs, hx1⟩
+  -- 4.
   use s+i+2+1
   unfold C
-
-  by_cases h1:fs_in (C (s + i + 2)).r i
-  ·
+  by_cases h1:fs_in (C (s + i + 2)).r i -- 5.
+  · -- 5A
     have a0 := @fold_preserves_R_mem _ (s+i+2) _ (range (s + i + 2)).reverse h1
     constructor
     exact a0
     have := @RiA_foldr (C (s + i + 2)) (s+i+2) (RiA_C (s + i + 2)) (s+i+2)
     exact (this i a0).elim (λ w ⟨hw0,hw1⟩ ↦ ⟨w, Wn_sound hw0, hw1⟩)
-  ·
+  · -- 5B
     have a0 := @R_foldr _ _ _ h1 ex0 si2
     constructor
     exact a0
     have := @RiA_foldr (C (s + i + 2)) (s+i+2) (RiA_C (s + i + 2)) (s+i+2)
     exact (this i a0).elim (λ w ⟨hw0,hw1⟩ ↦ ⟨w, Wn_sound hw0, hw1⟩)
 
-theorem P2 (i:ℕ) : (W ∅ i).Infinite → (W ∅ i ∩ A).Nonempty := by
+/-- `P i` asserts the `i`th positive requirement. -/
+theorem P (i:ℕ) : (W ∅ i).Infinite → (W ∅ i ∩ A).Nonempty := by
   intro h
-  rcases P i h with ⟨s, _, hs1⟩
+  rcases P_aux i h with ⟨s, _, hs1⟩
   unfold A
-  apply Set.inter_nonempty.mpr
-  exact hs1.elim (λ x hx ↦ ⟨x,hx.1,by simp; use s; exact hx.2⟩)
-theorem aux3
+  exact Set.inter_nonempty.mpr $ hs1.elim (λ x hx ↦ ⟨x,hx.1,by simp; use s; exact hx.2⟩)
+
+/--
+Asserts that if the foldr loop loops over a list whose elements are all `< ywit`, ywit can never be enumerate into R.
+-/
+theorem aux3 {s ywit l}
 (h : ¬fs_in (C s).r ywit)
 (hl : ∀ x, x∈l → x<ywit)
 :
@@ -519,9 +533,28 @@ theorem A_step_middle {j s x} {X : ℕ}
     simp
     use Nat.find found
     exact ⟨Nat.gt_of_not_le h3, Nat.find_spec found⟩
-  exact Eq.symm (Nat.le_antisymm a1 a0)
+  exact Nat.le_antisymm a1 a0
 
-theorem NaA : x ∈ A ↔ ∃ i s:ℕ, ( ¬fs_in (C s).r i ∧ i+1≤s ∧
+/--
+NaA gives the exact conditions under which `x` is enumerated into `A`.
+
+The reverse direction is easy, by using the above theorems.
+
+For the forward direction, suppose x ∈ A.
+
+That is to say, ∃ s, x ∈ (C s).l.
+
+Let `s` be the smallest such stage.
+
+This then, is the exact stage in which `x` was enumerated. (this is lemma `hx`.)
+
+We can dissect further, and determine the exact *step* in the foldr loop in which `x` was enumerated.
+
+Let i := the exact step. (We define this by noting it must've been enumerated at some step (lemma hstep), and let i be the smallest such one.)
+
+The minimality of `i` is then used to prove the goal.
+-/
+theorem NaA {x} : x ∈ A ↔ ∃ i s:ℕ, ( ¬fs_in (C s).r i ∧ i+1≤s ∧
   let cond t := t ∈ Wn ∅ i s ∧ t > 2*i
   cond x ∧ ∀ t<x, ¬ cond t
 ) := by
@@ -531,7 +564,6 @@ theorem NaA : x ∈ A ↔ ∃ i s:ℕ, ( ¬fs_in (C s).r i ∧ i+1≤s ∧
     simp [A] at h
     let s := Nat.find h
     have hs := Nat.find_spec h
-
     rw [show Nat.find h = s from rfl] at hs
     have a0 : s > 0 := by
       contrapose hs
@@ -542,16 +574,10 @@ theorem NaA : x ∈ A ↔ ∃ i s:ℕ, ( ¬fs_in (C s).r i ∧ i+1≤s ∧
     rw [a1] at hs
     simp [C, -foldr_reverse] at hs
 
-    have a9 : ¬ fs_in (C sM1).l x := by
-      have a5 := @Nat.find_min _ _ h sM1 ?_
-      exact a5
-      exact Nat.sub_one_lt_of_lt a0
-    -- ah! i got it.
-    -- split the list into 3. find the minimal j.
-    have sM1G1 : sM1 > 0 := by
-      contrapose hs; simp at hs; simp [hs, C]
+    have hx : ¬ fs_in (C sM1).l x := @Nat.find_min _ _ h sM1 (Nat.sub_one_lt_of_lt a0)
+    have sM1G1 : sM1 > 0 := by contrapose hs; simp at hs; simp [hs, C]
 
-    have a5 : ∃ j, j+1≤sM1 ∧
+    have hstep : ∃ j, j+1≤sM1 ∧
     fs_in (foldr (step sM1) (C sM1) ((range' (j + 1) (sM1 - 1 - j)).reverse ++ [j] ++ (range j).reverse)).l x
     ∧
     fs_in (step sM1 j (foldr (step sM1) (C sM1) (range j).reverse)).l x
@@ -567,10 +593,10 @@ theorem NaA : x ∈ A ↔ ∃ i s:ℕ, ( ¬fs_in (C s).r i ∧ i+1≤s ∧
         simp only [tsub_self, range'_zero, reverse_nil, nil_append, cons_append, foldr_cons] at a4
         exact a4⟩
 
-    let i := Nat.find a5
-    have hi := Nat.find_spec a5
-    have him := @Nat.find_min _ _ a5
-    rw [show Nat.find a5 = i from rfl] at hi him
+    let  i   := Nat.find hstep
+    have hi  := Nat.find_spec hstep
+    have him := @Nat.find_min _ _ hstep
+    rw [show Nat.find hstep = i from rfl] at hi him
     use i
     use sM1
     let sM2 := sM1 - 1
@@ -587,7 +613,7 @@ theorem NaA : x ∈ A ↔ ∃ i s:ℕ, ( ¬fs_in (C s).r i ∧ i+1≤s ∧
       have r0 : (C sM1).r % 2 = 0 := by
         contrapose a7
         simp [a7]
-        exact Eq.symm ((fun {a b} ↦ Bool.not_not_eq.mp) fun a ↦ a9 (id (Eq.symm a)))
+        exact Eq.symm ((fun {a b} ↦ Bool.not_not_eq.mp) fun a ↦ hx (id (Eq.symm a)))
       simp [r0] at a7
 
       constructor
@@ -598,31 +624,25 @@ theorem NaA : x ∈ A ↔ ∃ i s:ℕ, ( ¬fs_in (C s).r i ∧ i+1≤s ∧
       split at a7
       next hn =>
         have a10 : x = Nat.find hn := by
-          simp [a9] at a7
-          exact Eq.symm ((fun {y x} ↦ fs_in_singleton.mp) a7)
+          simp [hx] at a7
+          exact fs_in_singleton.mp a7
         simp [a10]
         have a11 := Nat.find_spec hn
-
         constructor
         · exact a11.1
         · exact λ t ht ↦ λ a ↦ ht t (Nat.le_refl t) a
-
       next hn =>
         contrapose hn
         simp at hn ⊢
-        exact False.elim (a9 a7)
+        exact False.elim (hx a7)
 
     | succ iM1 =>
-    have him1 := @him iM1 (?_)
-    rotate_left
-    · simp [hi2]
+    have him1 := @him iM1 (by simp [hi2])
     simp [-foldr_reverse] at him1
     have hi22 := hi.2.2
-
     have him2 := him1 ?_ ?_
     rotate_left
-    ·
-      have := hi.1
+    · have := hi.1
       rw [hi2] at this
       omega
     · have := hi.2.1
@@ -653,58 +673,43 @@ theorem NaA : x ∈ A ↔ ∃ i s:ℕ, ( ¬fs_in (C s).r i ∧ i+1≤s ∧
     simp [step, a16] at hi22
 
     constructor
-    ·
-      contrapose hi22
+    · contrapose hi22
       simp at hi22
       rw [←hi2] at hi22
       have a14 : fs_in (foldr (step sM1) (C sM1) (range iM1).reverse).r i := by
         have := @fold_preserves_R_mem _ sM1 (C sM1) (range iM1).reverse hi22
         simp [-foldr_reverse] at this
         exact this
-      have a15 : fs_in prev.r i := step_preserves_R_mem a14
-      exact fun a ↦ a16 a15
+      exact fun _ ↦ a16 (step_preserves_R_mem a14)
     constructor
-    ·
-      omega
+    · omega
     simp only []
     split at hi22
     next hh =>
-
       have a18 := Nat.find_spec hh
       have a19 := @Nat.find_min _ _ hh
-
       have a17 : x = Nat.find hh := by
         simp at hi22
         simp [him2] at hi22
-        exact Eq.symm ((fun {y x} ↦ fs_in_singleton.mp) hi22)
+        exact fs_in_singleton.mp hi22
       rw [←a17] at a18 a19
       rw [←hi2]
-      constructor
-      exact a18
-      intro t ht
-      exact a19 ht
-    next hh =>
-      simp [him2] at hi22
+      exact ⟨a18, λ t ht ↦ a19 ht⟩
+    next hh => simp [him2] at hi22
 
+  -- the reverse direction.
   · intro h
     rcases h with ⟨j,s,h0,h1,h2,h3⟩
-
     simp [A]
     use (s+1)
     simp [C, -foldr_reverse]
-
     rw [range_3_way_split h1]
     simp [-foldr_reverse]
-
     let fold_lower := (foldr (step s) (C s) (range j).reverse)
-
     have a0 := @split_lower j j s (C s) h0 (Nat.le_refl j)
-    by_cases h:fs_in fold_lower.l x
-    ·
-      exact fold_preserves_A_mem (@step_preserves_A_mem x s j fold_lower h)
-    ·
-      have := A_step_middle h2 h3 a0
-      exact fold_preserves_A_mem this
+    by_cases h : fs_in fold_lower.l x
+    · exact fold_preserves_A_mem (@step_preserves_A_mem x s j fold_lower h)
+    · exact fold_preserves_A_mem (A_step_middle h2 h3 a0)
 
 theorem aux0 (hx:x∈A) : (NaA.mp hx).choose ≤ x/2 := by
   have hxs := (NaA.mp hx).choose_spec
@@ -962,7 +967,7 @@ theorem exists_simple_set : ∃ A:Set ℕ, simpleIn ∅ A := by
     rw [c_simple_ev]
     exact NC
   intro c inf
-  have a0 := P2 c
+  have a0 := P c
   simp at a0
   have := a0 inf
   rw [c_simple_ev]
