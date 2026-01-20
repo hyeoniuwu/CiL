@@ -230,14 +230,20 @@ theorem simpleInReq : ((W O a)ᶜ.Infinite ∧ ∀ c, (W O c).Infinite → (W O 
   exact ⟨h3, λ c h5 ↦ (simpleInReq_aux (W O c) (W O a)).mpr (h4 c h5)⟩
 
 
-#check Nat.bit
-#check 0b00010
-#eval Nat.testBit 0b00010 0
-#eval Nat.bitIndices 0b100010
+/-
+We define functions to treat naturals as finite sets.
+-/
 abbrev fs_in := Nat.testBit
-abbrev fs_add : ℕ→ℕ→ℕ := λ a x ↦ a ||| (2^x)
-#check Nat.pair
+/-
+Examples:
+fs_in 0b0010 0 = false
+fs_in 0b0010 1 = true
+fs_in 0b0010 2 = false
+fs_in 0b0010 3 = false
+-/
 
+/-- `fs_add a x` gives the natural representing the set with `x` added to `a` interpreted as a finite set. -/
+abbrev fs_add : ℕ→ℕ→ℕ := λ a x ↦ a ||| (2^x)
 
 section Computability.Simple
 -- /--
@@ -261,10 +267,10 @@ noncomputable def C : ℕ → ℕ := λ s ↦
 match s with
 | 0 => ⟪0, 0⟫
 | s+1 =>
-  let A := (C s).l
-  let R := (C s).r
-
-  foldr (step s) ⟪A,R⟫ (range s).reverse
+  -- let A := (C s).l
+  -- let R := (C s).r
+  -- foldr (step s) ⟪A,R⟫ (range s).reverse
+  foldr (step s) (C s) (range s).reverse
 /-
   for each i ≤ s:
     1. check i is not already satisfied.
@@ -295,17 +301,21 @@ theorem step_preserves_R_not_mem {j k s prev} (h:¬fs_in prev.r j) (hk:k<j) :
       exact Nat.testBit_two_pow_of_ne this
     next h_2 => simp_all only [gt_iff_lt, not_exists, not_and, not_lt]
   next h_1 => simp_all only [Bool.not_eq_false]
-theorem fold_preserves_R_mem (h:fs_in R j) : fs_in (foldr (step s) ⟪A,R⟫ l).r j := by
+theorem fold_preserves_R_mem {j s X l} (h:fs_in X.r j) : fs_in (foldr (step s) X l).r j := by
   induction l with
   | nil => simpa
   | cons head tail ih => exact step_preserves_R_mem ih
+-- theorem fold_preserves_R_mem (h:fs_in R j) : fs_in (foldr (step s) ⟪A,R⟫ l).r j := by
+--   induction l with
+--   | nil => simpa
+--   | cons head tail ih => exact step_preserves_R_mem ih
 theorem fold_preserves_R_mem2 (h:fs_in (C s).r ywit) : ∀ i, fs_in (C (s+i)).r ywit := by
   intro i
   induction i with
   | zero => simpa
   | succ i ih =>
     simp [C, -foldr_reverse]
-    have := @fold_preserves_R_mem _ _ (s+i) (C (s + i)).l (range (s + i)).reverse ih
+    have := @fold_preserves_R_mem _ (s+i) (C (s + i)) (range (s + i)).reverse ih
     simp at this
     simp
     exact this
@@ -319,7 +329,7 @@ theorem fold_preserves_R_mem3 (h:fs_in (C s).r ywit) : ∀ s2≥s, fs_in (C (s2)
   -- induction l with
   -- | nil => simpa
   -- | cons head tail ih => exact step_preserves_R_mem ih
-theorem fold_preserves_A_mem (h:fs_in S.l j) : fs_in (foldr (step s) S l).l j := by
+theorem fold_preserves_A_mem (h:fs_in X.l j) : fs_in (foldr (step s) X l).l j := by
   induction l with
   | nil => simpa
   | cons head tail ih => exact step_preserves_A_mem ih
@@ -363,8 +373,8 @@ theorem A_step_middle {S:ℕ}
     exact Nat.find_spec found
   exact Eq.symm (Nat.le_antisymm a1 a0)
 
-theorem split_lower (h : ¬ fs_in R j) (hk : k ≤ j):
-¬ fs_in (foldr (step s) ⟪A,R⟫ (range k).reverse).r j := by
+theorem split_lower (h : ¬ fs_in X.r j) (hk : k ≤ j):
+¬ fs_in (foldr (step s) X (range k).reverse).r j := by
   induction k with
   | zero => simp at *; assumption
   | succ k ih =>
@@ -377,8 +387,8 @@ theorem split_lower (h : ¬ fs_in R j) (hk : k ≤ j):
     simp at this
     simp
     exact this
-theorem split_middle (h:¬fs_in R j) (h2: ∃ x ∈ Wn ∅ j s, x > 2*j) :
-fs_in ((step s) j ⟪A,R⟫).r j := by
+theorem split_middle (h:¬fs_in X.r j) (h2: ∃ x ∈ Wn ∅ j s, x > 2*j) :
+fs_in ((step s) j X).r j := by
   simp at h2
   simp [step, h, h2]
 theorem range_3way_split {s j} (hs:j+1≤ s) : (range s).reverse = (range' (j+1) (s-1-j)).reverse ++ [j] ++ (range' 0 j).reverse := by
@@ -391,28 +401,24 @@ theorem range_3way_split {s j} (hs:j+1≤ s) : (range s).reverse = (range' (j+1)
   rw [this]
   congr 1
   grind
-theorem R_foldr (h:¬fs_in R j) (h2: ∃ x ∈ Wn ∅ j s, x > 2*j) (hs:j+1≤s):
-fs_in (foldr (step s) ⟪A,R⟫ (range s).reverse).r j := by
+theorem R_foldr (h:¬fs_in X.r j) (h2: ∃ x ∈ Wn ∅ j s, x > 2*j) (hs:j+1≤s):
+fs_in (foldr (step s) X (range s).reverse).r j := by
   rw [range_3way_split hs]
   simp [-foldr_reverse]
 
   rw [show range' 0 j = range j from by exact Eq.symm range_eq_range'] at *
-  let fold_lower := (foldr (step s) ⟪A,R⟫ (range j).reverse)
+  let fold_lower := (foldr (step s) X (range j).reverse)
 
-  have a0 := @split_lower R j j s A h (Nat.le_refl j)
-  rw [show  (foldr (step s) ⟪A,R⟫ (range j).reverse) = fold_lower from rfl] at ⊢ a0
-  have a1 := @split_middle _ j s (fold_lower.l) a0 h2
+  have a0 := @split_lower j j s X h (Nat.le_refl j)
+  rw [show  (foldr (step s) X (range j).reverse) = fold_lower from rfl] at ⊢ a0
+  have a1 := @split_middle j s fold_lower a0 h2
   simp at a1
-
-  have a2 := @fold_preserves_R_mem _ _  s (step s j fold_lower).l ((range' (j + 1) (s-1-j)).reverse) a1
-
-  simp only [pair_lr] at a2
-  exact a2
+  exact @fold_preserves_R_mem _  s (step s j fold_lower) ((range' (j + 1) (s-1-j)).reverse) a1
 
 /-- R implies A -/
-def RiA (R A s : ℕ) := ∀ j, fs_in R j → ∃ x ∈ Wn ∅ (n2c j) s, fs_in A x
+def RiA (X s : ℕ) := ∀ j, fs_in X.r j → ∃ x ∈ Wn ∅ (n2c j) s, fs_in X.l x
 
-theorem RiA_step (R A s : ℕ) : RiA R A s → ∀ k, RiA (step s k ⟪A,R⟫).r (step s k ⟪A,R⟫).l s := by
+theorem RiA_step (X s : ℕ) : RiA X s → ∀ k, RiA (step s k X) s := by
   simp [RiA]
   simp [step]
 
@@ -445,27 +451,24 @@ theorem RiA_step (R A s : ℕ) : RiA R A s → ∀ k, RiA (step s k ⟪A,R⟫).r
   next h =>
     simp_all only [Bool.true_eq_false, ↓reduceIte, pair_r, Bool.not_eq_false, pair_l]
 
-theorem RiA_foldr : RiA R A s → ∀ j, RiA (foldr (step s) ⟪A,R⟫ (range j).reverse).r (foldr (step s) ⟪A,R⟫ (range j).reverse).l s := by
-    intro h j
-    induction j with
-    | zero => simpa
-    | succ j ih =>
-      simp [listrwgen, -foldr_reverse]
-      have := RiA_step _ _ s ih j
-      simp only [pair_lr] at this
-      exact this
+theorem RiA_foldr : RiA X s → ∀ j, RiA (foldr (step s) X (range j).reverse) s := by
+  intro h j
+  induction j with
+  | zero => simpa
+  | succ j ih =>
+    simp [listrwgen, -foldr_reverse]
+    have := RiA_step _ s ih j
+    exact this
 
-theorem RiA_C : ∀ s, RiA (C s).r (C s).l s := by
+theorem RiA_C : ∀ s, RiA (C s) s := by
   intro s
   induction s with
   | zero => simp [C, RiA]
   | succ s ih =>
     simp [C, RiA, -foldr_reverse]
     intro j h
-    have := @RiA_foldr (C s).r (C s).l s ih s j
-    simp only [pair_lr] at this
-    have := this h
-    rcases this with ⟨x,hx0,hx1⟩
+    have := @RiA_foldr (C s) s ih s j
+    rcases this h with ⟨x,hx0,hx1⟩
     exact ⟨x, @evalnSet_mono_dom ∅ s (s+1) j x (Nat.le_add_right s 1) hx0, hx1⟩
 
 def A : Set ℕ := {x | ∃ s, fs_in (C s).l x}
@@ -499,21 +502,24 @@ theorem P (i:ℕ) : (W ∅ i).Infinite → (∃ s, fs_in (C s).r i ∧ ∃ y ∈
     exact ⟨x,Wn_mono (si1) hs, hx1⟩
   use s+i+2+1
   unfold C
-  lift_lets; extract_lets; expose_names
-  by_cases h1:fs_in R i
+  -- lift_lets; extract_lets; expose_names
+  -- let A : ℕ := (C (s + i + 2)).l
+  -- let R : ℕ := (C (s + i + 2)).r
+  by_cases h1:fs_in (C (s + i + 2)).r i
   ·
-    have a0 := @fold_preserves_R_mem R i (s+i+2) A (range (s + i + 2)).reverse h1
+    have a0 := @fold_preserves_R_mem i (s+i+2) (C (s + i + 2)) (range (s + i + 2)).reverse h1
     constructor
     exact a0
 
-    have := @RiA_foldr R A (s+i+2) (RiA_C (s + i + 2)) (s+i+2)
+    have := @RiA_foldr (C (s + i + 2)) (s+i+2) (RiA_C (s + i + 2)) (s+i+2)
+
     exact (this i a0).elim (λ w ⟨hw0,hw1⟩ ↦ ⟨w, Wn_sound hw0, hw1⟩)
   ·
-    have a0 := @R_foldr _ _ _ A h1 ex0 si2
+    have a0 := @R_foldr _ _ (C (s + i + 2)) h1 ex0 si2
     constructor
     exact a0
 
-    have := @RiA_foldr R A (s+i+2) (RiA_C (s + i + 2)) (s+i+2)
+    have := @RiA_foldr (C (s + i + 2)) (s+i+2) (RiA_C (s + i + 2)) (s+i+2)
     exact (this i a0).elim (λ w ⟨hw0,hw1⟩ ↦ ⟨w, Wn_sound hw0, hw1⟩)
 
 theorem P2 (i:ℕ) : (W ∅ i).Infinite → (W ∅ i ∩ A).Nonempty := by
@@ -698,7 +704,7 @@ theorem NaA : x ∈ A ↔ ∃ i s:ℕ, ( ¬fs_in (C s).r i ∧ i+1≤s ∧
       rw [←hi2] at hi22
       have a14 : fs_in (foldr (step sM1) (C sM1) (range' 0 iM1).reverse).r i := by
         rw [←range_eq_range']
-        have := @fold_preserves_R_mem _ _ sM1 (C sM1).l (range iM1).reverse hi22
+        have := @fold_preserves_R_mem _ sM1 (C sM1) (range iM1).reverse hi22
         simp [-foldr_reverse] at this
         exact this
       have a15 : fs_in prev.r i := step_preserves_R_mem a14
@@ -739,16 +745,11 @@ theorem NaA : x ∈ A ↔ ∃ i s:ℕ, ( ¬fs_in (C s).r i ∧ i+1≤s ∧
     rw [show range' 0 j = range j from by exact Eq.symm range_eq_range'] at *
     let fold_lower := (foldr (step s) (C s) (range j).reverse)
 
-    have a0 := @split_lower (C s).r j j s (C s).l h0 (Nat.le_refl j)
-    simp only [pair_lr] at a0
+    have a0 := @split_lower j j s (C s) h0 (Nat.le_refl j)
     rw [show  (foldr (step s) (C s) (range j).reverse) = fold_lower from rfl] at ⊢ a0
-    have a1 := @split_middle _ j s (fold_lower.l) a0 (Exists.intro x h2)
+    have a1 := @split_middle j s fold_lower a0 (Exists.intro x h2)
     simp at a1
-
-
-    have a2 := @fold_preserves_R_mem _ _  s (step s j fold_lower).l ((range' (j + 1) (s-1-j)).reverse) a1
-
-    simp only [pair_lr] at a2
+    have a2 := @fold_preserves_R_mem _  s (step s j fold_lower) ((range' (j + 1) (s-1-j)).reverse) a1
     by_cases h:fs_in fold_lower.l x
     ·
       exact fold_preserves_A_mem (@step_preserves_A_mem x s j fold_lower h)
@@ -785,7 +786,7 @@ theorem cst
     simp [a2]
     have h : ∃ x, (evalnSet ∅ s (Code.n2c ywit) x).isSome = true ∧ 2 * ywit < x := ⟨x, hs221⟩
     simp [h]
-  have := @fold_preserves_R_mem _ _ s (step s ywit prev).l (range' (ywit + 1) (s - 1 - ywit)).reverse a3
+  have := @fold_preserves_R_mem _ s (step s ywit prev) (range' (ywit + 1) (s - 1 - ywit)).reverse a3
   simp at this; simpa
 
 open Classical Nat in
