@@ -5,6 +5,8 @@ import Mathlib.Order.Interval.Finset.Defs
 
 import Mathlib.Tactic.Linarith
 
+theorem inf_imp_inhabited {A:Set ℕ} (h:A.Infinite) : ∃ y, y ∈ A := by
+  simpa using h.nonempty
 theorem setrange_card (i : ℕ) : {x | x ≤ i}.ncard = i + 1 := by
   have h_interval : {x | x ≤ i} = Set.Iio (i + 1) := by
     ext x

@@ -520,3 +520,166 @@ theorem empty_le : ∀ A : Set ℕ, ∅ ≤ᵀ A := by
 
 theorem evalnSet_mono_dom : ∀ {k₁ k₂ : ℕ} {c n}, k₁ ≤ k₂ → (evalnSet O k₁ c n).isSome → (evalnSet O k₂ c n).isSome := by
   exact fun {k₁ k₂} {c} {n} a a_1 ↦ evaln_mono_dom a a_1
+
+/-- `CEin O A` means that `A` is c.e. in `O`. -/
+def CEin (O:Set ℕ) (A:Set ℕ) : Prop := ∃ c:Code, A = W O c
+@[simp] abbrev CE (A:Set ℕ) := CEin ∅ A
+@[simp] theorem CEin_trivial : CEin O (W O a) := exists_apply_eq_apply' (W O) a
+theorem CEIn_deg (h:CEin O A) : A ≤ᵀ O⌜ := by
+  rcases h with ⟨c,h⟩
+  rw [h]
+  exact W_le_Jump c
+theorem CEin_range : CEin O A ↔ ∃ c, A = WR O c := by
+  simp only [CEin]
+  constructor
+  · intro h
+    rcases h with ⟨c,hc⟩
+    use c_dom_to_ran c
+    rw [←dom_to_ran_prop]
+    exact hc
+  · intro h
+    rcases h with ⟨c,hc⟩
+    use ran_to_dom (χ O) c
+    rw [←ran_to_dom_prop]
+    exact hc
+
+/-
+Proof sketch:
+
+Let A≤ᵀB via `c`.
+
+Then, the function:
+λ x ↦ 0 if (c B x)↓ else ↑ has domain A.
+-/
+theorem reducible_imp_W : A≤ᵀB → ∃ c, W B c = A := by
+  intro h
+  rcases reducible_iff_code.mp h with ⟨c,h⟩
+  use c_ite c c_diverge zero
+  have c_total : code_total (χ B) c := by simp_all [code_total]
+  simp [W, evalSet, PFun.Dom, c_ite_ev c_total, h, eval]
+  unfold χ
+  aesop
+
+theorem Cin_iff_Cin' : A≤ᵀB ↔ Aᶜ≤ᵀB := by
+  /-
+  proof sketch; if A≤ᵀB via c, then Aᶜ≤ᵀB via Nat.sg' c.
+  -/
+  have main (A B) : A≤ᵀB → Aᶜ≤ᵀB := by
+    intro h
+    simp only [reducible_iff_code] at *
+    rcases h with ⟨c,hc⟩
+    use c_sg'.comp c
+    funext x
+    simp [eval, hc]; unfold χ
+    aesop
+
+  constructor
+  exact fun a ↦ main A B a
+  have := fun a ↦ main Aᶜ B a
+  simp only [compl_compl] at this
+  exact this
+
+theorem Cin_iff_CEin_CEin' : A≤ᵀB ↔ (CEin B A ∧ CEin B Aᶜ) := by
+  constructor
+  -- first, the trivial direction.
+  · intro h
+    simp [CEin]
+    have h1 := reducible_imp_W h
+    have h2 := reducible_imp_W $ Cin_iff_Cin'.mp h
+    rcases h1 with ⟨c1, hc1⟩
+    rcases h2 with ⟨c2, hc2⟩
+    exact ⟨⟨c1, hc1.symm⟩,⟨c2, hc2.symm⟩⟩
+
+  /-
+  We wish to show that if both A and its complement is computably enumerable from B,
+  then A is reducible to B.
+
+  Proof sketch:
+
+  Let CEin B A and CEin B Aᶜ via codes `c1` and `c2` respectively.
+
+  We will construct χ A by constructing the following function `d`:
+
+  d(x,y):
+    if y=0:
+      run [c2](x)
+      return 0
+    elif y=1:
+      run [c1](x)
+      return 0
+    else:
+      diverge
+
+  Then, the behaviour of `dovetail d` on input `x` will be as follows:
+
+  · if `x∈A`, then `d(x,y)` only halts if `y=1`, and diverges for all other `y`. Thus, `dovetail d` will return `1`.
+  · if `x∉A`, then `d(x,y)` only halts if `y=0`, and diverges for all other `y`. Thus, `dovetail d` will return `0`.
+
+  Note that dovetailing d will return 0 if x∉A and 1 if x∈A.
+  -/
+
+  intro ⟨h1,h2⟩
+  apply reducible_iff_code.mpr
+  rcases h1 with ⟨c1,hc1⟩
+  rcases h2 with ⟨c2,hc2⟩
+
+  let d := (
+    c_ite right
+    (zero.comp $ c2.comp left) $
+    c_if_eq_te' right (c_const 1)
+    (zero.comp $ c1.comp left)
+    c_diverge
+  )
+  use dovetail d
+  funext x
+
+  -- aux0, aux1: trivial helpers needed as arguments later for c_if_eq_te'_ev
+  have aux0 : code_total (χ B) (right) := by exact fun x ↦ trivial
+  have aux1 : code_total (χ B) (c_const 1) := by simp [code_total]
+
+  by_cases hx:x∈A
+  ·
+    have dvtthm := @dovetail_ev_0 (χ B) d x ?_
+    extract_lets at dvtthm; expose_names
+    all_goals
+      have tc1 : (eval (χ B) c1 x).Dom := by
+        simp [W, evalSet, PFun.Dom] at hc1
+        simp [hc1] at hx
+        exact hx
+      have tc2 : (eval (χ B) c2 x) = Part.none := by
+        have : ¬x∈Aᶜ := fun a ↦ a hx
+        simp [W, evalSet, PFun.Dom] at hc2
+        simp [hc2] at this
+        exact Part.eq_none_iff'.mpr this
+    rotate_left
+    · apply dovetail_ev_2.mpr
+      simp [d, c_if_eq_te'_ev aux0 aux1, eval, Part.Dom.bind $ tc1]
+      exact ⟨1, rfl⟩
+    · simp [χ, hx]
+      simp [d, c_if_eq_te'_ev aux0 aux1, eval, Part.Dom.bind $ tc1, tc2] at dvtthm
+      have : dvt = 1 := by contrapose dvtthm; simp [dvtthm]
+      simp [dvt] at this
+      exact Part.get_eq_iff_eq_some.mp this
+
+  · -- essentialy the same as the x∈A case.
+    have hx' : x∈Aᶜ := hx
+    have dvtthm := @dovetail_ev_0 (χ B) d x ?_
+    extract_lets at dvtthm; expose_names
+    all_goals
+      have tc1 : (eval (χ B) c2 x).Dom := by
+        simp [W, evalSet, PFun.Dom] at hc2
+        simp [hc2] at hx'
+        exact hx'
+      have tc2 : (eval (χ B) c1 x) = Part.none := by
+        simp [W, evalSet, PFun.Dom] at hc1
+        simp [hc1] at hx
+        exact Part.eq_none_iff'.mpr hx
+    rotate_left
+    · apply dovetail_ev_2.mpr
+      simp [d, c_if_eq_te'_ev aux0 aux1, eval, Part.Dom.bind $ tc1]
+      exact ⟨0, λ a ↦ False.elim (a rfl)⟩
+    · simp [χ, hx]
+      simp [d, c_if_eq_te'_ev aux0 aux1, eval, Part.Dom.bind $ tc1, tc2] at dvtthm
+      have : dvt = 0 := by contrapose dvtthm; simp [dvtthm]
+      simp [dvt] at this
+      exact Part.get_eq_iff_eq_some.mp this
