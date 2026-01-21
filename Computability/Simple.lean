@@ -417,25 +417,23 @@ theorem mem_A_iff_enumerated {x} : x ∈ A ↔ ∃ i s:ℕ, ( ¬fs_in (C s).r i 
     let sM2 := sM1 - 1
     have sM1rw : sM1 = sM2 + 1 := by exact Eq.symm (Nat.sub_add_cancel sM1G1)
 
+    -- we split cases on whether `i` is 0 or not here as the latter case
+    -- requires setting up conditions about the `i-1` step of the foldr loop.
     cases hi2:i with
     | zero =>
       simp only [hi2] at *
       simp [-foldr_reverse] at hi
       have a7 := hi.2.2
       simp [step] at a7
-      -- simp at a7
-
       have r0 : (C sM1).r % 2 = 0 := by
         contrapose a7
         simp [a7]
         exact Eq.symm ((fun {a b} ↦ Bool.not_not_eq.mp) fun a ↦ hx (id (Eq.symm a)))
       simp [r0] at a7
-
       constructor
       · simp; exact r0
       constructor
       · exact sM1G1
-
       split at a7
       next hn =>
         have a10 : x = Nat.find hn := by
