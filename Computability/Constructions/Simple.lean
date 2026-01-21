@@ -1,7 +1,7 @@
 /-
 Copyright (c) 2026 Edwin Park. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
-Authors: Edwin Park.
+Authors: Edwin Park
 -/
 import Computability.Constructions.EvalString
 import Computability.SetOracles
@@ -76,3 +76,21 @@ theorem C_aux_evp_1 : evalp Nat.fzero C_aux ⟪⟪s,R⟫, i⟫ = 0 ↔ (¬ fs_in
   sorry
 theorem C_aux_total : code_total O C_aux := by
   sorry
+
+def c_simple := zero
+theorem c_simple_ev : W ∅ c_simple = Simple.A := by sorry
+
+theorem exists_simple_set : ∃ A:Set ℕ, simpleIn ∅ A := by
+  use Simple.A
+  rw [←c_simple_ev]
+  apply simpleInReq.mp
+  constructor
+  ·
+    rw [c_simple_ev]
+    exact Simple.A_CoInfinite
+  intro c inf
+  have a0 := Simple.P c
+  simp at a0
+  have := a0 inf
+  rw [c_simple_ev]
+  exact Set.nonempty_iff_ne_empty.mp (a0 inf)

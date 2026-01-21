@@ -1,7 +1,7 @@
 /-
 Copyright (c) 2026 Edwin Park. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
-Authors: Edwin Park.
+Authors: Edwin Park
 -/
 import Computability.Constructions.Eval
 import Computability.Use
@@ -117,10 +117,7 @@ theorem c_usen_evp_aux_x_0_0 : evalp O (c_usen) (Nat.pair x (Nat.pair 0 0)) = o2
   extract_lets
   expose_names
   rw [show Nat.pair 0 0 = 0 from rfl]
-  simp [getI, usen] -- doing this simp after cases blows up memory. why?
-  cases x with
-  | zero => simp
-  | succ n => simp
+  simp [getI, usen]
 
 theorem c_usen_evp_aux_0_np1 : evalp O (c_usen) (Nat.pair x (Nat.pair (n+1) 0)) = o2n (usen O (n+1).n2c 0 x) := by
   unfold c_usen; unfold c_usen_aux
@@ -157,7 +154,6 @@ theorem c_usen_evp_aux_0_np1 : evalp O (c_usen) (Nat.pair x (Nat.pair (n+1) 0)) 
 
   have hs : evalp O s covrec_inp = 0 := by simp [s,code_s,covrec_inp,hkP1]
   simp [hs, getI, usen]
-  cases x <;> simp
 
 theorem c_usen_evp_aux (hcode_val:code≤4) :
   evalp O (c_usen) (Nat.pair x (Nat.pair code (s+1)))

@@ -1,12 +1,13 @@
 /-
 Copyright (c) 2026 Edwin Park. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
-Authors: Edwin Park.
+Authors: Edwin Park
 -/
 import Computability.Label
 import Computability.Encoding
 import Mathlib.Data.PFun
 import Mathlib.Data.Nat.Dist
+import Mathlib.Data.Nat.BitIndices
 
 /-!
 # Notations, helper functions
@@ -162,6 +163,35 @@ open Denumerable
 open Encodable
 abbrev n2o := @ofNat (Option ℕ) _
 abbrev o2n := @encode (Option ℕ) _
+
+section fs
+/-
+We define functions to treat naturals as finite sets.
+-/
+abbrev fs_in := Nat.testBit
+/-
+Examples:
+fs_in 0b0010 0 = false
+fs_in 0b0010 1 = true
+fs_in 0b0010 2 = false
+fs_in 0b0010 3 = false
+-/
+
+/-- `fs_add a x` gives the natural representing the set with `x` added to `a` interpreted as a finite set. -/
+abbrev fs_add : ℕ→ℕ→ℕ := λ a x ↦ a ||| (2^x)
+
+/-- `fs_add a` gives the the size of `a` interepreted as a finite set. -/
+def fs_size := List.length.comp Nat.bitIndices
+/-
+Examples:
+fs_size 0b010 = 1
+fs_size 0b111 = 3
+fs_size 0b011000111 = 5
+-/
+
+theorem fs_in_singleton {x y}: fs_in (2^y) x ↔ x=y := by grind
+theorem fs_in_singleton': Nat.testBit (2^y) x = false ↔ y≠x := by grind
+end fs
 
 namespace Computability.Code.nc_to_nn
 @[coe] protected def lift (f:ℕ→Code) : ℕ→ℕ := fun x => c2n (f x)
