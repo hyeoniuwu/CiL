@@ -1,3 +1,8 @@
+/-
+Copyright (c) 2026 Edwin Park. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Edwin Park.
+-/
 import Computability.Jump
 import Computability.Rin
 import Computability.Constructions.Eval
@@ -6,7 +11,12 @@ import Computability.Use
 import Computability.EvalString
 import Mathlib.Order.Basic
 
-import Computability.Constructions.CovRec
+/-!
+# SetOracles.lean
+
+We setup sets for use as oracles, (e.g. evaluation with sets as oracles, reduction between sets), and many basic definitions in degree theory, along with some basic results.
+
+-/
 
 open Nat
 open scoped Computability
@@ -89,16 +99,11 @@ noncomputable def c_evalnSet₁ (O:Set ℕ) := choose (@exists_prim_code_for_eva
 private theorem exists_code_for_eval₁ {O:ℕ→ℕ} : ∃ c:Computability.Code, eval O c = eval₁ O := by apply (exists_code.mp) rec_eval₁
 noncomputable def c_eval₁ (O:ℕ→ℕ) := choose (@exists_code_for_eval₁ O)
 @[simp] theorem c_eval₁_ev : eval O (c_eval₁ O) = eval₁ O := by exact choose_spec exists_code_for_eval₁
--- @[simp] theorem eval₁_code_prop2 : eval (χ O) (eval₁_code O) = eval₁ O := by exact choose_spec exists_code_for_eval₁
 end evalSettheorems
 
 -- lemmas
-lemma χ_eq_0or1 : (χ O x = 0) ∨ (χ O x = 1) := by
-  rw [χsimp]
-  cases Classical.em (x ∈ O) with
-  | inl h => simp only [h, ↓reduceIte, one_ne_zero, or_true]
-  | inr h => simp only [h, ↓reduceIte, zero_ne_one, or_false]
-lemma some_comp_simp (a:Part ℕ) {f:ℕ→ℕ} {h:a.Dom}:  (Part.some (f (a.get h)) = a >>= (f:ℕ→.ℕ)) := by
+lemma χ_eq_0or1 : (χ O x = 0) ∨ (χ O x = 1) := by by_cases h : x ∈ O <;> simp [h, χsimp]
+lemma some_comp_simp (a:Part ℕ) {f:ℕ→ℕ} {h:a.Dom}: (Part.some (f (a.get h)) = a >>= (f:ℕ→.ℕ)) := by
   simp only [bind]
   rw [Part.bind]
   exact Eq.symm (Part.assert_pos h)

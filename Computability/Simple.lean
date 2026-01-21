@@ -1,3 +1,8 @@
+/-
+Copyright (c) 2026 Edwin Park. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Edwin Park.
+-/
 import Computability.SetOracles
 import Computability.Helper.Sets
 
@@ -42,23 +47,6 @@ theorem simpleIn_not_reducible (h:simpleIn O A): A ≰ᵀ O := by
   exact immuneIn_not_CEIn_contrapositive h2
 
 theorem simple_above_empty (h:simple A): ∅<ᵀA := ⟨empty_le A, simpleIn_not_reducible h⟩
-theorem simpleInReq_aux {α} (A B : Set α) : A ∩ B ≠ ∅ ↔ ¬ A ⊆ Bᶜ := by
-  constructor
-  · intro h1
-    have : ∃ a:α, a ∈ A ∧ a ∈ B := by
-      contrapose h1
-      simp_all
-      ext x : 1
-      simp_all
-    contrapose this
-    simp at this ⊢
-    exact fun x a ↦ this a
-  · intro h1
-    have : ∃ a:α, a ∈ A ∧ a ∈ B := by
-      contrapose h1
-      simp_all
-      exact h1
-    exact Set.nonempty_iff_ne_empty.mp this
 /-
 Alternative characterisation of simplicity of a set; a set is simple iff if it is co-infinite, computable enumerable, and is such that its
 complements admits no infinite computable enumerable subset.
@@ -66,9 +54,9 @@ complements admits no infinite computable enumerable subset.
 theorem simpleInReq : ((W O a)ᶜ.Infinite ∧ ∀ c, (W O c).Infinite → (W O c ∩ W O a ≠ ∅)) ↔ simpleIn O (W O a) := by
   constructor
   · intro ⟨h1,h2⟩
-    exact ⟨CEin_trivial, h1, λ c h3 ↦ (simpleInReq_aux (W O c) (W O a)).mp (h2 c h3)⟩
+    exact ⟨CEin_trivial, h1, λ c h3 ↦ (nonempt_int_iff_not_subset_compl (W O c) (W O a)).mp (h2 c h3)⟩
   rintro ⟨_, h3, h4⟩;
-  exact ⟨h3, λ c h5 ↦ (simpleInReq_aux (W O c) (W O a)).mpr (h4 c h5)⟩
+  exact ⟨h3, λ c h5 ↦ (nonempt_int_iff_not_subset_compl (W O c) (W O a)).mpr (h4 c h5)⟩
 
 section fs
 /-
@@ -132,7 +120,6 @@ noncomputable def step (s:ℕ) := λ i prev ↦
       ⟪fs_add Aₚ x, fs_add Rₚ i⟫
     else prev
   else prev
-
 /--
 C stands for construction.
 Input: stage `s`
@@ -185,8 +172,8 @@ theorem fold_preserves_A_mem {j s X l} (h:fs_in X.l j) : fs_in (foldr (step s) X
   | nil => simpa
   | cons head tail ih => exact step_preserves_A_mem ih
 
-/-
-if `j∉X.r`, then applying `step i` to `X` for `i≤j` will not change the non-membership
+/--
+Asserts that if the foldr loop loops over a list whose elements are all `< j`,  then `j` can never be enumerate into R.
 -/
 theorem split_lower {j k s X} (h : ¬ fs_in X.r j) (hk : k ≤ j):
 ¬ fs_in (foldr (step s) X (range k).reverse).r j := by
@@ -230,7 +217,7 @@ fs_in (foldr (step s) X (range s).reverse).r j := by
 /--
 RiA establishes a relationship between the sets A and R.
 
-Where X represents the output of the construction at some stage `s`, RiA X asserts that:
+Where X represents the output of the construction at some stage `s`, `RiA X` asserts the following:
 if some `j` was added to R, that must mean some element of `Wn ∅ (n2c j) s`
 was added to A.
 -/
@@ -286,9 +273,9 @@ with `(C s).l`.
 
 the argument goes like this.
   1. suppose W_i is infinite.
-  2. by infinitue of W_i, we can find some x>2i in it eventually.
-  3. say x is enumerated into W_i by stage s.
-  4. Now, we argue about what happens in (C (s+i+2+1)).
+  2. by infinitue of W_i, we can find some `x>2i` in it eventually.
+  3. say `x` is enumerated into W_i by stage `s`.
+  4. Now, we argue about what happens in `C (s+i+2+1)`.
      The high stage number is used to ensure that at this stage, x is enumerated into W_i, and
      also that index `i` is considered in the foldr loop.
   5. We ask. Was `i` in R the previous stage?
@@ -334,24 +321,6 @@ theorem P (i:ℕ) : (W ∅ i).Infinite → (W ∅ i ∩ A).Nonempty := by
   rcases P_aux i h with ⟨s, _, hs1⟩
   unfold A
   exact Set.inter_nonempty.mpr $ hs1.elim (λ x hx ↦ ⟨x,hx.1,by simp; use s; exact hx.2⟩)
-/--
-Asserts that if the foldr loop loops over a list whose elements are all `< ywit`, ywit can never be enumerate into R.
--/
-theorem R_prop_0 {s ywit l}
-(h : ¬fs_in (C s).r ywit)
-(hl : ∀ x, x∈l → x<ywit)
-:
-¬fs_in (foldr (step s) (C s) l).r ywit := by
-  induction l with
-  | nil => simp; simp at h; exact h
-  | cons head tail ih =>
-    simp
-    have ih1 := ih ?_; clear ih
-    rotate_left
-    · intro x a
-      simp_all only [Bool.not_eq_true, mem_cons, or_true, implies_true, forall_const, forall_eq_or_imp]
-    have := @step_preserves_R_not_mem ywit head s _ ih1 (hl head mem_cons_self)
-    exact Eq.symm ((fun {a b} ↦ Bool.not_not_eq.mp) fun a ↦ this (id (Eq.symm a)))
 theorem A_step_middle {j s x} {X : ℕ}
 (h2 : x ∈ Wn ∅ (n2c j) s ∧ x > 2 * j)
 (h3 : ∀ t < x, ¬(fun t ↦ t ∈ Wn ∅ (n2c j) s ∧ t > 2 * j) t)
@@ -552,8 +521,6 @@ This is only used as a helper lemma for `N_aux_1`.
 theorem N_aux_0 (hx:x∈A) : (NaA.mp hx).choose ≤ x/2 := by
   have := (NaA.mp hx).choose_spec.choose_spec.2.2.1.2
   omega
-theorem hl : ∀ x, x∈(range ywit).reverse → x<ywit := by
-  simp [mem_reverse, mem_range]
 /-- `N_aux_2` states that under the specified conditions, `ywit` will be enumerated into `R`. -/
 theorem N_aux_2 {ywit s x}
 (hs21 : ywit + 1 ≤ s)
@@ -561,7 +528,7 @@ theorem N_aux_2 {ywit s x}
 (hs221 : (fun t ↦ t ∈ Wn ∅ (Code.n2c ywit) s ∧ t > 2 * ywit) x)
 : fs_in (C (s+1)).r ywit := by
   simp [C, range_3_way_split hs21, -foldr_reverse]
-  have a2 := R_prop_0 hs1 hl
+  have a2 := @split_lower ywit ywit s _ hs1 (Nat.le_refl ywit)
   let prev := (foldr (step s) (C s) (range ywit).reverse)
   rw [show (foldr (step s) (C s) (range ywit).reverse) = prev from rfl] at a2 ⊢
   have a3 : fs_in (step s ywit prev).r ywit := by
@@ -632,7 +599,7 @@ theorem N_aux_1 (hx:x∈A) (hy:y∈A) (hxy:x≠y) : choose (NaA.mp hx) ≠ choos
     exact False.elim (a0 a1)
 /-- `f` maps `x∈A` to the requirement which enumerated it. -/
 noncomputable def f {i} : {x // x ∈ A ∧ x ≤ 2*i} → ℕ := fun x => (NaA.mp x.property.left).choose
-theorem hf_inj : ∀ i, Function.Injective (@f i) :=
+theorem hf_injective : ∀ i, Function.Injective (@f i) :=
 by
   intro i x y h
   unfold f at h
@@ -657,7 +624,7 @@ by
   simp at a0 ⊢
   have : ↑x/2 ≤  i := by omega
   linarith
-theorem hf_SetInj : Set.InjOn (@f i) ({x | ↑x∈A ∧ x ≤ 2*i}) := Function.Injective.injOn (hf_inj i)
+theorem hf_SetInj : Set.InjOn (@f i) ({x | ↑x∈A ∧ x ≤ 2*i}) := Function.Injective.injOn (hf_injective i)
 
 
 /--
@@ -719,15 +686,3 @@ theorem exists_simple_set : ∃ A:Set ℕ, simpleIn ∅ A := by
   exact Set.nonempty_iff_ne_empty.mp (a0 inf)
 
 end Computability.Simple
-
--- in cooper p.220 theres the requirement also that A≤ᵀjumpn 1 ∅. is this necessary?
-def lowNIn (n:ℕ) (A O:Set ℕ) : Prop := jumpn n A = jumpn n O
-def lowN (n:ℕ) (A:Set ℕ) : Prop := lowNIn n A ∅
-abbrev low := lowN 1
-abbrev lowIn := lowNIn 1
-
-theorem low_below_K (h:lowN 1 A) : A<ᵀ∅⌜ := by
-  simp [lowN, lowNIn, jumpn] at h
-  have h0 : A⌜≡ᵀ∅⌜ := by exact Eq.antisymmRel (congrArg (toAntisymmetrization SetTuringReducible) h)
-  have h1 : A<ᵀA⌜ := by exact Set_lt_SetJump A
-  exact lt_of_lt_of_eq h1 (congrArg (toAntisymmetrization SetTuringReducible) h)

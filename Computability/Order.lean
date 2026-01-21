@@ -1,3 +1,11 @@
+/-
+Copyright (c) 2025 Tanner Duve. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Tanner Duve, Elan Roth
+
+Modifications:
+Copyright (c) 2026 Edwin Park.
+-/
 import Computability.Oracle
 import Mathlib.Order.Antisymmetrization
 

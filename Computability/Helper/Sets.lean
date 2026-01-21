@@ -1,3 +1,8 @@
+/-
+Copyright (c) 2026 Edwin Park. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Edwin Park.
+-/
 import Mathlib.Data.Set.Finite.Basic
 import Mathlib.Data.Set.Card.Arithmetic
 import Mathlib.Data.Finset.Max
@@ -5,6 +10,23 @@ import Mathlib.Order.Interval.Finset.Defs
 
 import Mathlib.Tactic.Linarith
 
+theorem nonempt_int_iff_not_subset_compl {α} (A B : Set α) : A ∩ B ≠ ∅ ↔ ¬ A ⊆ Bᶜ := by
+  constructor
+  · intro h1
+    have : ∃ a:α, a ∈ A ∧ a ∈ B := by
+      contrapose h1
+      simp_all
+      ext x : 1
+      simp_all
+    contrapose this
+    simp at this ⊢
+    exact fun x a ↦ this a
+  · intro h1
+    have : ∃ a:α, a ∈ A ∧ a ∈ B := by
+      contrapose h1
+      simp_all
+      exact h1
+    exact Set.nonempty_iff_ne_empty.mp this
 theorem inf_imp_inhabited {A:Set ℕ} (h:A.Infinite) : ∃ y, y ∈ A := by
   simpa using h.nonempty
 theorem setrange_card (i : ℕ) : {x | x ≤ i}.ncard = i + 1 := by

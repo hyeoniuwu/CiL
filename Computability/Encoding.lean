@@ -1,3 +1,11 @@
+/-
+Copyright (c) 2018 Mario Carneiro. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Mario Carneiro
+
+Modifications:
+Copyright (c) 2026 Edwin Park.
+-/
 import Computability.Oracle
 import Mathlib.Data.Option.Basic
 import Mathlib.Logic.Encodable.Pi

@@ -1,3 +1,8 @@
+/-
+Copyright (c) 2026 Edwin Park. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Edwin Park.
+-/
 import Computability.Label
 import Computability.Encoding
 import Mathlib.Data.PFun
