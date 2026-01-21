@@ -1,9 +1,7 @@
 import Computability.SetOracles
+import Computability.Helper.Sets
 
 import Mathlib.Data.Nat.BitIndices
-import Mathlib.Data.Set.Finite.Basic
-import Mathlib.Data.Set.Card.Arithmetic
-import Mathlib.Order.Interval.Finset.Defs
 
 open Computability
 open Computability.Code
@@ -500,7 +498,7 @@ theorem P (i:ℕ) : (W ∅ i).Infinite → (W ∅ i ∩ A).Nonempty := by
 /--
 Asserts that if the foldr loop loops over a list whose elements are all `< ywit`, ywit can never be enumerate into R.
 -/
-theorem aux3 {s ywit l}
+theorem R_prop_0 {s ywit l}
 (h : ¬fs_in (C s).r ywit)
 (hl : ∀ x, x∈l → x<ywit)
 :
@@ -711,39 +709,34 @@ theorem NaA {x} : x ∈ A ↔ ∃ i s:ℕ, ( ¬fs_in (C s).r i ∧ i+1≤s ∧
     · exact fold_preserves_A_mem (@step_preserves_A_mem x s j fold_lower h)
     · exact fold_preserves_A_mem (A_step_middle h2 h3 a0)
 
-theorem aux0 (hx:x∈A) : (NaA.mp hx).choose ≤ x/2 := by
-  have hxs := (NaA.mp hx).choose_spec
-  let xwit := (NaA.mp hx).choose
-  rw [show (NaA.mp hx).choose = xwit from rfl] at *
-  let s := hxs.choose
-  let hs := hxs.choose_spec
-  rw [show hxs.choose=s from rfl] at hs
-
-  have := hs.2.2.1.2
-  clear hs s hxs
+/--
+`N_aux_0` asserts that if `x∈A`, the requirement that enumerated `x` into `A` is `≤ x/2`.
+This is only used as a helper lemma for `N_aux_1`.
+-/
+theorem N_aux_0 (hx:x∈A) : (NaA.mp hx).choose ≤ x/2 := by
+  have := (NaA.mp hx).choose_spec.choose_spec.2.2.1.2
   omega
-
 theorem hl : ∀ x, x∈(range ywit).reverse → x<ywit := by
   simp [mem_reverse, mem_range]
-theorem cst
+/-- `N_aux_2` states that under the specified conditions, `ywit` will be enumerated into `R`. -/
+theorem N_aux_2 {ywit s x}
 (hs21 : ywit + 1 ≤ s)
 (hs1 : ¬fs_in (C s).r ywit)
 (hs221 : (fun t ↦ t ∈ Wn ∅ (Code.n2c ywit) s ∧ t > 2 * ywit) x)
 : fs_in (C (s+1)).r ywit := by
   simp [C, range_3_way_split hs21, -foldr_reverse]
-  have a2 := aux3 hs1 hl
+  have a2 := R_prop_0 hs1 hl
   let prev := (foldr (step s) (C s) (range ywit).reverse)
   rw [show (foldr (step s) (C s) (range ywit).reverse) = prev from rfl] at a2 ⊢
   have a3 : fs_in (step s ywit prev).r ywit := by
-    simp [step]
-    simp [a2]
+    simp [step, a2]
     have h : ∃ x, (evalnSet ∅ s (Code.n2c ywit) x).isSome = true ∧ 2 * ywit < x := ⟨x, hs221⟩
     simp [h]
   have := @fold_preserves_R_mem _ s (step s ywit prev) (range' (ywit + 1) (s - 1 - ywit)).reverse a3
   simp at this; simpa
 
-open Classical Nat in
-theorem aux1 (hx:x∈A) (hy:y∈A) (hxy:x≠y) : choose (NaA.mp hx) ≠ choose (NaA.mp hy) := by
+/-- We show that `f` is injective. -/
+theorem N_aux_1 (hx:x∈A) (hy:y∈A) (hxy:x≠y) : choose (NaA.mp hx) ≠ choose (NaA.mp hy) := by
 
   have hxs := choose_spec (NaA.mp hx)
   have hys := choose_spec (NaA.mp hy)
@@ -765,11 +758,10 @@ theorem aux1 (hx:x∈A) (hy:y∈A) (hxy:x≠y) : choose (NaA.mp hx) ≠ choose (
   rw [show choose hys=s2 from rfl] at hs2
 
   have ss2 : s2 = s := by
-
     -- we show that at step s+1, R contains ywit.
     -- But this contradicts ~.
-    have cs := cst hs.2.1 hs.1 hs.2.2.1
-    have cs2 := cst hs2.2.1 hs2.1 hs2.2.2.1
+    have cs := N_aux_2 hs.2.1 hs.1 hs.2.2.1
+    have cs2 := N_aux_2 hs2.2.1 hs2.1 hs2.2.2.1
 
     have tri := lt_trichotomy s2 s
     cases tri with
@@ -804,17 +796,17 @@ theorem aux1 (hx:x∈A) (hy:y∈A) (hxy:x≠y) : choose (NaA.mp hx) ≠ choose (
     have a1 := hs2.1
     exact False.elim (a0 a1)
 
+/-- `f` maps `x∈A` to the requirement which enumerated it. -/
 noncomputable def f {i} : {x // x ∈ A ∧ x ≤ 2*i} → ℕ := fun x => (NaA.mp x.property.left).choose
 theorem hf_inj : ∀ i, Function.Injective (@f i) :=
 by
   intro i x y h
   unfold f at h
   contrapose h
-  have := aux1 x.property.left y.property.left
+  have := N_aux_1 x.property.left y.property.left
   simp at this
   have := this ?_
-  · simp at this ⊢
-    exact this
+  · simpa using this
 
   aesop? says
     obtain ⟨val, property⟩ := x
@@ -822,137 +814,56 @@ by
     obtain ⟨left, right⟩ := property
     obtain ⟨left_1, right_1⟩ := property_1
     simp_all only [Subtype.mk.injEq, not_false_eq_true, forall_const]
-
 theorem hf_le : ∀ x, @f i x ≤ i :=
 by
   intro x
-  have a0 := aux0 x.property.left
+  have a0 := N_aux_0 x.property.left
   have a1 := x.property.right
   unfold f
   simp at a0 ⊢
   have : ↑x/2 ≤  i := by omega
   linarith
+theorem hf_SetInj : Set.InjOn (@f i) ({x | ↑x∈A ∧ x ≤ 2*i}) := Function.Injective.injOn (hf_inj i)
 
-theorem hf_SetInj : Set.InjOn (@f i) ({x | ↑x∈A ∧ x ≤ 2*i}) := by
-  refine Function.Injective.injOn (hf_inj i)
 
--- #check Set.ncard_le_ncard_of_injOn _ hf_SetInj
+/--
+`N i` is the `i`th negative requirement, stating that `A` is "sparse" enough, which is used to prove that it is coinfinite later.
 
-theorem setrange_card (i : ℕ) : {x | x ≤ i}.ncard = i + 1 := by
-  have h_interval : {x | x ≤ i} = Set.Iio (i + 1) := by
-    ext x
-    simp [Nat.lt_succ_iff]
-  rw [h_interval]
-  rw [← Finset.coe_range (i + 1)]
-  rw [Set.ncard_coe_finset]
-  exact Finset.card_range (i + 1)
-
-theorem Na (i:ℕ) :  Set.ncard (A ∩ {x | x ≤ 2*i}) ≤ i+1 := by
+The proof is standard, given we have already shown that `f` is an injection from `A ∩ {x | x ≤ 2*i}` to `{x | x ≤ i}`.
+-/
+theorem N (i:ℕ) :  Set.ncard (A ∩ {x | x ≤ 2*i}) ≤ i+1 := by
   have a0 := @Set.ncard_le_ncard_of_injOn _ _ _ ({x | x ≤ i}) (@f i) ?_ (@hf_SetInj i) ?_
 
-  -- have a1 : (A ∩ {x | x ≤ 2*i}) = ↑(@setOf { x // x ∈ A ∧ x ≤ 2 * i } fun x ↦ ↑x ∈ A ∧ ↑x ≤ 2 * i) := by sorry
   let s : Set {x // x ∈ A ∧ x ≤ 2*i} := (@setOf { x // x ∈ A ∧ x ≤ 2 * i } fun x ↦ ↑x ∈ A ∧ ↑x ≤ 2 * i)
-  rw [show (@setOf { x // x ∈ A ∧ x ≤ 2 * i } fun x ↦ ↑x ∈ A ∧ ↑x ≤ 2 * i) = s from rfl] at a0
   let t : Set ℕ := A ∩ {x | x ≤ 2*i}
-  rw [show A ∩ {x | x ≤ 2*i} = t from rfl]
   let f : (a : {x // x ∈ A ∧ x ≤ 2*i}) → a ∈ s → ℕ := λ  a _ => a
-  have h₁ :
-  ∀ (a : {x // x ∈ A ∧ x ≤ 2*i}) (ha : a ∈ s),
-    f a ha ∈ t :=
-  by
-    intro a ha
-    exact a.property
-  have h₂ :
-  ∀ (a b : {x // x ∈ A ∧ x ≤ 2*i})
-    (ha : a ∈ s) (hb : b ∈ s),
-    f a ha = f b hb → a = b :=
-  by
-    intro a b ha hb h
-    cases a
-    cases b
-    cases h
-    rfl
-  have h₃ :
-  ∀ b ∈ t, ∃ a, ∃ ha : a ∈ s, f a ha = b :=
-    by
-      intro b hb
-      refine ⟨⟨b, hb⟩, ?_, rfl⟩
-      exact h₁ ⟨b, hb⟩ (h₁ ⟨b, hb⟩ (h₁ ⟨b, hb⟩ (h₁ ⟨b, hb⟩ hb)))
-      -- the remaining goal is `⟨b, hb⟩ ∈ s`, which is definitionally true
-  have :
-    s.ncard = t.ncard := Set.ncard_congr f h₁ h₂ h₃
-  rw [←this]
 
-
-  have a2 : {x | x ≤ i}.ncard = i+1 := by
-    exact setrange_card i
-  exact le_of_le_of_eq a0 a2
-
+  have : s.ncard = t.ncard := Set.ncard_congr f ?_ ?_ ?_
+  rotate_left
+  · exact fun a ha ↦ ha
+  · exact fun a b ha hb a_1 ↦ Subtype.eq a_1
+  · exact fun b hb ↦ ⟨⟨b, hb⟩, hb, rfl⟩
   · simp [hf_le]
-
-  exact Set.finite_le_nat i
+  · exact Set.finite_le_nat i
+  rw [←this]
+  exact le_of_le_of_eq a0 (setrange_card i)
 
 theorem Na2 (i:ℕ) : Set.ncard (Aᶜ ∩ {x | x ≤ 2*i}) ≥ i := by
-  have a1 := Na i
+  have a1 := N i
   have a0 := Set.le_ncard_diff (A ∩ {x | x ≤ 2 * i}) {x | x ≤ 2*i}
   simp at a0
 
-  have a2 : (Aᶜ ∩ {x | x ≤ 2 * i}) = ({x | x ≤ 2 * i} \ A) := by
-    aesop
+  have a2 : (Aᶜ ∩ {x | x ≤ 2 * i}) = ({x | x ≤ 2 * i} \ A) := by aesop
   simp [a2]; clear a2
-  have a3 :  {x | x ≤ 2 * i}.ncard  = 2*i+1 := by exact setrange_card (2 * i)
+  have a3 := setrange_card (2 * i)
   rw [a3] at a0; clear a3
 
-  let x := (A ∩ {x | x ≤ 2 * i}).ncard
-  rw [show (A ∩ {x | x ≤ 2 * i}).ncard = x from rfl] at *
-  let y := ({x | x ≤ 2 * i} \ A).ncard
-  rw [show ({x | x ≤ 2 * i} \ A).ncard = y from rfl] at *
   omega
 
-theorem Na4 {i} {A : Set ℕ} : A.ncard > i → ∃ y ∈ A, y ≥ i := by
-  contrapose
-  simp
-  intro h
-  have a0 : A ⊆ {x | x < i} := by
-    aesop
-  have a1 := Set.ncard_diff_add_ncard_of_subset a0
-  have a2 :  {x | x < i}.ncard = i := by
-    cases i with
-    | zero => simp
-    | succ i =>
-      have : {x | x < i + 1} = {x | x ≤ i} := by grind
-      rw [this]
-      exact setrange_card i
-  rw [a2] at a1
-  linarith
-
-theorem infinite_iff_unbounded {A : Set ℕ} : Set.Infinite A ↔ (∀ x, ∃ y∈A, y≥x) := by
-  constructor
-  · intro h x
-    contrapose h
-    simp at h
-    simp
-    exact Finite.Set.subset {i | i < x} h
-
-  · intro h
-    classical
-    by_contra hfin
-    simp at hfin
-    have hA : Finite A := hfin
-    have hne : A.Nonempty := by
-      obtain ⟨y, hy, _⟩ := h 0
-      exact ⟨y, hy⟩
-    let m := (Set.Finite.toFinset hA).max' ((Set.Finite.toFinset_nonempty hA).mpr hne)
-    let hm := Finset.le_max' (Set.Finite.toFinset hA)
-    obtain ⟨y, hyA, hy⟩ := h (m+1+1)
-    have : y ≤ m := hm y ((Set.Finite.mem_toFinset hA).mpr hyA)
-    have a1 : y < m+1 := by exact Order.lt_add_one_iff.mpr this
-    exact lt_asymm hy a1
-
-theorem NC : Set.Infinite (Aᶜ) := by
+theorem A_CoInf : Set.Infinite (Aᶜ) := by
   apply infinite_iff_unbounded.mpr
   intro x
-  have := Na4 (Na2 (x+1))
+  have := big_imp_big_wit (Na2 (x+1))
   aesop
 
 def c_simple := zero
@@ -965,7 +876,7 @@ theorem exists_simple_set : ∃ A:Set ℕ, simpleIn ∅ A := by
   constructor
   ·
     rw [c_simple_ev]
-    exact NC
+    exact A_CoInf
   intro c inf
   have a0 := P c
   simp at a0
