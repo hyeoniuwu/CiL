@@ -7,13 +7,24 @@ import Computability.Jump
 
 namespace Nat
 namespace RecursiveIn
+namespace Rin
 open Part
+
+alias zero := _root_.Nat.RecursiveIn.zero
+alias succ := _root_.Nat.RecursiveIn.succ
+alias left := _root_.Nat.RecursiveIn.left
+alias right := _root_.Nat.RecursiveIn.right
+alias oracle := _root_.Nat.RecursiveIn.oracle
+alias pair := _root_.Nat.RecursiveIn.pair
+alias comp := _root_.Nat.RecursiveIn.comp
+alias prec := _root_.Nat.RecursiveIn.prec
+alias rfind := _root_.Nat.RecursiveIn.rfind
 
 theorem of_eq {f g : ℕ →. ℕ} (hf : RecursiveIn O f) (H : ∀ n, f n = g n) : RecursiveIn O g :=
   (funext H : f = g) ▸ hf
 
 theorem of_eq_tot {f : ℕ →. ℕ} {g : ℕ → ℕ} (hf : RecursiveIn O f) (H : ∀ n, g n ∈ f n) : RecursiveIn O g :=
-  hf.of_eq fun n => eq_some_iff.2 (H n)
+  of_eq hf fun n => eq_some_iff.2 (H n)
 theorem of_primrecIn {f : ℕ → ℕ} (hf : Nat.PrimrecIn O f) : RecursiveIn O f := by
   induction hf with
   | zero => exact zero
@@ -22,12 +33,12 @@ theorem of_primrecIn {f : ℕ → ℕ} (hf : Nat.PrimrecIn O f) : RecursiveIn O 
   | right => exact right
   | oracle => exact oracle
   | pair _ _ pf pg =>
-    refine (pf.pair pg).of_eq_tot fun n => ?_
+    refine of_eq_tot (pair pf pg) fun n => ?_
     simp [Seq.seq]
   | comp _ _ pf pg =>
-    refine (pf.comp pg).of_eq_tot fun n => (by simp)
+    refine of_eq_tot (comp pf pg) fun n => (by simp)
   | prec _ _ pf pg =>
-    refine (pf.prec pg).of_eq_tot fun n => ?_
+    refine of_eq_tot (prec pf pg) fun n => ?_
     simp only [unpaired, PFun.coe_val, bind_eq_bind]
     induction n.unpair.2 with
     | zero => simp
@@ -89,11 +100,11 @@ theorem of_primrecIn {f : ℕ → ℕ} (hf : Nat.PrimrecIn O f) : RecursiveIn O 
 
 open Computability
 open Computability.Code
-theorem _root_.Nat.RecursiveIn.eval_K_computable:Nat.RecursiveIn O (fun x ↦ eval O x x) := by
-  have h:(fun (x:ℕ) ↦ eval O x x) = (fun (x:ℕ) => eval O x.unpair.1 x.unpair.2) ∘ (fun x=>Nat.pair x x) := by
+theorem _root_.Nat.RecursiveIn.eval_K_computable:Nat.RecursiveIn O (fun x ↦ Computability.eval O x x) := by
+  have h:(fun (x:ℕ) ↦ Computability.eval O x x) = (fun (x:ℕ) => Computability.eval O x.unpair.1 x.unpair.2) ∘ (fun x=>Nat.pair x x) := by
     funext xs
     simp only [Function.comp_apply, Nat.unpair_pair]
   rw [h]
-  refine Nat.RecursiveIn.partCompTotal ?_ ?_
+  refine Nat.RecursiveIn.Rin.partCompTotal ?_ ?_
   exact rec_eval₁
-  exact Nat.RecursiveIn.of_primrecIn (Nat.PrimrecIn.pair Nat.PrimrecIn.id Nat.PrimrecIn.id)
+  exact Nat.RecursiveIn.Rin.of_primrecIn (Nat.PrimrecIn.pair Nat.PrimrecIn.id Nat.PrimrecIn.id)

@@ -214,7 +214,7 @@ lemma R_foldr (h:¬fs_in X.r j) (h2: ∃ x ∈ Wn ∅ j s, x > 2*j) (hs:j+1≤s)
 fs_in (foldr (step s) X (range s).reverse).r j := by
   rw [range_3_way_split hs]
   simp [-foldr_reverse]
-  have a0 := @split_lower j j s X h (Nat.le_refl j)
+  have a0 := @split_lower j j s X h (le_refl j)
   let fold_lower := (foldr (step s) X (range j).reverse)
   rw [show (foldr (step s) X (range j).reverse) = fold_lower from rfl] at ⊢ a0
   have a1 := @split_middle j s fold_lower a0 h2
@@ -241,7 +241,7 @@ lemma RiA_step (X s : ℕ) : RiA X s → ∀ k, RiA (step s k X) s := by
     next h_1 =>
       simp_all only [↓reduceDIte, pair_r, Nat.testBit_or, Bool.or_eq_true, pair_l]
       cases a with
-      | inl h_3 => exact (h0 j h_3).elim λ x hx ↦ ⟨x, @evaln_mono_dom (χ ∅) s s j x (Nat.le_refl s) hx.1, Or.inl hx.2⟩
+      | inl h_3 => exact (h0 j h_3).elim λ x hx ↦ ⟨x, @evaln_mono_dom (χ ∅) s s j x (le_refl s) hx.1, Or.inl hx.2⟩
       | inr h_2 =>
         have kj : k=j := by contrapose h_2; simp [h_2]
         let x := Nat.find h_1
@@ -250,7 +250,7 @@ lemma RiA_step (X s : ℕ) : RiA X s → ∀ k, RiA (step s k X) s := by
         simp [kj] at hx ⊢
         use x
         constructor
-        exact @evaln_mono_dom (χ ∅) s s j x (Nat.le_refl s) (hx.1)
+        exact @evaln_mono_dom (χ ∅) s s j x (le_refl s) (hx.1)
         simp only [Nat.testBit_two_pow_self, or_true]
     next h_1 => simp_all only [↓reduceDIte, not_exists, not_and, not_lt]
   next h => simp_all only [Bool.true_eq_false, ↓reduceIte, Bool.not_eq_false]
@@ -409,21 +409,18 @@ theorem mem_A_iff_enumerated {x} : x ∈ A ↔ ∃ i s:ℕ, ( ¬fs_in (C s).r i 
         exact a4⟩
 
     let  i   := Nat.find hstep
-    have hi  := Nat.find_spec hstep
-    have him := @Nat.find_min _ _ hstep
-    rw [show Nat.find hstep = i from rfl] at hi him
-    use i
-    use sM1
-    let sM2 := sM1 - 1
-    have sM1rw : sM1 = sM2 + 1 := by exact Eq.symm (Nat.sub_add_cancel sM1G1)
+    have hi_prop  := Nat.find_spec hstep
+    have hi_min := @Nat.find_min _ _ hstep
+    rw [show Nat.find hstep = i from rfl] at hi_prop hi_min
+    use i; use sM1
 
     -- we split cases on whether `i` is 0 or not here as the latter case
     -- requires setting up conditions about the `i-1` step of the foldr loop.
-    cases hi2:i with
+    cases hi_val:i with
     | zero =>
-      simp only [hi2] at *
-      simp [-foldr_reverse] at hi
-      have a7 := hi.2.2
+      simp only [hi_val] at *
+      simp [-foldr_reverse] at hi_prop
+      have a7 := hi_prop.2.2
       simp [step] at a7
       have r0 : (C sM1).r % 2 = 0 := by
         contrapose a7
@@ -443,72 +440,69 @@ theorem mem_A_iff_enumerated {x} : x ∈ A ↔ ∃ i s:ℕ, ( ¬fs_in (C s).r i 
         have a11 := Nat.find_spec hn
         constructor
         · exact a11.1
-        · exact λ t ht ↦ λ a ↦ ht t (Nat.le_refl t) a
+        · exact λ t ht ↦ λ a ↦ ht t (le_refl t) a
       next hn =>
         contrapose hn
         simp at hn ⊢
         exact False.elim (hx a7)
 
     | succ iM1 =>
-    have him1 := @him iM1 (by simp [hi2])
-    simp [-foldr_reverse] at him1
-    have hi22 := hi.2.2
-    have him2 := him1 ?_ ?_
+    rw [←hi_val]
+    have him_temp := @hi_min iM1 (by simp [hi_val])
+    simp [-foldr_reverse] at him_temp
+    -- h_iM1: x is not enumerated by the (i-1)ᵗʰ step of the foldr loop.
+    have h_iM1 := him_temp ?_ ?_; clear him_temp hi_min
+    -- h_i: x is enumerated by the iᵗʰ step of the foldr loop.
+    have h_i := hi_prop.2.2
     rotate_left
-    · have := hi.1
-      rw [hi2] at this
+    · have := hi_prop.1
+      rw [hi_val] at this
       omega
-    · have := hi.2.1
+    · have := hi_prop.2.1
       simp [-foldr_reverse] at this
       have a12 : iM1+1 ≤ sM1 := by omega
       have a13 := range_3_way_split a12
-      have hs2 := hs
-      simp [a13, -foldr_reverse] at hs2
-      exact hs2
-    have a12 : iM1+1 ≤ i := by exact Nat.le_of_eq (id (Eq.symm hi2))
+      simp [a13, -foldr_reverse] at hs
+      exact hs
+    have a12 : iM1+1 ≤ i := by exact Nat.le_of_eq (id (Eq.symm hi_val))
     have a13 := range_3_way_split a12
-    -- rw [range_eq_range'] at a13
-    rw [a13] at hi22
-    simp [-foldr_reverse] at hi22
+    rw [a13] at h_i
+    simp [-foldr_reverse] at h_i
     have : i - 1 - iM1 = 0 := by omega
-    simp [this, -foldr_reverse] at hi22
-    clear this a13 a12 him1 him sM1rw sM2
+    simp [this, -foldr_reverse] at h_i
+    clear this a13 a12
 
     let prev := (step sM1 iM1 (foldr (step sM1) (C sM1) (range iM1).reverse))
-    rw [show (step sM1 iM1 (foldr (step sM1) (C sM1) (range iM1).reverse)) = prev from rfl] at hi22 him2
+    rw [show (step sM1 iM1 (foldr (step sM1) (C sM1) (range iM1).reverse)) = prev from rfl] at h_i h_iM1
 
-    have a16 : ¬ fs_in prev.r i := by
-      simp [step] at hi22
-      contrapose hi22
-      simp at hi22
-      simp [hi22]
-      exact him2
-    simp [step, a16] at hi22
+    -- h_iM1_R: `i` is not enumerated into R by the (i-1)ᵗʰ step of the foldr loop.
+    have h_iM1_R : ¬ fs_in prev.r i := by
+      simp [step] at h_i
+      contrapose h_i
+      simp at h_i
+      simp [h_i]
+      exact h_iM1
+    simp [step, h_iM1_R] at h_i
 
     constructor
-    · contrapose hi22
-      simp at hi22
-      rw [←hi2] at hi22
-      have a14 : fs_in (foldr (step sM1) (C sM1) (range iM1).reverse).r i := by
-        have := @fold_preserves_R_mem _ sM1 (C sM1) (range iM1).reverse hi22
-        simp [-foldr_reverse] at this
-        exact this
-      exact fun _ ↦ a16 (step_preserves_R_mem a14)
+    · contrapose h_iM1_R 
+      -- the goal now becomes, if `i∈R` by stage `s-1`, it will be in R later.
+      simp at h_iM1_R ⊢
+      exact step_preserves_R_mem (@fold_preserves_R_mem _ sM1 (C sM1) (range iM1).reverse h_iM1_R)
     constructor
     · omega
     simp only []
-    split at hi22
-    next hh =>
-      have a18 := Nat.find_spec hh
-      have a19 := @Nat.find_min _ _ hh
-      have a17 : x = Nat.find hh := by
-        simp at hi22
-        simp [him2] at hi22
-        exact fs_in_singleton.mp hi22
+    split at h_i
+    next h_found =>
+      have a18 := Nat.find_spec h_found
+      have a19 := @Nat.find_min _ _ h_found
+      have a17 : x = Nat.find h_found := by
+        simp at h_i
+        simp [h_iM1] at h_i
+        exact fs_in_singleton.mp h_i
       rw [←a17] at a18 a19
-      rw [←hi2]
       exact ⟨a18, λ t ht ↦ a19 ht⟩
-    next hh => simp [him2] at hi22
+    next hh => simp [h_iM1] at h_i
 
   -- the reverse direction.
   · intro h
@@ -519,7 +513,7 @@ theorem mem_A_iff_enumerated {x} : x ∈ A ↔ ∃ i s:ℕ, ( ¬fs_in (C s).r i 
     rw [range_3_way_split h1]
     simp [-foldr_reverse]
     let fold_lower := (foldr (step s) (C s) (range j).reverse)
-    have a0 := @split_lower j j s (C s) h0 (Nat.le_refl j)
+    have a0 := @split_lower j j s (C s) h0 (le_refl j)
     by_cases h : fs_in fold_lower.l x
     · exact fold_preserves_A_mem (@step_preserves_A_mem x s j fold_lower h)
     · exact fold_preserves_A_mem (A_step_middle h2 h3 a0)
@@ -537,7 +531,7 @@ lemma N_aux_2 {ywit s x}
 (hs221 : (fun t ↦ t ∈ Wn ∅ (Code.n2c ywit) s ∧ t > 2 * ywit) x)
 : fs_in (C (s+1)).r ywit := by
   simp [C, range_3_way_split hs21, -foldr_reverse]
-  have a2 := @split_lower ywit ywit s _ hs1 (Nat.le_refl ywit)
+  have a2 := @split_lower ywit ywit s _ hs1 (le_refl ywit)
   let prev := (foldr (step s) (C s) (range ywit).reverse)
   rw [show (foldr (step s) (C s) (range ywit).reverse) = prev from rfl] at a2 ⊢
   have a3 : fs_in (step s ywit prev).r ywit := by

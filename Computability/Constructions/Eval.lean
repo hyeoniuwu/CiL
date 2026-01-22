@@ -900,7 +900,7 @@ def c_eval := (c_rfindOpt (c_evaln.comp₃ (right.comp left) (left.comp left) ri
   simp [c_rfindOpt_ev this]
   rw [eval_eq_rfindOpt]
   simp [eval,Seq.seq]
-theorem Computability.eval:Nat.RecursiveIn O (fun ex => eval O ex.l.n2c ex.r) := by
+theorem _root_.Nat.RecursiveIn.Rin.eval:Nat.RecursiveIn O (fun ex => eval O ex.l.n2c ex.r) := by
   apply exists_code.mpr
   use c_eval
   funext x

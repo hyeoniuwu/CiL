@@ -88,7 +88,7 @@ noncomputable def c_evalSet₁ (O:Set ℕ) := choose (@exists_code_for_evalSet�
 @[simp] theorem c_evalSet₁_ev : evalSet O (c_evalSet₁ O) = evalSet₁ O := by exact choose_spec exists_code_for_evalSet₁
 @[simp] theorem c_evalSet₁_ev2 : Computability.eval (χ O) (c_evalSet₁ O) = evalSet₁ O := by exact choose_spec exists_code_for_evalSet₁
 
-private theorem exists_code_for_evalnSet₁ {O:Set ℕ} : ∃ c:Computability.Code, evalSet O c = evalnSet₁ O := by apply ((exists_code_for_evalSet O (evalnSet₁ O)).mp) (Nat.RecursiveIn.of_primrecIn prim_evaln₁)
+private theorem exists_code_for_evalnSet₁ {O:Set ℕ} : ∃ c:Computability.Code, evalSet O c = evalnSet₁ O := by apply ((exists_code_for_evalSet O (evalnSet₁ O)).mp) (Nat.RecursiveIn.Rin.of_primrecIn prim_evaln₁)
 private theorem exists_prim_code_for_evalnSet₁ : ∃ c, c.code_prim ∧ evalnSet₁ O = evalp (χ O) c := by exact code_prim_of_primrecIn prim_evalnSet₁
 noncomputable def c_evalnSet₁ (O:Set ℕ) := choose (@exists_prim_code_for_evalnSet₁ O)
 @[simp] theorem c_evalnSet₁_evp : evalp (χ O) (c_evalnSet₁ O) = evalnSet₁ O := by exact (choose_spec exists_prim_code_for_evalnSet₁).right.symm
@@ -110,215 +110,164 @@ lemma some_comp_simp (a:Part ℕ) {f:ℕ→ℕ} {h:a.Dom}: (Part.some (f (a.get 
 
 namespace Code
 section SetJumpTheorems
-theorem χ_leq_χSetK0 {O:Set ℕ} : Nat.RecursiveIn (χ (SetK0 O)) (χ O) := by
-  let χK0 : ℕ→ℕ := fun ex ↦ if (eval (χ O) ex.l ex.r).Dom then 1 else 0
-  have h0 : χ (SetK0 O) = χK0 := by exact rfl
+open Nat
+open RecursiveIn
+-- namespace Rin = RecursiveIn
+alias Rin := RecursiveIn
+-- #check Rin.oracle
 
-  let g := fun x => if (χ O) x = 0 then Part.none else Part.some 0
+theorem χ_leq_χSetK0 {O:Set ℕ} : Rin (χ (SetK0 O)) (χ O) := by
+  /-
+  We wish to show that `χ O` can be constructed with knowledge of
+    χ (SetK0 O) = k = λ ⟪e,x⟫ ↦ [e:O](x)↓ then 1 else 0.
 
-  have hg : Nat.RecursiveIn (χ O) g := by exact Nat.RecursiveIn.ite Nat.RecursiveIn.oracle Nat.RecursiveIn.none Nat.RecursiveIn.zero
+  Let [c_g:A](x) = if A(x)=0 then ↑ else 0.
 
-  have exists_index_for_g : ∃ c : ℕ, eval (χ O) c = g := by exact exists_code_nat.mp hg
-  rcases exists_index_for_g with ⟨index_g,index_g_is_g⟩
-
-  let f':ℕ→.ℕ := fun x => χK0 (Nat.pair index_g x)
-
+  Then, note that `χ O` = `λ x ↦ k(c_g, x)`.
+  -/
+  let k : ℕ→ℕ := λ ex ↦ if (eval (χ O) ex.l ex.r).Dom then 1 else 0
+  let g := λ x ↦ if (χ O) x = 0 then Part.none else Part.some 0
+  have hg : Rin (χ O) g := Rin.ite Rin.oracle Rin.none Rin.zero
+  rcases exists_code_nat.mp hg with ⟨cg, hcg⟩
+  let f':ℕ→.ℕ := λ x ↦ k ⟪cg, x⟫
   have f_eq_f': (χ O) = f' := by
-      simp only [f']
       funext xs
-      simp only [χK0]
+      simp only [f', k]
       simp only [PFun.coe_val, pair_l, pair_r, Part.coe_some, Part.some_inj]
-      rw [index_g_is_g]
+      rw [hcg]
       simp only [g]
-
       cases Classical.em (χ O xs = 0) with
       | inl h => simp [h]
       | inr h =>
-        simp only [h]
-        simp only [↓reduceIte, Part.some_dom]
-        cases χ_eq_0or1
-        · (expose_names; exact False.elim (h h_1))
-        · (expose_names; exact h_1)
-
-  have f'_recIn_χK0 : Nat.RecursiveIn (χK0) f' := by
-    simp only [f']
-    refine Nat.RecursiveIn.someTotal (↑χK0) (fun x ↦ χK0 (Nat.pair index_g x)) ?_
-    refine Nat.RecursiveIn.totalComp' ?_ ?_
-    · exact Nat.RecursiveIn.oracle
-    · apply Nat.RecursiveIn.of_primrecIn Nat.PrimrecIn.pair_proj
-
-  rw [h0]
+        simp only [h, ↓reduceIte, Part.some_dom]
+        cases χ_eq_0or1 with
+        | inl h2 => exact False.elim (h h2)
+        | inr h2 => exact h2
+  have f'_recIn_k : Rin k f' := by
+    exact Rin.someTotal k (λ x ↦ k ⟪cg, x⟫) $ Rin.totalComp' Rin.oracle (Rin.of_primrecIn PrimrecIn.pair_proj)
   rw [f_eq_f']
-  exact f'_recIn_χK0
-theorem χSetK0_leq_K0χ {O:Set ℕ} : Nat.RecursiveIn (K0 (χ O)) (χ (SetK0 O)) := by
-  let χK0 : ℕ→ℕ := fun ex ↦ if (eval (χ O) ex.l ex.r).Dom then 1 else 0
-  have h0 : χ (SetK0 O) = χK0 := by exact rfl
+  exact f'_recIn_k
 
-  let construction := Nat.sg ∘ K0 (χ O)
-  have construction_eq_goal : χK0 = construction := by
+theorem χSetK0_leq_K0χ {O:Set ℕ} : Rin (K0 (χ O)) (χ (SetK0 O)) := by
+  -- We simply note that `χ (SetK0 O) = Nat.sg ∘ K0 (χ O)`.
+  let k : ℕ→ℕ := λ ex ↦ if (eval (χ O) ex.l ex.r).Dom then 1 else 0
+  have h0 : χ (SetK0 O) = k := by exact rfl
+  let f := sg ∘ K0 (χ O)
+  have k_eq_f : k = f := by
     funext xs
-    simp only [construction, χK0]
-    simp only [Function.comp_apply, Nat.sg, K0, dite_eq_right_iff, Nat.add_eq_zero, one_ne_zero, and_false, imp_false, ite_not]
-  have construction_constructible : Nat.RecursiveIn (K0 (χ O)) construction := by
-    simp only [construction]
-    exact Nat.RecursiveIn.totalComp (Nat.RecursiveIn.of_primrecIn Nat.PrimrecIn.sg) Nat.RecursiveIn.oracle
-
+    simp [f, k]
+  have rin_f : Rin (K0 (χ O)) f := by
+    exact Rin.totalComp (Rin.of_primrecIn Nat.PrimrecIn.sg) Rin.oracle
   rw [h0]
-  rw [construction_eq_goal]
-  exact construction_constructible
-theorem K0χ_leq_χSetK0 {O:Set ℕ} : Nat.RecursiveIn (χ (SetK0 O)) (K0 (χ O)) := by
-  let χK0 : ℕ→ℕ := fun ex ↦ if (eval (χ O) ex.l ex.r).Dom then 1 else 0
-  have h0 : χ (SetK0 O) = χK0 := by exact rfl
-  have h1 (ex:ℕ) : (χK0 ex = 0) = ¬(eval (χ O) ex.l ex.r).Dom := by
-    simp only [χK0]
-    simp only [ite_eq_right_iff, one_ne_zero, imp_false]
-  have h2 (ex:ℕ) : ¬χK0 ex = 0 = (eval (χ O) ex.l ex.r).Dom := by
-    simp only [χK0]
-    simp only [ite_eq_right_iff, one_ne_zero, imp_false, Decidable.not_not]
+  rw [k_eq_f]
+  exact rin_f
 
-  have h3 : (jump (χ O) : ℕ→.ℕ) = (fun ex => if (χK0 ex = 0) then Part.some 0 else (eval (χ O) ex.l ex.r) >>= (Nat.succ:ℕ→.ℕ) :ℕ→.ℕ) := by
+theorem K0χ_leq_χSetK0 {O:Set ℕ} : Rin (χ (SetK0 O)) (K0 (χ O)) := by
+  /-
+  Let k(e,x) = if [e:O](x)↓ then 1 else 0.
+  We wish to that with `k`, we can build `f = K0 (χ O)`, where
+    f(e,x) = 0 if [e:O](x)↑ else [e:O](x)+1.
+  
+  We do this as follows:
+    def f(e,x):
+      if k(e,x)=0, return 0
+      else return [e:O](x) + 1
+  -/
+  let k : ℕ→ℕ := λ ex ↦ if (eval (χ O) ex.l ex.r).Dom then 1 else 0
+  have h1 (ex:ℕ) : k ex = 0 ↔ ¬(eval (χ O) ex.l ex.r).Dom := by simp [k]
+  have h2 (ex:ℕ) : k ex ≠ 0 ↔ (eval (χ O) ex.l ex.r).Dom := by simp [k]
+
+  let f := fun ex => if (k ex = 0) then Part.some 0 else (eval (χ O) ex.l ex.r) >>= (Nat.succ:ℕ→.ℕ)
+  have rin_f : Rin k f := by
+    exact Rin.ite Rin.oracle Rin.zero $
+    Rin.comp Rin.succ (TuringReducible.trans' Rin.eval χ_leq_χSetK0)
+
+  have h3 : (K0 (χ O) : ℕ→.ℕ) = f := by
     funext xs
-    cases Classical.em (χK0 xs = 0) with
-    | inl h =>
-      simp only [h]
-      simp only [↓reduceIte]
-      simp only [(h1 xs)] at h
-      simp [h]
+    cases Classical.em (k xs = 0) with
+    | inl h => simp [h, (h1 xs).mp h, f]
     | inr h =>
-      simp only [h]
-      simp only [↓reduceIte]
-      rw [χsimp]
-
-      simp only [(h2 xs)] at h
-      rw [χsimp] at h
-      simp only [PFun.coe_val, jump]
-      simp [h]
-      -- simp only [h]
-      -- simp only [↓reduceDIte]
-
+      simp only [f, PFun.coe_val, K0, (h2 xs).mp h, ↓reduceDIte, h, ↓reduceIte, Part.bind_eq_bind]
       apply some_comp_simp
 
-  have h5 : Nat.RecursiveIn (χ O) (fun n ↦ eval (χ O) n.l n.r) := by exact Code.Computability.eval
-
-  rw [h0]
   rw [h3]
-  apply Nat.RecursiveIn.ite
-  · exact Nat.RecursiveIn.oracle
-  · exact Nat.RecursiveIn.zero
-  · apply Nat.RecursiveIn.comp
-    · exact Nat.RecursiveIn.succ
-    · apply TuringReducible.trans' h5 χ_leq_χSetK0
+  exact rin_f
 theorem K0χ_eq_χSetK0 (O:Set ℕ) : (K0 (χ O)) ≡ᵀᶠ (χ (SetK0 O)) := ⟨K0χ_leq_χSetK0, χSetK0_leq_K0χ⟩
 theorem χSetK0_eq_K0χ (O:Set ℕ) : (χ (SetK0 O)) ≡ᵀᶠ (K0 (χ O)) := (K0χ_eq_χSetK0 O).symm
 -- the next two theorems are more or less equivalent to some of the above, with minor tweaks.
-theorem χ_leq_χSetK (O:Set ℕ) : Nat.RecursiveIn (χ (SetK O)) (χ O) := by
-  let χK : ℕ→ℕ := fun x ↦ if (eval (χ O) (n2c x) x).Dom then 1 else 0
-  have h0 : χ (SetK O) = χK := by exact rfl
-
-  -- let compute := (K O) ∘ c_evconst
-  -- let h:ℕ→.ℕ := (compute)
-
+theorem χ_leq_χSetK (O:Set ℕ) : Rin (χ (SetK O)) (χ O) := by
+  let χK : ℕ→ℕ := fun x ↦ if (eval (χ O) x x).Dom then 1 else 0
   let g := fun x => if (χ O) x = 0 then Part.none else Part.some 0
-
-  have hg : Nat.RecursiveIn (χ O) g := by exact Nat.RecursiveIn.ite Nat.RecursiveIn.oracle Nat.RecursiveIn.none Nat.RecursiveIn.zero
-
-  have exists_index_for_g : ∃ c : ℕ, eval (χ O) c = g := by exact exists_code_nat.mp hg
-  rcases exists_index_for_g with ⟨index_g,index_g_is_g⟩
-
-  let f':ℕ→.ℕ := fun x => χK (c_evconst $ Nat.pair index_g x)
-
+  have hg : Rin (χ O) g :=  Rin.ite Rin.oracle Rin.none Rin.zero
+  rcases exists_code_nat.mp hg with ⟨cg, hcg⟩
+  let f': ℕ→.ℕ := fun x => χK (c_evconst ⟪cg, x⟫)
   have f_eq_f': (χ O) = f' := by
-    simp only [f']
     funext xs
+    simp only [f']
     simp [χK, c_evconst_ev]
 
-    rw [index_g_is_g]
+    rw [hcg]
     simp only [g]
 
     cases Classical.em (χ O xs = 0) with
     | inl h => simp [h]
     | inr h =>
       simp [h]
-      cases χ_eq_0or1
-      · (expose_names; exact False.elim (h h_1))
-      · (expose_names; exact h_1)
+      cases χ_eq_0or1 with
+      | inl h2 => exact False.elim (h h2)
+      | inr h2 => exact h2
 
   have f'_recIn_χK : Nat.RecursiveIn (χK) f' := by
     simp only [f']
-    refine Nat.RecursiveIn.someTotal (↑χK) (fun x ↦ χK (c_evconst (Nat.pair index_g x))) ?_
-    refine Nat.RecursiveIn.totalComp' ?_ ?_
-    · exact Nat.RecursiveIn.oracle
-    ·
-      apply exists_code.mpr
-      use (c_ev_const.comp₂ (c_const index_g) c_id)
+    refine Rin.someTotal (↑χK) (fun x ↦ χK (c_evconst ⟪cg, x⟫)) ?_
+    refine Rin.totalComp' Rin.oracle ?_
+    · apply exists_code.mpr
+      use (c_ev_const.comp₂ (c_const cg) c_id)
       simp [Seq.seq, c_evconst]
       exact rfl
 
-  rw [h0]
   rw [f_eq_f']
   exact f'_recIn_χK
 theorem Kχ_leq_χSetK (O:Set ℕ) : Nat.RecursiveIn (χ (SetK O)) (K (χ O)) := by
-  let χK : ℕ→ℕ := fun x ↦ if (eval (χ O) (n2c x) x).Dom then 1 else 0
-  have h0 : χ (SetK O) = χK := by exact rfl
-  have h1 (x:ℕ) : (χK x = 0) = ¬(eval (χ O) (n2c x) x).Dom := by
-    simp only [χK]
-    simp only [ite_eq_right_iff, one_ne_zero, imp_false]
-  have h2 (x:ℕ) : ¬χK x = 0 = (eval (χ O) (n2c x) x).Dom := by
-    simp only [χK]
-    simp only [ite_eq_right_iff, one_ne_zero, imp_false, Decidable.not_not]
+  let k : ℕ→ℕ := fun x ↦ if (eval (χ O) (n2c x) x).Dom then 1 else 0
+  have h0 : χ (SetK O) = k := by exact rfl
+  have h1 (x:ℕ) : k x = 0 ↔ ¬(eval (χ O) (n2c x) x).Dom := by simp [k]
+  have h2 (x:ℕ) : k x ≠ 0 ↔ (eval (χ O) (n2c x) x).Dom := by simp [k]
 
-  have h3 : (K (χ O) : ℕ→.ℕ) = (fun x => if (χK x = 0) then 0 else (eval (χ O) x x) >>= (Nat.succ:ℕ→.ℕ) :ℕ→.ℕ) := by
+  let f := fun x => if (k x = 0) then 0 else (eval (χ O) x x) >>= (Nat.succ:ℕ→.ℕ)
+  
+  have h3 : (K (χ O) : ℕ→.ℕ) = f := by
     funext xs
-    cases Classical.em (χK xs = 0) with
+    cases Classical.em (k xs = 0) with
     | inl h =>
-      simp only [h]
-      simp only [↓reduceIte]
-      simp only [(h1 xs)] at h
-      simp only [PFun.coe_val, K, h, ↓reduceDIte]
-      exact rfl
+      simp [f, h, (h1 xs).mp h, K]; rfl
     | inr h =>
+      simp only [χsimp, PFun.coe_val, K, Part.bind_eq_bind, h, ↓reduceIte, f];
+      simp only [(h2 xs), χsimp] at h
       simp only [h]
-      simp only [↓reduceIte]
-      rw [χsimp]
-      simp only [(h2 xs)] at h
-      rw [χsimp] at h
-      simp only [PFun.coe_val, K, h, ↓reduceDIte, Part.bind_eq_bind]
       apply some_comp_simp
 
-  have h5 : Nat.RecursiveIn (χ O) (fun x ↦ eval (↑(χ O)) (n2c x) x) := by
-
-    apply Nat.RecursiveIn.eval_K_computable
+  have rin_f : Rin k f := by
+    apply Rin.ite Rin.oracle Rin.zero $ Rin.comp Rin.succ ?_
+    apply TuringReducible.trans' Nat.RecursiveIn.eval_K_computable (χ_leq_χSetK O)
 
   rw [h0]
   rw [h3]
-  apply Nat.RecursiveIn.ite
-  · exact Nat.RecursiveIn.oracle
-  · exact Nat.RecursiveIn.zero
-  · apply Nat.RecursiveIn.comp
-    · exact Nat.RecursiveIn.succ
-    · apply TuringReducible.trans' h5 (χ_leq_χSetK O)
+  exact rin_f
 theorem χSetK_leq_χSetK0 (O:Set ℕ) : Nat.RecursiveIn (χ (SetK0 O)) (χ (SetK O)) := by
   have main : (χ (SetK O)) = (χ (SetK0 O)) ∘ fun x => Nat.pair x x := by
     funext xs
-    simp only [χ, SetK, Set.mem_setOf_eq, SetK0, Function.comp_apply]
-    simp
+    simp [χ, SetK, SetK0]
   rw [main]
-  exact Nat.RecursiveIn.totalComp Nat.RecursiveIn.oracle (Nat.RecursiveIn.of_primrecIn (Nat.PrimrecIn.pair Nat.PrimrecIn.id Nat.PrimrecIn.id))
-theorem χSetK_eq_Kχ (O:Set ℕ) : (χ (SetK O)) ≡ᵀᶠ (K (χ O)) := ⟨trans (χSetK_leq_χSetK0 O) $ trans (χSetK0_leq_K0χ) $ trans (K0_leq_K (χ O)) $ Nat.RecursiveIn.oracle , Kχ_leq_χSetK O⟩
+  exact Rin.totalComp Rin.oracle (Rin.of_primrecIn (PrimrecIn.pair PrimrecIn.id PrimrecIn.id))
+theorem χSetK_eq_Kχ (O:Set ℕ) : (χ (SetK O)) ≡ᵀᶠ (K (χ O)) := ⟨trans (χSetK_leq_χSetK0 O) $ trans (χSetK0_leq_K0χ) $ trans (K0_leq_K (χ O)) $ Rin.oracle , Kχ_leq_χSetK O⟩
 theorem Kχ_eq_χSetK (O:Set ℕ) : (K (χ O)) ≡ᵀᶠ (χ (SetK O)) := (χSetK_eq_Kχ O).symm
--- #check χK_eq_Kχ
--- why does the below fail?
--- #check K0_eq_K.le
-
 theorem χSetK0_eq_χSetK (O:Set ℕ) : (χ (SetK0 O)) ≡ᵀᶠ (χ (SetK O)) := TuringEquivalent.trans (χSetK0_eq_K0χ O) $ .trans (@K0_eq_K (χ O)) (Kχ_eq_χSetK O)
 theorem SetK0_eq_SetK (O:Set ℕ) : (SetK0 O) ≡ᵀ (SetK O) := ⟨(χSetK0_eq_χSetK O).le, (χSetK0_eq_χSetK O).ge⟩
 theorem Set_leq_SetK (O:Set ℕ) : O ≤ᵀ (SetK O) := χ_leq_χSetK O
-
 theorem χSetK_eq_K0χ (O:Set ℕ) : (χ (SetK O)) ≡ᵀᶠ (K0 (χ O)) := TuringEquivalent.trans (χSetK_eq_Kχ O) K_eq_K0
 theorem K0χ_eq_χSetK (O:Set ℕ) : (K0 (χ O)) ≡ᵀᶠ (χ (SetK O)) := (χSetK_eq_K0χ O).symm
-
 theorem TR_Set_iff_Fn {O₁ O₂} : O₁ ≤ᵀ O₂ ↔ (χ O₁) ≤ᵀᶠ (χ O₂) := Eq.to_iff rfl
-
 theorem SetK0_eq_Jump (O:Set ℕ) : SetK0 O ≡ᵀ O⌜ := SetK0_eq_SetK O
 
 theorem SetJump_not_leq_Set (O:Set ℕ) : ¬O⌜≤ᵀO := by
@@ -362,7 +311,7 @@ theorem evaln_complete_dom : (eval (χ O) c x).Dom ↔ ∃ k, (evaln (χ O) k c 
 theorem Wn_complete {O} {c x} : x ∈ W O c ↔ ∃ k, x ∈ Wn O c k := by
   simp [evalnSet, evalSet]
   exact Iff.trans (Iff.symm Part.dom_iff_mem) (@evaln_complete_dom O c x)
-  
+
 theorem W_le_SetK0 : ∀ c, W O c ≤ᵀ SetK0 O := by
   intro c
   unfold W
