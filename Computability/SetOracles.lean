@@ -16,6 +16,11 @@ import Mathlib.Order.Basic
 
 We setup sets for use as oracles, (e.g. evaluation with sets as oracles, reduction between sets), and many basic definitions in degree theory, along with some basic results.
 
+section basic_definitions:
+  With use of the characteristic function operator `χ`, we are able to talk of sets of naturals as oracles.
+
+  We define `TuringDegree` to be the equivalence classes of sets of naturals under Turing equivalence i.e. `SetTuringEquivalent`.
+
 -/
 
 open Nat
@@ -24,9 +29,10 @@ open Classical
 open Computability.Code
 namespace Computability
 
--- definitions
-noncomputable def χ (O:Set ℕ) : ℕ→ℕ := fun x ↦ if x ∈ O then 1 else 0
-theorem χsimp {O} : χ O = fun x ↦ if x ∈ O then 1 else 0 := by exact rfl
+section basic_definitions
+/-- χ O is the characteristic function of the set O.  -/
+noncomputable def χ (O:Set ℕ) : ℕ→ℕ := λ x ↦ if x ∈ O then 1 else 0
+theorem χsimp {O} : χ O = λ x ↦ if x ∈ O then 1 else 0 := by exact rfl
 @[simp] abbrev SetRecursiveIn (O:Set ℕ) (f:ℕ→.ℕ) : Prop := RecursiveIn (χ O) f
 @[simp] abbrev SetTuringReducible (A O:Set ℕ) : Prop := RecursiveIn (χ O) (χ A)
 @[simp] abbrev SetTuringReducibleStrict (A O:Set ℕ) : Prop := RecursiveIn (χ O) (χ A) ∧ ¬ RecursiveIn (χ A) (χ O)
@@ -81,25 +87,7 @@ scoped[Computability] infix:50 "|ᵀ" => SetTuringDegreeIN
   unfold SetTuringDegreeNLE
   unfold SetTuringDegreeLE
   simp
-section evalSettheorems
-theorem exists_code_for_evalSet (O:Set ℕ) (f:ℕ→.ℕ) : SetRecursiveIn O f ↔ ∃ c:Computability.Code, evalSet O c = f := Computability.exists_code
-private theorem exists_code_for_evalSet₁ {O:Set ℕ} : ∃ c:Computability.Code, evalSet O c = evalSet₁ O := by apply ((exists_code_for_evalSet O (evalSet₁ O)).mp) rec_eval₁
-noncomputable def c_evalSet₁ (O:Set ℕ) := choose (@exists_code_for_evalSet₁ O)
-@[simp] theorem c_evalSet₁_ev : evalSet O (c_evalSet₁ O) = evalSet₁ O := by exact choose_spec exists_code_for_evalSet₁
-@[simp] theorem c_evalSet₁_ev2 : Computability.eval (χ O) (c_evalSet₁ O) = evalSet₁ O := by exact choose_spec exists_code_for_evalSet₁
-
-private theorem exists_code_for_evalnSet₁ {O:Set ℕ} : ∃ c:Computability.Code, evalSet O c = evalnSet₁ O := by apply ((exists_code_for_evalSet O (evalnSet₁ O)).mp) (Nat.RecursiveIn.Rin.of_primrecIn prim_evaln₁)
-private theorem exists_prim_code_for_evalnSet₁ : ∃ c, c.code_prim ∧ evalnSet₁ O = evalp (χ O) c := by exact code_prim_of_primrecIn prim_evalnSet₁
-noncomputable def c_evalnSet₁ (O:Set ℕ) := choose (@exists_prim_code_for_evalnSet₁ O)
-@[simp] theorem c_evalnSet₁_evp : evalp (χ O) (c_evalnSet₁ O) = evalnSet₁ O := by exact (choose_spec exists_prim_code_for_evalnSet₁).right.symm
-@[simp] theorem c_evalnSet₁_prim : code_prim (c_evalnSet₁ O) := by exact (choose_spec exists_prim_code_for_evalnSet₁).left
-@[simp] theorem c_evalnSet₁_ev2 : eval (χ O) (c_evalnSet₁ O) = evalnSet₁ O := by rw [←@evalp_eq_eval (c_evalnSet₁ O) (χ O) c_evalnSet₁_prim]; simp
-@[simp] theorem c_evalnSet₁_ev : evalSet O (c_evalnSet₁ O) = evalnSet₁ O := by simp [evalSet]
-
-private theorem exists_code_for_eval₁ {O:ℕ→ℕ} : ∃ c:Computability.Code, eval O c = eval₁ O := by apply (exists_code.mp) rec_eval₁
-noncomputable def c_eval₁ (O:ℕ→ℕ) := choose (@exists_code_for_eval₁ O)
-@[simp] theorem c_eval₁_ev : eval O (c_eval₁ O) = eval₁ O := by exact choose_spec exists_code_for_eval₁
-end evalSettheorems
+end basic_definitions
 
 -- lemmas
 lemma χ_eq_0or1 : (χ O x = 0) ∨ (χ O x = 1) := by by_cases h : x ∈ O <;> simp [h, χsimp]
@@ -275,15 +263,13 @@ theorem SetJump_not_leq_Set (O:Set ℕ) : ¬O⌜≤ᵀO := by
   simp only [SetJump] at h
   apply K_nle_O
   exact .trans (Kχ_leq_χSetK O) h
-theorem Set_lt_SetJump (O:Set ℕ) : O<ᵀO⌜ := by
-  constructor
-  · exact Set_leq_SetK O
-  · exact SetJump_not_leq_Set O
+theorem Set_lt_SetJump (O:Set ℕ) : O<ᵀO⌜ := ⟨Set_leq_SetK O, SetJump_not_leq_Set O⟩
 end SetJumpTheorems
 
-theorem reducible_iff_code : A≤ᵀB ↔ ∃ c, eval (χ B) c = χ A := by
+theorem reducible_iff_code {A B : Set ℕ} : A≤ᵀB ↔ ∃ c, eval (χ B) c = χ A := by
   simp [TR_Set_iff_Fn, exists_code]
 
+section computably_enumerable
 /-- `W O e` := domain of e^th oracle program -/
 abbrev W (O:Set ℕ) (e : Code) := (evalSet O e).Dom
 /-- `WR O e` := range of e^th oracle program -/
@@ -296,9 +282,8 @@ abbrev WRn (O:Set ℕ) (e : Code) (s : ℕ) := { y | ∃ x, y ∈ evalnSet O s e
 theorem Wn_mono {O} : ∀ {k₁ k₂ c x}, k₁ ≤ k₂ → x ∈ Wn O c k₁ → x ∈ Wn O c k₂ := λ a b ↦ evaln_mono_dom a b
 theorem Wn_sound {O} : ∀ {k c x}, x ∈ Wn O c k → x ∈ W O c := by
   simp [evalnSet, evalSet]
-  intro k c x h
-  have := evaln_sound' h
-  rw [this]
+  intro _ _ _ h
+  rw [evaln_sound' h]
   exact Part.dom_iff_mem.mp trivial
 theorem evaln_complete_dom : (eval (χ O) c x).Dom ↔ ∃ k, (evaln (χ O) k c x).isSome := by
   constructor
@@ -359,14 +344,14 @@ theorem dom_to_ran_prop : (W O e) = (WR O (c_dom_to_ran e)) := by
 end dom_to_ran
 
 section ran_to_dom
-noncomputable def ran_to_dom (O:ℕ→ℕ) : (Code→Code) := fun c => dovetail (c_if_eq'.comp₂ left ((c_eval₁ O).comp₂ (c_const c) right))
-theorem ran_to_dom_ev : (eval O (ran_to_dom O c) y).Dom ↔ ∃ x, y ∈ eval O c x := by
+noncomputable def ran_to_dom : (Code→Code) := fun c => dovetail (c_if_eq'.comp₂ left ((c_eval₁).comp₂ (c_const c) right))
+theorem ran_to_dom_ev : (eval O (ran_to_dom c) y).Dom ↔ ∃ x, y ∈ eval O c x := by
   constructor
   ·
     intro h
     have := dovetail_ev_0 h
-    let dvt := ((eval O (c_if_eq'.comp₂ left ((c_eval₁ O).comp₂ (c_const c) right)).dovetail y).get h)
-    rw [show ((eval O (c_if_eq'.comp₂ left ((c_eval₁ O).comp₂ (c_const c) right)).dovetail y).get h) = dvt from rfl] at this
+    let dvt := ((eval O (c_if_eq'.comp₂ left ((c_eval₁).comp₂ (c_const c) right)).dovetail y).get h)
+    rw [show ((eval O (c_if_eq'.comp₂ left ((c_eval₁).comp₂ (c_const c) right)).dovetail y).get h) = dvt from rfl] at this
     simp at this
     simp [eval] at this
     simp [Seq.seq] at this
@@ -390,7 +375,7 @@ theorem ran_to_dom_ev : (eval O (ran_to_dom O c) y).Dom ↔ ∃ x, y ∈ eval O 
     simp [eval, Seq.seq, eval₁]
     simp [Part.bind_of_mem h2]
 
-theorem ran_to_dom_prop : (WR O e) = (W O (ran_to_dom (χ O) e)) := by
+theorem ran_to_dom_prop : (WR O e) = (W O (ran_to_dom e)) := by
   ext xs
   constructor
 
@@ -400,7 +385,7 @@ theorem ran_to_dom_prop : (WR O e) = (W O (ran_to_dom (χ O) e)) := by
     rw [W]
     have halts := ran_to_dom_ev.mpr (Exists.intro y hy)
     simp
-    use (eval (χ O) (ran_to_dom (χ O) e) xs).get halts
+    use (eval (χ O) (ran_to_dom e) xs).get halts
     exact Part.get_mem halts
   ·
     intro h
@@ -493,7 +478,7 @@ theorem CEin_range : CEin O A ↔ ∃ c, A = WR O c := by
     exact hc
   · intro h
     rcases h with ⟨c,hc⟩
-    use ran_to_dom (χ O) c
+    use ran_to_dom c
     rw [←ran_to_dom_prop]
     exact hc
 
@@ -637,3 +622,6 @@ theorem Cin_iff_CEin_CEin' : A≤ᵀB ↔ (CEin B A ∧ CEin B Aᶜ) := by
       have : dvt = 0 := by contrapose dvtthm; simp [dvtthm]
       simp [dvt] at this
       exact Part.get_eq_iff_eq_some.mp this
+
+
+end computably_enumerable

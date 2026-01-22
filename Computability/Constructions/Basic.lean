@@ -106,15 +106,24 @@ def c_ifdom (c a:Computability.Code) := c_add.comp₂ (zero.comp c) a
 
 
 
-def eval₁ (O:ℕ→ℕ):ℕ→.ℕ := fun ex => eval O ex.l.n2c ex.r
 def c_evaln₁ := c_evaln.comp₃ (left.comp right) (left) (right.comp right)
 def evaln₁ (O:ℕ→ℕ):ℕ→ℕ := fun abc => Encodable.encode (evaln O abc.r.r abc.l.n2c abc.r.l)
 theorem c_evaln₁_evp : evalp O c_evaln₁ = evaln₁ O := by
   simp [c_evaln₁]
   exact rfl
-theorem rec_eval₁ : Nat.RecursiveIn O (eval₁ O) := Nat.RecursiveIn.Rin.eval
 theorem prim_evaln₁ : Nat.PrimrecIn O (evaln₁ O) := by
   simp [← c_evaln₁_evp]
+
+def eval₁ (O:ℕ→ℕ):ℕ→.ℕ := fun ex => eval O ex.l.n2c ex.r
+def c_eval₁ := c_eval
+@[simp] theorem c_eval₁_ev : eval O c_eval₁ = eval₁ O := by
+  simp [c_eval₁]
+  unfold eval₁
+  funext ex
+  rw (config:={occs:=.pos [1]}) [show ex = ⟪ex.l, ex.r⟫ from by simp]
+  exact c_eval_ev
+
+theorem rec_eval₁ : Nat.RecursiveIn O (eval₁ O) := Nat.RecursiveIn.Rin.eval
 
 end Computability.Code
 
