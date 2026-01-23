@@ -197,34 +197,54 @@ theorem AsSize_mono' : (As i).length < (As (i+1)).length := by
   cases Nat.even_or_odd i with
   | inl h =>
     rcases h with ⟨h1,h2⟩
-    have := @AsSize_o2e h1
     have a0 : i=2*h1 := by
       rw [h2]
       exact Eq.symm (Nat.two_mul h1)
     rw [a0]
-    simp_all only [lt_add_iff_pos_right, zero_lt_one]
+    simp [@AsSize_o2e h1]
   | inr h =>
     rcases h with ⟨h1,h2⟩
-    have := @AsSize_e2o h1
     rw [h2]
-    simp_all only []
+    simp [@AsSize_e2o h1]
 theorem AsSize_mono (hij:i<j) : (As i).length < (As j).length := by
   have a0 := @AsSize_mono' i
   have a1 := (@AsBs_Mono_2 (i+1) j (hij)).left
   exact Nat.lt_of_lt_of_le a0 (List.IsPrefix.length_le a1)
+theorem append_len_geq (A B : List α) (h1 : A.length < B.length) (h2 : A ++ l = B) : l.length > 0 := by
+  grind
+theorem nonempt_l2n (A : List ℕ) (h1 : A.length > 0) : l2n A ≠ 0 := by
+  contrapose h1
+  simp at h1 ⊢
+  apply Encodable.encode_inj.mp h1
 theorem As_ex_ext (hij:i<j): ∃ lM1, (As i)++(n2l (lM1+1))=As j := by
-  have a0 := (@AsBs_Mono_2 i j (Nat.le_of_succ_le hij)).left
-  have a1 : (As i).length < (As j).length := by exact AsSize_mono hij
-  rcases a0 with ⟨h1,h2⟩
-  have a2 : h1.length > 0 := by grind
-  have a3 : l2n h1 ≠ 0 := by
-    contrapose a2
-    simp at a2 ⊢
-    apply Encodable.encode_inj.mp a2
-  have a4 : (l2n h1)-1+1=l2n h1 := by exact Nat.succ_pred_eq_of_ne_zero a3
+  rcases (@AsBs_Mono_2 i j (Nat.le_of_succ_le hij)).left with ⟨h1,h2⟩
+  have a2 : h1.length > 0 := append_len_geq (As i) (As j) (AsSize_mono hij) h2
+  have a4 : (l2n h1)-1+1=l2n h1 := Nat.succ_pred_eq_of_ne_zero (nonempt_l2n h1 a2)
   use (l2n h1)-1
-  simp [a4]
-  exact h2
+  simpa [a4]
+theorem BsSize_mono' : (Bs i).length < (Bs (i+1)).length := by
+  cases Nat.even_or_odd i with
+  | inl h =>
+    rcases h with ⟨h1,h2⟩
+    have a0 : i=2*h1 := by
+      rw [h2]
+      exact Eq.symm (Nat.two_mul h1)
+    rw [a0]
+    simp [@BsSize_e2o h1]
+  | inr h =>
+    rcases h with ⟨h1,h2⟩
+    rw [h2]
+    simp [@BsSize_o2e h1]
+theorem BsSize_mono (hij:i<j) : (Bs i).length < (Bs j).length := by
+  have a0 := @BsSize_mono' i
+  have a1 := (@AsBs_Mono_2 (i+1) j (hij)).right
+  exact Nat.lt_of_lt_of_le a0 (List.IsPrefix.length_le a1)
+theorem Bs_ex_ext (hij:i<j): ∃ lM1, (Bs i)++(n2l (lM1+1))=Bs j := by
+  rcases (@AsBs_Mono_2 i j (Nat.le_of_succ_le hij)).right with ⟨h1,h2⟩
+  have a2 : h1.length > 0 := append_len_geq (Bs i) (Bs j) (BsSize_mono hij) h2
+  have a4 : (l2n h1)-1+1=l2n h1 := Nat.succ_pred_eq_of_ne_zero (nonempt_l2n h1 a2)
+  use (l2n h1)-1
+  simpa [a4]
 theorem AsBsSize : i≤(As i).length ∧ i≤(Bs i).length := by
   induction i with
   | zero => exact ⟨Nat.zero_le (As 0).length, Nat.zero_le (Bs 0).length⟩
@@ -285,7 +305,7 @@ The second, `As_Uninjured`, states that the computation $[i:A_{2i+2}](x)$ will h
 We split the proof into two cases, `As_Uninjured_0` and `As_Uninjured_1`, depending on whether the value halts or not (respectively).
 -/
 
-/-- R_wt i is the natural that witnesses requirement `R i`. -/
+/-- R_wt i is the natural that witnesses the requirement `R i`. -/
 private noncomputable def R_wt (i:ℕ) := (Bs (2*(i+1)-1)).length
 @[simp] theorem BsSize_o2e_Rwt : R_wt i < (Bs (2 * (i + 1))).length := by
   rw [show R_wt i = (Bs (2*(i+1)-1)).length from rfl]
@@ -295,11 +315,6 @@ private noncomputable def R_wt (i:ℕ) := (Bs (2*(i+1)-1)).length
   rw [this]
   have := @BsSize_o2e i
   simp_all only [Nat.add_one_sub_one, lt_add_iff_pos_right, zero_lt_one]
-
--- private noncomputable def S_wt (i:ℕ) := (As (2*(i+1)-1)).length
--- @[simp] theorem AsSize_o2e' : S_wt i < (As (2 * (i + 1))).length := by
---   rw [show S_wt i = (As (2*(i+1)-1)).length from rfl]
---   exact AsSize_mono'
 
 /--
 `R_aux_0` proves that `R_wt i` witnesses the failure of program `i` to be the characteristic function of `Bs`;
@@ -318,35 +333,29 @@ private theorem R_aux_0 (i:ℕ) (h:(evals (As (2*i+1+1)) i (R_wt i)).Dom):
 
   lift_lets; extract_lets; expose_names
   have i_1_simp: i_1 = i := rfl
-
-  -- let (eq:=hdvt) dvt := (Computability.eval (λ_↦0) (c_kp54_aux i_1 lb).dovetail Aₚ)
   let (eq:=hdvt) dvt := (finite_ext Aₚ i_1 lb)
   simp (config := {zeta:=false}) only [←hdvt]
 
-  if halts: dvt.Dom then
-    let (eq:=hrf) rf  := dvt.get halts -- rf is a natural such that (eval_string ((n2l A) ++ (n2l rf)) i n).Dom.
-    simp (config := {zeta:=false}) only [←hrf]
-    let (eq:=hAₛ) Aₛ := (n2l Aₚ) ++ (n2l (rf+1))
-    simp (config := {zeta:=false}) only [←hAₛ]
-    simp (config := {zeta:=false}) [halts]
-    lift_lets; extract_lets; expose_names
-
-    have lbrw : R_wt i = (n2l Bₚ).length := rfl
-    simp [lbrw]; simp only [←lbrw]
-
-    have aaa : A_result = (evals (Aₛ) i_1 (R_wt i)).get (finite_ext_prop (of_eq_true (eq_true halts))) := rfl
-    simp (config := {zeta:=false}) only [i_1_simp] at aaa
-    simp [←aaa]
-
-    cases A_result <;> simp [n2b,b2n]
-
-  else
-    exfalso
+  -- if ¬ dvt.Dom, then our entire computation would have diverged, contradicting `h`.
+  have halts : dvt.Dom := by
+    apply byContradiction
+    intro halts
     rcases @As_ex_ext (2*i+1) (2*i+2) (Nat.lt_add_one (2 * i + 1)) with ⟨h3,h2⟩
     have := dovetail_ev_1.mp (Part.eq_none_iff'.mpr halts) h3
     simp [c_kp54_aux_evp, -Denumerable.list_ofNat_succ] at this
     rw [show n2l Aₚ = As (2*i+1) from rfl, h2, i_1_simp] at this
     exact this h
+
+  let (eq:=hrf) rf := dvt.get halts -- rf is a natural such that (eval_string ((n2l A) ++ (n2l rf)) i n).Dom.
+  let (eq:=hAₛ) Aₛ := (n2l Aₚ) ++ (n2l (rf+1))
+  simp (config := {zeta:=false}) only [←hrf, ←hAₛ, halts]
+  simp (config := {zeta:=false}) []
+  lift_lets; extract_lets; expose_names
+
+  have lbrw : R_wt i = (n2l Bₚ).length := rfl
+  simp [lbrw]; simp only [←lbrw]
+  simp [show (evals (Aₛ) i (R_wt i)).get (finite_ext_prop halts) = A_result from rfl]
+  cases A_result <;> simp [n2b,b2n]
 
 theorem R_aux_χ: χ B (R_wt i) = b2n (n2b ((Bs (2 * (i + 1)))[(R_wt i)]'(@BsSize_o2e_Rwt i))) := by
   simp [B,χ]
@@ -371,6 +380,7 @@ theorem As_Uninjured_0 (hh:(evals (As (2*(i+1))) i k).Dom): evals (As (2*(i+1)))
   intro ii hii
   rw [As_Mono_4 (Nat.lt_of_lt_of_le hii (evalc_prop_1 hh)) AsSize]
   split <;> next h => simp [b2n,h]
+
 /- contrapositive of As_Uninjured_0. -/
 theorem As_Uninjured_0' {i:ℕ} : ¬ (evalSet A i k).Dom → ¬ (evals (As (2*(i+1))) i k).Dom := by
   contrapose
@@ -391,7 +401,7 @@ To show \mono{(evals (As (2*(i+1))) i (R\_wt i)).Dom}, it suffices to show that 
 But we know a finite extension must exist, as the use of the computation is finite.
 
 -/
-theorem As_Uninjured_1 : ¬(evals (As (2*i+1+1)) i (R_wt i)).Dom → ¬(evalSet A i (R_wt i)).Dom := by
+lemma As_Uninjured_1 : ¬(evals (As (2*i+1+1)) i (R_wt i)).Dom → ¬(evalSet A i (R_wt i)).Dom := by
   unfold As
   unfold KP54
   simp (config := {zeta:=false})
@@ -442,13 +452,13 @@ theorem As_Uninjured_1 : ¬(evals (As (2*i+1+1)) i (R_wt i)).Dom → ¬(evalSet 
   If `use_compl < 2*i+1`, this means that we don't need an extension at all, as our current string is already an extension of `As (use_compl + 1)`.
 
   To actually prove the computation halts, we appeal to `evalc_prop_4.mp`, which tells us that `evalc` halts if the use is defined and is smaller than the imposed limit (which here is the size of the string `As`),
-  
+
   That the use is defined is proved via the use principle, showing our use is equivalent to the final computation's use.
 
   To show that our use is smaller than the limit:
     · in the case we use `As (use_compl + 1)`, note by monotonicty of `As` its length is `≥ use_compl + 1`.
     · in the other case this follows directly from `use_compl < 2*i+1`.
-  
+
   -/
   if h0 : 2*i+1 ≤ use_compl then
     rcases @As_ex_ext (2*i+1) (use_compl+1) (Nat.add_lt_add_right h0 1) with ⟨x,hx⟩
@@ -495,7 +505,9 @@ theorem As_Uninjured_1 : ¬(evals (As (2*i+1+1)) i (R_wt i)).Dom → ¬(evalSet 
     rw [@As_Mono_4 i2 (2*i+1) (i2 + 1) whatever (hi3) (AsSize)]
     simp only [b2n, ite_eq_ite]
   apply evalc_prop_4.mp <;> (simp only [mainrw]; assumption)
-theorem As_Uninjured_1' {i:ℕ} : (evalSet A i (R_wt i)).Dom  → (evals (As (2*(i+1))) i (R_wt i)).Dom := not_imp_not.mp (@As_Uninjured_1 i)
+lemma As_Uninjured_1' {i:ℕ} : (evalSet A i (R_wt i)).Dom  → (evals (As (2*(i+1))) i (R_wt i)).Dom := not_imp_not.mp (@As_Uninjured_1 i)
+
+/-- states that the computation [i](R_wt i) will remain unchanged. -/
 theorem As_Uninjured (i:ℕ) : evalSet A i (R_wt i) = evals (As (2*(i+1))) i (R_wt i) := by
   if h : (evalSet A i (R_wt i)).Dom then
     rw [@As_Uninjured_0 (i) (R_wt i) (As_Uninjured_1' h)]
@@ -515,6 +527,173 @@ theorem R (i:ℕ) : evalSet A i ≠ χ B := Function.ne_iff.mpr ⟨R_wt i, R_aux
 end R
 
 section S
+/-
+This section is essentially identical to section R, so we remove any comments.
+-/
+private noncomputable def S_wt (i:ℕ) := (As (2*i)).length
+@[simp] theorem AsSize_o2e_wt : S_wt i < (As (2*i+1)).length := by
+  rw [show S_wt i = (As (2*i)).length from rfl]
+  exact AsSize_mono'
+
+private theorem S_aux_0 (i:ℕ) (h:(evals (Bs (2*i+1)) i (S_wt i)).Dom):
+(evals (Bs (2*i+1)) i (S_wt i)).get h ≠ b2n (n2b $ (As (2*i+1))[S_wt i]'(@AsSize_o2e_wt i)) := by
+  unfold Bs
+  unfold As
+  unfold KP54
+  simp (config := {zeta:=false})
+  simp (config := {zetaHave:=false}) only []
+
+  lift_lets; extract_lets; expose_names
+  have i_1_simp: i_1 = i := rfl
+  let (eq:=hdvt) dvt := (finite_ext Bₚ i_1 la)
+  simp (config := {zeta:=false}) only [←hdvt]
+
+  have halts : dvt.Dom := by
+    apply byContradiction
+    intro halts
+    rcases @Bs_ex_ext (2*i) (2*i+1) (Nat.lt_add_one (2*i)) with ⟨h3,h2⟩
+    have := dovetail_ev_1.mp (Part.eq_none_iff'.mpr halts) h3
+    simp [c_kp54_aux_evp, -Denumerable.list_ofNat_succ] at this
+    rw [show n2l Bₚ = Bs (2*i) from rfl, h2, i_1_simp] at this
+    exact this h
+
+  let (eq:=hrf) rf := dvt.get halts
+  let (eq:=hBₛ) Bₛ := (n2l Bₚ) ++ (n2l (rf+1))
+  simp (config := {zeta:=false}) only [←hrf, ←hBₛ, halts]
+  simp (config := {zeta:=false}) []
+  lift_lets; extract_lets; expose_names
+
+  have lbrw : S_wt i = (n2l Aₚ).length := rfl
+  simp [lbrw]; simp only [←lbrw]
+  simp [show (evals (Bₛ) i (S_wt i)).get (finite_ext_prop halts) = B_result from rfl]
+  cases B_result <;> simp [n2b,b2n]
+theorem S_aux_χ: χ A (S_wt i) = b2n (n2b ((As (2*i+1))[(S_wt i)]'(@AsSize_o2e_wt i))) := by
+  simp [A, χ]
+  simp [As_Mono_3 (@AsSize (S_wt i)) (@AsSize_o2e_wt i)]
+  exact rfl
+theorem Bs_Uninjured_0 (hh:(evals (Bs (2*i+1)) i k).Dom): evals (Bs (2*i+1)) i k = evalSet B i k := by
+  simp [B, evalSet]; unfold χ; simp [evals] -- unfold defns
+
+  have h1 := evalc_prop_0 hh
+  simp at h1
+  rw [h1]
+  have hh2 := hh
+  simp [evals, h1] at hh2
+  apply use_principle_eval hh2
+  intro ii hii
+  rw [Bs_Mono_4 (Nat.lt_of_lt_of_le hii (evalc_prop_1 hh)) BsSize]
+  split <;> next h => simp [b2n,h]
+theorem Bs_Uninjured_0' {i:ℕ} : ¬ (evalSet B i k).Dom → ¬ (evals (Bs (2*i+1)) i k).Dom := by
+  contrapose
+  simp only [Decidable.not_not]
+  intro h
+  rwa [←Bs_Uninjured_0 h]
+
+lemma Bs_Uninjured_1 : ¬(evals (Bs (2*i+1)) i (S_wt i)).Dom → ¬(evalSet B i (S_wt i)).Dom := by
+  unfold Bs
+  unfold KP54
+  simp (config := {zeta:=false})
+  lift_lets; extract_lets; expose_names
+  have i_1_simp: i_1 = i := rfl
+  have keqlb : S_wt i = la := rfl
+
+  -- if dvt.Dom, this contradicts our assumption that the computation diverges.
+  if h0 : dvt.Dom then
+    simp (config := {zeta:=false}) [h0]
+    lift_lets; extract_lets; expose_names
+    simp only [List.concat_eq_append, pair_l, Denumerable.ofNat_encode]
+    intro h
+    exfalso
+    have := finite_ext_prop h0
+    simp only [i_1_simp] at this
+    exact h this
+  else
+
+  simp (config := {zeta:=false}) [h0]
+
+  have a1 := dovetail_ev_1.mp (Part.eq_none_iff'.mpr h0)
+  simp [c_kp54_aux_evp, -Denumerable.list_ofNat_succ] at a1
+  intro h; clear h
+  contrapose a1
+  simp at a1
+  rename' a1 => final_comp_halts
+  simp [-Denumerable.list_ofNat_succ]
+  -- the goal now reads:
+  -- if the final computation converges, we must have found some finite extension `x` at stage `2*i+1`.
+
+  rw [i_1_simp]
+  rw [←keqlb]
+  simp only [evals]
+  have use_dom := e2u final_comp_halts
+  let use_compl := (use (χ A) (n2c i) (R_wt i)).get use_dom
+  rw [show n2l Aₚ = As (2*i+1) from rfl]
+  /-
+  As the final computation (on index `i`, input `R_wt i`) only uses up to `use_compl`, this means we only need our string `As` to be as long as `use_compl` for our computation to halt.
+
+  That is, the string `As (use_compl + 1)` is enough to make the computation halt.
+
+  We are currently at stage `2*i+1`, so we split into two cases.
+
+  If `2*i+1 ≤ use_compl`, then we use the extension that will get us to the string `As (use_compl + 1)`.
+  (This can be extracted with `As_ex_ext`).
+
+  If `use_compl < 2*i+1`, this means that we don't need an extension at all, as our current string is already an extension of `As (use_compl + 1)`.
+
+  To actually prove the computation halts, we appeal to `evalc_prop_4.mp`, which tells us that `evalc` halts if the use is defined and is smaller than the imposed limit (which here is the size of the string `As`),
+
+  That the use is defined is proved via the use principle, showing our use is equivalent to the final computation's use.
+
+  To show that our use is smaller than the limit:
+    · in the case we use `As (use_compl + 1)`, note by monotonicty of `As` its length is `≥ use_compl + 1`.
+    · in the other case this follows directly from `use_compl < 2*i+1`.
+
+  -/
+  if h0 : 2*i+1 ≤ use_compl then
+    rcases @As_ex_ext (2*i+1) (use_compl+1) (Nat.add_lt_add_right h0 1) with ⟨x,hx⟩
+    use x
+    rw [hx]
+    -- showing that the current use is equivalent to the final computation's use
+    have mainrw : use (fun e ↦ b2n (n2b ((As (use_compl + 1)).getD e whatever))) i (R_wt i) = use (χ A) i (R_wt i) := by
+      apply Eq.symm
+      refine use_principle_use final_comp_halts ?_
+      intro i2 hi2
+      simp [χ,A]
+      have hi3 : i2 < (As (use_compl + 1)).length := calc
+        i2 < use_compl  := hi2
+        use_compl <  (As (use_compl + 1)).length := AsSize
+      rw [@As_Mono_4 i2 (use_compl+1) (i2 + 1) whatever hi3 (AsSize)]
+      simp only [b2n, ite_eq_ite]
+    have := Nat.le_of_succ_le (@AsSize use_compl)
+    apply evalc_prop_4.mp <;> (simp only [mainrw]; assumption)
+
+  else
+
+  simp at h0
+  use 0 -- use 0, as we do not need any extension
+  -- showing that the use is below the length of our string
+  have a6 : use_compl < (As (2 * i + 1)).length := calc
+    use_compl < 2 * i + 1 := h0
+    _     ≤ (As (2 * i + 1)).length := AsSize
+  have a5 : use_compl ≤ (As (2 * i + 1) ++ n2l (0 + 1)).length := calc
+    use_compl ≤ 2 * i + 1 := Nat.le_of_succ_le h0
+    _     ≤ (As (2 * i + 1)).length := AsSize
+    _     ≤ (As (2 * i + 1) ++ n2l (0 + 1)).length := by
+      simp only [zero_add, List.length_append, le_add_iff_nonneg_right, zero_le]
+
+  -- showing that the current use is equivalent to the final computation's use
+  have mainrw : use (fun e ↦ b2n (n2b ((As (2 * i + 1) ++ n2l (0 + 1)).getD e whatever))) (n2c i) (R_wt i) = use (χ A) (n2c i) (R_wt i):= by
+    apply Eq.symm
+    refine use_principle_use final_comp_halts ?_
+    intro i2 hi2
+    have hi3 := Nat.lt_trans hi2 a6
+    unfold χ
+    unfold A
+    simp
+    rw [@list_access_small _ _ _ [0] hi3]
+    rw [@As_Mono_4 i2 (2*i+1) (i2 + 1) whatever (hi3) (AsSize)]
+    simp only [b2n, ite_eq_ite]
+  apply evalc_prop_4.mp <;> (simp only [mainrw]; assumption)
+
 theorem S (i:ℕ) : evalSet B i ≠ χ A := by sorry
 end S
 
