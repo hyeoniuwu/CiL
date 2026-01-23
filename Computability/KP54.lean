@@ -49,7 +49,7 @@ theorem c_kp54_aux_evp :
 If no such `x` exists, returns `Part.none`.
 -/
 noncomputable def finite_ext (S i l) := eval (λ_↦0) (dovetail (c_kp54_aux i l)) S
-theorem c_kp54_aux_2 (halts:(finite_ext S i l).Dom) :
+theorem finite_ext_prop (halts:(finite_ext S i l).Dom) :
   have dvt := (finite_ext S i l).get halts
   (evals ((n2l S) ++ (n2l (dvt+1))) i l).Dom := by
     have := dovetail_ev_0 halts
@@ -83,26 +83,26 @@ match s with
   have la := (n2l Aₚ).length
 
   if (s+1)%2=0 then -- then s+1=2i+2, and we will work on Rᵢ.
-    let dvt := eval (λ_↦0) (dovetail (c_kp54_aux i lb)) Aₚ -- this is the step where we search for a finite extension.
-    if halts:dvt.Dom then
+    let dvt := finite_ext Aₚ i lb -- this is the step where we search for a finite extension.
+    if halts : dvt.Dom then
       let rf := dvt.get halts -- rf is a natural such that (eval_string ((n2l A) ++ (n2l rf)) i n).Dom.
       let Aₛ := (n2l Aₚ) ++ (n2l (rf+1))
-      let A_result := (evals Aₛ i lb).get (c_kp54_aux_2 halts)
+      let A_result := (evals Aₛ i lb).get (finite_ext_prop halts)
       Nat.pair Aₛ ((n2l Bₚ).concat (Nat.sg' A_result))
     else
       Nat.pair (l2n $ (n2l Aₚ).concat 0) (l2n $ (n2l Bₚ).concat 0)
   else -- then s+1=2i+1, and we will work on Sᵢ.
-    let dvt := eval (λ_↦0) (dovetail (c_kp54_aux i la)) Bₚ
-    if halts:dvt.Dom then
+    let dvt := finite_ext Bₚ i la
+    if halts : dvt.Dom then
       let rf := dvt.get halts
       let Bₛ := (n2l Bₚ) ++ (n2l (rf+1))
-      let B_result := (evals (Bₛ) i la).get (c_kp54_aux_2 halts)
+      let B_result := (evals (Bₛ) i la).get (finite_ext_prop halts)
       Nat.pair ((n2l Aₚ).concat (Nat.sg' B_result)) Bₛ
     else
       Nat.pair (l2n $ (n2l Aₚ).concat 0) (l2n $ (n2l Bₚ).concat 0)
 @[simp] theorem KP54_0_r : n2l (KP54 0).r = [] := by simp [KP54]
 @[simp] theorem KP54_0_l : n2l (KP54 0).l = [] := by simp [KP54]
-#exit
+
 noncomputable def As (s:ℕ) := n2l (KP54 s).l
 noncomputable def Bs (s:ℕ) := n2l (KP54 s).r
 
@@ -319,7 +319,8 @@ private theorem R_aux_0 (i:ℕ) (h:(evals (As (2*i+1+1)) i (R_wt i)).Dom):
   lift_lets; extract_lets; expose_names
   have i_1_simp: i_1 = i := rfl
 
-  let (eq:=hdvt) dvt := (Computability.eval (λ_↦0) (c_kp54_aux i_1 lb).dovetail Aₚ)
+  -- let (eq:=hdvt) dvt := (Computability.eval (λ_↦0) (c_kp54_aux i_1 lb).dovetail Aₚ)
+  let (eq:=hdvt) dvt := (finite_ext Aₚ i_1 lb)
   simp (config := {zeta:=false}) only [←hdvt]
 
   if halts: dvt.Dom then
@@ -333,7 +334,7 @@ private theorem R_aux_0 (i:ℕ) (h:(evals (As (2*i+1+1)) i (R_wt i)).Dom):
     have lbrw : R_wt i = (n2l Bₚ).length := rfl
     simp [lbrw]; simp only [←lbrw]
 
-    have aaa : A_result = (evals (Aₛ) i_1 (R_wt i)).get (c_kp54_aux_2 (of_eq_true (eq_true halts))) := rfl
+    have aaa : A_result = (evals (Aₛ) i_1 (R_wt i)).get (finite_ext_prop (of_eq_true (eq_true halts))) := rfl
     simp (config := {zeta:=false}) only [i_1_simp] at aaa
     simp [←aaa]
 
@@ -405,7 +406,7 @@ theorem As_Uninjured_1 : ¬(evals (As (2*i+1+1)) i (R_wt i)).Dom → ¬(evalSet 
     simp only [List.concat_eq_append, pair_l, Denumerable.ofNat_encode]
     intro h
     exfalso
-    have := c_kp54_aux_2 h0
+    have := finite_ext_prop h0
     simp only [i_1_simp] at this
     exact h this
   else

@@ -187,7 +187,7 @@ def c_kp54 :=
           next h2 => simp [hi, hlb, hAₚ]; congr
           next h2 =>
             simp [hi, hlb, hAₚ] at h2
-            simp [dvt, h2] at this
+            simp [dvt, KP54.finite_ext, h2] at this
         have hAₛ : evalp (K0 (λ_↦0)) Aₛ inp = Aₛ_1 := by simp [Aₛ, Aₛ_1, hAₚ, hrf, -Denumerable.list_ofNat_succ]
         have hA_result : evalp (K0 (λ_↦0)) A_result inp = A_result_1 := by
           simp [A_result, A_result_1]
@@ -219,7 +219,7 @@ def c_kp54 :=
           next h2 => simp [hi]; congr
           next h2 =>
             simp [hi, hla, hBₚ] at h2
-            simp [dvt_1, h2] at this
+            simp [dvt_1, KP54.finite_ext, h2] at this
         have hBₛ : evalp (K0 (λ_↦0)) Bₛ inp = Bₛ_1 := by simp [Bₛ, Bₛ_1, hBₚ, hrf, -Denumerable.list_ofNat_succ]
         have hB_result : evalp (K0 (λ_↦0)) B_result inp = B_result_1 := by
           simp [B_result, B_result_1]
