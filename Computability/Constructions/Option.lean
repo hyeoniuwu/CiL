@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Edwin Park
 -/
 import Computability.Constructions.Primitive
+import Computability.Helper.Partial
 
 open Nat
 open Denumerable

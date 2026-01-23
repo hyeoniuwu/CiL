@@ -4,13 +4,49 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Edwin Park
 -/
 import Computability.Basic
+import Computability.Helper.Partial
 import Mathlib.Tactic.Linarith
+
+/-!
+# Use.lean
+
+In this file we specify the use function. In particular, we implement the *exact* use function, which returns exactly the greatest natural queried during a computation (using `eval`), wrapped in an option type. (If no naturals are queried, `Option.none` is returned.)
+
+We first define the `usen` function, which acts like the `use` function for computations with bounded steps (corresponding to `evaln`). As was done for `evaln` and `eval`, we prove soundness/completeness/monotonicity of `usen` with respect to `use`, yielding a normal form theorem analogous to that of `evaln`.
+
+The main result is the use principle, which states that two different oracles that agree up to the use of a computation, may be interchanged in a computation without changing its result.
+
+For the construction of the use function given here, see Constructions/Use.lean.
+
+## Main declarations
+
+- `usen`: use function for computations with bounded steps.
+- `use`: use function.
+- `usen_mono`: theorem asserting monotonicity of `usen` w.r.t steps.
+- `usen_sound`: theorem asserting soundness of `usen` w.r.t `use`.
+- `usen_complete`: theorem asserting completeness of `usen` w.r.t `use`.
+- `usen_princple`: the use principle, for computations with bounded steps.
+- `use_principle`: the use principle.
+
+## Structure
+
+`usen_none_iff_evaln_none`
+`use_dom_iff_eval_dom` : asserts that
+
+## Notation/quirks
+
+ - Where `x`, `y` are naturals, `⟪x, y⟫ = Nat.pair x y`.
+
+## References
+
+-/
 
 open List Nat
 open Computability.Code
 
 namespace Computability.Code
 
+section evaln_lemmas
 -- general lemmas for evaln
 lemma evaln_sing (h1:a∈(evaln O s1 c x)) (h2:b∈(evaln O s2 c x)): a=b := by
   cases Classical.em (s1≤s2) with
@@ -55,6 +91,9 @@ theorem evaln_eq_eval (h:(evaln O s c x).isSome) : (evaln O s c x).get h = (eval
 lemma nrfind'_geq_xr (h:(evaln O (s) (rfind' cf) x).isSome) : (evaln O (s) (rfind' cf) x).get h ≥ x.r := by
   rw [evaln_eq_eval]
   exact rfind'_geq_xr (en2e h)
+end evaln_lemmas
+
+section rfind_obtain
 def rfind'_obtain (h:(eval O (rfind' cf) x).Dom) : ℕ := ((eval O (rfind' cf) x).get h)-x.r
 def nrfind'_obtain (h:(evaln O s (rfind' cf) x).isSome) : ℕ := ((evaln O s (rfind' cf) x).get h)-x.r
 theorem nrop_eq_rop (h:(evaln O s (rfind' cf) x).isSome) : nrfind'_obtain h = rfind'_obtain (en2e h) := by
@@ -571,7 +610,7 @@ theorem rfind'_obtain_prop_6 (h:(eval O (rfind' cf) x).Dom) :
   rcases evaln_complete''.mp (Part.get_mem h) with ⟨h1,h2⟩
   exact fun j jj =>
     evaln_sound ((nrfind'_obtain_prop_6' (Option.isSome_of_eq_some h2)) j jj)
-
+end rfind_obtain
 
 -- /--
 -- we define the use `max(all naturals queried to the oracle)+1`
@@ -604,7 +643,7 @@ match c with
       max := Nat.max max use_i
     max
 /-- `usen; the use of [c:O]ₛ(x)` -/
-def usen (O:ℕ→ℕ) (c:Code) (s:ℕ) : ℕ→ Option ℕ :=
+def usen (O:ℕ→ℕ) (c:Code) (s:ℕ) : ℕ → Option ℕ :=
 match c,s with
 | _, 0            => λ _ ↦ Option.none
 | zero      , s+1 => λ x ↦ do guard (x≤s); return 0
@@ -645,207 +684,7 @@ match c,s with
     let usen_indt  ← usen O (rfind' cf) s ⟪x.l, x.r+1⟫
     Nat.max usen_base usen_indt
 
--- Custom induction principle used in usen_sound
-def CodeNatK.induction
-  {motive : ℕ → Code → Prop}
-  -- base case: k = 0, c arbitrary
-  (h0 : ∀ c, motive 0 c)
-
-  -- step case: k+1
-  (hzero   : ∀ k, motive (k+1) .zero)
-  (hsucc   : ∀ k, motive (k+1) .succ)
-  (hleft   : ∀ k, motive (k+1) .left)
-  (hright  : ∀ k, motive (k+1) .right)
-  (horacle : ∀ k, motive (k+1) .oracle)
-
-  (hpair : ∀ k cf cg,
-    motive (k+1) cf →
-    motive (k+1) cg →
-    motive (k+1) (.pair cf cg))
-
-  (hcomp : ∀ k cf cg,
-    motive (k+1) cf →
-    motive (k+1) cg →
-    motive (k+1) (.comp cf cg))
-
-  (hprec : ∀ k cf cg,
-    motive (k+1) cf →
-    motive (k+1) cg →
-    motive k (.prec cf cg) →
-    motive (k+1) (.prec cf cg))
-
-  (hrfind : ∀ k cf,
-    (∀ x' ≤ k+1, motive x' cf) →
-    motive (k+1) (.rfind' cf))
-
-  : ∀ k c, motive k c := by
-  intro k
-  induction k using Nat.strongRecOn with
-  | ind k ih =>
-    intro c
-    induction c with
-    | zero   =>
-      cases k with
-      | zero   => exact h0 .zero
-      | succ k => exact hzero k
-    | succ   =>
-      cases k with
-      | zero   => exact h0 .succ
-      | succ k => exact hsucc k
-    | left   =>
-      cases k with
-      | zero   => exact h0 .left
-      | succ k => exact hleft k
-    | right  =>
-      cases k with
-      | zero   => exact h0 .right
-      | succ k => exact hright k
-    | oracle =>
-      cases k with
-      | zero   => exact h0 .oracle
-      | succ k => exact horacle k
-    | pair cf cg hcf hcg =>
-      cases k with
-      | zero   => exact h0 (.pair cf cg)
-      | succ k => exact hpair k cf cg hcf hcg
-    | comp cf cg hcf hcg =>
-      cases k with
-      | zero   => exact h0 (.comp cf cg)
-      | succ k => exact hcomp k cf cg hcf hcg
-    | prec cf cg hcf hcg =>
-      cases k with
-      | zero   => exact h0 (.prec cf cg)
-      | succ k => exact hprec k cf cg hcf hcg (ih k (Nat.lt_succ_self _) (.prec cf cg))
-    | rfind' cf hcf =>
-      cases k with
-      | zero   => exact h0 (.rfind' cf)
-      | succ k =>
-        apply hrfind k cf
-        intro x' hle
-        cases Nat.eq_or_lt_of_le hle with
-        | inl h => rw [h]; exact hcf
-        | inr h => exact ih x' h cf
-
--- TODO: replace ind with an explicit induction scheme
-private def ind : ℕ → Code → ℕ
-| 0, _ => 0
-| _+1, zero => 0
-| _+1, succ => 0
-| _+1, left => 0
-| _+1, right => 0
-| _+1, oracle => 0
-| s+1, pair cf cg => ind (s+1) cf + ind (s+1) cg
-| s+1, comp cf cg => ind (s+1) cf + ind (s+1) cg
-| s+1, prec cf cg =>
-  ind (s+1) cf
-  + ind (s+1) cg
-  + ind s (prec cf cg)
-| s+1, rfind' cf =>
-  ind (s+1) cf
-  + ind s (rfind' cf)
-
-
-theorem usen_none_iff_evaln_none : (usen O c s x) = Option.none ↔ (evaln O s c x) = Option.none := by
--- using evaln.induct doesnt work, the prec inductive hypothesis w cf.prec cg is s+1 instead of s for some reason
-  induction s,c using ind.induct generalizing x with
-  | case1 _ => simp [usen,evaln]
-  | case2 s => simp [usen,evaln]
-  | case3 s => simp [usen,evaln]
-  | case4 s => simp [usen,evaln]
-  | case5 s => simp [usen,evaln]
-  | case6 s => simp [usen,evaln]
-  | case7 s cf cg hcf hcg =>
-    simp [usen,evaln]
-    simp [Seq.seq]
-    cases Classical.em (x≤s) with
-    | inr h => simp [h]
-    | inl h =>
-    simp [h]
-    constructor
-    · intro hh a ha
-      have := (@hcf x).not
-      simp only [Option.ne_none_iff_exists'] at this
-      obtain ⟨a2,ha2⟩ := this.mpr ⟨a,ha⟩
-      exact hcg.mp (Option.eq_none_iff_forall_ne_some.mpr (hh a2 ha2))
-
-    · intro hh a ha
-      apply Option.eq_none_iff_forall_ne_some.mp
-      have := (@hcf x).not
-      simp only [Option.ne_none_iff_exists'] at this
-      obtain ⟨a2,ha2⟩ := this.mp ⟨a,ha⟩
-      exact hcg.mpr (hh a2 ha2)
-  | case8 s cf cg hcf hcg =>
-    simp [usen,evaln]
-    cases Classical.em (x≤s) with
-    | inr h => simp [h]
-    | inl h =>
-    simp [h]
-    constructor
-    · intro hh a ha
-      have := (@hcg x).not
-      simp only [Option.ne_none_iff_exists'] at this
-      obtain ⟨a2,ha2⟩ := this.mpr ⟨a,ha⟩
-      exact hcf.mp (Option.eq_none_iff_forall_ne_some.mpr (hh a2 ha2 a ha))
-    · exact λ hh a ha a3 ha3 ↦ Option.eq_none_iff_forall_ne_some.mp (hcf.mpr (hh a3 ha3))
-  | case9 s cf cg hcf hcg ih =>
-    simp [usen,evaln]
-    cases Classical.em (x≤s) with
-    | inr h => simp [h]
-    | inl h =>
-    simp [h]
-    cases hxr:x.r with
-    | zero => simp; exact hcf
-    | succ xrM1 =>
-    simp only [Option.bind_eq_none_iff, reduceCtorEq, imp_false]
-
-    constructor
-    ·
-      intro hh a ha
-      have := (@ih (Nat.pair x.l xrM1)).not
-      simp only [Option.ne_none_iff_exists'] at this
-      obtain ⟨a2,ha2⟩ := this.mpr ⟨a,ha⟩
-      have := hh a2 ha2 a ha
-      exact hcg.mp (Option.eq_none_iff_forall_ne_some.mpr this)
-    · exact λ hh a ha a3 ha3 ↦ Option.eq_none_iff_forall_ne_some.mp (hcg.mpr (hh a3 ha3))
-  | case10 s cf hcf ih =>
-    simp [usen,evaln]
-    cases Classical.em (x≤s) with
-    | inr h => simp [h]
-    | inl h =>
-    simp [h]
-    constructor
-    ·
-      intro hh a ha
-      have := (@hcf x).not
-      simp only [Option.ne_none_iff_exists'] at this
-      obtain ⟨a2,ha2⟩ := this.mpr ⟨a,ha⟩
-      have := hh a2 ha2 a ha
-
-      cases a with
-      | zero => simp at this
-      | succ n =>
-      simp at this ⊢
-      exact ih.mp (Option.eq_none_iff_forall_ne_some.mpr this)
-
-    · intro hh a ha a3 ha3
-      have := hh a3 ha3
-
-      cases a3 with
-      | zero => simp at this
-      | succ n =>
-      simp at this ⊢
-      apply Option.eq_none_iff_forall_ne_some.mp
-      exact ih.mpr this
-
-theorem usen_dom_iff_evaln_dom : (∃a,a∈(usen O c s x)) ↔ (∃b,b∈(evaln O s c x)) := by
-  have := (@usen_none_iff_evaln_none O c s x).not
-  simp [Option.eq_none_iff_forall_ne_some] at this
-  exact this
-theorem usen_dom_iff_evaln_dom' : ((usen O c s x).isSome) ↔ ((evaln O s c x).isSome) := by
-  have := (@usen_none_iff_evaln_none O c s x).not
-  simp at this
-  simp [isSome_iff_not_none] at this
-  exact Bool.coe_iff_coe.mpr this
+section usen_mono
 theorem usen_bound : ∀ {k c n x}, x ∈ usen O c k n → n < k
   | 0, c, n, x, h => by simp [usen] at h
   | k + 1, c, n, x, h => by
@@ -948,78 +787,6 @@ theorem evaln_mono_dom : ∀ {k₁ k₂ c n}, k₁ ≤ k₂ → (evaln O k₁ c 
   intro k1 k2 c n k1k2 h1
   exact Option.isSome_of_mem (evaln_mono k1k2 (Option.get_mem h1))
 
-lemma part_add {x y : ℕ}: Part.some x + Part.some y = Part.some (x+y) := by
-  exact Part.some_add_some x y
-theorem use_dom_iff_eval_dom : (use O c x).Dom ↔ (eval O c x).Dom := by
-  induction c generalizing x with
-  | zero => exact Eq.to_iff rfl
-  | succ => exact Eq.to_iff rfl
-  | left => exact Eq.to_iff rfl
-  | right => exact Eq.to_iff rfl
-  | oracle => simp [use,eval]
-  | pair cf cg hcf hcg => simp [use,eval,Seq.seq]; simp_all only []
-  | comp cf cg hcf hcg => simp [use,eval,Seq.seq]; simp_all only [and_exists_self]
-  | prec cf cg hcf hcg =>
-    simp [use,eval,Seq.seq]
-    induction x.r with
-    | zero => simp_all
-    | succ xrM1 ih => simp_all
-  | rfind' cf hcf =>
-    constructor
-    · simp [use]
-      intro x_1 h
-      exact x_1
-
-    intro h
-    have rop := rfind'_obtain_prop h
-    let ro := rfind'_obtain h
-    have rwro : rfind'_obtain h = ro := rfl
-    simp [rwro] at rop ⊢
-    rcases rop with ⟨rop1,rop2,rop3⟩
-    have rop4 := rfind'_obtain_prop_4 h
-    simp [rwro] at rop4
-    simp [use]
-    use h
-    have rwro2 : (eval O (rfind' cf) x).get h - x.r = ro := rfl
-    simp [rwro2]
-
-    generalize 0=a at h ⊢
-    revert rop2
-    induction ro generalizing a with
-    | zero =>
-      simp_all
-      intro rop2
-      -- have := rop2 0 (zero_le ro)
-      have := rop2
-      aesop? says
-        simp_all only [ro]
-        split
-        next x_1 b heq => simp_all only [Part.some_dom]
-        next x_1 b heq => simp_all only [Part.some_dom]
-    | succ n ih =>
-      simp (config:={singlePass:=true}) [listrwgen]; simp
-      intro rop2
-      have := hcf.mpr (rop2 (n+1) (le_rfl))
-      simp [Part.Dom.bind this]
-      use this
-      exact ih
-        (a.max ((use O cf (Nat.pair x.l (n + 1 + x.r))).get this))
-        (λ j hj ↦ rop2 (j) (le_add_right_of_le hj))
-
-abbrev e2u : (eval O c x).Dom → (use O c x).Dom := use_dom_iff_eval_dom.mpr
-abbrev u2e : (use O c x).Dom → (eval O c x).Dom := use_dom_iff_eval_dom.mp
-abbrev en2un : (evaln O s c x).isSome → (usen O c s x).isSome := usen_dom_iff_evaln_dom'.mpr
-abbrev un2en : (usen O c s x).isSome → (evaln O s c x).isSome := usen_dom_iff_evaln_dom'.mp
-
-lemma eval_rfind_prop5 :
-x∈eval O (rfind' cf) y→y.r≤x := by
-  simp [eval]
-  grind
-lemma evaln_rfind_prop5 :
-x∈evaln O s (rfind' cf) y→y.r≤x := by
-  intro h
-  exact eval_rfind_prop5 (evaln_sound h)
-
 lemma usen_sing (h1:a∈(usen O c s1 x)) (h2:b∈(usen O c s2 x)): a=b := by
   cases Classical.em (s1≤s2) with
   | inl h =>
@@ -1037,247 +804,212 @@ lemma usen_mono'
   have := usen_mono h2 (Option.get_mem h1)
   simp_all only [Option.mem_def, Option.some_get]
 
-lemma evaln_rfind_prop_aux :
-(∃y,y+x.r∈evaln O (k+1) (rfind' cf) x)
-↔  ¬ (evaln O (k+1) (rfind' cf) x=Option.none) := by
-  constructor
-  intro h
-  grind
-  intro h
-  rcases Option.ne_none_iff_exists'.mp h with ⟨h1,h2⟩
-  have := evaln_rfind_prop5 h2
-  use h1-x.r
-  simp [this]
-  exact h2
+end usen_mono
 
-theorem evaln_rfind_prop_not' :
-¬ y + x.r ∈ evaln O (k + 1) cf.rfind' x ↔
-  (¬0 ∈ evaln O (k + 1 - y) cf (Nat.pair x.l (y + x.r))) ∨
-    ((∃ j ≤ y, evaln O (k + 1 - j) cf ⟪x.l, j+x.r⟫=Option.none) ) ∨
-    (¬ ∀ j < y, 0 ∉ evaln O (k + 1 - j) cf ⟪x.l, j+x.r⟫)
-:= by
+section usen_dom_iff_evaln_dom
+-- TODO: replace ind with an explicit induction scheme
+private def ind : ℕ → Code → ℕ
+| 0, _ => 0
+| _+1, zero => 0
+| _+1, succ => 0
+| _+1, left => 0
+| _+1, right => 0
+| _+1, oracle => 0
+| s+1, pair cf cg => ind (s+1) cf + ind (s+1) cg
+| s+1, comp cf cg => ind (s+1) cf + ind (s+1) cg
+| s+1, prec cf cg =>
+  ind (s+1) cf
+  + ind (s+1) cg
+  + ind s (prec cf cg)
+| s+1, rfind' cf =>
+  ind (s+1) cf
+  + ind s (rfind' cf)
 
-  induction y generalizing x k with
-  | zero =>
-    simp_all
-    constructor
-    intro h
-    contrapose h
-    simp_all
-    simp [evaln]
-    cases em (x≤k) with
-    | inl hh =>  simp [hh,h]
-    | inr hh =>
-      simp [hh, Option.bind]
-      contrapose hh
-      simp
-      exact le_of_lt_succ (evaln_bound h.left)
-
-
-    intro h
-    simp [evaln]
-    cases em (x≤k) with
-    | inr hh => simp [hh, Option.bind]
-    | inl hh =>
-    cases h with
+theorem usen_none_iff_evaln_none : (usen O c s x) = Option.none ↔ (evaln O s c x) = Option.none := by
+-- using evaln.induct doesnt work, the prec inductive hypothesis w cf.prec cg is s+1 instead of s for some reason
+  induction s,c using ind.induct generalizing x with
+  | case1 _ => simp [usen,evaln]
+  | case2 s => simp [usen,evaln]
+  | case3 s => simp [usen,evaln]
+  | case4 s => simp [usen,evaln]
+  | case5 s => simp [usen,evaln]
+  | case6 s => simp [usen,evaln]
+  | case7 s cf cg hcf hcg =>
+    simp [usen,evaln]
+    simp [Seq.seq]
+    cases Classical.em (x≤s) with
     | inr h => simp [h]
     | inl h =>
-    simp [hh]
-    cases em (evaln O (k + 1) cf x=Option.none) with
-    | inl hhh => simp [hhh]
-    | inr hhh =>
-    rcases Option.ne_none_iff_exists'.mp hhh with ⟨h13,h14⟩
-    simp_all
-    intro cont
-    have := evaln_rfind_prop5 cont
-    simp at this
+    simp [h]
+    constructor
+    · intro hh a ha
+      have := (@hcf x).not
+      simp only [Option.ne_none_iff_exists'] at this
+      obtain ⟨a2,ha2⟩ := this.mpr ⟨a,ha⟩
+      exact hcg.mp (Option.eq_none_iff_forall_ne_some.mpr (hh a2 ha2))
 
-  | succ yM1 ih =>
-  have rwadd : yM1 + 1 + x.r = yM1 + (x.r + 1) := by ac_nf
-
-  constructor
-
-  intro this
-  simp [evaln] at this
-  cases em (x≤k) with
-  | inl h =>
-    simp [h] at this
-    cases k with
-    | zero => simp_all [evaln]
-    | succ kM1 =>
-
-    have ih1 := (@ih (kM1) ⟪x.l, x.r+1⟫).mp
-    clear ih
-    simp at ih1
-
-    cases em ((evaln O (kM1+1+1) cf x)=Option.none) with
-    | inl hh =>
-      simp_all
-      apply Or.inr; apply Or.inl
-      use 0
-      simpa
-    | inr hh =>
-    rcases Option.ne_none_iff_exists'.mp hh with ⟨h13,h14⟩
-    simp_all
-    cases em (h13=0) with
-    | inl hhh =>
-      simp [hhh] at this
-      simp_all
-      apply Or.inr
-      apply Or.inr
-      use 0
-      simpa
-    | inr hhh =>
-    simp [hhh] at this
-    have ih2 := ih1 this
-    clear ih1
-
-    cases ih2 with
-    | inl h => apply Or.inl; assumption
-    | inr h =>
-    cases h with
+    · intro hh a ha
+      apply Option.eq_none_iff_forall_ne_some.mp
+      have := (@hcf x).not
+      simp only [Option.ne_none_iff_exists'] at this
+      obtain ⟨a2,ha2⟩ := this.mp ⟨a,ha⟩
+      exact hcg.mpr (hh a2 ha2)
+  | case8 s cf cg hcf hcg =>
+    simp [usen,evaln]
+    cases Classical.em (x≤s) with
+    | inr h => simp [h]
     | inl h =>
-      apply Or.inr
-      apply Or.inl
-      rcases h with ⟨h1,h2,h3⟩
-      cases h1 with
-      | zero =>
-        simp_all
-        use 1
-        constructor
-        · exact le_add_left 1 yM1
-        simp
-        rw (config:={occs:=.pos [2]}) [add_comm]
-        assumption
-      | succ h1M1 =>
-        simp at h3
-        use h1M1+1+1
-        constructor
-        · simp only [add_le_add_iff_right]
-          exact h2
-        simp only [reduceSubDiff]
-        rwa [Nat.add_right_comm (h1M1 + 1) 1 x.r]
-    | inr h =>
-      apply Or.inr
-      apply Or.inr
-      rcases h with ⟨h1,h2,h3⟩
-      cases h1 with
-      | zero =>
-        simp_all
-        use 1
-        constructor
-        · exact Nat.lt_add_of_pos_left h2
-        simp
-        rw (config:={occs:=.pos [2]}) [add_comm]
-        assumption
-      | succ h1M1 =>
-        simp at h3
-        use h1M1+1+1
-        constructor
-        · simp only [add_lt_add_iff_right]
-          exact h2
-        simp only [reduceSubDiff]
-        rwa [Nat.add_right_comm (h1M1 + 1) 1 x.r]
+    simp [h]
+    constructor
+    · intro hh a ha
+      have := (@hcg x).not
+      simp only [Option.ne_none_iff_exists'] at this
+      obtain ⟨a2,ha2⟩ := this.mpr ⟨a,ha⟩
+      exact hcf.mp (Option.eq_none_iff_forall_ne_some.mpr (hh a2 ha2 a ha))
+    · exact λ hh a ha a3 ha3 ↦ Option.eq_none_iff_forall_ne_some.mp (hcf.mpr (hh a3 ha3))
+  | case9 s cf cg hcf hcg ih =>
+    simp [usen,evaln]
+    cases Classical.em (x≤s) with
+    | inr h => simp [h]
+    | inl h =>
+    simp [h]
+    cases hxr:x.r with
+    | zero => simp; exact hcf
+    | succ xrM1 =>
+    simp only [Option.bind_eq_none_iff, reduceCtorEq, imp_false]
 
-  | inr h =>
-    apply Or.inl
-    simp at h
-    have : x < (Nat.pair x.l (yM1 + 1 + x.r)) := by
-      rw (config:={occs:=.pos [1]})  [show x=Nat.pair x.l x.r from by simp]
-      apply pair_lt_pair_right
-      grind only
-    -- have : k
+    constructor
+    ·
+      intro hh a ha
+      have := (@ih (Nat.pair x.l xrM1)).not
+      simp only [Option.ne_none_iff_exists'] at this
+      obtain ⟨a2,ha2⟩ := this.mpr ⟨a,ha⟩
+      have := hh a2 ha2 a ha
+      exact hcg.mp (Option.eq_none_iff_forall_ne_some.mpr this)
+    · exact λ hh a ha a3 ha3 ↦ Option.eq_none_iff_forall_ne_some.mp (hcg.mpr (hh a3 ha3))
+  | case10 s cf hcf ih =>
+    simp [usen,evaln]
+    cases Classical.em (x≤s) with
+    | inr h => simp [h]
+    | inl h =>
+    simp [h]
+    constructor
+    ·
+      intro hh a ha
+      have := (@hcf x).not
+      simp only [Option.ne_none_iff_exists'] at this
+      obtain ⟨a2,ha2⟩ := this.mpr ⟨a,ha⟩
+      have := hh a2 ha2 a ha
 
-    simp
-    have : (k - yM1) < (Nat.pair x.l (yM1 + 1 + x.r)) := by
-      grind
-    contrapose this
-    simp at this
-    have := evaln_bound this
-    exact Nat.not_lt_of_gt this
+      cases a with
+      | zero => simp at this
+      | succ n =>
+      simp at this ⊢
+      exact ih.mp (Option.eq_none_iff_forall_ne_some.mpr this)
 
+    · intro hh a ha a3 ha3
+      have := hh a3 ha3
 
+      cases a3 with
+      | zero => simp at this
+      | succ n =>
+      simp at this ⊢
+      apply Option.eq_none_iff_forall_ne_some.mp
+      exact ih.mpr this
+theorem usen_dom_iff_evaln_dom : (∃a,a∈(usen O c s x)) ↔ (∃b,b∈(evaln O s c x)) := by
+  have := (@usen_none_iff_evaln_none O c s x).not
+  simp [Option.eq_none_iff_forall_ne_some] at this
+  exact this
+theorem usen_dom_iff_evaln_dom' : ((usen O c s x).isSome) ↔ ((evaln O s c x).isSome) := by
+  have := (@usen_none_iff_evaln_none O c s x).not
+  simp at this
+  simp [isSome_iff_not_none] at this
+  exact Bool.coe_iff_coe.mpr this
+abbrev en2un : (evaln O s c x).isSome → (usen O c s x).isSome := usen_dom_iff_evaln_dom'.mpr
+abbrev un2en : (usen O c s x).isSome → (evaln O s c x).isSome := usen_dom_iff_evaln_dom'.mp
+end usen_dom_iff_evaln_dom
 
+section usen_sound
+-- Custom induction principle used in usen_sound
+def CodeNatK.induction
+  {motive : ℕ → Code → Prop}
+  -- base case: k = 0, c arbitrary
+  (h0 : ∀ c, motive 0 c)
 
+  -- step case: k+1
+  (hzero   : ∀ k, motive (k+1) .zero)
+  (hsucc   : ∀ k, motive (k+1) .succ)
+  (hleft   : ∀ k, motive (k+1) .left)
+  (hright  : ∀ k, motive (k+1) .right)
+  (horacle : ∀ k, motive (k+1) .oracle)
 
-  intro this
-  simp [evaln]
-  cases em (x≤k) with
-  | inr hh => simp [hh, Option.bind]
-  | inl xlek =>
-  simp [xlek]
-  cases em ((evaln O (k + 1) cf x)=Option.none) with
-  | inl hh => simp [hh]
-  | inr hh =>
+  (hpair : ∀ k cf cg,
+    motive (k+1) cf →
+    motive (k+1) cg →
+    motive (k+1) (.pair cf cg))
 
+  (hcomp : ∀ k cf cg,
+    motive (k+1) cf →
+    motive (k+1) cg →
+    motive (k+1) (.comp cf cg))
 
+  (hprec : ∀ k cf cg,
+    motive (k+1) cf →
+    motive (k+1) cg →
+    motive k (.prec cf cg) →
+    motive (k+1) (.prec cf cg))
 
-  have : ∃z,z∈ evaln O (k + 1) cf x := by exact Option.ne_none_iff_exists'.mp hh
-  rcases this with ⟨h13,h14⟩
-  simp_all
-  cases em (h13=0) with
-  | inl hhh =>
-    simp [hhh]
-    grind
-  | inr hhh =>
-  simp [hhh]
+  (hrfind : ∀ k cf,
+    (∀ x' ≤ k+1, motive x' cf) →
+    motive (k+1) (.rfind' cf))
 
-
-
-  have ih1 := @ih (k-1) ⟪x.l, x.r+1⟫
-  clear ih
-  simp at ih1
-  cases k with
-  | zero => simp [evaln]
-  | succ kM1 =>
-  simp at *
-
-
-
-  cases this with
-  | inl h => exact ih1.mpr (Or.inl h)
-  | inr h =>
-  cases h with
-  | inl h =>
-    rcases h with ⟨h1,h2,h3⟩
-    cases h1 with
-    | zero => simp_all
-    | succ h1M1 =>
-    have : (∃ j ≤ yM1, evaln O (kM1 + 1 - j) cf (Nat.pair x.l (j + (x.r + 1))) = Option.none) := by
-      use h1M1
-      constructor
-      exact le_of_lt_succ h2
-      simp at h3
-      ac_nf at h3 ⊢
-    exact ih1.mpr (Or.inr (Or.inl this))
-  | inr h =>
-    rcases h with ⟨h1,h2,h3⟩
-    cases h1 with
-    | zero => simp_all
-    | succ h1M1 =>
-    have : ∃ x_1 < yM1, evaln O (kM1 + 1 - x_1) cf (Nat.pair x.l (x_1 + (x.r + 1))) = some 0 := by
-      use h1M1
-      constructor
-      exact succ_lt_succ_iff.mp h2
-      simp at h3
-      ac_nf at h3 ⊢
-    exact ih1.mpr (Or.inr (Or.inr this))
-theorem evaln_rfind_prop :
-y+x.r∈evaln O (k+1) cf.rfind' x
-↔
-0∈(evaln O (k+1-y) cf ⟪x.l, y+x.r⟫)
-∧ (∀ j ≤ y, ∃z,z∈(evaln O (k+1-j) cf ⟪x.l, j+x.r⟫))
-∧ (∀ j < y, ¬0∈(evaln O (k+1-j) cf ⟪x.l, j+x.r⟫)) := by
-  suffices ¬ y + x.r ∈ evaln O (k + 1) cf.rfind' x ↔
-  (¬0 ∈ evaln O (k + 1 - y) cf (Nat.pair x.l (y + x.r))) ∨
-    ((∃ j ≤ y, evaln O (k + 1 - j) cf ⟪x.l, j+x.r⟫=Option.none) ) ∨
-    (¬ ∀ j < y, 0 ∉ evaln O (k + 1 - j) cf ⟪x.l, j+x.r⟫) from by
-      apply Iff.not at this
-      simp
-      simp [Option.ne_none_iff_exists'] at this
-      assumption
-  exact evaln_rfind_prop_not'
-
+  : ∀ k c, motive k c := by
+  intro k
+  induction k using Nat.strongRecOn with
+  | ind k ih =>
+    intro c
+    induction c with
+    | zero   =>
+      cases k with
+      | zero   => exact h0 .zero
+      | succ k => exact hzero k
+    | succ   =>
+      cases k with
+      | zero   => exact h0 .succ
+      | succ k => exact hsucc k
+    | left   =>
+      cases k with
+      | zero   => exact h0 .left
+      | succ k => exact hleft k
+    | right  =>
+      cases k with
+      | zero   => exact h0 .right
+      | succ k => exact hright k
+    | oracle =>
+      cases k with
+      | zero   => exact h0 .oracle
+      | succ k => exact horacle k
+    | pair cf cg hcf hcg =>
+      cases k with
+      | zero   => exact h0 (.pair cf cg)
+      | succ k => exact hpair k cf cg hcf hcg
+    | comp cf cg hcf hcg =>
+      cases k with
+      | zero   => exact h0 (.comp cf cg)
+      | succ k => exact hcomp k cf cg hcf hcg
+    | prec cf cg hcf hcg =>
+      cases k with
+      | zero   => exact h0 (.prec cf cg)
+      | succ k => exact hprec k cf cg hcf hcg (ih k (Nat.lt_succ_self _) (.prec cf cg))
+    | rfind' cf hcf =>
+      cases k with
+      | zero   => exact h0 (.rfind' cf)
+      | succ k =>
+        apply hrfind k cf
+        intro x' hle
+        cases Nat.eq_or_lt_of_le hle with
+        | inl h => rw [h]; exact hcf
+        | inr h => exact ih x' h cf
 
 theorem usen_rfind_prop_aux'' {cf:Code} :
 (usen O cf.rfind' (k + 1) n).isSome
@@ -1318,14 +1050,7 @@ theorem usen_rfind_prop_aux {cf:Code} :
   intro h
   have : (usen O cf.rfind' (k + 1) n).isSome := by exact Option.isSome_of_mem h
   exact usen_rfind_prop_aux' this
-theorem use_rfind_prop (hu:(use O (rfind' cf) n).Dom):
-∀j≤rfind'_obtain (u2e hu),
-  (use O cf (Nat.pair n.l (n.r+j))).Dom
-  -- and also the maximum of these is equal to the usen.
-:= by
-  intro j hjro
-  rw [add_comm]
-  exact e2u ((rfind'_obtain_prop (u2e hu)).right.left j hjro)
+
 theorem usen_rfind_prop' (hu:(usen O (rfind' cf) (k + 1) n).isSome):
 ∀j≤rfind'_obtain (usen_rfind_prop_aux' hu),
   (usen O cf (k + 1 - j) (Nat.pair n.l (n.r+j))).isSome
@@ -1371,23 +1096,7 @@ x≤k-1
   have evaln_base_dom : (evaln O (k -1+1) cf x).isSome := by exact un2en usen_base_dom
   simp [isSome.bind evaln_base_dom] at h ⊢
   simp [evaln_base_dom]
-lemma nrfh (h:(usen O (rfind' cf) k x)=some y) : (if (evaln O (k) cf x).get (nrf (Option.isSome_of_mem h)).right.right = 0 then usen O cf (k) x
-    else
-      (usen O cf.rfind' (k - 1) ⟪x.l, x.r+1⟫).bind fun usen_indt ↦
-        some (((usen O cf (k) x).get (nrf (Option.isSome_of_mem h)).right.left).max usen_indt)) = some y := by
-  have := (nrf (Option.isSome_of_mem h))
-  have : k≠0 := by
-    contrapose h; simp at h; simp [h]
-    simp [usen]
-  have keqkM1P1 : k=k-1+1 := by exact Eq.symm (succ_pred_eq_of_ne_zero this)
-  rcases nrf (Option.isSome_of_mem h) with ⟨xlek,usen_base_dom,evaln_base_dom⟩
-  simp (config:={singlePass:=true}) [keqkM1P1] at h ⊢ usen_base_dom evaln_base_dom
 
-  simp [usen] at h
-  simp [xlek] at h ⊢
-  simp [isSome.bind usen_base_dom] at h
-  simp [isSome.bind evaln_base_dom] at h ⊢
-  exact h
 lemma unrpeq2' :
 ((eval O cf x).get evalnbasedom = 0)
 ↔
@@ -2071,6 +1780,51 @@ theorem usen_sound : ∀ {c s n x}, x ∈ usen O c s n → x ∈ use O c n
       constructor
       use h3
       exact ih (base.max h3) aux0 h5
+end usen_sound
+
+theorem eval_dom_imp_evaln (h:(eval O c x).Dom) : ∃ s, (evaln O s c x).isSome := by
+  rcases evaln_complete.mp (Part.get_mem h) with ⟨k, hk⟩
+  use k
+  exact Option.isSome_of_mem hk
+
+theorem use_dom_iff_eval_dom : (use O c x).Dom ↔ (eval O c x).Dom := by
+  constructor
+  · induction c generalizing x with
+    | zero => exact id
+    | succ => exact id
+    | left => exact id
+    | right => exact id
+    | oracle => exact id
+    | pair cf cg hcf hcg => simp [use,eval,Seq.seq]; simp_all
+    | comp cf cg hcf hcg => simp [use,eval,Seq.seq]; simp_all
+    | prec cf cg hcf hcg =>
+      simp [use,eval,Seq.seq]
+      induction x.r with
+      | zero => simp_all
+      | succ xrM1 ih =>
+      intro a
+      simp_all only [Part.bind_dom, Part.map_Dom, exists_prop, exists_and_left, exists_true_left, forall_const]
+    | rfind' cf hcf =>
+      simp [use]
+      intro x_1 h
+      exact x_1
+  intro h
+  rcases eval_dom_imp_evaln h with ⟨s, hs⟩
+  exact Part.mem_imp_dom $ usen_sound $ Option.get_mem $ en2un hs
+
+
+abbrev e2u : (eval O c x).Dom → (use O c x).Dom := use_dom_iff_eval_dom.mpr
+abbrev u2e : (use O c x).Dom → (eval O c x).Dom := use_dom_iff_eval_dom.mp
+theorem use_rfind_prop (hu:(use O (rfind' cf) n).Dom):
+∀j≤rfind'_obtain (u2e hu),
+  (use O cf (Nat.pair n.l (n.r+j))).Dom
+  -- and also the maximum of these is equal to the usen.
+:= by
+  intro j hjro
+  rw [add_comm]
+  exact e2u ((rfind'_obtain_prop (u2e hu)).right.left j hjro)
+
+
 
 lemma lemlemlem
 {a n:ℕ}
@@ -2243,7 +1997,10 @@ lemma lemlemlem3
         exact (Part.eq_get_iff_mem dom1).mpr (usen_sound g2)
       rw [this]
       exact iihh2
-
+lemma eval_rfind_prop5 :
+x∈eval O (rfind' cf) y→y.r≤x := by
+  simp [eval]
+  grind
 -- set_option diagnostics true in
 set_option maxHeartbeats 1000000 in
 theorem usen_complete {c n x} : x ∈ use O c n ↔ ∃ s, x ∈ usen O c s n := by
