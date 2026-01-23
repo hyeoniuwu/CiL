@@ -92,23 +92,19 @@ match s with
 noncomputable def As (s:ℕ) := n2l (KP54 s).l
 noncomputable def Bs (s:ℕ) := n2l (KP54 s).r
 
-
+section AsBs_Mono
 -- We prove a bunch of theorems about the monotonicity of growth of the strings `As` and `Bs`, and their sizes.
 theorem AsBs_Mono_0 : (As i) <+: (As (i+1)) ∧ (Bs i) <+: (Bs (i+1)) := by
   unfold As
   unfold Bs
-  -- rw (config:={occs:=.pos [2,3]}) [KP54]
   rw (config:={occs:=.pos [1,2]}) [KP54]
   simp (config := {zeta:=false}) [-Nat.rfind_dom]
-  -- lift_lets
-  -- extract_lets
-  -- expose_names
-  if h0: (i+1) % 2 = 0 then
+  if h0 : (i+1) % 2 = 0 then
     simp [h0,-Nat.rfind_dom]
-    aesop
+    split <;> simp
   else
     simp [h0,-Nat.rfind_dom]
-    aesop
+    split <;> simp
 theorem AsBs_Mono_1 : (As i) <+: (As (i+j)) ∧ (Bs i) <+: (Bs (i+j)) := by
   induction j with
   | zero => simp_all
@@ -120,45 +116,33 @@ theorem AsBs_Mono_1 : (As i) <+: (As (i+j)) ∧ (Bs i) <+: (Bs (i+j)) := by
 theorem AsBs_Mono_2 (h:i≤j) : (As i) <+: (As j) ∧ (Bs i) <+: (Bs j) := by
   rw [Eq.symm (Nat.add_sub_of_le h)]
   exact AsBs_Mono_1
-
 theorem As_Mono_3
 (hi:k<(As i).length)
 (hh:k<(As j).length)
 : (As i)[k] = (As j)[k] := by
   cases Classical.em (i≤j) with
-  | inl h =>
-    have := (AsBs_Mono_2 h).left
-    exact List.IsPrefix.getElem this hi
+  | inl h => exact List.IsPrefix.getElem ((AsBs_Mono_2 h).left) hi
   | inr h =>
     simp at h
-    have := (AsBs_Mono_2 (Nat.le_of_succ_le h)).left
-    exact Eq.symm (List.IsPrefix.getElem this hh)
+    exact (List.IsPrefix.getElem (AsBs_Mono_2 (Nat.le_of_succ_le h)).left hh).symm
 theorem Bs_Mono_3
 (hi:k<(Bs i).length)
 (hh:k<(Bs j).length)
 : (Bs i)[k] = (Bs j)[k] := by
   cases Classical.em (i≤j) with
-  | inl h =>
-    have := (AsBs_Mono_2 h).right
-    exact List.IsPrefix.getElem this hi
+  | inl h => exact List.IsPrefix.getElem ((AsBs_Mono_2 h).right) hi
   | inr h =>
     simp at h
     have := (AsBs_Mono_2 (Nat.le_of_succ_le h)).right
     exact Eq.symm (List.IsPrefix.getElem this hh)
-theorem As_Mono_4
-(hii : ii < (As j).length)
-(asz : ii < (As k).length)
-:
+theorem As_Mono_4 (hii : ii < (As j).length) (asz : ii < (As k).length) :
 ((As j)[ii]?.getD smth) = (As k)[ii] := by
   have : (As j)[ii]?.getD smth = (As k)[ii] := by
     have : (As j)[ii]?.getD smth = (As j)[ii] := by simp only [getElem?_pos, Option.getD_some,hii]
     rw [this]
     exact As_Mono_3 hii asz
   rw [this]
-theorem Bs_Mono_4
-(hii : ii < (Bs j).length)
-(asz : ii < (Bs k).length)
-:
+theorem Bs_Mono_4 (hii : ii < (Bs j).length) (asz : ii < (Bs k).length) :
 ((Bs j)[ii]?.getD smth) = (Bs k)[ii] := by
   have : (Bs j)[ii]?.getD smth = (Bs k)[ii] := by
     have : (Bs j)[ii]?.getD smth = (Bs j)[ii] := by simp only [getElem?_pos, Option.getD_some,hii]
@@ -214,7 +198,7 @@ theorem AsSize_mono (hij:i<j) : (As i).length < (As j).length := by
   have a0 := @AsSize_mono' i
   have a1 := (@AsBs_Mono_2 (i+1) j (hij)).left
   exact Nat.lt_of_lt_of_le a0 (List.IsPrefix.length_le a1)
-theorem Asexext (hij:i<j): ∃ lM1, (As i)++(n2l (lM1+1))=As j := by
+theorem As_ex_ext (hij:i<j): ∃ lM1, (As i)++(n2l (lM1+1))=As j := by
   have a0 := (@AsBs_Mono_2 i j (Nat.le_of_succ_le hij)).left
   have a1 : (As i).length < (As j).length := by exact AsSize_mono hij
   rcases a0 with ⟨h1,h2⟩
@@ -264,9 +248,32 @@ theorem AsBsSize : i≤(As i).length ∧ i≤(Bs i).length := by
 @[simp] theorem AsSize : i<(As (i+1)).length := (@AsBsSize (i+1)).left
 @[simp] theorem BsSize : i<(Bs (i+1)).length := (@AsBsSize (i+1)).right
 
--- wt stands for witness. R_wt i is the natural that witnesses requirement `R i`.
+-- The "completed" sets `A` and `B`, defined from `As` and `Bs` noting that by stage `x+1`, index `x` is defined by the monotonicty theorems above.
+-- The [x] 's require the theorems AsSize and BsSize above.
+def A := { x | n2b (As (x+1))[x] }
+def B := { x | n2b (Bs (x+1))[x] }
+end AsBs_Mono
+
+section R
+/-
+We wish to prove
+`theorem R (i:ℕ) : eval A i ≠ χ B`.
+
+We shall prove this with two auxiliary lemmas. The first, `R_aux_0`, states that for any $i\in\N$, $n=\sz{B_s(2i+1)}$ witnesses:
+\begin{align}
+	[i:A_{2i+2}](n)\ne \lss{n\in B_{2i+2}}.
+\end{align}
+
+We will define that witness as `R_wt`.
+
+The second, `As_Uninjured`, states that the computation $[i:A_{2i+2}](x)$ will have its value unchanged through subsequent stages.
+
+We split the proof into two cases, `As_Uninjured_0` and `As_Uninjured_1`, depending on whether the value halts or not (respectively).
+-/
+
+/-- R_wt i is the natural that witnesses requirement `R i`. -/
 private noncomputable def R_wt (i:ℕ) := (Bs (2*(i+1)-1)).length
-@[simp] theorem BsSize_o2e' : R_wt i < (Bs (2 * (i + 1))).length := by
+@[simp] theorem BsSize_o2e_Rwt : R_wt i < (Bs (2 * (i + 1))).length := by
   rw [show R_wt i = (Bs (2*(i+1)-1)).length from rfl]
   have : 2 * (i + 1) - 1 = 2*i+1 := by exact rfl
   rw [this]
@@ -280,13 +287,14 @@ private noncomputable def R_wt (i:ℕ) := (Bs (2*(i+1)-1)).length
 --   rw [show S_wt i = (As (2*(i+1)-1)).length from rfl]
 --   exact AsSize_mono'
 
--- The "completed" sets `A` and `B`, defined from `As` and `Bs` noting that by stage `x+1`, index `x` is defined by the monotonicty theorems above.
--- The [x] 's require the theorems AsSize and BsSize above.
-def A := { x | n2b (As (x+1))[x] }
-def B := { x | n2b (Bs (x+1))[x] }
+/--
+`R_aux_0` proves that `R_wt i` witnesses the failure of program `i` to be the characteristic function of `Bs`;
+that [i:As](R_wt i) ≠ (R_wt i) ∈ Bs.
 
+The proof follows easily from unravelling if-statements.
+-/
 private theorem R_aux_0 (i:ℕ) (h:(evals (As (2*i+1+1)) i (R_wt i)).Dom):
-(evals (As (2*i+1+1)) i (R_wt i)).get h ≠ b2n (n2b $ (Bs (2*i+1+1))[R_wt i]'(@BsSize_o2e' i)) := by
+(evals (As (2*i+1+1)) i (R_wt i)).get h ≠ b2n (n2b $ (Bs (2*i+1+1))[R_wt i]'(@BsSize_o2e_Rwt i)) := by
   unfold Bs
   unfold As
   unfold KP54
@@ -319,19 +327,22 @@ private theorem R_aux_0 (i:ℕ) (h:(evals (As (2*i+1+1)) i (R_wt i)).Dom):
 
   else
     exfalso
-    rcases @Asexext (2*i+1) (2*i+2) (Nat.lt_add_one (2 * i + 1)) with ⟨h3,h2⟩
+    rcases @As_ex_ext (2*i+1) (2*i+2) (Nat.lt_add_one (2 * i + 1)) with ⟨h3,h2⟩
     have := dovetail_ev_1.mp (Part.eq_none_iff'.mpr halts) h3
     simp [c_kp54_aux_evp, -Denumerable.list_ofNat_succ] at this
     rw [show n2l Aₚ = As (2*i+1) from rfl, h2, i_1_simp] at this
     exact this h
 
-theorem R_aux_χ: χ B (R_wt i) = b2n (n2b ((Bs (2 * (i + 1)))[(R_wt i)]'(@BsSize_o2e' i))) := by
+theorem R_aux_χ: χ B (R_wt i) = b2n (n2b ((Bs (2 * (i + 1)))[(R_wt i)]'(@BsSize_o2e_Rwt i))) := by
   simp [B,χ]
-  simp [Bs_Mono_3 (@BsSize (R_wt i)) (@BsSize_o2e' i)]
+  simp [Bs_Mono_3 (@BsSize (R_wt i)) (@BsSize_o2e_Rwt i)]
   exact rfl
 
 /--
 If `[i:As](k)` halts, then its value will be unchanged in all subsequent steps.
+
+The proof follows from an invocation of the use principle. The monotonicity of As proves that the oracles are in-
+deed equivalent up to the use.
 -/
 theorem As_Uninjured_0 (hh:(evals (As (2*(i+1))) i k).Dom): evals (As (2*(i+1))) i k = evalSet A i k := by
   simp [A,evalSet]; unfold χ; simp [evals] -- unfold defns
@@ -339,17 +350,12 @@ theorem As_Uninjured_0 (hh:(evals (As (2*(i+1))) i k).Dom): evals (As (2*(i+1)))
   have h1 := evalc_prop_0 hh
   simp at h1
   rw [h1]
-
   have hh2 := hh
   simp [evals, h1] at hh2
-
   apply use_principle_eval hh2
-
   intro ii hii
   rw [As_Mono_4 (Nat.lt_of_lt_of_le hii (evalc_prop_1 hh)) AsSize]
-  split
-  next h => simp [b2n,h]
-  next h => simp [b2n,h]
+  split <;> next h => simp [b2n,h]
 theorem As_Uninjured_0' {i:ℕ} : ¬ (evalSet A i k).Dom → ¬ (evals (As (2*(i+1))) i k).Dom := by
   contrapose
   simp only [Decidable.not_not]
@@ -358,6 +364,15 @@ theorem As_Uninjured_0' {i:ℕ} : ¬ (evalSet A i k).Dom → ¬ (evals (As (2*(i
   exact h
 /--
 If `[i:As](k)` diverges, then it will always diverge in subsequent steps.
+
+This is proven by contraposition; if the final computation converges, we must have found some finite extension.
+
+If the final computation converges, it must have some finite use $u$.
+
+To show \mono{(evals (As (2*(i+1))) i (R\_wt i)).Dom}, it suffices to show that the corresponding finite extension was found in the KP54 construction procedure.
+
+But we know a finite extension must exist, as the use of the computation is finite.
+
 -/
 theorem As_Uninjured_1 : ¬(evals (As (2*i+1+1)) i (R_wt i)).Dom → ¬(evalSet A i (R_wt i)).Dom := by
   unfold As
@@ -367,7 +382,8 @@ theorem As_Uninjured_1 : ¬(evals (As (2*i+1+1)) i (R_wt i)).Dom → ¬(evalSet 
   have i_1_simp: i_1 = i := rfl
   have keqlb : R_wt i=lb := rfl
 
-  if h0:dvt.Dom then
+  -- if dvt.Dom, this contradicts our assumption that the computation diverges.
+  if h0 : dvt.Dom then
     simp (config := {zeta:=false}) [h0]
     lift_lets; extract_lets; expose_names
     simp only [List.concat_eq_append, pair_l, Denumerable.ofNat_encode]
@@ -376,10 +392,8 @@ theorem As_Uninjured_1 : ¬(evals (As (2*i+1+1)) i (R_wt i)).Dom → ¬(evalSet 
     have := c_kp54_aux_2 h0
     simp only [i_1_simp] at this
     exact h this
-
   else
 
-  simp at h0
   simp (config := {zeta:=false}) [h0]
 
   have a1 := dovetail_ev_1.mp (Part.eq_none_iff'.mpr h0)
@@ -387,65 +401,78 @@ theorem As_Uninjured_1 : ¬(evals (As (2*i+1+1)) i (R_wt i)).Dom → ¬(evalSet 
   intro h; clear h
   contrapose a1
   simp at a1
+  rename' a1 => final_comp_halts
   simp [-Denumerable.list_ofNat_succ]
+  -- the goal now reads:
+  -- if the final computation converges, we must have found some finite extension `x` at stage `2*i+1`.
 
   rw [i_1_simp]
   rw [←keqlb]
-
   simp only [evals]
+  have use_dom := e2u final_comp_halts
+  let use_compl := (use (χ A) (n2c i) (R_wt i)).get use_dom
+  rw [show n2l Aₚ = As (2*i+1) from rfl]
+  /-
+  As the final computation only uses up to `use_compl`, this means we only need our string `As` to be as long as `use_compl`,
+  for our computation to halt.
 
-  have a2 := e2u a1
-  let usecn := (use (χ A) (n2c i) (R_wt i)).get a2
+  That is, the string `As (use_compl + 1)` is enough to make the computation halt.
 
-  have a4 := a2
-  unfold A at a4
-  unfold χ at a4
-  simp at a4
+  We are currently at stage `2*i+1`, so we split into two cases.
 
-  -- use reverse of evalc_prop'' to rephrase the evalc in the goal to just eval.
-  -- then, use the extension that will get the oracle string to As (use).
-  -- the inequality will be satisfies as the list as size greater than use.
+  If `2*i+1 ≤ use_compl`, then we use the extension that will get us to the string `As (use_compl + 1)`.
+  (This can be extracted with `As_ex_ext`).
 
-  have Aprw : n2l Aₚ = As (2*i+1) := rfl
-  rw [Aprw]
-  if h0:2*i+1≤usecn then
+  If `use_compl < 2*i+1`, this means that we don't need an extension at all, as our current string is already an extension of
+  `As (use_compl + 1)`.
+
+  That the use is equivalent, is proven by
+
+  evalc_prop_4.mp tells us that `evalc` halts if the use is defined and is smaller than the imposed limit.
+  In our case, the imposed limit is the size of the string `As`.
+
+
+
+  -/
+  if h0 : 2*i+1 ≤ use_compl then
     -- we want to make (As (2 * i + 1) ++ n2l (x + 1)) equal to (As (usecn + 1))
-    rcases @Asexext (2*i+1) (usecn+1) (Nat.add_lt_add_right h0 1) with ⟨x,hx⟩
+    rcases @As_ex_ext (2*i+1) (use_compl+1) (Nat.add_lt_add_right h0 1) with ⟨x,hx⟩
     use x
     rw [hx]
 
-    have mainrw : (use (χ A) (n2c i) (R_wt i)) = (use (fun e ↦ b2n (n2b ((As (usecn + 1)).getD e whatever))) (n2c i) (R_wt i)) := by
-      refine use_principle_use a1 ?_
+    have mainrw : use (fun e ↦ b2n (n2b ((As (use_compl + 1)).getD e whatever))) i (R_wt i) = use (χ A) i (R_wt i) := by
+      apply Eq.symm
+      refine use_principle_use final_comp_halts ?_
       intro i2 hi2
       simp [χ,A]
-      have hi3 : i2 < (As (usecn + 1)).length := calc
-        i2 < usecn  := hi2
-        usecn <  (As (usecn + 1)).length := AsSize
-      have := @As_Mono_4 i2 (usecn+1) (i2 + 1) whatever hi3 (AsSize)
-      rw [this]
+      have hi3 : i2 < (As (use_compl + 1)).length := calc
+        i2 < use_compl  := hi2
+        use_compl <  (As (use_compl + 1)).length := AsSize
+      rw [@As_Mono_4 i2 (use_compl+1) (i2 + 1) whatever hi3 (AsSize)]
       simp only [b2n, ite_eq_ite]
     apply evalc_prop_4.mp
-    simp only [←mainrw]
-    exact Nat.le_of_succ_le (@AsSize usecn)
-    simp only [←mainrw]
-    exact a2
+    simp only [mainrw]
+    exact Nat.le_of_succ_le (@AsSize use_compl)
+    simp only [mainrw]
+    exact use_dom
 
   else
 
   simp at h0
   use 0
 
-  have a6 : usecn < (As (2 * i + 1)).length := calc
-    usecn < 2 * i + 1 := h0
+  have a6 : use_compl < (As (2 * i + 1)).length := calc
+    use_compl < 2 * i + 1 := h0
     _     ≤ (As (2 * i + 1)).length := AsSize
-  have a5 : usecn ≤ (As (2 * i + 1) ++ n2l (0 + 1)).length := calc
-    usecn ≤ 2 * i + 1 := Nat.le_of_succ_le h0
+  have a5 : use_compl ≤ (As (2 * i + 1) ++ n2l (0 + 1)).length := calc
+    use_compl ≤ 2 * i + 1 := Nat.le_of_succ_le h0
     _     ≤ (As (2 * i + 1)).length := AsSize
     _     ≤ (As (2 * i + 1) ++ n2l (0 + 1)).length := by
       simp only [zero_add, List.length_append, le_add_iff_nonneg_right, zero_le]
 
-  have mainrw : (use (χ A) (n2c i) (R_wt i)) = (use (fun e ↦ b2n (n2b ((As (2 * i + 1) ++ n2l (0 + 1)).getD e whatever))) (n2c i) (R_wt i)):= by
-    refine use_principle_use a1 ?_
+  have mainrw : use (fun e ↦ b2n (n2b ((As (2 * i + 1) ++ n2l (0 + 1)).getD e whatever))) (n2c i) (R_wt i) = use (χ A) (n2c i) (R_wt i):= by
+    apply Eq.symm
+    refine use_principle_use final_comp_halts ?_
     intro i2
     intro hi2
     have hi3 : i2 < (As (2 * i + 1)).length := by exact Nat.lt_trans hi2 a6
@@ -458,13 +485,13 @@ theorem As_Uninjured_1 : ¬(evals (As (2*i+1+1)) i (R_wt i)).Dom → ¬(evalSet 
     rw [this]
     have := @As_Mono_4 i2 (2*i+1) (i2 + 1) whatever (hi3) (AsSize)
     rw [this]
-
     simp only [b2n, ite_eq_ite]
+
   apply evalc_prop_4.mp
-  simp only [←mainrw]
+  simp only [mainrw]
   exact a5
-  simp only [←mainrw]
-  exact a2
+  simp only [mainrw]
+  exact use_dom
 theorem As_Uninjured_1' {i:ℕ} : (evalSet A i (R_wt i)).Dom  → (evals (As (2*(i+1))) i (R_wt i)).Dom := not_imp_not.mp (@As_Uninjured_1 i)
 theorem As_Uninjured (i:ℕ) : evalSet A i (R_wt i) = evals (As (2*(i+1))) i (R_wt i) := by
   if h:(evalSet A i (R_wt i)).Dom then
@@ -482,7 +509,11 @@ theorem R_aux_1 (i:ℕ) : (evalSet A i (R_wt i)) ≠ Part.some ((χ B) (R_wt i))
     simp [Part.eq_none_iff'.mpr h0]
 
 theorem R (i:ℕ) : evalSet A i ≠ χ B := Function.ne_iff.mpr ⟨R_wt i, R_aux_1 i⟩
+end R
+
+section S
 theorem S (i:ℕ) : evalSet B i ≠ χ A := by sorry
+end S
 
 theorem ex_incomparable_sets : ∃ A B:Set ℕ, A|ᵀB := by
   use A

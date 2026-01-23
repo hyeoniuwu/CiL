@@ -155,7 +155,7 @@ theorem K0χ_leq_χSetK0 {O:Set ℕ} : Rin (χ (SetK0 O)) (K0 (χ O)) := by
   Let k(e,x) = if [e:O](x)↓ then 1 else 0.
   We wish to that with `k`, we can build `f = K0 (χ O)`, where
     f(e,x) = 0 if [e:O](x)↑ else [e:O](x)+1.
-  
+
   We do this as follows:
     def f(e,x):
       if k(e,x)=0, return 0
@@ -223,7 +223,7 @@ theorem Kχ_leq_χSetK (O:Set ℕ) : Nat.RecursiveIn (χ (SetK O)) (K (χ O)) :=
   have h2 (x:ℕ) : k x ≠ 0 ↔ (eval (χ O) (n2c x) x).Dom := by simp [k]
 
   let f := fun x => if (k x = 0) then 0 else (eval (χ O) x x) >>= (Nat.succ:ℕ→.ℕ)
-  
+
   have h3 : (K (χ O) : ℕ→.ℕ) = f := by
     funext xs
     cases Classical.em (k xs = 0) with
@@ -296,24 +296,30 @@ theorem evaln_complete_dom : (eval (χ O) c x).Dom ↔ ∃ k, (evaln (χ O) k c 
 theorem Wn_complete {O} {c x} : x ∈ W O c ↔ ∃ k, x ∈ Wn O c k := by
   simp [evalnSet, evalSet]
   exact Iff.trans (Iff.symm Part.dom_iff_mem) (@evaln_complete_dom O c x)
-
 theorem W_le_SetK0 : ∀ c, W O c ≤ᵀ SetK0 O := by
   intro c
-  unfold W
   apply reducible_iff_code.mpr
   use oracle.comp $ pair (c_const c) c_id
   funext x
   simp [evalSet, eval, Seq.seq, SetK0, χ]
-  have : ((eval (χ O) c x).Dom) ↔ (∃ y, y ∈ eval (χ O) c x) := Part.dom_iff_mem
-  exact if_ctx_congr this (congrFun rfl) (congrFun rfl)
+  exact if_ctx_congr Part.dom_iff_mem (congrFun rfl) (congrFun rfl)
 
-theorem W_le_Jump : ∀ c, W O c ≤ᵀ O⌜ := by
-  intro c
-  have := @W_le_SetK0 O c
-  have h2 := SetK0_eq_Jump O
-  exact LE.le.trans_antisymmRel this h2
+theorem W_le_Jump : ∀ c, W O c ≤ᵀ O⌜ :=
+  λ c ↦ LE.le.trans_antisymmRel (@W_le_SetK0 O c) (SetK0_eq_Jump O)
 
 section dom_to_ran
+/-
+Given a code `e`, we wish to find a code `f(e)` s.t:
+
+dom[e] = ran[f(e)].
+
+That is, [e](x)↓ iff ∃ y, x ∈ [f(e)](y).
+
+we can simply define f(e) to be:
+def [f(e)](y):
+  run [e](y)
+  return y
+-/
 def c_dom_to_ran (e:Code) := c_ifdom (c_eval.comp₂ (c_const e) c_id) c_id
 theorem dom_to_ran_prop : (W O e) = (WR O (c_dom_to_ran e)) := by
   ext xs
@@ -325,8 +331,7 @@ theorem dom_to_ran_prop : (W O e) = (WR O (c_dom_to_ran e)) := by
     use xs
     simp [evalSet, Seq.seq, Part.mem_imp_dom hy]
 
-  ·
-    intro h
+  · intro h
     simp [PFun.ran] at h
     rcases h with ⟨h0,h1⟩
     simp [evalSet] at h1
@@ -339,16 +344,27 @@ theorem dom_to_ran_prop : (W O e) = (WR O (c_dom_to_ran e)) := by
       next h => exact Part.notMem_none xs
     rw [←this] at h1
     split at h1
-    · (expose_names; exact Part.dom_iff_mem.mp h)
+    next h => exact Part.dom_iff_mem.mp h
     · simp_all only [Part.notMem_none]
 end dom_to_ran
 
 section ran_to_dom
-noncomputable def ran_to_dom : (Code→Code) := fun c => dovetail (c_if_eq'.comp₂ left ((c_eval₁).comp₂ (c_const c) right))
+/-
+Given a code `e`, we wish to find a code `f(e)` s.t:
+
+ran[e] = dom[f(e)].
+
+That is, [f(e)](x)↓ iff ∃ y, x ∈ [e](y).
+
+we can define f(e) to be:
+def [f(e)](x):
+  dovetail [e] to see if x is in its range.
+  return anything.
+-/
+noncomputable def ran_to_dom := λ c:Code ↦ dovetail (c_if_eq'.comp₂ left ((c_eval₁).comp₂ (c_const c) right))
 theorem ran_to_dom_ev : (eval O (ran_to_dom c) y).Dom ↔ ∃ x, y ∈ eval O c x := by
   constructor
-  ·
-    intro h
+  · intro h
     have := dovetail_ev_0 h
     let dvt := ((eval O (c_if_eq'.comp₂ left ((c_eval₁).comp₂ (c_const c) right)).dovetail y).get h)
     rw [show ((eval O (c_if_eq'.comp₂ left ((c_eval₁).comp₂ (c_const c) right)).dovetail y).get h) = dvt from rfl] at this
@@ -361,39 +377,22 @@ theorem ran_to_dom_ev : (eval O (ran_to_dom c) y).Dom ↔ ∃ x, y ∈ eval O c 
     simp [Part.Dom.bind s1] at this
     simp [eval₁] at this s1
     use dvt
-
-    suffices y = (eval O c dvt).get s1 from by
-      exact (@Part.get_eq_iff_mem ℕ (eval O c dvt) y s1).mp this.symm
-    exact this
-
-  ·
-    intro h
-    rcases h with ⟨h1,h2⟩
-    unfold ran_to_dom
+    exact (@Part.get_eq_iff_mem ℕ (eval O c dvt) y s1).mp this.symm
+  · rintro ⟨h1,h2⟩
     apply dovetail_ev_2.mpr
     use h1
-    simp [eval, Seq.seq, eval₁]
-    simp [Part.bind_of_mem h2]
+    simp [eval, Seq.seq, eval₁, Part.bind_of_mem h2]
 
 theorem ran_to_dom_prop : (WR O e) = (W O (ran_to_dom e)) := by
   ext xs
   constructor
-
+  · intro h
+    rcases h with ⟨y,hy⟩
+    exact ran_to_dom_ev.mpr (Exists.intro y hy)
   · intro h
     simp at h
     rcases h with ⟨y,hy⟩
-    rw [W]
-    have halts := ran_to_dom_ev.mpr (Exists.intro y hy)
-    simp
-    use (eval (χ O) (ran_to_dom e) xs).get halts
-    exact Part.get_mem halts
-  ·
-    intro h
-    simp at h
-    rcases h with ⟨y,hy⟩
-    rw [WR]
-    have := ran_to_dom_ev.mp (Part.mem_imp_dom hy)
-    exact this
+    exact ran_to_dom_ev.mp (Part.mem_imp_dom hy)
 end ran_to_dom
 
 section join
@@ -439,12 +438,10 @@ theorem join_least (A B C : Set ℕ) : A ≤ᵀ C ∧ B ≤ᵀ C → (A ∨ B) �
   funext x; simp
 
   cases hx:x.bodd
-  ·
-    rw [← codes_aux_aux_0 hx]; simp
+  · rw [← codes_aux_aux_0 hx]; simp
     ac_nf
     simp [even_odd_1]
-  ·
-    rw [← codes_aux_aux_1 hx]; simp
+  · rw [← codes_aux_aux_1 hx]; simp
     ac_nf
     simp [even_odd_2]
 
