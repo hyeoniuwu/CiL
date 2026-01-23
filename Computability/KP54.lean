@@ -23,7 +23,14 @@ end Computability.Code
 set_option linter.dupNamespace false
 namespace KP54
 
--- c_kp54_aux check if x.r+1 is a finite extension to A for the computation [i](n).
+/--
+[c_kp54_aux i n](x,y) checks if `y` is a finite extension to `x` for the computation [i](n).
+
+That is,
+[c_kp54_aux i n](x,y):
+  let list = x ++ y.
+  if [i:list](n) halts, then return 0 else diverge.
+-/
 @[irreducible] noncomputable def c_kp54_aux (i n:ℕ) :=
   c_ifdom
   (c_evals.comp₃ (c_list_append.comp₂ left (succ.comp right)) (c_const i) (c_const n))
@@ -36,9 +43,15 @@ theorem c_kp54_aux_evp :
   simp [c_kp54_aux, -Denumerable.list_ofNat_succ]
   simp [Computability.eval, -Denumerable.list_ofNat_succ]
   simp [Seq.seq, -Denumerable.list_ofNat_succ]
-theorem c_kp54_aux_2 (halts:(eval (λ_↦0) (dovetail (c_kp54_aux i lb)) Aₚ).Dom) :
-  have dvt := (eval (λ_↦0) (dovetail (c_kp54_aux i lb)) Aₚ).get halts
-  (evals ((n2l Aₚ) ++ (n2l (dvt+1))) i lb).Dom := by
+/--
+`finite_ext S i l` gives `x` s.t. `[i:S++x](l)↓`.
+
+If no such `x` exists, returns `Part.none`.
+-/
+noncomputable def finite_ext (S i l) := eval (λ_↦0) (dovetail (c_kp54_aux i l)) S
+theorem c_kp54_aux_2 (halts:(finite_ext S i l).Dom) :
+  have dvt := (finite_ext S i l).get halts
+  (evals ((n2l S) ++ (n2l (dvt+1))) i l).Dom := by
     have := dovetail_ev_0 halts
     extract_lets at this ⊢
     expose_names
@@ -46,6 +59,7 @@ theorem c_kp54_aux_2 (halts:(eval (λ_↦0) (dovetail (c_kp54_aux i lb)) Aₚ).D
     contrapose this
     simp [-Denumerable.list_ofNat_succ]
     exact this
+
 
 open Nat List in
 /--
@@ -88,7 +102,7 @@ match s with
       Nat.pair (l2n $ (n2l Aₚ).concat 0) (l2n $ (n2l Bₚ).concat 0)
 @[simp] theorem KP54_0_r : n2l (KP54 0).r = [] := by simp [KP54]
 @[simp] theorem KP54_0_l : n2l (KP54 0).l = [] := by simp [KP54]
-
+#exit
 noncomputable def As (s:ℕ) := n2l (KP54 s).l
 noncomputable def Bs (s:ℕ) := n2l (KP54 s).r
 
@@ -356,12 +370,14 @@ theorem As_Uninjured_0 (hh:(evals (As (2*(i+1))) i k).Dom): evals (As (2*(i+1)))
   intro ii hii
   rw [As_Mono_4 (Nat.lt_of_lt_of_le hii (evalc_prop_1 hh)) AsSize]
   split <;> next h => simp [b2n,h]
+/- contrapositive of As_Uninjured_0. -/
 theorem As_Uninjured_0' {i:ℕ} : ¬ (evalSet A i k).Dom → ¬ (evals (As (2*(i+1))) i k).Dom := by
   contrapose
   simp only [Decidable.not_not]
   intro h
-  rw [←As_Uninjured_0 h]
-  exact h
+  rwa [←As_Uninjured_0 h]
+theorem list_access_small {i} {l1 l2 : List α} (h:i<l1.length) : (l1 ++ l2)[i]? = (l1)[i]? := by
+    simp [getElem?_pos, List.getElem?_append, h]
 /--
 If `[i:As](k)` diverges, then it will always diverge in subsequent steps.
 
@@ -413,8 +429,7 @@ theorem As_Uninjured_1 : ¬(evals (As (2*i+1+1)) i (R_wt i)).Dom → ¬(evalSet 
   let use_compl := (use (χ A) (n2c i) (R_wt i)).get use_dom
   rw [show n2l Aₚ = As (2*i+1) from rfl]
   /-
-  As the final computation only uses up to `use_compl`, this means we only need our string `As` to be as long as `use_compl`,
-  for our computation to halt.
+  As the final computation (on index `i`, input `R_wt i`) only uses up to `use_compl`, this means we only need our string `As` to be as long as `use_compl` for our computation to halt.
 
   That is, the string `As (use_compl + 1)` is enough to make the computation halt.
 
@@ -423,23 +438,22 @@ theorem As_Uninjured_1 : ¬(evals (As (2*i+1+1)) i (R_wt i)).Dom → ¬(evalSet 
   If `2*i+1 ≤ use_compl`, then we use the extension that will get us to the string `As (use_compl + 1)`.
   (This can be extracted with `As_ex_ext`).
 
-  If `use_compl < 2*i+1`, this means that we don't need an extension at all, as our current string is already an extension of
-  `As (use_compl + 1)`.
+  If `use_compl < 2*i+1`, this means that we don't need an extension at all, as our current string is already an extension of `As (use_compl + 1)`.
 
-  That the use is equivalent, is proven by
+  To actually prove the computation halts, we appeal to `evalc_prop_4.mp`, which tells us that `evalc` halts if the use is defined and is smaller than the imposed limit (which here is the size of the string `As`),
+  
+  That the use is defined is proved via the use principle, showing our use is equivalent to the final computation's use.
 
-  evalc_prop_4.mp tells us that `evalc` halts if the use is defined and is smaller than the imposed limit.
-  In our case, the imposed limit is the size of the string `As`.
-
-
-
+  To show that our use is smaller than the limit:
+    · in the case we use `As (use_compl + 1)`, note by monotonicty of `As` its length is `≥ use_compl + 1`.
+    · in the other case this follows directly from `use_compl < 2*i+1`.
+  
   -/
   if h0 : 2*i+1 ≤ use_compl then
-    -- we want to make (As (2 * i + 1) ++ n2l (x + 1)) equal to (As (usecn + 1))
     rcases @As_ex_ext (2*i+1) (use_compl+1) (Nat.add_lt_add_right h0 1) with ⟨x,hx⟩
     use x
     rw [hx]
-
+    -- showing that the current use is equivalent to the final computation's use
     have mainrw : use (fun e ↦ b2n (n2b ((As (use_compl + 1)).getD e whatever))) i (R_wt i) = use (χ A) i (R_wt i) := by
       apply Eq.symm
       refine use_principle_use final_comp_halts ?_
@@ -450,17 +464,14 @@ theorem As_Uninjured_1 : ¬(evals (As (2*i+1+1)) i (R_wt i)).Dom → ¬(evalSet 
         use_compl <  (As (use_compl + 1)).length := AsSize
       rw [@As_Mono_4 i2 (use_compl+1) (i2 + 1) whatever hi3 (AsSize)]
       simp only [b2n, ite_eq_ite]
-    apply evalc_prop_4.mp
-    simp only [mainrw]
-    exact Nat.le_of_succ_le (@AsSize use_compl)
-    simp only [mainrw]
-    exact use_dom
+    have := Nat.le_of_succ_le (@AsSize use_compl)
+    apply evalc_prop_4.mp <;> (simp only [mainrw]; assumption)
 
   else
 
   simp at h0
-  use 0
-
+  use 0 -- use 0, as we do not need any extension
+  -- showing that the use is below the length of our string
   have a6 : use_compl < (As (2 * i + 1)).length := calc
     use_compl < 2 * i + 1 := h0
     _     ≤ (As (2 * i + 1)).length := AsSize
@@ -470,31 +481,22 @@ theorem As_Uninjured_1 : ¬(evals (As (2*i+1+1)) i (R_wt i)).Dom → ¬(evalSet 
     _     ≤ (As (2 * i + 1) ++ n2l (0 + 1)).length := by
       simp only [zero_add, List.length_append, le_add_iff_nonneg_right, zero_le]
 
+  -- showing that the current use is equivalent to the final computation's use
   have mainrw : use (fun e ↦ b2n (n2b ((As (2 * i + 1) ++ n2l (0 + 1)).getD e whatever))) (n2c i) (R_wt i) = use (χ A) (n2c i) (R_wt i):= by
     apply Eq.symm
     refine use_principle_use final_comp_halts ?_
-    intro i2
-    intro hi2
-    have hi3 : i2 < (As (2 * i + 1)).length := by exact Nat.lt_trans hi2 a6
+    intro i2 hi2
+    have hi3 := Nat.lt_trans hi2 a6
     unfold χ
     unfold A
     simp
-    have : (As (2 * i + 1) ++ [0])[i2]? = (As (2 * i + 1))[i2]? := by
-      simp [hi3]
-      grind
-    rw [this]
-    have := @As_Mono_4 i2 (2*i+1) (i2 + 1) whatever (hi3) (AsSize)
-    rw [this]
+    rw [@list_access_small _ _ _ [0] hi3]
+    rw [@As_Mono_4 i2 (2*i+1) (i2 + 1) whatever (hi3) (AsSize)]
     simp only [b2n, ite_eq_ite]
-
-  apply evalc_prop_4.mp
-  simp only [mainrw]
-  exact a5
-  simp only [mainrw]
-  exact use_dom
+  apply evalc_prop_4.mp <;> (simp only [mainrw]; assumption)
 theorem As_Uninjured_1' {i:ℕ} : (evalSet A i (R_wt i)).Dom  → (evals (As (2*(i+1))) i (R_wt i)).Dom := not_imp_not.mp (@As_Uninjured_1 i)
 theorem As_Uninjured (i:ℕ) : evalSet A i (R_wt i) = evals (As (2*(i+1))) i (R_wt i) := by
-  if h:(evalSet A i (R_wt i)).Dom then
+  if h : (evalSet A i (R_wt i)).Dom then
     rw [@As_Uninjured_0 (i) (R_wt i) (As_Uninjured_1' h)]
   else
     rw [Part.eq_none_iff'.mpr h]
