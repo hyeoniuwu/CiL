@@ -47,11 +47,6 @@ theorem pair_l_gt0 {x} : x>0→(Nat.pair x y)>0 := by
   rw [show x=(Nat.pair x y).unpair.1 from by simp [unpair_pair]]
   rw [h]
   simp [unpair_zero]
--- general lemmas for later theorems
-theorem listrwgen (n): (List.range (n + 1)).reverse = n :: (List.range n).reverse := by
-  simp only [List.reverse_eq_cons_iff, List.reverse_reverse]
-  exact List.range_succ
-
 
 notation "⟪" x "," y "⟫" => Nat.pair x y
 notation "⟪" x "," y "⟫" => Nat.pair <$> x <*> y
