@@ -54,11 +54,9 @@ theorem evalc_prop_3 (h:(eval O c x).Dom) (h0:(use O c x).get (e2u h)≤u): eval
   simp [h0]
 theorem evalc_prop_4: (use O c x).get h≤u ↔ (evalc O u c x).Dom :=
   ⟨
-    λ h0 ↦ Part.eq_some_imp_dom $ evalc_prop_3 (u2e h) h0
-    ,
+    λ h0 ↦ Part.eq_some_imp_dom $ evalc_prop_3 (u2e h) h0,
     λ h0 ↦ evalc_prop_1 h0
   ⟩
-
 
 -- the b2n $ n2b is to simplify later proofs where evals will be compared against _.
 def whatever := 0

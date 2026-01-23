@@ -30,3 +30,6 @@ lemma listrevlem (h:∃ l'':List ℕ, l'' ++ l' = (range x).reverse) : ∃ y, l'
 lemma listrevlem2 (h:∃ l'':List ℕ, l'' ++ l' = (range x).reverse) (h2:a∈l') : a<x := by
   have := listrevlem h
   grind
+
+theorem list_access_small {i} {l1 l2 : List α} (h:i<l1.length) : (l1 ++ l2)[i]? = (l1)[i]? := by
+    simp [getElem?_pos, List.getElem?_append, h]

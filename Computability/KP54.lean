@@ -387,8 +387,7 @@ theorem As_Uninjured_0' {i:ℕ} : ¬ (evalSet A i k).Dom → ¬ (evals (As (2*(i
   simp only [Decidable.not_not]
   intro h
   rwa [←As_Uninjured_0 h]
-theorem list_access_small {i} {l1 l2 : List α} (h:i<l1.length) : (l1 ++ l2)[i]? = (l1)[i]? := by
-    simp [getElem?_pos, List.getElem?_append, h]
+
 /--
 If `[i:As](k)` diverges, then it will always diverge in subsequent steps.
 
@@ -461,7 +460,7 @@ lemma As_Uninjured_1 : ¬(evals (As (2*i+1+1)) i (R_wt i)).Dom → ¬(evalSet A 
 
   -/
   if h0 : 2*i+1 ≤ use_compl then
-    rcases @As_ex_ext (2*i+1) (use_compl+1) (Nat.add_lt_add_right h0 1) with ⟨x,hx⟩
+    rcases @As_ex_ext (2*i+1) (use_compl+1) (add_lt_add_right h0 1) with ⟨x,hx⟩
     use x
     rw [hx]
     -- showing that the current use is equivalent to the final computation's use
@@ -497,7 +496,7 @@ lemma As_Uninjured_1 : ¬(evals (As (2*i+1+1)) i (R_wt i)).Dom → ¬(evalSet A 
     apply Eq.symm
     refine use_principle_use final_comp_halts ?_
     intro i2 hi2
-    have hi3 := Nat.lt_trans hi2 a6
+    have hi3 := lt_trans hi2 a6
     unfold χ
     unfold A
     simp
