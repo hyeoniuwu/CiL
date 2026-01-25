@@ -12,24 +12,16 @@ section efl_prec
 namespace Computability.Code
 /--
 A specialised code used as an auxiliary for `c_cov_rec`.
-Given an input of the form (x, (i, list)), the code (c_efl_prec c) computes list.append (eval c input).
+Given an input of the form ``⟪x, i, list⟫``, the code (c_efl_prec c) computes list.append (eval c input).
 (The form above is what you would expect in the inductive case in primitive recursion.)
 -/
-def c_efl_prec:=fun c=>c_list_concat.comp (pair (c_id.comp (right.comp right)) c)
--- def c_efl_prec:=fun c=>c_l_append.comp₂ (c_id.comp (right.comp right)) c
+def c_efl_prec := λ c ↦ c_list_concat.comp (pair (c_id.comp (right.comp right)) c)
 @[cp] theorem c_efl_prec_prim (h:code_prim c):code_prim $ c_efl_prec c := by
   unfold c_efl_prec
   apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
 @[simp] theorem c_efl_prec_evp : evalp O (c_efl_prec c) x = l2n ((n2l x.r.r).concat (evalp O c x)) := by
   simp [c_efl_prec]
--- @[simp] theorem c_efl_prec_ev : eval O (c_efl_prec c) x =l2n ((n2l x.r.r).concat (eval O c x)) := by
---   -- unfold Nat.list_append
---   simp [c_efl_prec,eval]
---   simp [Seq.seq]
---   exact Part.bind_some_eq_map (unpair (unpair x).2).2.list_append (eval O c x)
 end Computability.Code
--- theorem Nat.PrimrecIn.efl_prec:Nat.PrimrecIn O Nat.efl_prec := by ...
--- theorem Nat.Primrec.efl_prec:Nat.Primrec Nat.efl_prec := by ...
 end efl_prec
 
 -- course of values recursion.
