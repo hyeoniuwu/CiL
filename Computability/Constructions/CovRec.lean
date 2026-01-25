@@ -372,14 +372,20 @@ def c_div2 := c_div.comp₂ c_id (c_const 2)
 @[cp] theorem c_div2_prim:code_prim c_div2 := by
   unfold c_div2
   apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
--- @[simp] theorem c_div2_evp : evalp O c_div2 = fun x => x/2 := by simp [c_div2]
--- @[simp] theorem c_div2_ev:eval O c_div2 = (fun x => x/(2:ℕ)) := by simp [← evalp_eq_eval c_div2_prim]
 @[simp] theorem c_div2_evp : evalp O c_div2 = div2 := by simp [c_div2]; funext x; exact Eq.symm (div2_val x)
 @[simp] theorem c_div2_ev:eval O c_div2 = div2 := by simp [← evalp_eq_eval c_div2_prim]
 end Computability.Code
--- theorem Nat.PrimrecIn.div2:Nat.PrimrecIn O Nat.div2 := by ...
--- theorem Nat.Primrec.div2:Nat.Primrec Nat.div2 := by ...
 end div2
+section mod2
+namespace Computability.Code
+def c_mod2 := c_mod.comp₂ c_id (c_const 2)
+@[cp] theorem c_mod2_prim:code_prim c_mod2 := by
+  unfold c_mod2
+  apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+@[simp] theorem c_mod2_evp : evalp O c_mod2 = λ x ↦ x%2 := by simp [c_mod2];
+@[simp] theorem c_mod2_ev:eval O c_mod2 = (λ x:ℕ ↦ x%2) := by simp [← evalp_eq_eval c_mod2_prim]
+end Computability.Code
+end mod2
 
 section replace_oracle
 namespace Computability.Code
