@@ -390,12 +390,11 @@ theorem nrfind'_obtain_prop
 ∧ (∀ j ≤ nrfind'_obtain h, (evaln O (s+1-j) cf  ⟪x.l, j+x.r⟫).isSome)
 ∧ (∀ j < nrfind'_obtain h, ¬0∈(evaln O (s+1-j) cf ⟪x.l, j+x.r⟫)) := by
 
-  let rf := (evaln O (s+1) cf.rfind' x).get h
+  let (eq:=hrf) rf := (evaln O (s+1) cf.rfind' x).get h
   have aux0 : rf ∈ evaln O (s+1) cf.rfind' x := Option.get_mem h
-  have aux3 : rf = (evaln O (s+1) cf.rfind' x).get h := rfl
 
   have := evaln_rfind_as_eval_rfind h
-  rw [←aux3] at this; clear aux3
+  rw [← hrf] at this; clear hrf
   have aux3 := this; clear this
   simp at aux3
 
@@ -433,8 +432,8 @@ lemma mpp_leq {x:ℕ} (hjro:j ≤ ro): (ro - j + (j + x)) = ro + x := by simp on
 theorem nrfind'_obtain_prop_4 (h:(evaln O (s+1) (rfind' cf) x).isSome) :
 ∀ j ≤ nrfind'_obtain h, (evaln O (s+1-j) (rfind' cf) ⟪x.l, j+x.r⟫).isSome := by
   have rop := nrfind'_obtain_prop h
-  let ro := nrfind'_obtain h; have rwro : nrfind'_obtain h = ro := rfl
-  simp [rwro] at rop ⊢
+  let (eq:=hro) ro := nrfind'_obtain h
+  simp [←hro] at rop ⊢
   rcases rop with ⟨rop1,rop2,_⟩
 
   intro j hjro
@@ -502,9 +501,8 @@ theorem nrfind'_obtain_prop_6 (h:(evaln O (s+1) (rfind' cf) x).isSome) :
 ∀ j ≤ nrfind'_obtain h,
 (nrfind'_obtain h)+x.r ∈ (evaln O (s+1-j) (rfind' cf) ⟪x.l, j+x.r⟫)  := by
   have rop := nrfind'_obtain_prop h
-  let ro := nrfind'_obtain h
-  have rwro : nrfind'_obtain h = ro := rfl
-  simp [rwro] at rop ⊢
+  let (eq:=hro) ro := nrfind'_obtain h
+  simp [← hro] at rop ⊢
   rcases rop with ⟨rop1,rop2,rop3⟩
   have rop4 := nrfind'_obtain_prop_4 h
 
@@ -2765,14 +2763,13 @@ theorem usen_mono_rfind' {O cf s x j} (hh:(usen O (rfind' cf) (s+1) x).isSome):
 
   intro hjro
   have rop := nrfind'_obtain_prop (un2en hh)
-  let ro := nrfind'_obtain (un2en hh)
-  have rwro : nrfind'_obtain (un2en hh) = ro := rfl
-  simp [rwro] at rop hjro
+  let (eq:=hro) ro := nrfind'_obtain (un2en hh)
+  simp [← hro] at rop hjro
   have rop1 := rop.left
   have rop2 := rop.right.left
   have rop3 := rop.right.right
   have rop4 := nrfind'_obtain_prop_4 (un2en hh)
-  simp [rwro] at rop4
+  simp [← hro] at rop4
 
   have aux3 := rop2 0 (Nat.zero_le ro)
   simp only [tsub_zero, zero_add, pair_lr] at aux3
@@ -3122,9 +3119,8 @@ theorem usen_principle {O₁ O₂} {s c x}
 
   | hrfind' cf s x hcf =>
     rcases nrfind'_obtain_prop hh with ⟨nrop1,nrop2,nrop3⟩
-    let nro := nrfind'_obtain hh
-    have rwnro : nrfind'_obtain hh = nro := rfl
-    simp only [rwnro, Option.mem_def] at nrop1 nrop2
+    let (eq:=hnro) nro := nrfind'_obtain hh
+    simp only [← hnro, Option.mem_def] at nrop1 nrop2
     have ihAll : ∀ j ≤ nro,
       evaln O₁ (s-1+1-j) cf  ⟪x.l, j+x.r⟫ = evaln O₂ (s-1+1-j) cf ⟪x.l, j+x.r⟫
       ∧
@@ -3216,9 +3212,9 @@ theorem usen_principle {O₁ O₂} {s c x}
     simp [isSome.bind hh]
 
     have a2 := λ j hj ↦ (ihAll j hj).right
-    have a0 : (evaln O₁ (s - 1 + 1) cf.rfind' x).get hh - x.r = nro := by exact rwnro
+    have a0 : (evaln O₁ (s - 1 + 1) cf.rfind' x).get hh - x.r = nro := by exact hnro
     rw [a0]
-    clear rwnro nrop3 nrop1 aux0 hO a0 main1 hcf ihAll
+    clear hnro nrop3 nrop1 aux0 hO a0 main1 hcf ihAll
 
     have a4 := a2 0 (Nat.zero_le nro)
     simp at a4

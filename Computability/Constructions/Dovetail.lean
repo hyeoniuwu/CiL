@@ -21,15 +21,13 @@ def dovetailn (c:Code) : Code :=
   (c_const 1)
 
 theorem dovetailn_ev_0 (h:(eval O (dovetailn c) x).Dom) :
-let dvt := (eval O (dovetailn c) x).get h
+let (eq:=hdvt) dvt := (eval O (dovetailn c) x).get h
 evaln O dvt.r c ⟪x, dvt.l⟫=Option.some 0 := by
   extract_lets; expose_names
-  have dvtrw : (eval O (dovetailn c) x).get h = dvt := rfl
-
-  unfold dovetailn at h dvtrw
+  unfold dovetailn at h hdvt
 
   have := Part.get_mem h
-  rw [dvtrw] at this
+  rw [← hdvt] at this
   simp [c_rfind_prop] at this
   simp [eval] at this
 
