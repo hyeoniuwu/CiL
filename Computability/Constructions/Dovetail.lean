@@ -28,9 +28,7 @@ evaln O dvt.r c ⟪x, dvt.l⟫=Option.some 0 := by
 
   have := Part.get_mem h
   rw [← hdvt] at this
-  simp [c_rfind_prop] at this
-  simp [eval] at this
-
+  simp [c_rfind_ev, eval] at this
   rcases this with ⟨⟨h2,h3,h4⟩,h5⟩; clear h5
   simp [Seq.seq] at h3
   rw [h3] at h4; clear h3; simp at h4
@@ -56,7 +54,7 @@ theorem dovetailn_ev_1' : eval O (dovetailn c) x=Part.none ↔ ∀ s y, evaln O 
     apply Part.not_none_iff_dom.mpr
 
     unfold dovetailn
-    simp only [c_rfind_prop]
+    simp only [c_rfind_ev]
     simp only [comp₂, comp₃] -- without this theres a recursion depth error. why?
     simp []
 
@@ -87,21 +85,17 @@ theorem dovetailn_ev_1' : eval O (dovetailn c) x=Part.none ↔ ∀ s y, evaln O 
       exact this
 
 theorem dovetailn_ev_1_aux : (∀ s y, evaln O s c ⟪x, y⟫≠Option.some 0) ↔ ∀ y, eval O c ⟪x, y⟫≠Part.some 0 := by
-
   constructor
-  contrapose
-  simp
-  intro y
-  intro h
-  have := evaln_complete.mp (Part.eq_some_iff.mp h)
-  aesop
-
-  contrapose
-  simp
-  intro s y
-  intro h
-  use y
-  exact Part.eq_some_iff.mpr (evaln_sound h)
+  · contrapose
+    simp
+    intro y h
+    have := evaln_complete.mp (Part.eq_some_iff.mp h)
+    aesop
+  · contrapose
+    simp
+    intro s y h
+    use y
+    exact Part.eq_some_iff.mpr (evaln_sound h)
 
 theorem dovetailn_ev_1 : eval O (dovetailn c) x=Part.none ↔ ∀ y, eval O c ⟪x, y⟫≠Part.some 0 := by
   exact Iff.trans dovetailn_ev_1' dovetailn_ev_1_aux
