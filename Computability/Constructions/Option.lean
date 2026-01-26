@@ -49,8 +49,26 @@ theorem hnat_9 : o.get h = (o2n o)-1 := by
 theorem iget_eq_get {o:Option ℕ} (h:o.isSome) : o.iget = o.get h := by
   have : o= some (o.get h) := by exact Option.dom_imp_some h
   exact Option.iget_of_mem this
-
-
+theorem o2n_a0 : o2n x = 0 ↔ x = Option.none := by
+  constructor
+  · intro h
+    contrapose h
+    exact hnat_1 h
+  · intro h
+    simp [h]
+theorem hnat_10 (h : o2n x ≠ 0) : x.isSome := by
+  have := hnat_6 h
+  simp at this
+  exact this
+theorem hnat_11 {x:Option ℕ} (h : x.isSome) : x = some (o2n x - 1) := by
+  rw [hnat_2 h]
+  simp
+theorem hnat_12 {x : ℕ} (h : n2o x = some a) : x-1 = a := by
+  have : (n2o x).isSome := by exact Option.isSome_of_mem h
+  have := hnat_11 this
+  rw [this] at h
+  simp at h
+  assumption
 
 
 

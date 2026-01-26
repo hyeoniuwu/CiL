@@ -79,6 +79,7 @@ def n2b (n:ℕ) : Bool := if n=0 then false else true
 def b2n (b:Bool) : ℕ := if b then 1 else 0
 def n2b' (n:ℕ) : Bool := if n=0 then true else false
 def b'2n (b:Bool) : ℕ := if b then 0 else 1
+theorem b2n_a0 {x} : b2n x = 0 ↔ x = false := by simp [b2n]
 open Denumerable
 open Encodable
 abbrev n2o := @ofNat (Option ℕ) _
