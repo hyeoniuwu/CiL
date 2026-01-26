@@ -53,14 +53,14 @@ def c_bdd_search (c:Code) := prec
   lift_lets
   extract_lets
   expose_names
-  have hcompt : code_prim compt := by apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
-  have hprev_comp : code_prim prev_comp := by apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
-  have hiP1 : code_prim iP1 := by apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
-  have hs : code_prim s := by apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
-  have ha : code_prim a := by apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
-  have hk : code_prim k := by apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
-  have haPi : code_prim aPi := by apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
-  apply_rules (config := {maxDepth:=50, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+  have hcompt : code_prim compt := by apply_cp
+  have hprev_comp : code_prim prev_comp := by apply_cp
+  have hiP1 : code_prim iP1 := by apply_cp
+  have hs : code_prim s := by apply_cp
+  have ha : code_prim a := by apply_cp
+  have hk : code_prim k := by apply_cp
+  have haPi : code_prim aPi := by apply_cp
+  apply_cp 60
 theorem o2n_a0 : o2n x = 0 ↔ x = Option.none := by
   constructor
   · intro h
@@ -315,10 +315,10 @@ def c_list_foldr_param_aux (cf:Code) :=
 def c_list_foldr_param (cf:Code) := right.comp (c_list_foldr_param_aux cf)
 @[cp] theorem c_list_foldr_param_aux_prim (hcf:code_prim cf) : code_prim (c_list_foldr_param_aux cf) := by
   rewrite [c_list_foldr_param_aux]
-  apply_rules (config := {maxDepth:=50, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+  apply_cp 60
 @[cp] theorem c_list_foldr_param_prim (hcf:code_prim cf) : code_prim (c_list_foldr_param cf) := by
   rewrite [c_list_foldr_param]
-  apply_rules (config := {maxDepth:=50, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+  apply_cp 60
 theorem auxaux {f: ℕ→ℕ} : List.foldr (fun a b ↦ ⟪a.l,f ⟪a.l,⟪a.r,b.r⟫⟫⟫) ⟪param,init⟫
     (List.zipWith (fun (x y : ℕ) ↦ ⟪x,y⟫) (List.replicate (l).length param) (l)) =
   ⟪param,List.foldr (fun a b ↦ f ⟪param,⟪a,b⟫⟫) init (l)⟫ := by
@@ -358,9 +358,7 @@ namespace Computability.Code
 def c_fs_in := c_mod.comp₂
   (c_div.comp₂ left (c_pow.comp₂ (c_const 2) right))
   (c_const 2)
-@[cp] theorem c_fs_in_prim : code_prim c_fs_in := by
-  unfold c_fs_in
-  apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+@[cp] theorem c_fs_in_prim : code_prim c_fs_in := by unfold c_fs_in; apply_cp
 @[simp] theorem c_fs_in_evp: evalp O c_fs_in ⟪x,y⟫ = (b2n $ fs_in x y) := by
   simp [c_fs_in,evalp];
   simp [fs_in, b2n]
@@ -374,9 +372,7 @@ def c_fs_add := c_ifz.comp₃
   (c_fs_in.comp c_id)
   (c_add.comp₂ left (c_pow.comp₂ (c_const 2) right))
   (left)
-@[cp] theorem c_fs_add_prim : code_prim c_fs_add := by
-  unfold c_fs_add
-  apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+@[cp] theorem c_fs_add_prim : code_prim c_fs_add := by unfold c_fs_add; apply_cp
 theorem c_fs_add_aux (x y : ℕ) : x.testBit y ↔ x = x ||| (2^y) := by
   constructor
   intro h
@@ -437,15 +433,15 @@ def c_step :=
   lift_lets
   extract_lets
   expose_names
-  have hs : code_prim s := by apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
-  have hi : code_prim i := by apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
-  have hprev : code_prim prev := by apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
-  have hAₚ : code_prim Aₚ := by apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
-  have hRₚ : code_prim Rₚ := by apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
-  have hz21 : code_prim z21 := by apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
-  have hsearch : code_prim search := by apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
-  have hmin : code_prim min := by apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
-  apply_rules (config := {maxDepth:=50, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+  have hs : code_prim s := by apply_cp
+  have hi : code_prim i := by apply_cp
+  have hprev : code_prim prev := by apply_cp
+  have hAₚ : code_prim Aₚ := by apply_cp
+  have hRₚ : code_prim Rₚ := by apply_cp
+  have hz21 : code_prim z21 := by apply_cp
+  have hsearch : code_prim search := by apply_cp
+  have hmin : code_prim min := by apply_cp
+  apply_cp 60
 @[simp] theorem c_step_evp : evalp (χ ∅) c_step = λ x:ℕ ↦ Simple.step x.l x.r.l x.r.r := by
   funext x
   unfold Simple.step
@@ -481,7 +477,7 @@ def c_step :=
       have temp := c_bdd_search_evp_1.mp hzr
       -- simp [i] at temp
       rcases temp with ⟨hzr1, hzr2, hzr3⟩
-      simp [hi] at hzr1 hzr2 hzr3
+      simp at hzr1 hzr2 hzr3
       -- simp [evaln] at hzr2
       have found_aux : (evalnSet ∅ x.l (n2c x.r.l) (2*x.r.l+1+z)).isSome = true ∧ (2*x.r.l+1+z) > 2 * x.r.l := by
         constructor
@@ -546,9 +542,7 @@ def c_C :=
     (c_list_foldr_param c_step).comp₃ s prev (c_list_reverse.comp $ c_list_range.comp s)
   ).comp₂ zero c_id
 
-@[cp] theorem c_C_prim (h:code_prim c):code_prim c_C:= by
-  unfold c_C
-  apply_rules (config := {maxDepth:=33, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+@[cp] theorem c_C_prim : code_prim c_C:= by unfold c_C; apply_cp
 
 @[simp] theorem c_C_evp : evalp (χ ∅) c_C = Simple.C := by
   funext x
@@ -572,7 +566,9 @@ theorem W_eq_iff_mem : W O c = A ↔ (∀ x, x∈A ↔ (evalSet O c x).Dom) := b
   constructor
   intro h
   rw [←h]
-  exact fun x ↦ Set.mem_def
+  intro x
+  simp only [PFun.mem_dom]
+  exact Iff.symm Part.dom_iff_mem
   intro h
   refine Set.ext ?_
   exact fun x ↦ (fun {a b} ↦ iff_comm.mp) (h x)
@@ -581,9 +577,7 @@ theorem c_simple_ev : W ∅ c_simple = Simple.A := by
   apply W_eq_iff_mem.mpr
   simp [c_simple, Simple.A]
   intro x
-
-  have : code_prim (c_sg'.comp (c_fs_in.comp₂ (left.comp (c_C.comp right)) left)) := by
-    apply_rules (config := {maxDepth:=33, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+  have : code_prim (c_sg'.comp (c_fs_in.comp₂ (left.comp (c_C.comp right)) left)) := by apply_cp
   simp [evalSet]
   
   constructor

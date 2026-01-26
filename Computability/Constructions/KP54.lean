@@ -14,8 +14,7 @@ section kp54
 
 @[irreducible] def c_c_rfind := c_comp.comp₂ c_rfind' (c_pair.comp₂ (c_const c_id) (c_zero))
 @[cp] theorem c_c_rfind_prim : code_prim c_c_rfind := by
-  unfold c_c_rfind
-  apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+  unfold c_c_rfind; apply_cp
 @[simp] theorem c_c_rfind_evp : evalp O c_c_rfind = fun x:ℕ => c2n (c_rfind x) := by simp [c_c_rfind, c_rfind]
 def c_dovetailn :=
   c_c_rfind.comp $
@@ -24,16 +23,14 @@ def c_dovetailn :=
   (c_comp₃.comp₄ (c_const c_evaln) (c_pair.comp₂ c_left (c_comp.comp₂ c_left c_right)) (c_c_const) (c_comp.comp₂ c_right c_right))
   (c_const (c_const 1))
 @[cp] theorem c_dovetailn_prim : code_prim c_dovetailn := by
-  unfold c_dovetailn
-  apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+  unfold c_dovetailn; apply_cp
 @[simp] theorem c_dovetailn_evp : evalp O c_dovetailn = λ x ↦ c2n (dovetailn $ n2c x) := by
   -- just doing simp [c_dovetailn, dovetailn] should work, but gives a kernel recursion error. why?
   -- this was fixed by moving simp from def of comp_n to the comp_n_evp theorems.
   simp [c_dovetailn, dovetailn]
 def c_dovetail := c_comp.comp₂ c_left c_dovetailn
 @[cp] theorem c_dovetail_prim : code_prim c_dovetail := by
-  unfold c_dovetail
-  apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+  unfold c_dovetail; apply_cp
 @[simp] theorem c_dovetail_evp : evalp O c_dovetail = λ x ↦ c2n (dovetail $ n2c x) := by
   simp [c_dovetail, dovetail]
 
@@ -45,14 +42,12 @@ def c_c_evals :=
   (c_const $ c_const c_evals_code)
   (c_const c_id)
 @[cp] theorem c_c_evals_prim : code_prim c_c_evals := by
-  unfold c_c_evals
-  apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+  unfold c_c_evals; apply_cp
 @[simp] theorem c_c_evals_evp : evalp O c_c_evals x = c_evals := by simp [c_c_evals, c_evals]
 def c_c_ifdom :=
   c_comp₂.comp₃ (c_const c_add) (c_comp.comp₂ c_zero left) (right)
 @[cp] theorem c_c_ifdom_prim : code_prim c_c_ifdom := by
-  unfold c_c_ifdom
-  apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+  unfold c_c_ifdom; apply_cp
 @[simp] theorem c_c_ifdom_evp : evalp O c_c_ifdom = λ x ↦ c2n (c_ifdom x.l x.r) := by
   simp [c_c_ifdom, c_ifdom]
 def c_c_kp54_aux :=
@@ -67,12 +62,10 @@ def c_c_kp54_aux :=
   )
   c_zero
 @[cp] theorem c_c_kp54_aux_prim : code_prim c_c_kp54_aux := by
-  unfold c_c_kp54_aux
-  apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+  unfold c_c_kp54_aux; apply_cp
 
 @[simp] theorem c_c_kp54_aux_evp : evalp O c_c_kp54_aux = λ x:ℕ ↦ c2n (dovetail (KP54.c_kp54_aux x.l x.r)) := by
   simp [c_c_kp54_aux, KP54.c_kp54_aux]
-
 
 def c_kp54_main :=
   have s := left
@@ -119,23 +112,23 @@ def c_kp54 :=
   extract_lets
   expose_names
 
-  have cp_s : code_prim s := by apply_rules (config := {maxDepth:=10, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
-  have cp_KP54s : code_prim KP54s := by apply_rules (config := {maxDepth:=10, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
-  have cp_i : code_prim i := by apply_rules (config := {maxDepth:=10, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
-  have cp_Aₚ : code_prim Aₚ := by apply_rules (config := {maxDepth:=10, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
-  have cp_Bₚ : code_prim Bₚ := by apply_rules (config := {maxDepth:=10, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
-  have cp_lb : code_prim lb := by apply_rules (config := {maxDepth:=10, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
-  have cp_la : code_prim la := by apply_rules (config := {maxDepth:=10, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
-  have cp_q0 : code_prim q0 := by apply_rules (config := {maxDepth:=10, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
-  have cp_rf : code_prim rf := by apply_rules (config := {maxDepth:=10, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
-  have cp_Aₛ : code_prim Aₛ := by apply_rules (config := {maxDepth:=10, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
-  have cp_A_result : code_prim A_result := by apply_rules (config := {maxDepth:=10, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
-  have cp_q0_1 : code_prim q0_1 := by apply_rules (config := {maxDepth:=10, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
-  have cp_rf_1 : code_prim rf_1 := by apply_rules (config := {maxDepth:=10, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
-  have cp_Bₛ : code_prim Bₛ := by apply_rules (config := {maxDepth:=10, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
-  have cp_B_result : code_prim B_result := by apply_rules (config := {maxDepth:=10, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+  have cp_s : code_prim s := by apply_cp
+  have cp_KP54s : code_prim KP54s := by apply_cp
+  have cp_i : code_prim i := by apply_cp
+  have cp_Aₚ : code_prim Aₚ := by apply_cp
+  have cp_Bₚ : code_prim Bₚ := by apply_cp
+  have cp_lb : code_prim lb := by apply_cp
+  have cp_la : code_prim la := by apply_cp
+  have cp_q0 : code_prim q0 := by apply_cp
+  have cp_rf : code_prim rf := by apply_cp
+  have cp_Aₛ : code_prim Aₛ := by apply_cp
+  have cp_A_result : code_prim A_result := by apply_cp
+  have cp_q0_1 : code_prim q0_1 := by apply_cp
+  have cp_rf_1 : code_prim rf_1 := by apply_cp
+  have cp_Bₛ : code_prim Bₛ := by apply_cp
+  have cp_B_result : code_prim B_result := by apply_cp
 
-  apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+  apply_cp 60
 
 @[simp] theorem c_kp54_evp : evalp (K0 (λ_↦0)) c_kp54 x = KP54.KP54 x := by
   induction x with
@@ -242,9 +235,7 @@ def c_kp54 :=
 section n2b
 namespace Computability.Code
 def c_n2b := c_sg
-@[cp] theorem c_n2b_prim : code_prim c_n2b := by
-  unfold c_n2b
-  apply_rules (config := {maxDepth:=10, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+@[cp] theorem c_n2b_prim : code_prim c_n2b := by unfold c_n2b; apply_cp 10
 @[simp] theorem c_n2b_evp:evalp O c_n2b = fun x => if n2b x = true then 1 else 0 := by
   simp [c_n2b]
   unfold Nat.sg; unfold n2b
@@ -262,9 +253,7 @@ end n2b
 theorem fzero_eq_χempty : (λ_↦0) = χ ∅ := by unfold χ; simp
 
 def c_kp54_A := c_n2b.comp $ c_list_getI.comp₂ (left.comp $ c_kp54.comp succ) c_id
-@[cp] theorem c_kp54_A_prim : code_prim c_kp54_A := by
-  unfold c_kp54_A
-  apply_rules (config := {maxDepth:=20, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+@[cp] theorem c_kp54_A_prim : code_prim c_kp54_A := by unfold c_kp54_A; apply_cp 10
 @[simp] theorem c_kp54_A_evp : evalp (K0 (λ_↦0)) c_kp54_A = χ KP54.A := by
   funext x
   simp [c_kp54_A]; congr
@@ -277,9 +266,7 @@ theorem A_le_J1 : KP54.A ≤ᵀ ∅⌜ := by
   rw [fzero_eq_χempty]
   exact (K0χ_eq_χSetK ∅).1
 def c_kp54_B := c_n2b.comp $ c_list_getI.comp₂ (right.comp $ c_kp54.comp succ) c_id
-@[cp] theorem c_kp54_B_prim : code_prim c_kp54_B := by
-  unfold c_kp54_B
-  apply_rules (config := {maxDepth:=20, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+@[cp] theorem c_kp54_B_prim : code_prim c_kp54_B := by unfold c_kp54_B; apply_cp 10
 @[simp] theorem c_kp54_B_evp : evalp (K0 (λ_↦0)) c_kp54_B = χ KP54.B := by
   funext x
   simp [c_kp54_B]; congr

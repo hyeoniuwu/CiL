@@ -11,10 +11,6 @@ open Denumerable
 open Encodable
 open List
 
-
-
--- theorem option_isSome : Primrec (@Option.isSome α) :=
---   (option_casesOn .id (const false) (const true).to₂).of_eq fun o => by cases o <;> rfl
 @[simp] theorem hnat_to_opt_0 : (Denumerable.ofNat (Option ℕ) 0) = Option.none := by exact rfl
 @[simp] theorem hnat_to_opt_0' : (Denumerable.ofNat (Option ℕ) (x+1)) = Option.some (x) := by exact rfl
 theorem ge_0_rw {x} (h2:¬x=0) : x=x-1+1 := by exact Eq.symm (succ_pred_eq_of_ne_zero h2)
@@ -61,9 +57,7 @@ theorem iget_eq_get {o:Option ℕ} (h:o.isSome) : o.iget = o.get h := by
 section isSome
 namespace Computability.Code
 def c_isSome := c_sg'
-@[cp] theorem c_isSome_prim : code_prim c_isSome := by
-  unfold c_isSome
-  apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+@[cp] theorem c_isSome_prim : code_prim c_isSome := by unfold c_isSome; apply_cp
 @[simp] theorem c_isSome_evp:evalp O c_isSome = fun o => b'2n $ (n2o o).isSome := by
   simp [c_isSome]
   funext x
@@ -80,9 +74,7 @@ end isSome
 section opt_iget
 namespace Computability.Code
 def c_opt_iget := c_pred
-@[cp] theorem c_opt_iget_prim : code_prim c_opt_iget := by
-  unfold c_opt_iget
-  apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+@[cp] theorem c_opt_iget_prim : code_prim c_opt_iget := by unfold c_opt_iget; apply_cp
 @[simp] theorem c_opt_iget_evp : evalp O c_opt_iget o = Option.iget (n2o o) := by
   simp [c_opt_iget]
   by_cases ho:o=0
@@ -101,9 +93,7 @@ end opt_iget
 section opt_getD
 namespace Computability.Code
 def c_opt_getD := c_ifz.comp₃ left right (c_opt_iget.comp left)
-@[cp] theorem c_opt_getD_prim : code_prim c_opt_getD := by
-  unfold c_opt_getD
-  apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+@[cp] theorem c_opt_getD_prim : code_prim c_opt_getD := by unfold c_opt_getD; apply_cp
 @[simp] theorem c_opt_getD_evp : evalp O c_opt_getD (Nat.pair o d) = (n2o o).getD d := by
   simp [c_opt_getD]
   by_cases ho:o=0
@@ -119,9 +109,7 @@ end opt_getD
 section opt_none
 namespace Computability.Code
 def c_opt_none := (c_const 0)
-@[cp] theorem c_opt_none_prim : code_prim c_opt_none := by
-  unfold c_opt_none
-  apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+@[cp] theorem c_opt_none_prim : code_prim c_opt_none := by unfold c_opt_none; apply_cp
 @[simp] theorem c_opt_none_evp : evalp O c_opt_none o = o2n Option.none := by
   simp [c_opt_none]
 -- @[simp] theorem c_opt_none_ev: n2o (eval O c_opt_none o) = (Option.none : Option ℕ) := by simp [← evalp_eq_eval c_opt_none_prim]
@@ -132,9 +120,7 @@ section opt_bind
 namespace Computability.Code
 -- def c_opt_bind := c_ifz.comp₃ left zero (right.comp (c_opt_iget.comp left))
 def c_opt_bind (cf cg:Code) :=  c_ifz.comp₃ cf zero (cg.comp₂ c_id (c_opt_iget.comp cf))
-@[cp] theorem c_opt_bind_prim(hcf:code_prim cf) (hcg:code_prim cg) : code_prim (c_opt_bind cf cg) := by
-  unfold c_opt_bind
-  apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+@[cp] theorem c_opt_bind_prim(hcf:code_prim cf) (hcg:code_prim cg) : code_prim (c_opt_bind cf cg) := by unfold c_opt_bind; apply_cp
 @[simp] theorem c_opt_bind_evp: evalp O (c_opt_bind cf cg) x =
   o2n do
     let t ← n2o (evalp O cf x)
@@ -163,9 +149,7 @@ section opt_bind'
 namespace Computability.Code
 -- def c_opt_bind' := c_ifz.comp₃ left zero (right.comp (c_opt_iget.comp left))
 def c_opt_bind' (cf cg:Code) :=  c_ifz.comp₃ cf zero cg
-@[cp] theorem c_opt_bind'_prim(hcf:code_prim cf) (hcg:code_prim cg) : code_prim (c_opt_bind' cf cg) := by
-  unfold c_opt_bind'
-  apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+@[cp] theorem c_opt_bind'_prim(hcf:code_prim cf) (hcg:code_prim cg) : code_prim (c_opt_bind' cf cg) := by unfold c_opt_bind'; apply_cp
 @[simp] theorem c_opt_bind'_evp: evalp O (c_opt_bind' cf cg) x =
   o2n do
     let _ ← n2o (evalp O cf x)

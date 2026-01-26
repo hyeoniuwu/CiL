@@ -20,9 +20,7 @@ instance : Coe (List ℕ) ℕ := ⟨l2n⟩
 section list_nil
 namespace Computability.Code
 def c_list_nil := zero
-@[cp] theorem c_list_nil_prim : code_prim c_list_nil := by
-  unfold c_list_nil
-  apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+@[cp] theorem c_list_nil_prim : code_prim c_list_nil := by unfold c_list_nil; apply_cp
 @[simp] theorem c_list_nil_evp :evalp O c_list_nil x = l2n ([]) := by simp [c_list_nil]
 @[simp] theorem c_list_nil_ev :eval O c_list_nil x = l2n ([]) := by simp [←evalp_eq_eval c_list_nil_prim]
 end Computability.Code
@@ -31,9 +29,7 @@ end list_nil
 section list_cons
 namespace Computability.Code
 def c_list_cons := succ
-@[cp] theorem c_list_cons_prim : code_prim c_list_cons := by
-  unfold c_list_cons
-  apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+@[cp] theorem c_list_cons_prim : code_prim c_list_cons := by unfold c_list_cons; apply_cp
 @[simp] theorem c_list_cons_evp :evalp O c_list_cons ⟪a, lN⟫= l2n (List.cons a (n2l lN)) := by simp [c_list_cons]
 @[simp] theorem c_list_cons_ev :eval O c_list_cons ⟪a, lN⟫= l2n (List.cons a (n2l lN)) := by simp [←evalp_eq_eval c_list_cons_prim]
 end Computability.Code
@@ -42,9 +38,7 @@ end list_cons
 section list_tail
 namespace Computability.Code
 def c_list_tail := right.comp c_pred
-@[cp] theorem c_list_tail_prim : code_prim c_list_tail := by
-  unfold c_list_tail
-  apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+@[cp] theorem c_list_tail_prim : code_prim c_list_tail := by unfold c_list_tail; apply_cp
 @[simp] theorem c_list_tail_evp : evalp O c_list_tail lN = l2n (List.tail (n2l lN)) := by
   simp [c_list_tail]
   by_cases hl:lN=0
@@ -57,9 +51,7 @@ end list_tail
 section list_head?
 namespace Computability.Code
 def c_list_head? := c_ifz.comp₃ c_id zero $ succ.comp (left.comp c_pred)
-@[cp] theorem c_list_head?_prim : code_prim c_list_head? := by
-  unfold c_list_head?
-  apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+@[cp] theorem c_list_head?_prim : code_prim c_list_head? := by unfold c_list_head?; apply_cp
 @[simp] theorem c_list_head?_evp : evalp O c_list_head? lN = o2n (List.head? (n2l lN)) := by
   simp [c_list_head?]
   by_cases hl:lN=0
@@ -74,9 +66,7 @@ end list_head?
 section list_headI
 namespace Computability.Code
 def c_list_headI := c_ifz.comp₃ c_id zero (left.comp c_pred)
-@[cp] theorem c_list_headI_prim : code_prim c_list_headI := by
-  unfold c_list_headI
-  apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+@[cp] theorem c_list_headI_prim : code_prim c_list_headI := by unfold c_list_headI; apply_cp
 @[simp] theorem c_list_headI_evp : evalp O c_list_headI lN = List.headI (n2l lN) := by
   simp [c_list_headI]
   by_cases hl:lN=0
@@ -92,9 +82,7 @@ def c_list_casesOn (cl cf cg:Code) :=
   let x := left.comp (c_pred.comp cl)
   let xs := right.comp (c_pred.comp cl)
   c_if_eq_te.comp₄ cl (c_const 0) cf (cg.comp₂ x xs)
-@[cp] theorem c_list_casesOn_prim (hcl:code_prim cl) (hcf:code_prim cf) (hcg:code_prim cg) : code_prim (c_list_casesOn cl cf cg) := by
-  unfold c_list_casesOn
-  apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+@[cp] theorem c_list_casesOn_prim (hcl:code_prim cl) (hcf:code_prim cf) (hcg:code_prim cg) : code_prim (c_list_casesOn cl cf cg) := by unfold c_list_casesOn; apply_cp
 @[simp] theorem c_list_casesOn_evp : evalp O (c_list_casesOn cl cf cg) input =
   List.casesOn
   (n2l (evalp O cl input))
@@ -117,9 +105,7 @@ section list_casesOn'
 namespace Computability.Code
 def c_list_casesOn' (cl cf cg:Code) :=
   c_if_eq_te.comp₄ cl (c_const 0) cf cg
-@[cp] theorem c_list_casesOn'_prim (hcl:code_prim cl) (hcf:code_prim cf) (hcg:code_prim cg):code_prim (c_list_casesOn' cl cf cg) := by
-  unfold c_list_casesOn'
-  apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+@[cp] theorem c_list_casesOn'_prim (hcl:code_prim cl) (hcf:code_prim cf) (hcg:code_prim cg):code_prim (c_list_casesOn' cl cf cg) := by unfold c_list_casesOn'; apply_cp
 @[simp] theorem c_list_casesOn'_evp : evalp O (c_list_casesOn' cl cf cg) input =
   List.casesOn
   (n2l (evalp O cl input))
@@ -147,9 +133,7 @@ def c_list_drop :=
     c_id $
     c_list_tail.comp (right.comp right)
   ).comp c_flip
-@[cp] theorem c_list_drop_prim : code_prim c_list_drop := by
-  unfold c_list_drop
-  apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+@[cp] theorem c_list_drop_prim : code_prim c_list_drop := by unfold c_list_drop; apply_cp
 @[simp] theorem c_list_drop_evp : evalp O c_list_drop (Nat.pair i lN) = l2n (List.drop i (n2l lN)) := by
   simp [c_list_drop]
   by_cases hl:lN=0
@@ -168,9 +152,7 @@ end list_drop
 section list_getElem?
 namespace Computability.Code
 def c_list_getElem? := c_list_head?.comp (c_list_drop.comp c_flip)
-@[cp] theorem c_list_getElem?_prim : code_prim c_list_getElem? := by
-  unfold c_list_getElem?
-  apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+@[cp] theorem c_list_getElem?_prim : code_prim c_list_getElem? := by unfold c_list_getElem?; apply_cp
 @[simp] theorem c_list_getElem?_evp : evalp O c_list_getElem? ⟪lN, i⟫ = o2n (n2l lN)[i]? := by simp [c_list_getElem?]
 @[simp] theorem c_list_getElem?_ev : eval O c_list_getElem? ⟪lN, i⟫ = o2n (n2l lN)[i]? := by simp [← evalp_eq_eval c_list_getElem?_prim]
 end Computability.Code
@@ -179,9 +161,7 @@ end list_getElem?
 section list_getD
 namespace Computability.Code
 def c_list_getD := c_opt_getD.comp₂ (c_list_getElem?.comp₂ left (left.comp right)) (right.comp right)
-@[cp] theorem c_list_getD_prim : code_prim c_list_getD := by
-  unfold c_list_getD
-  apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+@[cp] theorem c_list_getD_prim : code_prim c_list_getD := by unfold c_list_getD; apply_cp
 @[simp] theorem c_list_getD_evp : evalp O c_list_getD ⟪lN, i, d⟫ = (n2l lN).getD i d := by simp [c_list_getD]
 @[simp] theorem c_list_getD_ev : eval O c_list_getD ⟪lN, i, d⟫ = (n2l lN).getD i d := by simp [← evalp_eq_eval c_list_getD_prim]
 end Computability.Code
@@ -190,9 +170,7 @@ end list_getD
 section list_getI
 namespace Computability.Code
 def c_list_getI := c_pred.comp c_list_getElem?
-@[cp] theorem c_list_getI_prim : code_prim c_list_getI := by
-  unfold c_list_getI
-  apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+@[cp] theorem c_list_getI_prim : code_prim c_list_getI := by unfold c_list_getI; apply_cp
 @[simp] theorem c_list_getI_evp : evalp O c_list_getI ⟪lN, i⟫ = ((n2l lN).getI i) := by
   simp [c_list_getI]
   by_cases hl:i<(n2l lN).length <;> simp [hl, List.getI]
@@ -203,9 +181,7 @@ end list_getI
 section list_get
 namespace Computability.Code
 def c_list_get := c_list_getI
-@[cp] theorem c_list_get_prim : code_prim c_list_get := by
-  unfold c_list_get
-  apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+@[cp] theorem c_list_get_prim : code_prim c_list_get := by unfold c_list_get; apply_cp
 @[simp] theorem c_list_get_evp (h:i<(n2l lN).length) : evalp O c_list_get ⟪lN, i⟫ = (n2l lN)[i] := by
   simp [c_list_get]
   simp [getI]
@@ -231,9 +207,7 @@ def c_list_foldl_aux (cf:Code) :=
   c_list_casesOn' right c_id (pair (cf.comp₂ left x) (xs))
 def c_list_foldl_aux2 (cf:Code) := (c_nat_iterate (c_list_foldl_aux cf)).comp₂ c_id right
 def c_list_foldl (cf:Code) := left.comp (c_list_foldl_aux2 cf)
-@[cp] theorem c_list_foldl_prim (hcf:code_prim cf) : code_prim (c_list_foldl cf) := by
-  rewrite [c_list_foldl, c_list_foldl_aux2, c_list_foldl_aux]
-  apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+@[cp] theorem c_list_foldl_prim (hcf:code_prim cf) : code_prim (c_list_foldl cf) := by rewrite [c_list_foldl, c_list_foldl_aux2, c_list_foldl_aux]; apply_cp
 @[simp] theorem c_list_foldl_aux_evp   : evalp O (c_list_foldl_aux cf) ⟪init, lN⟫ = if (n2l lN) = [] then ⟪init, lN⟫ else Nat.pair (evalp O cf (Nat.pair init (n2l lN).headI)) (l2n (List.tail (n2l lN))) := by
   simp [c_list_foldl_aux]
   by_cases hl:lN=0
@@ -314,9 +288,7 @@ end list_foldl
 section list_reverse
 namespace Computability.Code
 def c_list_reverse := (c_list_foldl (c_list_cons.comp c_flip)).comp₂ c_list_nil c_id
-@[cp] theorem c_list_reverse_prim : code_prim c_list_reverse := by
-  unfold c_list_reverse
-  apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+@[cp] theorem c_list_reverse_prim : code_prim c_list_reverse := by unfold c_list_reverse; apply_cp
 @[simp] theorem c_list_reverse_evp : evalp O c_list_reverse lN =  l2n (List.reverse (n2l lN)) := by
   simp only [c_list_reverse]
   simp [-encode_list_cons, -encode_list_nil]
@@ -339,9 +311,7 @@ end list_reverse
 section list_foldr
 namespace Computability.Code
 def c_list_foldr (cf:Code) := (c_list_foldl (cf.comp c_flip)).comp₂ left (c_list_reverse.comp right)
-@[cp] theorem c_list_foldr_prim(hcf:code_prim cf) : code_prim (c_list_foldr cf) := by
-  unfold c_list_foldr
-  apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+@[cp] theorem c_list_foldr_prim(hcf:code_prim cf) : code_prim (c_list_foldr cf) := by unfold c_list_foldr; apply_cp
 @[simp] theorem c_list_foldr_evp : evalp O (c_list_foldr cf) ⟪init, lN⟫ =
   (
     List.foldr
@@ -364,9 +334,7 @@ end list_foldr
 section list_length
 namespace Computability.Code
 def c_list_length := (c_list_foldl (succ.comp left)).comp₂ zero c_id
-@[cp] theorem c_list_length_prim : code_prim c_list_length := by
-  unfold c_list_length
-  apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+@[cp] theorem c_list_length_prim : code_prim c_list_length := by unfold c_list_length; apply_cp
 @[simp] theorem c_list_length_evp : evalp O c_list_length lN = List.length (n2l lN) := by simp [c_list_length]
 @[simp] theorem c_list_length_ev : eval O c_list_length lN = List.length (n2l lN) := by simp [← evalp_eq_eval c_list_length_prim]
 end Computability.Code
@@ -375,9 +343,7 @@ end list_length
 section list_getLast?
 namespace Computability.Code
 def c_list_getLast? := c_list_getElem?.comp₂ c_id (c_pred.comp $ c_list_length.comp c_id)
-@[cp] theorem c_list_getLast?_prim : code_prim c_list_getLast? := by
-  unfold c_list_getLast?
-  apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+@[cp] theorem c_list_getLast?_prim : code_prim c_list_getLast? := by unfold c_list_getLast?; apply_cp
 @[simp] theorem c_list_getLast?_evp : evalp O c_list_getLast? lN = o2n (List.getLast? (n2l lN)) := by
   simp [c_list_getLast?]
   exact Eq.symm List.getLast?_eq_getElem?
@@ -388,9 +354,7 @@ end list_getLast?
 section list_getLastI
 namespace Computability.Code
 def c_list_getLastI := c_opt_iget.comp c_list_getLast?
-@[cp] theorem c_list_getLastI_prim : code_prim c_list_getLastI := by
-  unfold c_list_getLastI
-  apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+@[cp] theorem c_list_getLastI_prim : code_prim c_list_getLastI := by unfold c_list_getLastI; apply_cp
 @[simp] theorem c_list_getLastI_evp : evalp O c_list_getLastI lN = List.getLastI (n2l lN) := by
   simp [c_list_getLastI]
   exact Eq.symm (List.getLastI_eq_getLast? (n2l lN))
@@ -405,9 +369,7 @@ end list_getLastI
 section list_append
 namespace Computability.Code
 def c_list_append := (c_list_foldr (c_list_cons)).comp c_flip
-@[cp] theorem c_list_append_prim : code_prim c_list_append := by
-  unfold c_list_append
-  apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+@[cp] theorem c_list_append_prim : code_prim c_list_append := by unfold c_list_append; apply_cp
 @[simp] theorem c_list_append_evp : evalp O c_list_append ⟪l1N, l2N⟫ = l2n ((n2l l1N) ++ (n2l l2N)) := by
   simp [c_list_append, -encode_list_cons, -encode_list_nil]
   induction (n2l l1N) with
@@ -420,9 +382,7 @@ end list_append
 section list_singleton
 namespace Computability.Code
 def c_list_singleton (cf:Code) := c_list_cons.comp₂ cf c_list_nil
-@[cp] theorem c_list_singleton_prim (hcf:code_prim cf) : code_prim (c_list_singleton cf) := by
-  unfold c_list_singleton
-  apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+@[cp] theorem c_list_singleton_prim (hcf:code_prim cf) : code_prim (c_list_singleton cf) := by unfold c_list_singleton; apply_cp
 @[simp] theorem c_list_singleton_evp : evalp O (c_list_singleton cf) x = l2n ([evalp O cf x]) := by
   simp [c_list_singleton]
 -- @[simp] theorem c_list_singleton_ev : eval O (c_list_singleton cf) x = l2n ([evalp O cf x]) := by simp [← evalp_eq_eval c_list_singleton_prim]
@@ -432,9 +392,7 @@ end list_singleton
 section list_concat
 namespace Computability.Code
 def c_list_concat := c_list_append.comp₂ left (c_list_singleton right)
-@[cp] theorem c_list_concat_prim : code_prim c_list_concat := by
-  unfold c_list_concat
-  apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+@[cp] theorem c_list_concat_prim : code_prim c_list_concat := by unfold c_list_concat; apply_cp
 @[simp] theorem c_list_concat_evp : evalp O c_list_concat ⟪lN, i⟫ = l2n ((n2l lN)++[i]) := by
   simp [c_list_concat, -encode_list_cons, -encode_list_nil]
 @[simp] theorem c_list_concat_ev : eval O c_list_concat ⟪lN, i⟫ = l2n ((n2l lN)++[i]) := by simp [← evalp_eq_eval c_list_concat_prim]
@@ -445,9 +403,7 @@ end list_concat
 section list_map
 namespace Computability.Code
 def c_list_map (cf:Code) := (c_list_foldr (c_list_cons.comp₂ (cf.comp left) right)).comp₂ (c_list_nil) (c_id)
-@[cp] theorem c_list_map_prim (hcf:code_prim cf) : code_prim (c_list_map cf) := by
-  unfold c_list_map
-  apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+@[cp] theorem c_list_map_prim (hcf:code_prim cf) : code_prim (c_list_map cf) := by unfold c_list_map; apply_cp
 @[simp] theorem c_list_map_evp : evalp O (c_list_map cf) lN = l2n ((n2l lN).map (evalp O cf)) := by
   simp [c_list_map, -encode_list_cons, -encode_list_nil]
   induction (n2l lN) with
@@ -482,12 +438,8 @@ def c_list_zipWith_aux (cf:Code):=
   (c_list_foldl step).comp₂ (pair c_list_nil right) left
 def c_list_zipWith (cf:Code) := c_list_reverse.comp $ left.comp (c_list_zipWith_aux cf)
 
-@[cp] theorem c_list_zipWith_aux_prim (hcf:code_prim cf) : code_prim (c_list_zipWith_aux cf) := by
-  unfold c_list_zipWith_aux
-  apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
-@[cp] theorem c_list_zipWith_prim (hcf:code_prim cf) : code_prim (c_list_zipWith cf) := by
-  unfold c_list_zipWith
-  apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+@[cp] theorem c_list_zipWith_aux_prim (hcf:code_prim cf) : code_prim (c_list_zipWith_aux cf) := by unfold c_list_zipWith_aux; apply_cp
+@[cp] theorem c_list_zipWith_prim (hcf:code_prim cf) : code_prim (c_list_zipWith cf) := by unfold c_list_zipWith; apply_cp
 theorem c_list_zipWith_evp_aux_2 {a b : List ℕ} {f:ℕ→ℕ→ℕ} (h:a.length≤b.length) : List.zipWith f (b++c) a = List.zipWith f b a := by
   have aux3 : b = take a.length (b) ++ drop a.length (b) := by
     exact Eq.symm (take_append_drop a.length (b))
@@ -623,9 +575,7 @@ def c_list_range :=
   (prec
   (c_list_nil)
   (c_list_concat.comp₂ prev_list i)).comp₂ zero c_id
-@[cp] theorem c_list_range_prim : code_prim c_list_range := by
-  unfold c_list_range
-  apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+@[cp] theorem c_list_range_prim : code_prim c_list_range := by unfold c_list_range; apply_cp
 @[simp] theorem c_list_range_evp : evalp O c_list_range n = l2n (List.range n) := by
   simp [c_list_range, -encode_list_cons, -encode_list_nil]
   induction n with
@@ -645,9 +595,7 @@ def c_list_replicate :=
   (prec
   (c_list_nil)
   (c_list_concat.comp₂ prev_list x)).comp c_flip
-@[cp] theorem c_list_replicate_prim : code_prim c_list_replicate := by
-  unfold c_list_replicate
-  apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+@[cp] theorem c_list_replicate_prim : code_prim c_list_replicate := by unfold c_list_replicate; apply_cp
 @[simp] theorem c_list_replicate_evp : evalp O c_list_replicate ⟪n,x⟫ = l2n (List.replicate n x) := by
   simp [c_list_replicate, -encode_list_cons, -encode_list_nil]
   induction n with
@@ -668,9 +616,7 @@ def c_list_map' (cf:Code) :=
   let lN  := left
   let aux := right
   (c_list_map cf).comp ((c_list_zipWith c_id).comp₂ lN (c_list_replicate.comp₂ (c_list_length.comp lN) aux))
-@[cp] theorem c_list_map'_prim (hcf:code_prim cf) : code_prim (c_list_map' cf) := by
-  unfold c_list_map'
-  apply_rules (config := {maxDepth:=30, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+@[cp] theorem c_list_map'_prim (hcf:code_prim cf) : code_prim (c_list_map' cf) := by unfold c_list_map'; apply_cp
 @[simp] theorem c_list_map'_evp :
   evalp O (c_list_map' cf) ⟪lN, aux⟫
     =

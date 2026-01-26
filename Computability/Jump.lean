@@ -45,7 +45,7 @@ theorem O_le_K0 (O:ℕ→ℕ) :  O ≤ᵀᶠ (K0 O) := by
 
   have compute_total : code_total (K0 O) q := by
     apply prim_total
-    apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+    apply_cp 60
 
   simp only [c_jump_decode_ev' compute_total]
   simp only [q]
@@ -66,7 +66,7 @@ theorem K0_leq_K (O:ℕ→ℕ) : (K0 O) ≤ᵀᶠ (K O)  := by
 
   have compute_total : code_total (K O) compute := by
     apply prim_total
-    apply_rules (config := {maxDepth:=60, symm:=false, exfalso:=false, transparency:=.reducible}) only [*] using cp
+    apply_cp 60
 
   unfold compute
   funext x
