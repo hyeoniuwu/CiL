@@ -71,18 +71,13 @@ theorem c_bdd_search_evp_0 :
     unfold c_bdd_search
     lift_lets; extract_lets; expose_names
     simp [evalp]
-    let (eq:=hinp) inp := ⟪⟪s,⟪a,k⟫⟫,⟪n,Nat.rec (if evalp O compt ⟪s,⟪a,k⟫⟫ = 0 then 0 else ⟪0,evalp O compt ⟪s,⟪a,k⟫⟫ - 1⟫ + 1)
-      (fun y IH ↦
-        if evalp O prev_comp ⟪⟪s,⟪a,k⟫⟫,⟪y,IH⟫⟫ = 0 then
-          if evalp O computation ⟪⟪s,⟪a,k⟫⟫,⟪y,IH⟫⟫ = 0 then 0
-          else ⟪evalp O iP1 ⟪⟪s,⟪a,k⟫⟫,⟪y,IH⟫⟫,evalp O computation ⟪⟪s,⟪a,k⟫⟫,⟪y,IH⟫⟫ - 1⟫ + 1
-        else evalp O prev_comp ⟪⟪s,⟪a,k⟫⟫,⟪y,IH⟫⟫)
-      n⟫⟫
-    rw [←hinp]
+    let (eq:=hinp) inp := ⟪⟪s,a,k⟫, ⟪n,evalp O (c_bdd_search c) ⟪⟪s,a,k⟫, n⟫⟫⟫
+    unfold c_bdd_search at hinp; lift_lets at hinp; simp at hinp
+    rw [← hinp]
     have hprev_comp : evalp O prev_comp inp = evalp O (c_bdd_search c) ⟪⟪s,a,k⟫, n⟫ := by
       unfold c_bdd_search
       lift_lets;
-      simp [prev_comp, inp]
+      simp [prev_comp, hinp]
 
     have hs_1 : evalp O s_1 inp = s := by simp [s_1, inp]
     have ha_1 : evalp O a_1 inp = a := by simp [a_1, inp]
@@ -164,18 +159,13 @@ theorem c_bdd_search_evp_1:
     unfold c_bdd_search
     lift_lets; extract_lets; expose_names
     simp [evalp]
-    let (eq:=hinp) inp := ⟪⟪s,⟪a,k⟫⟫,⟪n,Nat.rec (if evalp O compt ⟪s,⟪a,k⟫⟫ = 0 then 0 else ⟪0,evalp O compt ⟪s,⟪a,k⟫⟫ - 1⟫ + 1)
-      (fun y IH ↦
-        if evalp O prev_comp ⟪⟪s,⟪a,k⟫⟫,⟪y,IH⟫⟫ = 0 then
-          if evalp O computation ⟪⟪s,⟪a,k⟫⟫,⟪y,IH⟫⟫ = 0 then 0
-          else ⟪evalp O iP1 ⟪⟪s,⟪a,k⟫⟫,⟪y,IH⟫⟫,evalp O computation ⟪⟪s,⟪a,k⟫⟫,⟪y,IH⟫⟫ - 1⟫ + 1
-        else evalp O prev_comp ⟪⟪s,⟪a,k⟫⟫,⟪y,IH⟫⟫)
-      n⟫⟫
-    rw [←hinp]
+    let (eq:=hinp) inp := ⟪⟪s,⟪a,k⟫⟫, ⟪n,evalp O (c_bdd_search c) ⟪⟪s,a,k⟫, n⟫⟫⟫
+    unfold c_bdd_search at hinp; lift_lets at hinp; simp at hinp
+    rw [← hinp]
     have hprev_comp : evalp O prev_comp inp = evalp O (c_bdd_search c) ⟪⟪s,a,k⟫, n⟫ := by
       unfold c_bdd_search
       lift_lets;
-      simp [prev_comp, inp]
+      simp [prev_comp, hinp]
     have hs_1 : evalp O s_1 inp = s := by simp [s_1, inp]
     have ha_1 : evalp O a_1 inp = a := by simp [a_1, inp]
     have hk_1 : evalp O k_1 inp = k := by simp [k_1, inp]

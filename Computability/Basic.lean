@@ -66,6 +66,7 @@ notation "⟪" x "," y "⟫" => Nat.pair x y
 notation "⟪" x "," y "⟫" => Nat.pair <$> x <*> y
 notation "⟪" x "," y "," z "⟫" => Nat.pair x (Nat.pair y z)
 notation "⟪" x "," y "," z "⟫" => Nat.pair <$> x <*> (Nat.pair <$> y <*> z)
+notation "⟪" x "," y "," z "," w "⟫" => (Nat.pair x y) (Nat.pair z w)
 def Nat.l (n:ℕ) := n.unpair.1
 def Nat.r (n:ℕ) := n.unpair.2
 @[simp] theorem pair_l {x y} : (Nat.pair x y).l = x := by simp [Nat.l]
