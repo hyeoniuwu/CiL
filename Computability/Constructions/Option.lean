@@ -11,67 +11,6 @@ open Denumerable
 open Encodable
 open List
 
-@[simp] theorem hnat_to_opt_0 : (Denumerable.ofNat (Option ℕ) 0) = Option.none := by exact rfl
-@[simp] theorem hnat_to_opt_0' : (Denumerable.ofNat (Option ℕ) (x+1)) = Option.some (x) := by exact rfl
-theorem ge_0_rw {x} (h2:¬x=0) : x=x-1+1 := by exact Eq.symm (succ_pred_eq_of_ne_zero h2)
-theorem hnat_to_opt_2 {x} (h3:¬x=o2n Option.none) : n2o x = (Option.some (x-1)) := by
-  rw (config := {occs := .pos [1]}) [ge_0_rw h3]
-  exact rfl
-theorem not_none_imp_not_zero {xx} (h:¬xx=o2n Option.none):¬xx=0:=by
-  simp at h
-  exact h
-theorem hnat_0 {o:Option ℕ} (ho: o.isSome) : ¬ o2n o = 0 := by
-  have : o = Option.some (o.get ho) := by exact Option.dom_imp_some ho
-  rw [this]
-  exact add_one_ne_zero (Encodable.encode (o.get ho))
-theorem hnat_1 {o:Option ℕ} (ho: ¬ o = Option.none) : ¬ o2n o = 0 := by
-  exact hnat_0 (Option.isSome_iff_ne_none.mpr ho)
-theorem hnat_2 {o:Option ℕ} (ho: o.isSome) : (o2n o) - 1 = o.get ho := by
-  simp (config:={singlePass:=true}) [Option.dom_imp_some ho]
-  exact rfl
-
-theorem hnat_5 (h:n≠0) : ((n-1).max (a-1))+1 = n.max a := by
-  grind only [= Nat.max_def, cases Or]
-theorem hnat_6 (h:i≠0) : (n2o i).isSome := by
-  have : i=i-1+1 := by exact ge_0_rw h
-  rw [this]
-  rfl
-theorem hnat_8 (h:(n2o o).isSome): o≠0 := by
-  contrapose h
-  simp at h
-  simp [h]
-theorem hnat_7 : (n2o o).get h = o-1 := by
-  have : o ≠ 0 := by exact hnat_8 h
-  have : o=o-1+1 := by exact ge_0_rw this
-  simp (config:={singlePass:=true}) [this]
-theorem hnat_9 : o.get h = (o2n o)-1 := by
-  exact Eq.symm (hnat_2 h)
-theorem iget_eq_get {o:Option ℕ} (h:o.isSome) : o.iget = o.get h := by
-  have : o= some (o.get h) := by exact Option.dom_imp_some h
-  exact Option.iget_of_mem this
-theorem o2n_a0 : o2n x = 0 ↔ x = Option.none := by
-  constructor
-  · intro h
-    contrapose h
-    exact hnat_1 h
-  · intro h
-    simp [h]
-theorem hnat_10 (h : o2n x ≠ 0) : x.isSome := by
-  have := hnat_6 h
-  simp at this
-  exact this
-theorem hnat_11 {x:Option ℕ} (h : x.isSome) : x = some (o2n x - 1) := by
-  rw [hnat_2 h]
-  simp
-theorem hnat_12 {x : ℕ} (h : n2o x = some a) : x-1 = a := by
-  have : (n2o x).isSome := by exact Option.isSome_of_mem h
-  have := hnat_11 this
-  rw [this] at h
-  simp at h
-  assumption
-
-
-
 section isSome
 namespace Computability.Code
 def c_isSome := c_sg'

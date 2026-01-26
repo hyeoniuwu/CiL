@@ -259,28 +259,18 @@ theorem c_div_flip_evp_aux_aux :
 
   lift_lets; extract_lets; expose_names
 
-  let (eq:=hinp) inp := Nat.pair (d + 1) (Nat.pair n (evalp O c_div_flip_aux ⟪d+1, n⟫))
+  let (eq:=hinp2) inp2 := evalp O c_div_flip_aux (Nat.pair (d+1) (n))
+  unfold c_div_flip_aux at hinp2; lift_lets at hinp2
+  let (eq:=hinp) inp := Nat.pair (d + 1) (Nat.pair n inp2)
 
   have hdivisor : evalp O divisor inp = d+1 := by simp [hinp, divisor]
   have hdividend : evalp O dividend inp = n+1 := by simp [hinp, dividend]
-  have hlist_of_prev_values : evalp O list_of_prev_values inp = evalp O c_div_flip_aux ⟪d+1, n⟫ := by simp [hinp, list_of_prev_values]
+  have hlist_of_prev_values : evalp O list_of_prev_values inp = evalp O c_div_flip_aux ⟪d+1, n⟫ := by
+    simp [hinp, inp2, list_of_prev_values]
 
   simp
 
-  have stupidrewrite :
-  (evalp O
-  ((c_const 0).c_cov_rec
-  (c_ifz.comp₂ divisor
-  ((c_const 0).pair
-  (c_if_lt_te.comp₄ dividend divisor (c_const 0)
-  (succ.comp (c_list_getI.comp₂ list_of_prev_values (c_sub.comp₂ dividend divisor)))))))
-  (Nat.pair (d + 1) n))
-                =
-              evalp O c_div_flip_aux (Nat.pair (d+1) (n))
-              := by exact rfl
-
-  simp [stupidrewrite]
-  simp only [←hinp]
+  simp only [← hinp2, ← hinp]
   simp [hdivisor,hdividend,hlist_of_prev_values]
 
   unfold c_div_flip
@@ -288,9 +278,6 @@ theorem c_div_flip_evp_aux_aux :
   simp only []
   rw [evalp]
   simp
-
-
-
 
 theorem c_div_flip_evp_aux:evalp O c_div_flip = unpaired2 div_flip_aux := by
   funext dn
@@ -493,20 +480,19 @@ theorem c_replace_oracle_evp_aux_nMod4 :
   extract_lets
   expose_names
 
+  let (eq:=hinp) inp := evalp O c_replace_oracle_aux ⟪o, n+4⟫
+  unfold c_replace_oracle_aux at hinp; lift_lets at hinp
 
-  have hinput_to_decode : evalp O input_to_decode ⟪o, n+4, evalp O c_replace_oracle_aux ⟪o, n+4⟫⟫ = n+5 := by simp [input_to_decode]
-  have hn : evalp O n_1 ⟪o, n+4, evalp O c_replace_oracle_aux ⟪o, n+4⟫⟫ = n := by simp [n_1, hinput_to_decode]
-  have hnMod4 : evalp O nMod4 ⟪o, n+4, evalp O c_replace_oracle_aux ⟪o, n+4⟫⟫ = n%4 := by simp [nMod4, hn]
-  have hm : evalp O m_1 ⟪o, n+4, evalp O c_replace_oracle_aux ⟪o, n+4⟫⟫ = m := by
-    simp [m_1]
-    simp [hn]
-    simp [m]
-
-  have hml : evalp O ml_1 ⟪o, n+4, evalp O c_replace_oracle_aux ⟪o, n+4⟫⟫ = ml := by
+  have hinput_to_decode : evalp O input_to_decode ⟪o, n+4, inp⟫ = n+5 := by simp [input_to_decode]
+  have hn : evalp O n_1 ⟪o, n+4, inp⟫ = n := by simp [n_1, hinput_to_decode]
+  have hnMod4 : evalp O nMod4 ⟪o, n+4, inp⟫ = n%4 := by simp [nMod4, hn]
+  have hm : evalp O m_1 ⟪o, n+4, inp⟫ = m := by simp [m_1, hn, m]
+  have hml : evalp O ml_1 ⟪o, n+4, inp⟫ = ml := by
     simp [ml_1]
     simp [comp_hist]
     simp [hm]
     simp [ml]
+    simp [inp]
 
     unfold c_replace_oracle
     unfold c_replace_oracle_aux
@@ -515,11 +501,12 @@ theorem c_replace_oracle_evp_aux_nMod4 :
     simp only [div2_val]
     rw [c_cov_rec_evp_2_I c_replace_oracle_evp_aux_nMod4_bounds1]
     simp
-  have hmr : evalp O mr_1 ⟪o, n+4, evalp O c_replace_oracle_aux ⟪o, n+4⟫⟫ = mr := by
+  have hmr : evalp O mr_1 ⟪o, n+4, inp⟫ = mr := by
     simp [mr_1]
     simp [comp_hist]
     simp [hm]
     simp [mr]
+    simp [inp]
 
     unfold c_replace_oracle
     unfold c_replace_oracle_aux
@@ -528,11 +515,12 @@ theorem c_replace_oracle_evp_aux_nMod4 :
     simp only [div2_val]
     rw [c_cov_rec_evp_2_I c_replace_oracle_evp_aux_nMod4_bounds2]
     simp
-  have hmp : evalp O mp_1 ⟪o, n+4, evalp O c_replace_oracle_aux ⟪o, n+4⟫⟫ = mp := by
+  have hmp : evalp O mp_1 ⟪o, n+4, inp⟫ = mp := by
     simp [mp_1]
     simp [comp_hist]
     simp [hm]
     simp [mp]
+    simp [inp]
 
     unfold c_replace_oracle
     unfold c_replace_oracle_aux
@@ -541,44 +529,12 @@ theorem c_replace_oracle_evp_aux_nMod4 :
     simp only [div2_val]
     rw [c_cov_rec_evp_2_I c_replace_oracle_evp_aux_nMod4_bounds3]
     simp
-  have hpair_code : evalp O pair_code ⟪o, n+4, evalp O c_replace_oracle_aux ⟪o, n+4⟫⟫ = 2 * (2 * ⟪ml, mr⟫) + 5 := by
-    simp [pair_code]
-    simp [hml]
-    simp [hmr]
-    simp [mul_comm]
-  have hcomp_code : evalp O comp_code ⟪o, n+4, evalp O c_replace_oracle_aux ⟪o, n+4⟫⟫ = 2*(2*⟪ml, mr⟫  ) +1  + 5 := by
-    simp [comp_code]
-    simp [hml]
-    simp [hmr]
-    simp [mul_comm]
-  have hprec_code : evalp O prec_code ⟪o, n+4, evalp O c_replace_oracle_aux ⟪o, n+4⟫⟫ = 2*(2*⟪ml, mr⟫ +1 )   + 5 := by
-    simp [prec_code]
-    simp [hml]
-    simp [hmr]
-    simp [mul_comm]
-  have hrfind'_code : evalp O rfind'_code ⟪o, n+4, evalp O c_replace_oracle_aux ⟪o, n+4⟫⟫ = 2*(2*(mp)  +1)+1   + 5 := by
-    simp [rfind'_code]
-    simp [hmp]
-    simp [mul_comm]
+  have hpair_code : evalp O pair_code ⟪o, n+4, inp⟫ = 2 * (2 * ⟪ml, mr⟫) + 5 := by simp [pair_code, hml, hmr, mul_comm]
+  have hcomp_code : evalp O comp_code ⟪o, n+4, inp⟫ = 2*(2*⟪ml, mr⟫  ) +1  + 5 := by simp [comp_code, hml, hmr, mul_comm]
+  have hprec_code : evalp O prec_code ⟪o, n+4, inp⟫ = 2*(2*⟪ml, mr⟫ +1 )   + 5 := by simp [prec_code, hml, hmr, mul_comm]
+  have hrfind'_code : evalp O rfind'_code ⟪o, n+4, inp⟫ = 2*(2*(mp)  +1)+1   + 5 := by simp [rfind'_code, hmp, mul_comm]
 
-  simp
--- how can i avoid writing this out in full?
-  have stupidrewrite :
-  (evalp O
-  ((c_const 0).c_cov_rec
-  (c_if_eq_te.comp₄ input_to_decode (c_const 1) (c_const 1)
-  (c_if_eq_te.comp₄ input_to_decode (c_const 2) (c_const 2)
-  (c_if_eq_te.comp₄ input_to_decode (c_const 3) (c_const 3)
-  (c_if_eq_te.comp₄ input_to_decode (c_const 4) o_1
-  (c_if_eq_te.comp₄ nMod4 (c_const 0) pair_code
-  (c_if_eq_te.comp₄ nMod4 (c_const 1) comp_code
-  (c_if_eq_te.comp₄ nMod4 (c_const 2) prec_code rfind'_code))))))))
-  (Nat.pair o (n + 4)))
-  = evalp O c_replace_oracle_aux ⟪o, n+4⟫ := by exact rfl
-
-  simp [stupidrewrite]
-
-
+  simp [←hinp]
   simp [hinput_to_decode]
   simp only [hnMod4]
 

@@ -132,25 +132,12 @@ theorem c_usen_evp_aux_0_np1 : evalp O (c_usen) (Nat.pair x (Nat.pair (n+1) 0)) 
   have hkP1: k+1=((Nat.pair (n+1) 0)) := by exact Nat.sub_add_cancel kP1_gt_0
   rw [←hkP1]
 
-  let covrec_inp := Nat.pair 17 (Nat.pair k (evalp O c_usen_aux (Nat.pair 17 k)))
-  have covrec_inp_simp : Nat.pair 17 (Nat.pair k (evalp O c_usen_aux (Nat.pair 17 k))) = covrec_inp := rfl
+  let (eq:=hinp) inp := (evalp O c_usen_aux (Nat.pair 17 k))
+  unfold c_usen_aux at hinp; lift_lets at hinp
+  let (eq:=hcovrec_inp) covrec_inp := Nat.pair 17 (Nat.pair k inp)
 
   simp [-comp₄_evp]
-  have stupidrewrite :
-  (evalp O
-  (zero.c_list_singleton.c_cov_rec
-  (c_if_eq_te.comp₄ s (c_const 0) zero.c_list_singleton
-  (c_if_eq_te.comp₄ code (c_const 0) zero_mapped
-  (c_if_eq_te.comp₄ code (c_const 1) zero_mapped
-  (c_if_eq_te.comp₄ code (c_const 2) zero_mapped
-  (c_if_eq_te.comp₄ code (c_const 3) zero_mapped
-  (c_if_eq_te.comp₄ code (c_const 4) oracle_mapped
-  (c_if_eq_te.comp₄ nMod4 (c_const 0) pair_mapped
-  (c_if_eq_te.comp₄ nMod4 (c_const 1) comp_mapped
-  (c_if_eq_te.comp₄ nMod4 (c_const 2) prec_mapped rfind'_mapped))))))))))
-  (Nat.pair 17 k))
-  = (evalp O c_usen_aux (Nat.pair 17 k)) := rfl
-  simp [stupidrewrite,covrec_inp_simp]
+  simp [←hinp, ←hcovrec_inp]
 
   have hs : evalp O s covrec_inp = 0 := by simp [s,code_s,covrec_inp,hkP1]
   simp [hs, getI, usen]
@@ -174,23 +161,10 @@ theorem c_usen_evp_aux (hcode_val:code≤4) :
   have hkP1: k+1=((Nat.pair code (s + 1))) := by exact Nat.sub_add_cancel kP1_gt_0
   rw [←hkP1]
 
-  let covrec_inp := Nat.pair 17 (Nat.pair k (evalp O c_usen_aux (Nat.pair 17 k)))
-  have covrec_inp_simp : Nat.pair 17 (Nat.pair k (evalp O c_usen_aux (Nat.pair 17 k))) = covrec_inp := rfl
-  have stupidrewrite :
-  (evalp O
-  (zero.c_list_singleton.c_cov_rec
-  (c_if_eq_te.comp₄ s_1 (c_const 0) zero.c_list_singleton
-  (c_if_eq_te.comp₄ code_1 (c_const 0) zero_mapped
-  (c_if_eq_te.comp₄ code_1 (c_const 1) zero_mapped
-  (c_if_eq_te.comp₄ code_1 (c_const 2) zero_mapped
-  (c_if_eq_te.comp₄ code_1 (c_const 3) zero_mapped
-  (c_if_eq_te.comp₄ code_1 (c_const 4) oracle_mapped
-  (c_if_eq_te.comp₄ nMod4 (c_const 0) pair_mapped
-  (c_if_eq_te.comp₄ nMod4 (c_const 1) comp_mapped
-  (c_if_eq_te.comp₄ nMod4 (c_const 2) prec_mapped rfind'_mapped))))))))))
-  (Nat.pair 17 k))
-  = (evalp O c_usen_aux (Nat.pair 17 k)) := by exact rfl
-  simp [stupidrewrite,covrec_inp_simp]
+  let (eq:=hinp) inp := (evalp O c_usen_aux (Nat.pair 17 k))
+  unfold c_usen_aux at hinp; lift_lets at hinp
+  let (eq:=hcovrec_inp) covrec_inp := Nat.pair 17 (Nat.pair k inp)
+  simp [←hinp, ←hcovrec_inp]
 
   have hcode_s : evalp O code_s covrec_inp = (Nat.pair code (s + 1)) := by simp [code_s,covrec_inp,hkP1]
   have hs      : evalp O s_1 covrec_inp = s+1 := by simp [s_1,hcode_s]
@@ -260,7 +234,8 @@ theorem c_usen_evp_aux_nMod4 :
   let mr        := m.r
 
   let k:=(Nat.pair ((n+4)+1) (s+1))-1
-  let covrec_inp := Nat.pair 17 (Nat.pair k (evalp O c_usen_aux (Nat.pair 17 k)))
+  let (eq:=hinp) inp := (evalp O c_usen_aux (Nat.pair 17 k))
+  let covrec_inp := Nat.pair 17 (Nat.pair k inp)
 
   let pc_ml_s  c' elem := evalp O (c_usen) (Nat.pair (evalp O c' (Nat.pair elem covrec_inp)) (Nat.pair ml (s+1)))
   let pc_mr_s  c' elem := evalp O (c_usen) (Nat.pair (evalp O c' (Nat.pair elem covrec_inp)) (Nat.pair mr (s+1)))
@@ -324,23 +299,10 @@ theorem c_usen_evp_aux_nMod4 :
     exact Nat.sub_add_cancel kP1_gt_0
   rw [←hkP1]
 
-  have covrec_inp_simp : Nat.pair 17 (Nat.pair k (evalp O c_usen_aux (Nat.pair 17 k))) = covrec_inp := rfl
+  unfold c_usen_aux at hinp; lift_lets at hinp
+  have hcovrec_inp : Nat.pair 17 (Nat.pair k inp) = covrec_inp := rfl
   simp [-comp₄_evp]
-  have stupidrewrite :
-  (evalp O
-  (zero.c_list_singleton.c_cov_rec
-  (c_if_eq_te.comp₄ s_1 (c_const 0) zero.c_list_singleton
-  (c_if_eq_te.comp₄ code (c_const 0) zero_mapped
-  (c_if_eq_te.comp₄ code (c_const 1) zero_mapped
-  (c_if_eq_te.comp₄ code (c_const 2) zero_mapped
-  (c_if_eq_te.comp₄ code (c_const 3) zero_mapped
-  (c_if_eq_te.comp₄ code (c_const 4) oracle_mapped
-  (c_if_eq_te.comp₄ nMod4 (c_const 0) pair_mapped
-  (c_if_eq_te.comp₄ nMod4 (c_const 1) comp_mapped
-  (c_if_eq_te.comp₄ nMod4 (c_const 2) prec_mapped rfind'_mapped))))))))))
-  (Nat.pair 17 k))
-  = (evalp O c_usen_aux (Nat.pair 17 k)) := by exact rfl
-  simp [stupidrewrite,covrec_inp_simp]
+  simp [←hinp, hcovrec_inp]
 
   have hcode_s : evalp O code_s covrec_inp = (Nat.pair ((n+4)+1) (s+1)) := by simp [code_s,covrec_inp,hkP1]
   have hs      : evalp O s_1 covrec_inp    = s+1     := by simp [s_1,hcode_s]
@@ -374,7 +336,7 @@ theorem c_usen_evp_aux_nMod4 :
     simp [aux1,aux2,aux3] at *
 
     simp [comp_hist]
-    simp [covrec_inp]
+    simp [covrec_inp, inp]
     unfold c_usen
     unfold c_usen_aux
     lift_lets
@@ -609,7 +571,6 @@ theorem c_usen_evp_aux_nMod4 :
     rw [h] at contrad
     rw [show x.succ.succ.succ.succ=x+4 from rfl] at contrad
     simp at contrad
-
 
 @[simp] theorem c_usen_evp: evalp O (c_usen) (Nat.pair x (Nat.pair code s)) =
   o2n (usen O code.n2c s x) := by

@@ -33,3 +33,7 @@ lemma listrevlem2 (h:∃ l'':List ℕ, l'' ++ l' = (range x).reverse) (h2:a∈l'
 
 theorem list_access_small {i} {l1 l2 : List α} (h:i<l1.length) : (l1 ++ l2)[i]? = (l1)[i]? := by
     simp [getElem?_pos, List.getElem?_append, h]
+
+@[simp] theorem getI_eq_getElem {l:List ℕ} {h:i<l.length} : l.getI i = l[i] := by
+  unfold List.getI
+  simp [h]
