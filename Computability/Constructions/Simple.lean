@@ -12,15 +12,15 @@ open Computability
 
 
 /-
-`c_bdd_search c` is a primrec code that, on input `⟪(x, s, a), l⟫`, evaluates:
-  let e := [c](⟪(x, s, a), l⟫)
-  `[e]ₛ(x,a+0)`
-  `[e]ₛ(x,a+1)`
+`c_bdd_search c` is a primrec code that, on input `⟪(s, a, i), l⟫`, evaluates:
+  let e := [c](⟪(s, a, i), l⟫)
+  `[e]ₛ(a+0)`
+  `[e]ₛ(a+1)`
   ... up to
-  `[e]ₛ(x,a+l)`,
-  until one of the computations halt. Suppose `[e]ₛ(x,a+i)` is the first such computation.
+  `[e]ₛ(a+l)`,
+  until one of the computations halt. Suppose `[e]ₛ(a+i)` is the first such computation.
 
-  Then, `some ⟪i, [e](x,a+i)⟫` is returned.
+  Then, `some ⟪i, [e](a+i)⟫` is returned.
 
   If no such value is found, `none` is returned.
 
@@ -28,7 +28,7 @@ open Computability
 -/
 def c_bdd_search (c:Code) := prec
   (
-    let compt := c_evaln.comp₃ (pair left (right.comp right)) (c) (left.comp right)
+    let compt := c_evaln.comp₃ (left.comp right) (c) (left)
     c_ifz.comp₃ compt zero $
     succ.comp $ pair zero $ c_pred.comp compt
     -- pair zero $ c_evaln.comp₃ (pair left (c_const 0)) (c_const c) right
@@ -36,11 +36,12 @@ def c_bdd_search (c:Code) := prec
   (
     let prev_comp := right.comp right
     let iP1 := succ.comp $ left.comp right
-    let x := left.comp left
-    let s := left.comp $ right.comp left
-    let a := right.comp $ right.comp left
+    -- let x := left.comp left
+    let s := left.comp left
+    let a := left.comp $ right.comp left
+    let k := right.comp $ right.comp left
     let aPi := c_add.comp₂ a $ iP1
-    let computation := c_evaln.comp₃ (pair x aPi) (c.comp₃ x s a) s
+    let computation := c_evaln.comp₃ (aPi) (c.comp₃ s a k) s
 
     c_ifz.comp₃ prev_comp
     (c_ifz.comp₃ computation zero (succ.comp $ pair iP1 $ c_pred.comp computation))
@@ -59,40 +60,40 @@ theorem o2n_a0 : o2n x = 0 ↔ x = Option.none := by
 theorem b2n_a0 : b2n x = 0 ↔ x = false := by simp [b2n]
 
 theorem c_bdd_search_evp_0 :
-  (evalp O (c_bdd_search c) ⟪⟪x,s,a⟫, l⟫) = 0
+  (evalp O (c_bdd_search c) ⟪⟪s,a,k⟫, l⟫) = 0
   ↔
-  ∀ i ≤ l, (evaln O s (evalp O c ⟪x,s,a⟫) ⟪x,a+i⟫) = Option.none := by
+  ∀ i ≤ l, (evaln O s (evalp O c ⟪s,a,k⟫) (a+i)) = Option.none := by
   induction l with
   | zero =>
     simp [c_bdd_search]
-    simp [←o2n_a0]
+    simp [ ← o2n_a0]
   | succ n ih =>
     unfold c_bdd_search
     lift_lets; extract_lets; expose_names
     -- simp only [evalp, Nat.unpaired, Nat.unpair_pair, -comp₃_evp, c_ifz_evp, pair_l, pair_r]
     simp [evalp]
-    let (eq:=hinp) inp := ⟪⟪x,⟪s,a⟫⟫,⟪n,Nat.rec (if evalp O compt ⟪x,⟪s,a⟫⟫ = 0 then 0 else ⟪0,evalp O compt ⟪x,⟪s,a⟫⟫ - 1⟫ + 1)
+    let (eq:=hinp) inp := ⟪⟪s,⟪a,k⟫⟫,⟪n,Nat.rec (if evalp O compt ⟪s,⟪a,k⟫⟫ = 0 then 0 else ⟪0,evalp O compt ⟪s,⟪a,k⟫⟫ - 1⟫ + 1)
                   (fun y IH ↦
-                    if evalp O prev_comp ⟪⟪x,⟪s,a⟫⟫,⟪y,IH⟫⟫ = 0 then
-                      if evalp O computation ⟪⟪x,⟪s,a⟫⟫,⟪y,IH⟫⟫ = 0 then 0
-                      else ⟪evalp O iP1 ⟪⟪x,⟪s,a⟫⟫,⟪y,IH⟫⟫,evalp O computation ⟪⟪x,⟪s,a⟫⟫,⟪y,IH⟫⟫ - 1⟫ + 1
-                    else evalp O prev_comp ⟪⟪x,⟪s,a⟫⟫,⟪y,IH⟫⟫)
+                    if evalp O prev_comp ⟪⟪s,⟪a,k⟫⟫,⟪y,IH⟫⟫ = 0 then
+                      if evalp O computation ⟪⟪s,⟪a,k⟫⟫,⟪y,IH⟫⟫ = 0 then 0
+                      else ⟪evalp O iP1 ⟪⟪s,⟪a,k⟫⟫,⟪y,IH⟫⟫,evalp O computation ⟪⟪s,⟪a,k⟫⟫,⟪y,IH⟫⟫ - 1⟫ + 1
+                    else evalp O prev_comp ⟪⟪s,⟪a,k⟫⟫,⟪y,IH⟫⟫)
                   n⟫⟫
     rw [←hinp]
-    have hprev_comp : evalp O prev_comp inp = evalp O (c_bdd_search c) ⟪⟪x,s,a⟫, n⟫ := by
+    have hprev_comp : evalp O prev_comp inp = evalp O (c_bdd_search c) ⟪⟪s,a,k⟫, n⟫ := by
       unfold c_bdd_search
       lift_lets;
       simp [prev_comp, inp]
 
     have hs_1 : evalp O s_1 inp = s := by simp [s_1, inp]
     have ha_1 : evalp O a_1 inp = a := by simp [a_1, inp]
-    have hx_1 : evalp O x_1 inp = x := by simp [x_1, inp]
+    have hk_1 : evalp O k_1 inp = k := by simp [k_1, inp]
     have hiP1 : evalp O iP1 inp = n+1 := by simp [iP1, inp]
     have haPi : evalp O aPi inp = a+(n+1) := by simp [aPi, ha_1, hiP1]
     simp [hprev_comp]
-    have hcomputation : evalp O computation inp = o2n (evaln O s (evalp O c ⟪x,s,a⟫) ⟪x, a+(n+1)⟫) := by
-      simp [computation, hs_1, hx_1, haPi, ha_1]
-    simp [hcomputation, hiP1, haPi]
+    have hcomputation : evalp O computation inp = o2n (evaln O s (evalp O c ⟪s,a,k⟫) (a+(n+1))) := by
+      simp [computation, hs_1, haPi, ha_1, hk_1]
+    simp [hcomputation, hiP1]
     split at ⊢
     next h2 =>
       have ih1 := ih.mp h2
@@ -129,15 +130,21 @@ theorem hnat_10 (h : o2n x ≠ 0) : x.isSome := by
 theorem hnat_11 {x:Option ℕ} (h : x.isSome) : x = some (o2n x - 1) := by
   rw [hnat_2 h]
   simp
+theorem hnat_12 {x : ℕ} (h : n2o x = some a) : x-1 = a := by
+  have : (n2o x).isSome := by exact Option.isSome_of_mem h
+  have := hnat_11 this
+  rw [this] at h
+  simp at h
+  assumption
 theorem c_bdd_aux (h:x≠0) : ∃ y z, ⟪y, z⟫ ∈ n2o x := by
   use (x-1).l
   use (x-1).r
   simp
   exact hnat_to_opt_2 h
 theorem c_bdd_search_evp_1:
-  ⟪i, r⟫ ∈ (n2o (evalp O (c_bdd_search c) ⟪⟪x,s,a⟫, l⟫))
+  ⟪i, r⟫ ∈ (n2o (evalp O (c_bdd_search c) ⟪⟪s,a,k⟫, l⟫))
   ↔
-  i ≤ l ∧ r ∈ ((evaln O s (evalp O c ⟪x,s,a⟫) ⟪x,a+i⟫)) ∧ ∀ j < i,(evaln O s (evalp O c ⟪x,s,a⟫) ⟪x,a+j⟫) = none := by
+  i ≤ l ∧ r ∈ ((evaln O s (evalp O c ⟪s,a,k⟫) (a+i))) ∧ ∀ j < i,(evaln O s (evalp O c ⟪s,a,k⟫) (a+j)) = none := by
   induction l generalizing i r with
   | zero =>
     simp [c_bdd_search]
@@ -155,7 +162,7 @@ theorem c_bdd_search_evp_1:
             obtain ⟨left, right⟩ := a_1
             subst right left
             simp_all only [add_zero]
-            have : (evaln O s (n2c (evalp O c ⟪x,⟪s,a⟫⟫)) ⟪x,a⟫).isSome := by
+            have : (evaln O s (n2c (evalp O c ⟪s,a,k⟫)) a).isSome := by
               exact hnat_10 h
             exact hnat_11 this
         · intro j a_2
@@ -179,27 +186,27 @@ theorem c_bdd_search_evp_1:
     lift_lets; extract_lets; expose_names
     -- simp only [evalp, Nat.unpaired, Nat.unpair_pair, -comp₃_evp, c_ifz_evp, pair_l, pair_r]
     simp [evalp]
-    let (eq:=hinp) inp := ⟪⟪x,⟪s,a⟫⟫,⟪n,Nat.rec (if evalp O compt ⟪x,⟪s,a⟫⟫ = 0 then 0 else ⟪0,evalp O compt ⟪x,⟪s,a⟫⟫ - 1⟫ + 1)
+    let (eq:=hinp) inp := ⟪⟪s,⟪a,k⟫⟫,⟪n,Nat.rec (if evalp O compt ⟪s,⟪a,k⟫⟫ = 0 then 0 else ⟪0,evalp O compt ⟪s,⟪a,k⟫⟫ - 1⟫ + 1)
                     (fun y IH ↦
-                      if evalp O prev_comp ⟪⟪x,⟪s,a⟫⟫,⟪y,IH⟫⟫ = 0 then
-                        if evalp O computation ⟪⟪x,⟪s,a⟫⟫,⟪y,IH⟫⟫ = 0 then 0
-                        else ⟪evalp O iP1 ⟪⟪x,⟪s,a⟫⟫,⟪y,IH⟫⟫,evalp O computation ⟪⟪x,⟪s,a⟫⟫,⟪y,IH⟫⟫ - 1⟫ + 1
-                      else evalp O prev_comp ⟪⟪x,⟪s,a⟫⟫,⟪y,IH⟫⟫)
-                    n⟫⟫
+                      if evalp O prev_comp ⟪⟪s,⟪a,k⟫⟫,⟪y,IH⟫⟫ = 0 then
+                        if evalp O computation ⟪⟪s,⟪a,k⟫⟫,⟪y,IH⟫⟫ = 0 then 0
+                        else ⟪evalp O iP1 ⟪⟪s,⟪a,k⟫⟫,⟪y,IH⟫⟫,evalp O computation ⟪⟪s,⟪a,k⟫⟫,⟪y,IH⟫⟫ - 1⟫ + 1
+                      else evalp O prev_comp ⟪⟪s,⟪a,k⟫⟫,⟪y,IH⟫⟫)
+                    n⟫⟫ 
     rw [←hinp]
-    have hprev_comp : evalp O prev_comp inp = evalp O (c_bdd_search c) ⟪⟪x,s,a⟫, n⟫ := by
+    have hprev_comp : evalp O prev_comp inp = evalp O (c_bdd_search c) ⟪⟪s,a,k⟫, n⟫ := by
       unfold c_bdd_search
       lift_lets;
       simp [prev_comp, inp]
 
     have hs_1 : evalp O s_1 inp = s := by simp [s_1, inp]
     have ha_1 : evalp O a_1 inp = a := by simp [a_1, inp]
-    have hx_1 : evalp O x_1 inp = x := by simp [x_1, inp]
+    have hk_1 : evalp O k_1 inp = k := by simp [k_1, inp]
     have hiP1 : evalp O iP1 inp = n+1 := by simp [iP1, inp]
     have haPi : evalp O aPi inp = a+(n+1) := by simp [aPi, ha_1, hiP1]
     simp [hprev_comp]
-    have hcomputation : evalp O computation inp = o2n (evaln O s (evalp O c ⟪x,s,a⟫) ⟪x, a+(n+1)⟫) := by
-      simp [computation, hs_1, hx_1, haPi, ha_1]
+    have hcomputation : evalp O computation inp = o2n (evaln O s (evalp O c ⟪s,a,k⟫) (a+(n+1))) := by
+      simp [computation, hs_1, haPi, ha_1, hk_1]
     simp [hcomputation, hiP1]
     split
     next h =>
@@ -393,6 +400,14 @@ theorem c_fs_add_aux (x y : ℕ) : x.testBit y ↔ x = x ||| (2^y) := by
 end Computability.Code
 end fs_add
 
+theorem evaln_dom_imp_x_le_s (h:(evaln O s c x).isSome) : x≤s := by
+  contrapose h
+  simp at h
+  simp
+  cases s with
+  | zero => simp [evaln]
+  | succ n =>
+    cases c <;> simp [evaln, not_le.mpr (Nat.lt_of_succ_lt h)];
 
 
 open Classical in
@@ -409,20 +424,23 @@ def c_step :=
   let s := left
   let i := left.comp right
   let prev := right.comp right
+  -- i inside search expr:
+  -- let ii := c_comp.comp₂ (left.comp $ right.comp $ left) c_right
 
   let Aₚ := left.comp prev
   let Rₚ := right.comp prev
+  let z21 := succ.comp $ c_mul.comp₂ (c_const 2) $ left.comp right
   c_ifz.comp₃ (c_sg'.comp $ c_fs_in.comp₂ Rₚ i)
   prev
   (
     -- search from [i]ₛ(0) to [i]ₛ(s)
-    let search := (c_bdd_search (c_id)).comp₂ (pair zero c_id) s
-    let min := (left.comp $ c_pred.comp search)
+    let search := (c_bdd_search (right.comp right)).comp₂ ((pair s $ pair (z21) i)) (s)
+    let min := c_add.comp₂ z21 (left.comp $ c_pred.comp search)
     c_ifz.comp₃ (search)
-      (pair (c_fs_add.comp₂ Aₚ min) (c_fs_add.comp₂ Rₚ i))
     prev
+    (pair (c_fs_add.comp₂ Aₚ min) (c_fs_add.comp₂ Rₚ i))
   )
-@[simp] theorem c_step_evp : evalp O c_step = λ x:ℕ ↦ Simple.step x.l x.r.l x.r.r := by
+@[simp] theorem c_step_evp : evalp (χ ∅) c_step = λ x:ℕ ↦ Simple.step x.l x.r.l x.r.r := by
   funext x
   unfold Simple.step
   unfold c_step
@@ -430,12 +448,14 @@ def c_step :=
   simp
   -- simp [Rₚ, prev]
 
-  have hprev : (evalp O prev x) = x.r.r := by simp [prev]
-  have hx_1 : (evalp O Rₚ x) = Rₚ_1 := by simp [Rₚ, prev, Rₚ_1]
-  have hi : (evalp O i x) = x.r.l := by simp [i]
-  have hs : (evalp O s x) = x.l := by simp [s]
+  have hprev : (evalp (χ ∅) prev x) = x.r.r := by simp [prev]
+  have hRp_1 : (evalp (χ ∅) Rₚ x) = Rₚ_1 := by simp [Rₚ, prev, Rₚ_1]
+  have hAₚ_1 : (evalp (χ ∅) Aₚ x) = Aₚ_1 := by simp [Aₚ, prev, Aₚ_1]
+  have hi : (evalp (χ ∅) i x) = x.r.l := by simp [i]
+  have hs : (evalp (χ ∅) s x) = x.l := by simp [s]
+  have hz21 : (evalp (χ ∅) z21 x) = 2*x.r.l+1 := by simp [z21]
 
-  simp [hprev, hx_1, hi]
+  simp [hprev, hRp_1, hi, hAₚ_1]
   split; rotate_left
   next h0 =>
     simp [b2n] at h0
@@ -451,21 +471,64 @@ def c_step :=
       unfold search at h0
       simp [hs] at h0
       rcases c_bdd_aux h0 with ⟨z,r, hzr⟩
+      simp [hi, hz21] at hzr
       have temp := c_bdd_search_evp_1.mp hzr
-      simp [i] at temp
-      rcases temp with ⟨hzr1, hzr2⟩
-      have found : ∃ x_1, (evalnSet ∅ x.l (n2c x.r.l) x_1).isSome = true ∧ x_1 > 2 * x.r.l := by
-        use z
+      -- simp [i] at temp
+      rcases temp with ⟨hzr1, hzr2, hzr3⟩
+      simp [hi] at hzr1 hzr2 hzr3
+      -- simp [evaln] at hzr2
+      have found_aux : (evalnSet ∅ x.l (n2c x.r.l) (2*x.r.l+1+z)).isSome = true ∧ (2*x.r.l+1+z) > 2 * x.r.l := by
         constructor
+        simp [evalnSet]
+        rw [hzr2]
+        rfl
+        omega
+      have found : ∃ x_1, (evalnSet ∅ x.l (n2c x.r.l) x_1).isSome = true ∧ x_1 > 2 * x.r.l := by
+        use 2*x.r.l+1+z
+      simp [found]
+      apply congrArg
+      simp [min, search, hs,hi, hz21]
+      simp [hnat_12 hzr]
+      let (eq:=hnf) nf := Nat.find found
+      have a0 := @Nat.find_min _ _ found
+      have a1 := @Nat.find_spec _ _ found
+      rw [←hnf] at a0 a1 ⊢
 
-        sorry
-
-      sorry
+      have tri := lt_trichotomy (2 * x.r.l + 1 + z) nf
+      cases tri with
+      | inl h =>
+        have := @a0 (2 * x.r.l + 1 + z) h
+        simp at this
+        have := this found_aux.1
+        omega
+      | inr h =>
+      cases h with
+      | inl h => exact h
+      | inr h =>
+        have a2 : nf - 2*x.r.l-1 < z := by omega
+        have a3 := hzr3 (nf - 2*x.r.l-1) a2
+        have a4 : (2 * x.r.l + 1 + (nf - 2 * x.r.l - 1)) = nf := by omega
+        simp [a4] at a3
+        simp [evalnSet] at a1
+        simp [a3] at a1
+      
     next h0 =>
-      sorry
+      simp [search, hz21, hi, hs] at h0
+      have := c_bdd_search_evp_0.mp h0
+      split; rotate_left
+      next h1 => simp
+      next h1 =>
+        rcases h1 with ⟨h2,h3,h4⟩
+        simp [evalnSet] at h3
+        have a0 : h2 ≤ x.l := by exact evaln_dom_imp_x_le_s h3
+        have a2 : h2-2*x.r.l-1 ≤ x.l := by omega
+        have a1 := this (h2-2*x.r.l-1) a2
+        simp at a1
+        have a3 : (2 * x.r.l + 1 + (h2 - 2 * x.r.l - 1)) = h2 := by omega
 
+        simp [a3] at a1
+        simp [a1] at h3
 
-  sorry
 
 def c_C :=
   (
