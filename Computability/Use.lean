@@ -441,28 +441,19 @@ theorem nrfind'_obtain_prop_4 (h:(evaln O (s+1) (rfind' cf) x).isSome) :
   simp
   use ro-j
   constructor
-  ·
-    rw [mpp_leq hjro]
+  · rw [mpp_leq hjro]
     rw [Nat.sub_sub_sub_cancel_right hjro]
     exact rop1
   intro m hm
   rw [← (Nat.add_assoc m j x.r)]
   have := rop2 (m+j) (le_of_succ_le (add_lt_of_lt_sub hm))
   rwa [Eq.symm (Simproc.sub_add_eq_comm (s + 1) m j)]
-private lemma mem_shambles
-{o:Option ℕ}
-{p:Part ℕ}
-(h0:x∉o)
-(h1:o.isSome)
-(h2:o.get h1∈p)
-:
-(x∉p) := by
+private lemma mem_shambles {o:Option ℕ} {p:Part ℕ} (h0:x∉o) (h1:o.isSome) (h2:o.get h1∈p) : (x∉p) := by
   contrapose h2
   simp at h2
-  have : p=Part.some x := by exact Part.eq_some_iff.mpr h2
-  rw [this]
+  rw [Part.eq_some_iff.mpr h2] -- `p` => `Part.some x`
   simp
-  have : o ≠ some x := by exact h0
+  have : o ≠ some x := h0
   contrapose this
   simp only [ne_eq, Decidable.not_not] at this ⊢
   rw [←this]
@@ -486,13 +477,11 @@ theorem nrfind'_prop
       simp_all
     rw [this]
     exact nrfind'_obtain_prop h
-  have := evaln_rfind_as_eval_rfind h
   contrapose
   intro h1
   push_neg
-  intro h2
-  intro h3
-  have h1 := mem_shambles h1 h this
+  intro h2 h3
+  have h1 := mem_shambles h1 h (evaln_rfind_as_eval_rfind h)
   simp at h1
   rcases h1 h2 with ⟨h4,h5,h6⟩
   use h4
@@ -880,7 +869,7 @@ theorem usen_none_iff_evaln_none : (usen O c s x) = Option.none ↔ (evaln O s c
     constructor
     ·
       intro hh a ha
-      have := (@ih (Nat.pair x.l xrM1)).not
+      have := (@ih ⟪x.l, xrM1⟫).not
       simp only [Option.ne_none_iff_exists'] at this
       obtain ⟨a2,ha2⟩ := this.mpr ⟨a,ha⟩
       have := hh a2 ha2 a ha
@@ -3098,17 +3087,17 @@ theorem usen_principle {O₁ O₂} {s c x}
       have ih_c := ih
         (s-1)
         (sub_le s 1)
-        (Nat.pair x.l xrM1)
+        ⟪x.l, xrM1⟫
         (pair_lt_pair_right x.l (lt_add_one xrM1))
         aux00
         aux02
       clear ih
 
       simp [this] at ih_c aux00
-      have aux11 := evaln_prec_dom hh
 
       have ih_cg := hcg
-        (Nat.pair x.l (Nat.pair xrM1 ((evaln O₁ (s-1) (cf.prec cg) (Nat.pair x.l xrM1)).get (aux00)))) (aux11.right)
+        ⟪x.l, xrM1, (evaln O₁ (s-1) (cf.prec cg) ⟪x.l, xrM1⟫).get aux00⟫
+        (evaln_prec_dom hh).right
         λ x h ↦ hO x (le_trans h (usen_mono_prec (en2un hh)).right)
 
       rw [← ih_c.left]

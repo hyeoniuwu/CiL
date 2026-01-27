@@ -56,7 +56,7 @@ def c_left := c_const (c2n left)
 def c_right := c_const (c2n right)
 @[cp] theorem c_right_prim : code_prim c_right := by unfold c_right; apply_cp
 @[simp] theorem c_right_evp {O x} : evalp O c_right x = c2n right := by simp [c_right]
-@[simp] theorem c_right_evp' {O} : evalp O c_right = fun _:ℕ => c2n (right) := by funext x; simp
+@[simp] theorem c_right_evp' {O} : evalp O c_right = fun _:ℕ => c2n right := by funext x; simp
 @[simp] theorem c_right_ev {O x} : eval O c_right x = c2n right := by rw [← evalp_eq_eval c_right_prim]; simp
 @[simp] theorem Nat.PrimrecIn.c_right : Nat.PrimrecIn O (fun _:ℕ => c2n right) := by rw [←c_right_evp']; exact code_prim_prop
 def c_oracle := c_const (c2n oracle)
@@ -152,8 +152,7 @@ section c_c_rfind
 @[simp] theorem c_c_rfind_evp : evalp O c_c_rfind = λ x:ℕ => c2n (c_rfind x) := by simp [c_c_rfind, c_rfind]
 end c_c_rfind
 
-def c_dovetailn :=
-  c_c_rfind.comp $
+def c_dovetailn := c_c_rfind.comp $
   c_comp₂.comp₃
   (c_const c_if_eq')
   (c_comp₃.comp₄ (c_const c_evaln) (c_pair.comp₂ c_left (c_comp.comp₂ c_left c_right)) (c_c_const) (c_comp.comp₂ c_right c_right))
@@ -168,8 +167,7 @@ def c_dovetail := c_comp.comp₂ c_left c_dovetailn
 @[simp] theorem c_dovetail_evp : evalp O c_dovetail = λ x ↦ c2n (dovetail $ n2c x) := by
   simp [c_dovetail, dovetail]
 
-def c_c_ifdom :=
-  c_comp₂.comp₃ (c_const c_add) (c_comp.comp₂ c_zero left) (right)
+def c_c_ifdom := c_comp₂.comp₃ (c_const c_add) (c_comp.comp₂ c_zero left) right
 @[cp] theorem c_c_ifdom_prim : code_prim c_c_ifdom := by unfold c_c_ifdom; apply_cp
 @[simp] theorem c_c_ifdom_evp : evalp O c_c_ifdom = λ x ↦ c2n (c_ifdom x.l x.r) := by
   simp [c_c_ifdom, c_ifdom]
