@@ -5,6 +5,21 @@ Authors: Edwin Park
 -/
 import Computability.Constructions.Option
 
+/-!
+# Construction of basic primitive recursive functions on lists
+
+This file defines basic primitive recursive codes for basic functions on lists.
+
+## Structure
+(See Computability.Constructions.Primitive for more details.)
+
+The major constructions in this file are `c_list_foldl` and `c_list_zipWith`.
+
+`c_list_foldl` allows easy definitions of subsequent constructs, although `c_list_zipWith` still requires
+a nontrivial proof.
+
+-/
+
 open Nat
 open Denumerable
 open Encodable
@@ -60,8 +75,6 @@ def c_list_head? := c_ifz.comp₃ c_id zero $ succ.comp (left.comp c_pred)
 @[simp] theorem c_list_head?_ev:eval O c_list_head? lN = o2n (List.head? (n2l lN)) := by simp [← evalp_eq_eval c_list_head?_prim]
 end Computability.Code
 end list_head?
-
-
 
 section list_headI
 namespace Computability.Code
@@ -422,7 +435,7 @@ zipL xs ys = reverse $ fst $ foldl step ([], ys) xs
     step (acc, y:ys') x = ((x,y) : acc, ys')
     step (acc, [])    _ = (acc, [])
 -/
-def c_list_zipWith_aux (cf:Code):=
+def c_list_zipWith_aux (cf : Code) :=
   let yys' := right.comp left
   let ys'  := c_list_tail.comp  yys'
   let y    := c_list_headI.comp yys'
@@ -433,7 +446,7 @@ def c_list_zipWith_aux (cf:Code):=
     c_list_casesOn'
     yys'
     left
-    (pair (c_list_cons.comp₂ (cf.comp₂ x y) (acc)) ys')
+    (pair (c_list_cons.comp₂ (cf.comp₂ x y) acc) ys')
 
   (c_list_foldl step).comp₂ (pair c_list_nil right) left
 def c_list_zipWith (cf:Code) := c_list_reverse.comp $ left.comp (c_list_zipWith_aux cf)
@@ -441,45 +454,67 @@ def c_list_zipWith (cf:Code) := c_list_reverse.comp $ left.comp (c_list_zipWith_
 @[cp] theorem c_list_zipWith_aux_prim (hcf:code_prim cf) : code_prim (c_list_zipWith_aux cf) := by unfold c_list_zipWith_aux; apply_cp
 @[cp] theorem c_list_zipWith_prim (hcf:code_prim cf) : code_prim (c_list_zipWith cf) := by unfold c_list_zipWith; apply_cp
 theorem c_list_zipWith_evp_aux_2 {a b : List ℕ} {f:ℕ→ℕ→ℕ} (h:a.length≤b.length) : List.zipWith f (b++c) a = List.zipWith f b a := by
-  have aux3 : b = take a.length (b) ++ drop a.length (b) := by
-    exact Eq.symm (take_append_drop a.length (b))
-  rw [aux3]
-  have aux4 : (take a.length b ++ drop a.length b ++ c) = (take a.length b ++( drop a.length b ++ c)) := by exact append_assoc (take a.length b) (drop a.length b) c
-  rw [aux4]
-  have aux5 : (take a.length b).length = (take a.length b).length := by rfl
+  -- rw `b` => `take a.length b ++ drop a.length b`
+  rewrite [(take_append_drop a.length b).symm]
+  -- rw `take a.length b ++ drop a.length b ++ c` => `take a.length b ++ (drop a.length b ++ c)`
+  rewrite [append_assoc (take a.length b) (drop a.length b) c]
   have aux7 : (take a.length b).length = a.length := by exact length_take_of_le h
-
   have aux6 := @zipWith_append ℕ ℕ ℕ f (take a.length b) (drop a.length b ++ c) a [] aux7
-  simp at aux6
-  rw [aux6]
-  simp
   have aux8 := @zipWith_append ℕ ℕ ℕ f (take a.length b) (drop a.length b) a [] aux7
-  simp at aux8
-  rw [aux8]
+  simp at aux6 aux8
+  simp [aux6, aux8]
 theorem zipWith_flip : List.zipWith f a b = List.zipWith (flip f) b a := by
-    induction a generalizing b with
+  induction a generalizing b with
+  | nil => simp
+  | cons _ _ xih =>
+    induction b with
     | nil => simp
-    | cons x xs xih =>
-      induction b with
-      | nil => simp
-      | cons y ys yih =>
-        simp [xih, flip]
+    | cons _ _ yih => simp [xih, flip]
 
 theorem c_list_zipWith_evp_aux_1 {a b : List ℕ} {f:ℕ→ℕ→ℕ} (h:a.length≤b.length) : List.zipWith f a (b++c) = List.zipWith f a b := by
   rw [zipWith_flip]
   rw (config:={occs:=.pos [2]}) [zipWith_flip]
   exact c_list_zipWith_evp_aux_2 h
 
-
+theorem c_list_zipWith_evp_aux_3 {f:ℕ→ℕ→ℕ} {head} {tail : List ℕ} (hh:tail.length < (n2l l2N).length) (hl2 : drop tail.length (n2l l2N) = head2 :: list2) : (f head (head2 :: list2).headI :: (zipWith f tail.reverse (n2l l2N)).reverse) = (zipWith f (tail.reverse ++ [head]) (n2l l2N)).reverse := by
+  simp
+  have aux5 : (n2l l2N) = (take tail.length (n2l l2N)) ++ [head2] ++ list2 := by
+    -- rw `(n2l l2N)` => `(take tail.length (n2l l2N)) ++ drop tail.length (n2l l2N)`
+    rw (config:={occs:=.pos [1]}) [Eq.symm (take_append_drop tail.length (n2l l2N))]
+    rw [append_assoc, hl2]
+    simp
+  have aux7 :
+    let l₁  := tail.reverse ++ [head]
+    let l₂  := take tail.length (n2l l2N) ++ [head2] ++ list2
+    let l₁' := zipWith f (tail.reverse) (take tail.length (n2l l2N))
+    let l₂' : List ℕ := [f head head2]
+    ∃ ws xs ys zs, ws.length = ys.length ∧ l₁ = ws ++ xs ∧ l₂ = ys ++ zs ∧ l₁' = zipWith f ws ys ∧ l₂' = zipWith f xs zs := by
+      let ws := tail.reverse
+      let ys := take tail.length (n2l l2N)
+      let xs := [head]
+      let zs := [head2] ++ list2
+      use ws,xs,ys,zs
+      constructor
+      · simp [ws,ys]
+        exact le_of_succ_le hh
+      · exact ⟨rfl, append_assoc (take tail.length (n2l l2N)) [head2] list2, rfl, rfl⟩
+  have aux9 : tail.reverse.length ≤ (take tail.length (n2l l2N)).length := by
+    simp only [length_reverse, length_take, le_inf_iff, le_refl, true_and]
+    exact le_of_succ_le hh
+  rw (config:={occs:=.pos [2]}) [aux5]
+  rw [zipWith_eq_append_iff.mpr aux7]
+  rw (config:={occs:=.pos [1]}) [aux5]
+  rw [append_assoc (take tail.length (n2l l2N)) [head2] list2]
+  simp
+  exact c_list_zipWith_evp_aux_1 aux9
 theorem c_list_zipWith_aux_evp :
   evalp O (c_list_zipWith_aux cf) ⟪l1N, l2N⟫
     =
   Nat.pair ((List.zipWith (fun x y => evalp O cf ⟪x,y⟫) l1N l2N).reverse) (drop (n2l l1N).length (n2l l2N)) := by
 
-  let f:=fun x y => evalp O cf ⟪x,y⟫
+  let f := fun x y => evalp O cf ⟪x,y⟫
 
   simp [c_list_zipWith_aux, -encode_list_cons, -encode_list_nil]
-  have grind_helper_1: ((n2l l1N).reverse).reverse = (n2l l1N) := by exact reverse_reverse (n2l l1N)
   induction h:(n2l l1N).reverse generalizing l1N with
   | nil => simp_all
   | cons head tail ih =>
@@ -487,75 +522,30 @@ theorem c_list_zipWith_aux_evp :
       rw [concat_eq_append]
       rw [←reverse_reverse (n2l l1N)]
       rw [h]
-      apply reverse_cons
+      exact reverse_cons
     rw [asd2]
 
     simp [-encode_list_cons, -encode_list_nil] at ih
-    have asdd : (n2l (l2n tail.reverse)).reverse = tail := by simp
     simp [-encode_list_cons, -encode_list_nil, -foldl_reverse]
+    have asdd : (n2l (l2n tail.reverse)).reverse = tail := by simp
     have lolz := ih asdd
     simp [-encode_list_cons, -encode_list_nil, -foldl_reverse] at lolz
     rw [lolz]
     simp [-encode_list_cons, -encode_list_nil, -foldl_reverse]
+    clear ih lolz asdd asd2
 
-
-    by_cases hh:(drop tail.length (n2l l2N))=([]:List ℕ)
-    ·
-      simp only [hh]
-      have aux1: drop (tail.length + 1) (n2l l2N) = [] := by
-        simp
-        grind
-      rw[aux1]
+    by_cases hh : drop tail.length (n2l l2N) = ([]:List ℕ)
+    · simp only [hh]
+      rw [show drop (tail.length + 1) (n2l l2N) = [] from by simp at hh ⊢; omega]
       have aux4 := List.drop_eq_nil_iff.mp hh
-      have aux5 : tail.length = tail.reverse.length := by exact Eq.symm length_reverse
-      rw [aux5] at aux4
-      have aux2:(zipWith f (tail.reverse ++ [head]) (n2l l2N)) = (zipWith f tail.reverse (n2l l2N)) := by simp [c_list_zipWith_evp_aux_2 aux4]
-      rw [aux2]
-
+      rw [show tail.length = tail.reverse.length from length_reverse.symm] at aux4
+      simp [c_list_zipWith_evp_aux_2 aux4]
     · -- this is the case where l2N is longer than l1N.
-      have omwv: ∃ head2 list2, drop tail.length (n2l l2N) = head2::list2 := by exact ne_nil_iff_exists_cons.mp hh
-      rcases omwv with ⟨head2,list2,hl2⟩
+      rcases ne_nil_iff_exists_cons.mp hh with ⟨head2, list2, hl2⟩
+      -- now we have `drop tail.length (n2l l2N) = head2::list2`
       simp only [hl2]
-
-      have main : (f head (head2 :: list2).headI :: (zipWith f tail.reverse (n2l l2N)).reverse) = (zipWith f (tail.reverse ++ [head]) (n2l l2N)).reverse := by
-        simp
-        have aux1 := length_lt_of_drop_ne_nil hh
-        have aux3 : (n2l l2N) = (take tail.length (n2l l2N)) ++ drop tail.length (n2l l2N) := by
-          exact Eq.symm (take_append_drop tail.length (n2l l2N))
-        have aux5 : (n2l l2N) = (take tail.length (n2l l2N)) ++ [head2] ++ list2 := by
-          rw (config:={occs:=.pos [1]}) [aux3]
-          rw [append_assoc]
-          simp [hl2]
-
-        have aux7 :
-          let l₁  := tail.reverse ++ [head]
-          let l₂  := take tail.length (n2l l2N) ++ [head2] ++ list2
-          let l₁' := zipWith f (tail.reverse) (take tail.length (n2l l2N))
-          let l₂' : List ℕ := [f head head2]
-
-          ∃ ws xs ys zs, ws.length = ys.length ∧ l₁ = ws ++ xs ∧ l₂ = ys ++ zs ∧ l₁' = zipWith f ws ys ∧ l₂' = zipWith f xs zs := by
-            let ws := tail.reverse
-            let ys := take tail.length (n2l l2N)
-            let xs :List ℕ :=[head]
-            let zs := [head2] ++ list2
-            use ws,xs,ys,zs
-            constructor
-            ·
-              simp [ws,ys]
-              exact le_of_succ_le aux1
-            · exact ⟨rfl, append_assoc (take tail.length (n2l l2N)) [head2] list2, rfl, rfl⟩
-        have aux8 := zipWith_eq_append_iff.mpr aux7
-
-        rw (config:={occs:=.pos [2]}) [aux5]
-        rw [aux8]
-        simp
-        rw (config:={occs:=.pos [1]}) [aux5]
-        rw [append_assoc (take tail.length (n2l l2N)) [head2] list2]
-
-        have aux9 : tail.reverse.length ≤ (take tail.length (n2l l2N)).length := by
-          simp
-          exact le_of_succ_le aux1
-        exact  c_list_zipWith_evp_aux_1 aux9
+      simp only [drop_eq_nil_iff, not_le] at hh
+      have main : (f head (head2 :: list2).headI :: (zipWith f tail.reverse (n2l l2N)).reverse) = (zipWith f (tail.reverse ++ [head]) (n2l l2N)).reverse := c_list_zipWith_evp_aux_3 hh hl2
       rw [main]
 
 @[simp] theorem c_list_zipWith_evp :
