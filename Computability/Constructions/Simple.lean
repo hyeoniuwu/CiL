@@ -7,6 +7,36 @@ import Computability.Constructions.EvalString
 import Computability.SetOracles
 import Computability.Simple
 
+/-!
+# Constructions/Simple.lean
+
+This file constructs the function `Simple.C` from Simple.lean as a code.
+
+The overall structure of the proof is written to facilitate adapation to proving the construction of a
+low simple set, which will be done in Constructions/Post.lean.
+
+## Structure
+The difficult part of the construction is in implementing the search procedure of a `x` s.t.
+`∃ x ∈ Wn ∅ i s, x > 2*i`.
+
+This is done using `c_bdd_search`, which searches for an `x` that halts on code `c` for `s`
+steps, from a specified lower bound to an upper bound. `c` and `s` are specified from the input.
+
+Once the search procedure can be defined, `Simple.step`, and in turn `Simple.C`, can be constructed as codes
+(`c_step` and `c_C` respectively) easily.
+
+Then, we can define `c_simple` such that its domain is exactly `Simple.A`;
+we let `c_simple` search (by dovetailing) for a step `s` such that its input is in `(C s).l`.
+
+## Main declarations
+
+- `c_C`: 
+- `c_simple`: 
+- `c_simple_ev`: 
+- `exists_simple_set`: 
+
+-/
+
 open Computability.Code
 open Computability
 
@@ -341,9 +371,9 @@ def c_step :=
   c_ifz.comp₃ (c_sg'.comp $ c_fs_in.comp₂ Rₚ i)
   prev
   (
-    let search := (c_bdd_search (right.comp right)).comp₂ ((pair s $ pair (z21) i)) (s)
+    let search := (c_bdd_search (right.comp right)).comp₂ ((pair s $ pair z21 i)) (s)
     let min := c_add.comp₂ z21 (left.comp $ c_pred.comp search)
-    c_ifz.comp₃ (search)
+    c_ifz.comp₃ search
     prev
     (pair (c_fs_add.comp₂ Aₚ min) (c_fs_add.comp₂ Rₚ i))
   )

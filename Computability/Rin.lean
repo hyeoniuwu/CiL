@@ -8,15 +8,15 @@ import Computability.Jump
 namespace Nat.RecursiveIn.Rin
 open Part
 
-alias zero := _root_.Nat.RecursiveIn.zero
-alias succ := _root_.Nat.RecursiveIn.succ
-alias left := _root_.Nat.RecursiveIn.left
-alias right := _root_.Nat.RecursiveIn.right
+alias zero   := _root_.Nat.RecursiveIn.zero
+alias succ   := _root_.Nat.RecursiveIn.succ
+alias left   := _root_.Nat.RecursiveIn.left
+alias right  := _root_.Nat.RecursiveIn.right
 alias oracle := _root_.Nat.RecursiveIn.oracle
-alias pair := _root_.Nat.RecursiveIn.pair
-alias comp := _root_.Nat.RecursiveIn.comp
-alias prec := _root_.Nat.RecursiveIn.prec
-alias rfind := _root_.Nat.RecursiveIn.rfind
+alias pair   := _root_.Nat.RecursiveIn.pair
+alias comp   := _root_.Nat.RecursiveIn.comp
+alias prec   := _root_.Nat.RecursiveIn.prec
+alias rfind  := _root_.Nat.RecursiveIn.rfind
 
 theorem of_eq {f g : ℕ →. ℕ} (hf : RecursiveIn O f) (H : ∀ n, f n = g n) : RecursiveIn O g :=
   (funext H : f = g) ▸ hf
