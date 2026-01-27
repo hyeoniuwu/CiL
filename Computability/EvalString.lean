@@ -13,6 +13,9 @@ open Classical
 In this file we define the evaluation function `evals`, which is like `eval` but takes a (finite) *string* as an oracle, rather than a set.
 
 This is done via defining "clamped" evaluation, where a computation diverges if its use exceeds a set limit.
+
+For the construction of these functions via codes, see Computability/Constructions/EvalString.lean.
+
 -/
 
 namespace Computability.Code

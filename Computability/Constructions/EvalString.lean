@@ -8,8 +8,23 @@ import Computability.Constructions.Basic
 import Computability.Constructions.Meta
 import Computability.EvalString
 
-open Nat
+/-!
+# Constructions/EvalString.lean
 
+This file constructs `evalc` and `evals` from Computability/EvalString.lean from codes.
+
+To be able to define `evals`, where the oracle of a computation is changed, we define the code `c_evalo`, with the following behaviour (where `o` is the code of a total function):
+
+`eval O c_evalo ⟪o, c, x⟫ = eval (λ t ↦ (eval O o t).get (ho t)) c x`.
+
+## Main declarations
+- `c_evalc`: code for `evalc`.
+- `c_evalo`: code which allows parametrisation of the oracle in evaluation.
+- `c_evals`: code for `evals`.
+
+-/
+
+open Nat
 section evalnc
 namespace Computability.Code
 def c_evalnc :=
@@ -67,9 +82,15 @@ def c_evalc :=
 end Computability.Code
 end evalc
 
-section evals
-namespace Computability.Code
 section c_evalo
+/-
+Rather than building a custom evaluation function which parametrises the oracle, we build a function that just modifies a given code, replacing all calls to the oracle with calls to a given input. This code can then be piped to the regular evaluation function, with the same effect of parametrising the oracle.
+
+This greatly simplifies the proof, as one only needs to induct on the codes, rather than some convoluted combination of the code, input and steps.
+
+(The function that modifies the code, `c_replace_oracle`, is already defined in Computability/Constructions/CovRec.lean.)
+-/
+namespace Computability.Code
 def c_evalo :=
   let o := left
   let c := left.comp right
@@ -79,8 +100,11 @@ theorem c_evalo_ev (ho:code_total O o) : eval O c_evalo ⟪o, c, x⟫ = eval (λ
   simp [c_evalo]
   simp [eval,Seq.seq]
   rw [@eval_replace_oracle_prop O o c ho]
+end Computability.Code
 end c_evalo
 
+section evals
+namespace Computability.Code
 section c_evals_oracle
 def c_evals_oracle (o:Code):= c_sg.comp $ c_list_getD.comp₃ (c_const o) c_id (c_const whatever)
 @[cp] theorem c_evals_oracle_prim : code_prim (c_evals_oracle o) := by unfold c_evals_oracle; apply_cp
@@ -89,8 +113,7 @@ theorem c_evals_oracle_evp : evalp O (c_evals_oracle o) =
   simp [c_evals_oracle]
   funext x
   split
-  next h =>
-    simp [h]; rfl
+  next h => simp [h]; rfl
   next h =>
     rw [Eq.symm (succ_pred_eq_of_ne_zero h)]
     simp [n2b]
