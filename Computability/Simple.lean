@@ -80,7 +80,7 @@ We split the proof into 4 main sections;
   · section positive_requirements: proves `P`.
   · section negative_requirements: proves `N`, by defining a function `f` which maps elements in `A` to the requirement which enumerated them. The bulk of work in this section is dedicated to showing that this function is injective.
 
- -/
+-/
 
 open Classical
 /-

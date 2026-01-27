@@ -197,19 +197,28 @@ However, I've written the "longer" way, which is more efficient. For more comple
 
 The reason for explicitly defining the auxiliary function (the function without c_l_get_last.comp attached) is to be able to rewrite the
 "unfolded" definitions in the recursive case with the shorter function name.
+
+The let-bindings allow for more organised/performant proofs, and also helps readability in the construction.
+This is especially true for more complex `c_cov_rec` constructions, such as `c_replace_oracle_aux` later.
+
+All let bindings are used in the inductive case of course-of-values recursion.
+
+Recall that the interface for the inductive case is designed like `prec`; in `c_cov_rec cf cg ⟪x, i+1⟫`, the
+input that the code `cg` will get looks like:
+`⟪x, i, evalp O (c_cov_rec cf cg) ⟪x,i⟫⟫`.
 -/
+/-- `evalp O c_div_flip ⟪d, n⟫ = n/d`. -/
 def c_div_flip_aux :=
   let dividend := succ.comp $ left.comp right
   let divisor := left
   let list_of_prev_values := right.comp right
 
-
   c_cov_rec
 
-  (c_const 0) $            -- base case: if dividend is 0, return 0
+  (c_const 0) $ -- base case: if dividend is 0, return 0
 
-  c_ifz.comp₂ divisor $    -- in general, test if the divisor is zero
-  pair (c_const 0) $       -- if so, return 0
+  c_ifz.comp₂ divisor $ -- in general, test if the divisor is zero
+  pair (c_const 0) $ -- if so, return 0
   c_if_lt_te.comp₄ dividend divisor (c_const 0) $ -- if dividend < divisor, return 0
   (succ.comp (c_list_getI.comp₂ list_of_prev_values (c_sub.comp₂ dividend divisor))) -- else return (dividend-divisor)/divisor+1
 def c_div_flip := c_list_getLastI.comp c_div_flip_aux
@@ -324,7 +333,34 @@ end mod2
 
 section replace_oracle
 namespace Computability.Code
-def replace_oracle (o:Code) : Code → Code
+/-! ### parsing codes with c_cov_rec
+#### Structure of section
+  · `c_replace_oracle_aux` : main body of construction, using c_cov_rec
+  · `c_replace_oracle` : to see why this is defined separately, see comments on `c_div_flip_aux`
+  · `c_replace_oracle_prim` : show `c_replace_oracle` is primrec
+  · `c_replace_oracle_evp_aux` : shows that the code has correct behaviour on the non-inductive codes i.e
+    `zero`, `succ`, `left`, `right` and `oracle`. This is much easier than e.g. `prec`, which required
+    inductive reasoning on previous codes.
+  · `c_replace_oracle_evp_aux_nMod4_bounds*` : the `c_cov_rec` construction accesses previous computations
+    by looking that up on a list. to know that the lookup succeeded (and thus simplify using the `c_cov_rec_evp*` theorems),
+    we need to know that the index is smaller than the current input. These bounds theorem show exactly that.
+  · `c_replace_oracle_evp_aux_nMod4` : shows behaviour of the codes on the inductive codes i.e
+    `pair`, `comp`, `prec` and `rfind'`. One thing to note is that this theorem does not show correctness by itself;
+    it only demonstrates that evaluating `c_replace_oracle` on an inductive code, can be simplified to evaluating
+    `c_replace_oracle` on smaller codes. To show correctness, one would need to use strong induction on codes, which we do next.
+  · `c_replace_oracle_evp` : shows that the code has correct behaviour on evaluation, using strong induction. The proof requires
+    basically no interaction with `evalp`, as that has all been done in the previous theorems.
+-/
+
+/--
+Given a code `c`, `replace_oracle o c` replaces all instances of the code `oracle` with the code `o` instead.
+
+Examples:
+replace_oracle c oracle = c
+replace_oracle c succ = succ
+replace_oracle c (prec zero oracle) = prec zero c
+-/
+def replace_oracle (o : Code) : Code → Code
 | Code.zero        => Code.zero
 | Code.succ        => Code.succ
 | Code.left        => Code.left
@@ -335,7 +371,9 @@ def replace_oracle (o:Code) : Code → Code
 | Code.prec cf cg  => Code.prec (replace_oracle o cf) (replace_oracle o cg)
 | Code.rfind' cf   => Code.rfind' (replace_oracle o cf)
 
-/-- `eval c_replace_oracle (o,code)` = `code` but with calls to oracle replaced with calls to code `o` -/
+/--
+`eval c_replace_oracle (o,code) = replace_oracle o code`.
+-/
 def c_replace_oracle_aux :=
   let o               := left
   let input_to_decode := succ.comp (left.comp right)
@@ -354,7 +392,7 @@ def c_replace_oracle_aux :=
 
   c_cov_rec
 
-  (c_const 0) $
+  (c_const 0) $ -- base case, when code = 0.
 
   c_if_eq_te.comp₄ input_to_decode (c_const 1) (c_const 1) $
   c_if_eq_te.comp₄ input_to_decode (c_const 2) (c_const 2) $
@@ -364,8 +402,15 @@ def c_replace_oracle_aux :=
   c_if_eq_te.comp₄ nMod4           (c_const 1) comp_code   $
   c_if_eq_te.comp₄ nMod4           (c_const 2) prec_code   $
                                                rfind'_code
+
 def c_replace_oracle := c_list_getLastI.comp c_replace_oracle_aux
-@[simp] theorem c_replace_oracle_prim : code_prim (c_replace_oracle) := by
+/-
+The most efficient way to show `code_prim (c_replace_oracle)` is by showing the primitiveness of each
+let-binding.
+
+If one were to instead unfold all let-bindings, there are performance penalties.
+-/
+@[cp] theorem c_replace_oracle_prim : code_prim (c_replace_oracle) := by
   unfold c_replace_oracle;
   unfold c_replace_oracle_aux
   extract_lets;
@@ -447,7 +492,7 @@ theorem c_replace_oracle_evp_aux_nMod4 :
     unfold c_replace_oracle_aux
     lift_lets
     simp [hcs'']
-  
+
   have hml : evalp O ml_1 ⟪o, n+4, inp⟫ = ml := by
     have := @hlookup (left.comp m_1) (by simp [hm, m, div2_val, c_replace_oracle_evp_aux_nMod4_bounds1])
     simp [ml_1, this, hm]
@@ -508,7 +553,6 @@ theorem nMod4_eq_0 (hno:n.bodd=false) (hn2o:n.div2.bodd=false) : n%4=0 := by rw 
 theorem nMod4_eq_1 (hno:n.bodd=true ) (hn2o:n.div2.bodd=false) : n%4=1 := by rw [←codes_aux_1 hno hn2o]; omega
 theorem nMod4_eq_2 (hno:n.bodd=false) (hn2o:n.div2.bodd=true ) : n%4=2 := by rw [←codes_aux_2 hno hn2o]; omega
 theorem nMod4_eq_3 (hno:n.bodd=true ) (hn2o:n.div2.bodd=true ) : n%4=3 := by rw [←codes_aux_3 hno hn2o]; omega
-
 
 @[simp] theorem c_replace_oracle_evp: evalp O (c_replace_oracle) = λ x ↦c2n (replace_oracle (n2c x.l) (n2c x.r)) := by
   funext oc
