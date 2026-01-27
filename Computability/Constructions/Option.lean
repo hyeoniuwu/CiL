@@ -23,10 +23,7 @@ def c_isSome := c_sg'
   cases x <;> simp
 @[simp] theorem c_isSome_ev:eval O c_isSome = fun o => b'2n $ (n2o o).isSome := by rw [← evalp_eq_eval c_isSome_prim]; simp only [c_isSome_evp];
 end Computability.Code
--- theorem Nat.PrimrecIn.isSome:Nat.PrimrecIn O Nat.isSome := by ...
--- theorem Nat.Primrec.isSome:Nat.Primrec Nat.isSome := by ...
 end isSome
-
 
 section opt_iget
 namespace Computability.Code
@@ -36,8 +33,7 @@ def c_opt_iget := c_pred
   simp [c_opt_iget]
   by_cases ho:o=0
   · simp [ho];
-  · have asd := exists_add_one_eq.mpr (one_le_iff_ne_zero.mpr ho)
-    rcases asd with ⟨k,hk⟩
+  · rcases exists_add_one_eq.mpr (one_le_iff_ne_zero.mpr ho) with ⟨k,hk⟩
     simp [←hk]
 @[simp] theorem iget_evp_2 (h:o≠0):  Option.iget (n2o o) = o-1:= by
   have asd : o = (o-1)+1 := by exact Eq.symm (succ_pred_eq_of_ne_zero h)
@@ -55,9 +51,7 @@ def c_opt_getD := c_ifz.comp₃ left right (c_opt_iget.comp left)
   simp [c_opt_getD]
   by_cases ho:o=0
   · simp [ho];
-  ·
-    have asd := exists_add_one_eq.mpr (one_le_iff_ne_zero.mpr ho)
-    rcases asd with ⟨k,hk⟩
+  · rcases exists_add_one_eq.mpr (one_le_iff_ne_zero.mpr ho) with ⟨k,hk⟩
     simp [←hk]
 @[simp] theorem c_opt_getD_ev:eval O c_opt_getD (Nat.pair o d) = (n2o o).getD d := by simp [← evalp_eq_eval c_opt_getD_prim]
 end Computability.Code
@@ -75,18 +69,14 @@ end opt_none
 
 section opt_bind
 namespace Computability.Code
--- def c_opt_bind := c_ifz.comp₃ left zero (right.comp (c_opt_iget.comp left))
 def c_opt_bind (cf cg:Code) :=  c_ifz.comp₃ cf zero (cg.comp₂ c_id (c_opt_iget.comp cf))
 @[cp] theorem c_opt_bind_prim(hcf:code_prim cf) (hcg:code_prim cg) : code_prim (c_opt_bind cf cg) := by unfold c_opt_bind; apply_cp
 @[simp] theorem c_opt_bind_evp: evalp O (c_opt_bind cf cg) x =
   o2n do
     let t ← n2o (evalp O cf x)
     let r ← n2o (evalp O cg (Nat.pair x t))
-    -- return ←r
     return r
-    -- return evalp O cg t
 := by
-  -- sorry
   simp [c_opt_bind,evalp]
   cases Classical.em (evalp O cf x = 0) with
   | inl h => simp [h]
@@ -98,63 +88,32 @@ def c_opt_bind (cf cg:Code) :=  c_ifz.comp₃ cf zero (cg.comp₂ c_id (c_opt_ig
 
 -- @[simp] theorem c_opt_bind_ev:eval O c_opt_bind = unpaired2 Nat.opt_bind := by rw [← evalp_eq_eval c_opt_bind_prim]; simp only [c_opt_bind_evp]
 end Computability.Code
--- theorem Nat.PrimrecIn.opt_bind:Nat.PrimrecIn O Nat.opt_bind := by ...
--- theorem Nat.Primrec.opt_bind:Nat.Primrec Nat.opt_bind := by ...
 end opt_bind
 
 section opt_bind'
 namespace Computability.Code
--- def c_opt_bind' := c_ifz.comp₃ left zero (right.comp (c_opt_iget.comp left))
 def c_opt_bind' (cf cg:Code) :=  c_ifz.comp₃ cf zero cg
 @[cp] theorem c_opt_bind'_prim(hcf:code_prim cf) (hcg:code_prim cg) : code_prim (c_opt_bind' cf cg) := by unfold c_opt_bind'; apply_cp
 @[simp] theorem c_opt_bind'_evp: evalp O (c_opt_bind' cf cg) x =
   o2n do
     let _ ← n2o (evalp O cf x)
     let r ← n2o (evalp O cg x)
-    -- return ←r
     return r
-    -- return evalp O cg t
 := by
-  -- sorry
   simp [c_opt_bind',evalp]
   cases Classical.em (evalp O cf x = 0) with
   | inl h => simp [h]
   | inr h =>
     simp [h]
     simp [isSome.bind $ hnat_6 h]
-    -- congr
-    -- exact Eq.symm hnat_7
-
-
 -- @[simp] theorem c_opt_bind'_ev:eval O c_opt_bind' = unpaired2 Nat.opt_bind' := by rw [← evalp_eq_eval c_opt_bind'_prim]; simp only [c_opt_bind'_evp]
+
 end Computability.Code
--- theorem Nat.PrimrecIn.opt_bind':Nat.PrimrecIn O Nat.opt_bind' := by ...
--- theorem Nat.Primrec.opt_bind':Nat.Primrec Nat.opt_bind' := by ...
 end opt_bind'
 
 section part_bind
 namespace Computability.Code
--- def c_part_bind := c_ifz.comp₃ left zero (right.comp (c_opt_iget.comp left))
 def c_part_bind (cf cg:Code) := cg.comp₂ c_id cf
--- @[simp, aesop safe] theorem c_part_bind_prim(hcf:code_prim cf) (hcg:code_prim cg):code_prim (c_part_bind cf cg) := by repeat (first|assumption|simp|constructor)
--- @[simp] theorem c_part_bind_evp: evalp O (c_part_bind cf cg) x =
---   o2n do
---     let t ← n2o (evalp O cf x)
---     let r ← n2o (evalp O cg (Nat.pair x t))
---     -- return ←r
---     return r
---     -- return evalp O cg t
--- := by
---   -- sorry
---   simp [c_part_bind,evalp]
---   cases Classical.em (evalp O cf x = 0) with
---   | inl h => simp [h, n2o0]
---   | inr h =>
---     simp [h]
---     simp [isSome.bind $ hnat_6 h]
---     congr
---     exact Eq.symm hnat_7
-
 @[simp] theorem c_part_bind_ev : eval O (c_part_bind cf cg) x =
   do
     let t ← eval O cf x
@@ -165,6 +124,4 @@ def c_part_bind (cf cg:Code) := cg.comp₂ c_id cf
  simp [Seq.seq]
 
 end Computability.Code
--- theorem Nat.PrimrecIn.part_bind:Nat.PrimrecIn O Nat.part_bind := by ...
--- theorem Nat.Primrec.part_bind:Nat.Primrec Nat.part_bind := by ...
 end part_bind

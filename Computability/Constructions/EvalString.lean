@@ -26,14 +26,14 @@ def c_evalnc :=
   c_opt_bind
   (c_usen.comp₃ x0 c0 s0) $
   c_if_le_te.comp₄ right u1 (c_evaln.comp₃ x1 c1 s1) zero
-@[simp, aesop safe] theorem c_evalnc_prim : code_prim c_evalnc := by unfold c_evalnc; apply_cp 90
-@[simp] theorem c_evalnc_evp:evalp O c_evalnc ⟪⟪u,s⟫,⟪c,x⟫⟫ = o2n (evalnc O u s c x) := by
+@[cp] theorem c_evalnc_prim : code_prim c_evalnc := by unfold c_evalnc; apply_cp 90
+@[simp] theorem c_evalnc_evp:evalp O c_evalnc ⟪u,s,c,x⟫ = o2n (evalnc O u s c x) := by
   simp [c_evalnc,evalp];
   simp [evalnc]
   congr; funext a_0
   simp only [apply_ite]
   aesop
-@[simp] theorem c_evalnc_ev : eval O c_evalnc ⟪⟪u,s⟫,⟪c,x⟫⟫ = o2n (evalnc O u s c x) := by simp [← evalp_eq_eval c_evalnc_prim]
+@[simp] theorem c_evalnc_ev : eval O c_evalnc ⟪u,s,c,x⟫ = o2n (evalnc O u s c x) := by simp [← evalp_eq_eval c_evalnc_prim]
 end Computability.Code
 end evalnc
 
