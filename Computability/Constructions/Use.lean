@@ -6,6 +6,24 @@ Authors: Edwin Park
 import Computability.Constructions.Eval
 import Computability.Use
 
+/-!
+# Use.lean
+
+This file constructs codes for `usen` and `use`, almost identically in structure to Computability/Constructions/Eval.lean, which we refer readers to for more documentation.
+
+## Main declarations
+
+- `c_usen`: code for `usen`.
+- `c_usen_evp`: asserts that `c_usen` implements the `usen` function.
+- `c_use`: code for `use`.
+- `c_use_ev`: asserts that `c_use` implements the `use` function.
+
+## Notation/quirks
+
+ - Where `x`, `y` are naturals, `⟪x, y⟫ = Nat.pair x y`.
+
+-/
+
 open List Nat
 
 section usen
@@ -109,7 +127,6 @@ def c_usen_aux :=
 /-- api: `Nat.pair x (Nat.pair code s)` -/
 def c_usen :=
   c_list_getI.comp₂ (c_list_getLastI.comp $ c_usen_aux.comp (pair (c_const 17) right)) left
-
 
 theorem c_usen_evp_aux_x_0_0 : evalp O c_usen ⟪x, 0, 0⟫ = o2n (usen O 0 0 x) := by
   unfold c_usen; unfold c_usen_aux
