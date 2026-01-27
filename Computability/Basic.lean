@@ -15,9 +15,7 @@ import Mathlib.Data.Nat.BitIndices
 In this file we define helper functions which will be used later on.
 -/
 
-open Classical
-open Computability.Code
-open Nat
+open Nat Classical Computability.Code
 
 -- general helper functions
 theorem pair_nonzero_right_pos_aux : ¬ (Nat.pair x (s+1)=0) := by
@@ -129,9 +127,10 @@ namespace Computability.Code.cc_to_nn
 instance : Coe (Code→Code) (ℕ→ℕ) := ⟨Computability.Code.cc_to_nn.lift⟩
 end Computability.Code.cc_to_nn
 
+section primrec
 -- templates for primrec constructions as codes
 namespace Computability.Code
-@[aesop safe, cp] inductive code_prim:Code → Prop
+@[aesop safe, cp] inductive code_prim : Code → Prop
 | zero:code_prim zero
 | succ:code_prim succ
 | left:code_prim left
@@ -154,45 +153,6 @@ def code_total (O) (c:Code) := ∀x, (eval O c x).Dom
 @[simp] theorem right_total {O} : code_total O right := λ _ ↦ trivial
 @[simp] theorem succ_total {O} : code_total O succ := λ _ ↦ trivial
 @[simp] theorem oracle_total {O} : code_total O oracle := λ _ ↦ trivial
-theorem total_pair_iff : (code_total O cf) ∧ (code_total O cg) ↔ (code_total O (pair cf cg)) :=
-  ⟨
-    λ h x ↦ ⟨h.left x, h.right x⟩
-  ,
-    λ h ↦ ⟨λ x ↦ Part.left_dom_of_sub_dom (h x) , λ x ↦ Part.right_dom_of_div_dom (h x)⟩
-  ⟩
-@[simp] theorem total_pair_of (hcf : code_total O cf) (hcg : code_total O cg) : (code_total O (pair cf cg)) := total_pair_iff.mp ⟨hcf,hcg⟩
-theorem total_comp_of (hcf : code_total O cf) (hcg : code_total O cg) : (code_total O (comp cf cg)) := by
-  intro x
-  simp [eval]
-  use hcg x
-  exact hcf ((eval O cg x).get (hcg x))
-@[simp] theorem total_of_pair_left {O} (h:code_total O (pair cf cg)) : code_total O cf :=
-  (total_pair_iff.mpr h).left
-@[simp] theorem total_of_pair_right {O} (h:code_total O (pair cf cg)) : code_total O cg :=
-  (total_pair_iff.mpr h).right
-@[simp] theorem total_of_comp_left {O} (h:code_total O (comp cf cg)) : code_total O cg := by
-  intro h2
-  exact Part.Dom.of_bind (h h2)
-@[simp] theorem total_of_comp_right {O} (h:code_total O (comp cf cg)) : ∀x, (eval O cf ((eval O cg x).get (Part.Dom.of_bind (h x)))).Dom := by
-  exact fun x ↦ Part.right_dom_of_div_dom (h x)
-@[simp] theorem total_of_prec_left {O} (h:code_total O (prec cf cg)) : code_total O cf := by
-  intro x
-  unfold code_total at h
-  simp [eval] at h
-  have hx := h (Nat.pair x 0)
-  simp at hx
-  exact hx
--- @[simp] theorem total_of_prec_right {O} (h:code_total O (prec cf cg)) : code_total O cf := by
---   intro x
---   unfold code_total at h
---   simp [eval] at h
---   have hx := h (Nat.pair x 0)
---   simp at hx
---   exact hx
-
-  -- exact?
-  -- exact fun x ↦ Part.right_dom_of_div_dom (h x)
-
 theorem prim_total (h:code_prim c): code_total O c := by
   unfold code_total
   induction h with
@@ -213,41 +173,7 @@ theorem prim_total (h:code_prim c): code_total O c := by
     intro x
     induction x.r with
     | zero => exact ha_ih x.l
-    | succ y' IH' =>
-
-      simp
-      expose_names;
-      use IH'
-      apply hb_ih
--- def eval_total (O:ℕ→ℕ) (c:Code) {h:code_total O c}:ℕ→ℕ := fun x => (eval O c x).get (h x)
-theorem eval_total_comp (h:code_total O (comp cf cg)) :
-  eval O (comp cf cg) x = Part.some ((eval O cf ((eval O cg x).get (Part.Dom.of_bind (h x)))).get (total_of_comp_right h x)) := by
-    simp
-    simp [eval]
-    exact Part.Dom.bind (Part.Dom.of_bind (h x)) (eval O cf)
-def evalt (O:ℕ→ℕ) (c:Code) (h:code_total O c) : ℕ→ℕ := λ x ↦ (eval O c x).get (h x)
--- def eval_total (O:ℕ→ℕ) (c:Code) (h:code_total O c) : ℕ→ℕ := match c with
--- | zero       => λ _ ↦ 0
--- | succ       => Nat.succ
--- | left       => Nat.l
--- | right      => Nat.r
--- | oracle     => O
--- | pair cf cg => fun n => Nat.pair (eval_total O cf (total_of_pair_left h) n) (eval_total O cg (total_of_pair_right
---   h) n)
--- | comp cf cg => fun x => (eval O cf ((eval O cg x).get (Part.Dom.of_bind (h x)))).get (total_of_comp_right h x)
--- | prec cf cg => fun x => (x.r).rec (eval_total O cf (total_of_prec_left h) x.l) fun y IH => (eval_total O cg (sorry)) <| Nat.pair x.l <| Nat.pair y IH
--- | rfind' _ => 0
-noncomputable def Part.getD (p:Part ℕ) : ℕ := if h:p.Dom then p.get h else 0
-noncomputable def eval_total (O:ℕ→ℕ) (c:Code) : ℕ→ℕ := match c with
-| zero       => λ _ ↦ 0
-| succ       => Nat.succ
-| left       => Nat.l
-| right      => Nat.r
-| oracle     => O
-| pair cf cg => fun x => Nat.pair (eval_total O cf x) (eval_total O cg x)
-| comp cf cg => fun x => eval_total O cf (eval_total O cg x)
-| prec cf cg => unpaired fun z n => n.rec (eval_total O cf z) fun y IH => (eval_total O cg) <| Nat.pair z <| Nat.pair y IH
-| rfind' cf =>  Nat.unpaired fun a m => ((Nat.rfind fun n => (fun x => x = 0) <$> eval_total O cf (Nat.pair a (n + m))).map (· + m)).getD
+    | succ y' IH' => use IH'; apply hb_ih
 @[simp] def evalp (O:ℕ→ℕ):Code→ℕ→ℕ
 | zero       => λ _ ↦ 0
 | succ       => Nat.succ
@@ -258,7 +184,6 @@ noncomputable def eval_total (O:ℕ→ℕ) (c:Code) : ℕ→ℕ := match c with
 | comp cf cg => λ x ↦ evalp O cf (evalp O cg x)
 | prec cf cg => unpaired fun z n => n.rec (evalp O cf z) fun y IH => (evalp O cg) (z.pair (y.pair IH))
 | rfind' _   => λ _ ↦ 0
-
 theorem evalp_eq_eval (h:code_prim c):evalp O c = eval O c := by
   induction h with
   | zero => exact rfl
@@ -304,65 +229,6 @@ theorem evalp_eq_eval (h:code_prim c):evalp O c = eval O c := by
       simp
       rw [show eval O b ((Nat.pair xs.l (Nat.pair y' (Nat.rec (evalp O a xs.l) (fun y IH ↦ evalp O b (Nat.pair xs.l (Nat.pair y IH))) y')))) = Part.some (evalp O b ((Nat.pair xs.l (Nat.pair y' (Nat.rec (evalp O a xs.l) (fun y IH ↦ evalp O b (Nat.pair xs.l (Nat.pair y IH))) y'))))) from by exact congrFun (_root_.id (Eq.symm hb_ih)) ((Nat.pair xs.l (Nat.pair y' (Nat.rec (evalp O a xs.l) (fun y IH ↦ evalp O b (Nat.pair xs.l (Nat.pair y IH))) y'))))]
 theorem evalp_eq_eval_ext (h:code_prim c): eval O c x = evalp O c x := congrFun (_root_.id (Eq.symm (@evalp_eq_eval c O h))) x
--- theorem eval_total_eq_eval (h:code_total O c):eval_total O c = eval O c := by
---   sorry
-  -- induction c generalizing h with
-  -- | zero => exact rfl
-  -- | succ => exact rfl
-  -- | left => exact rfl
-  -- | right => exact rfl
-  -- | oracle => exact rfl
-  -- | pair ha hb ha_ih hb_ih =>
-  --   unfold eval
-  --   rw [← ha_ih (total_of_pair_left h)]
-  --   rw [← hb_ih (total_of_pair_right h)]
-  --   exact pair' (eval_total O ha) (eval_total O hb)
-  -- | comp ha hb ha_ih hb_ih =>
-  --   unfold eval_total
-  --   simp [eval]
-  --   funext xs
-  --   simp
-  --   expose_names
-  --   simp only [show eval O b xs = Part.some (eval_total O b xs) from by exact congrFun (_root_.id (Eq.symm hb_ih)) xs]
-  --   simp
-  --   simp only [show eval O a (eval_total O b xs) = Part.some (eval_total O a (eval_total O b xs)) from by exact congrFun (_root_.id (Eq.symm ha_ih)) (eval_total O b xs)]
-  -- | prec ha hb ha_ih hb_ih =>
-  --   unfold eval
-  --   unfold eval_total
-  --   have := ha_ih ?_
-  --   rotate_left
-  --   exact total_of_prec_left h
-  --   rw [← this]
-
-  --   simp
-  --   funext xs
-  --   simp
-
-  --   induction xs.r with
-  --   | zero => simp
-  --   | succ n ih =>
-  --     simp
-  --     rw [← ih]
-  --     simp [Part.bind_some]
-
-  --     sorry
-
-  --   have := hb_ih ?_
-  --   rotate_left
-
-  -- | rfind' cf hcf =>
-  --   sorry
-@[simp 1000] theorem RecursiveIn_of_eval : Nat.RecursiveIn O (eval O c) := by
-  induction c with
-  | zero => exact Nat.RecursiveIn.zero
-  | succ => exact Nat.RecursiveIn.succ
-  | left => exact Nat.RecursiveIn.left
-  | right => exact Nat.RecursiveIn.right
-  | oracle => exact Nat.RecursiveIn.oracle
-  | pair ha hb ha_ih hb_ih => unfold eval; exact Nat.RecursiveIn.pair (ha_ih) (hb_ih)
-  | comp ha hb ha_ih hb_ih => unfold eval; exact Nat.RecursiveIn.comp (ha_ih) (hb_ih)
-  | prec ha hb ha_ih hb_ih => unfold eval; exact Nat.RecursiveIn.prec (ha_ih) (hb_ih)
-  | rfind' ha ha_ih => unfold eval; exact RecursiveIn.rfind ha_ih
 @[simp 1000] theorem code_prim_prop : Nat.PrimrecIn O (evalp O c) := by
   induction c with
   | zero => exact Nat.PrimrecIn.zero
@@ -402,5 +268,58 @@ theorem code_prim_of_primrecIn (h:Nat.PrimrecIn O f) : ∃ c, code_prim c ∧ f=
     constructor
     · exact code_prim.prec hcf.left hcg.left
     · simp only [evalp]; rw [hcf.right, hcg.right]
+end Computability.Code
+end primrec
+
+section total
+namespace Computability.Code
+theorem total_pair_iff : (code_total O cf) ∧ (code_total O cg) ↔ (code_total O (pair cf cg)) :=
+  ⟨
+    λ h x ↦ ⟨h.left x, h.right x⟩
+  ,
+    λ h ↦ ⟨λ x ↦ Part.left_dom_of_sub_dom (h x) , λ x ↦ Part.right_dom_of_div_dom (h x)⟩
+  ⟩
+@[simp] theorem total_pair_of (hcf : code_total O cf) (hcg : code_total O cg) : (code_total O (pair cf cg)) := total_pair_iff.mp ⟨hcf,hcg⟩
+theorem total_comp_of (hcf : code_total O cf) (hcg : code_total O cg) : (code_total O (comp cf cg)) := by
+  intro x
+  simp [eval]
+  use hcg x
+  exact hcf ((eval O cg x).get (hcg x))
+@[simp] theorem total_of_pair_left {O} (h:code_total O (pair cf cg)) : code_total O cf :=
+  (total_pair_iff.mpr h).left
+@[simp] theorem total_of_pair_right {O} (h:code_total O (pair cf cg)) : code_total O cg :=
+  (total_pair_iff.mpr h).right
+@[simp] theorem total_of_comp_left {O} (h:code_total O (comp cf cg)) : code_total O cg := by
+  intro h2
+  exact Part.Dom.of_bind (h h2)
+@[simp] theorem total_of_comp_right {O} (h:code_total O (comp cf cg)) : ∀x, (eval O cf ((eval O cg x).get (Part.Dom.of_bind (h x)))).Dom := by
+  exact fun x ↦ Part.right_dom_of_div_dom (h x)
+@[simp] theorem total_of_prec_left {O} (h:code_total O (prec cf cg)) : code_total O cf := by
+  intro x
+  unfold code_total at h
+  simp [eval] at h
+  have hx := h (Nat.pair x 0)
+  simp at hx
+  exact hx
+theorem eval_total_comp (h:code_total O (comp cf cg)) :
+  eval O (comp cf cg) x = Part.some ((eval O cf ((eval O cg x).get (Part.Dom.of_bind (h x)))).get (total_of_comp_right h x)) := by
+    simp
+    simp [eval]
+    exact Part.Dom.bind (Part.Dom.of_bind (h x)) (eval O cf)
+end Computability.Code
+end total
+
+namespace Computability.Code
+@[simp 1000] theorem RecursiveIn_of_eval : Nat.RecursiveIn O (eval O c) := by
+  induction c with
+  | zero => exact Nat.RecursiveIn.zero
+  | succ => exact Nat.RecursiveIn.succ
+  | left => exact Nat.RecursiveIn.left
+  | right => exact Nat.RecursiveIn.right
+  | oracle => exact Nat.RecursiveIn.oracle
+  | pair ha hb ha_ih hb_ih => unfold eval; exact Nat.RecursiveIn.pair (ha_ih) (hb_ih)
+  | comp ha hb ha_ih hb_ih => unfold eval; exact Nat.RecursiveIn.comp (ha_ih) (hb_ih)
+  | prec ha hb ha_ih hb_ih => unfold eval; exact Nat.RecursiveIn.prec (ha_ih) (hb_ih)
+  | rfind' ha ha_ih => unfold eval; exact RecursiveIn.rfind ha_ih
 
 end Computability.Code
