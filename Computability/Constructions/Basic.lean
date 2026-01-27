@@ -128,22 +128,7 @@ theorem rec_eval₁ : Nat.RecursiveIn O (eval₁ O) := Nat.RecursiveIn.Rin.eval
 end Computability.Code
 
 
-namespace Computability.Code
-/-- c_evconst takes as input a natural `(e,x)`, and returns an index to a program which calculates `[e](x)` regardless of its input. -/
-def c_evconst (ex:ℕ) : Code := comp ex.l.n2c (c_const ex.r)
-def c_c_evconst := c_comp.comp₂ left (c_c_const.comp right)
-@[simp] theorem c_c_evconst_evp : evalp O c_c_evconst = fun x:ℕ => c2n (c_evconst (x.n2c)) := by
-  unfold c_evconst
-  funext x
-  simp [c_c_evconst]
-@[simp] theorem c_evconst_ev : eval O (c_evconst (Nat.pair e x)) _z = eval O e.n2c x := by unfold c_evconst; simp [eval]
--- hm, the proof shouldnt be this long?
 
-@[simp] theorem c_c_evconst_pr : Nat.PrimrecIn O fun x:ℕ => c2n (c_evconst (x.n2c)) := by
-  rw [← c_c_evconst_evp]
-  exact code_prim_prop
-
-end Computability.Code
 
 open Computability
 open Code

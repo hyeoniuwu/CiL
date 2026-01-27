@@ -5,6 +5,7 @@ Authors: Edwin Park
 -/
 import Computability.Constructions.Use
 import Computability.Constructions.Basic
+import Computability.Constructions.Meta
 import Computability.EvalString
 
 open Nat
@@ -32,10 +33,8 @@ def c_evalnc :=
   congr; funext a_0
   simp only [apply_ite]
   aesop
-@[simp] theorem c_evalnc_ev:eval O c_evalnc ⟪⟪u,s⟫,⟪c,x⟫⟫ = o2n (evalnc O u s c x) := by simp [← evalp_eq_eval c_evalnc_prim]
+@[simp] theorem c_evalnc_ev : eval O c_evalnc ⟪⟪u,s⟫,⟪c,x⟫⟫ = o2n (evalnc O u s c x) := by simp [← evalp_eq_eval c_evalnc_prim]
 end Computability.Code
--- theorem Nat.PrimrecIn.evalnc:Nat.PrimrecIn O evalnc := by ...
--- theorem Nat.Primrec.evalnc:Nat.Primrec Nat.evalnc := by ...
 end evalnc
 
 section evalc
@@ -103,30 +102,6 @@ theorem c_evals_oracle_ev : eval O (c_evals_oracle o) =
   simp [c_evals_oracle_evp]
 end c_evals_oracle
 
-section c_comp₂
-def c_comp₂ :=
-  let a := left
-  let b := left.comp right
-  let c := right.comp right
-  c_comp.comp₂ a $ c_pair.comp₂ b c
-@[cp] theorem c_comp₂_prim : code_prim c_comp₂ := by unfold c_comp₂; apply_cp
-@[simp] theorem c_comp₂_evp : evalp O c_comp₂ ⟪a,b,c⟫ = c2n (comp₂ a b c) := by
-  simp [c_comp₂]; rfl
-@[simp] theorem c_comp₂_ev:eval O c_comp₂ ⟪a,b,c⟫ = c2n (comp₂ a b c) := by rw [← evalp_eq_eval c_comp₂_prim]; simp
-end c_comp₂
-section c_comp₃
-def c_comp₃ :=
-  let a := left.comp left
-  let b := left.comp right
-  let c := right.comp left
-  let d := right.comp right
-  c_comp.comp₂ (a) (c_pair.comp₂ c (c_pair.comp₂ b d))
-@[cp] theorem c_comp₃_prim : code_prim c_comp₃ := by unfold c_comp₃; apply_cp
-@[simp] theorem c_comp₃_evp : evalp O c_comp₃ ⟪⟪a,b⟫,⟪c,d⟫⟫ = c2n (comp₃ a b c d) := by
-  simp [c_comp₃]; rfl
-@[simp] theorem c_comp₃_ev:eval O c_comp₃ ⟪⟪a,b⟫,⟪c,d⟫⟫ = c2n (comp₃ a b c d) := by rw [← evalp_eq_eval c_comp₃_prim]; simp
-end c_comp₃
-
 section c_c_evals_oracle
 def c_c_evals_oracle := c_comp.comp₂ (c_const c_sg) (c_comp₃.comp₄ (c_const c_list_getD) (c_c_const.comp left) (c_const c_id) (c_const $ c_const whatever))
 @[cp] def c_c_evals_oracle_prim : code_prim c_c_evals_oracle := by unfold c_c_evals_oracle; apply_cp
@@ -161,5 +136,17 @@ def c_evals := c_evalo.comp₃
   simp [c_evals_oracle_ev]
   simp [c_evals_code_ev]
 end c_evals
+
+section c_c_evals
+def c_c_evals :=
+  c_comp₃.comp₄
+  (c_const c_evalo)
+  (c_const c_c_evals_oracle)
+  (c_const $ c_const c_evals_code)
+  (c_const c_id)
+@[cp] theorem c_c_evals_prim : code_prim c_c_evals := by unfold c_c_evals; apply_cp
+@[simp] theorem c_c_evals_evp : evalp O c_c_evals x = c_evals := by simp [c_c_evals, c_evals]
+end c_c_evals
+
 end Computability.Code
 end evals

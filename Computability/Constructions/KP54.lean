@@ -230,8 +230,6 @@ theorem B_le_J1 : KP54.B ≤ᵀ ∅⌜ := by
   apply _root_.trans (B_le_J1_aux)
   rw [fzero_eq_χempty]
   exact (K0χ_eq_χSetK ∅).1
-
--- end Computability.Code
 end kp54
 
 

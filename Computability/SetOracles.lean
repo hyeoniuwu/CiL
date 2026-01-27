@@ -188,11 +188,12 @@ theorem χ_leq_χSetK (O:Set ℕ) : Rin (χ (SetK O)) (χ O) := by
   let g := fun x => if (χ O) x = 0 then Part.none else Part.some 0
   have hg : Rin (χ O) g :=  Rin.ite Rin.oracle Rin.none Rin.zero
   rcases exists_code_nat.mp hg with ⟨cg, hcg⟩
-  let f': ℕ→.ℕ := fun x => χK (c_evconst ⟪cg, x⟫)
+  let f': ℕ→.ℕ := fun x => χK (cg.n2c.comp (c_const x))
   have f_eq_f': (χ O) = f' := by
     funext xs
     simp only [f']
-    simp [χK, c_evconst_ev]
+    simp [χK]
+    simp [eval]
 
     rw [hcg]
     simp only [g]
@@ -207,11 +208,11 @@ theorem χ_leq_χSetK (O:Set ℕ) : Rin (χ (SetK O)) (χ O) := by
 
   have f'_recIn_χK : Nat.RecursiveIn (χK) f' := by
     simp only [f']
-    refine Rin.someTotal (↑χK) (fun x ↦ χK (c_evconst ⟪cg, x⟫)) ?_
+    refine Rin.someTotal χK (fun x ↦ χK (cg.n2c.comp (c_const x)).c2n) ?_
     refine Rin.totalComp' Rin.oracle ?_
     · apply exists_code.mpr
       use (c_ev_const.comp₂ (c_const cg) c_id)
-      simp [Seq.seq, c_evconst]
+      simp [Seq.seq]
       exact rfl
 
   rw [f_eq_f']

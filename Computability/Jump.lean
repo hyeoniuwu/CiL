@@ -5,6 +5,7 @@ Authors: Edwin Park
 -/
 import Computability.Constructions.Basic
 import Computability.Constructions.Primitive
+import Computability.Constructions.Meta
 import Computability.Order
 
 open Computability
