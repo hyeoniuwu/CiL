@@ -12,7 +12,6 @@ import Computability.Use
 This file constructs codes for `usen` and `use`, almost identically in structure to Computability/Constructions/Eval.lean, which we refer readers to for more documentation.
 
 ## Main declarations
-
 - `c_usen`: code for `usen`.
 - `c_usen_evp`: asserts that `c_usen` implements the `usen` function.
 - `c_use`: code for `use`.
@@ -58,20 +57,20 @@ def c_usen_aux :=
   -- `=[c]ₛ(x)`
   let lookup (x' c' s') := c_list_getI.comp₂ (c_list_getI.comp₂ (comp_hist.comp right) (pair c' s')) x'
 
-  let pc_ml_s c'  := lookup c' (ml.comp right) (s.comp right)      -- `[ml]ₛ(x)`
-  let pc_mr_s c'  := lookup c' (mr.comp right) (s.comp right)      -- `[mr]ₛ(x)`
-  let pc_m_s  c'  := lookup c' (m.comp  right) (s.comp right)      -- `[mr]ₛ(x)`
+  let pc_ml_s c'  := lookup c' (ml.comp right)   (s.comp right)   -- `[ml]ₛ(x)`
+  let pc_mr_s c'  := lookup c' (mr.comp right)   (s.comp right)   -- `[mr]ₛ(x)`
+  let pc_m_s  c'  := lookup c' (m.comp  right)   (s.comp right)   -- `[mr]ₛ(x)`
   let pc_c_sM1 c' := lookup c' (code.comp right) (sM1.comp right) -- `[code]_{s-1}(x)`
 
-  let opt_pair := c_if_gt_te.comp₄ ele (sM1.comp right) (c_opt_none) $
-    c_ifz.comp₃ (pc_ml_s ele) (c_opt_none) $
-    c_ifz.comp₃ (pc_mr_s ele) (c_opt_none) $
+  let opt_pair := c_if_gt_te.comp₄ ele (sM1.comp right) c_opt_none $
+    c_ifz.comp₃ (pc_ml_s ele) c_opt_none $
+    c_ifz.comp₃ (pc_mr_s ele) c_opt_none $
     succ.comp (c_max.comp₂ (c_opt_iget.comp (pc_ml_s ele)) (c_opt_iget.comp (pc_mr_s ele)))
 
   let comp_usen_cg := pc_mr_s ele
   let comp_evaln_cg := c_evaln.comp₃ ele (mr.comp right) (s.comp right)
-  let comp_usen_cf := pc_ml_s $ c_pred.comp (comp_evaln_cg)
-  let opt_comp := c_if_gt_te.comp₄ ele (sM1.comp right) (c_opt_none) $
+  let comp_usen_cf := pc_ml_s $ c_pred.comp comp_evaln_cg
+  let opt_comp := c_if_gt_te.comp₄ ele (sM1.comp right) c_opt_none $
     c_ifz.comp₃ comp_usen_cg  c_opt_none $
     c_ifz.comp₃ comp_evaln_cg c_opt_none $
     c_ifz.comp₃ comp_usen_cf  c_opt_none $
@@ -85,7 +84,7 @@ def c_usen_aux :=
   let prec_evaln_prev := c_evaln.comp₃ (pair prec_x (prec_iM1)) (code.comp right) (sM1.comp right)
   let prec_usen_indt  := pc_mr_s (pair prec_x (pair prec_iM1 (c_pred.comp prec_evaln_prev)))
 
-  let opt_prec := c_if_gt_te.comp₄ ele (sM1.comp right) (c_opt_none) $
+  let opt_prec := c_if_gt_te.comp₄ ele (sM1.comp right) c_opt_none $
     c_ifz.comp₃ prec_i          prec_usen_base $
     c_ifz.comp₃ prec_usen_prev  c_opt_none $
     c_ifz.comp₃ prec_evaln_prev c_opt_none $
@@ -95,7 +94,7 @@ def c_usen_aux :=
   let rfind'_usen_base := pc_m_s ele
   let rfind'_evaln_base := c_evaln.comp₃ ele (m.comp right) (s.comp right)
   let rfind'_usen_indt := pc_c_sM1 (pair (left.comp ele) (succ.comp (right.comp ele)))
-  let opt_rfind' := c_if_gt_te.comp₄ ele (sM1.comp right) (c_opt_none) $
+  let opt_rfind' := c_if_gt_te.comp₄ ele (sM1.comp right) c_opt_none $
     c_ifz.comp₃ rfind'_usen_base c_opt_none $
     c_ifz.comp₃ rfind'_evaln_base c_opt_none $
     c_ifz.comp₃ (c_opt_iget.comp rfind'_evaln_base) rfind'_usen_base $
@@ -111,7 +110,7 @@ def c_usen_aux :=
 
   (c_list_singleton zero) $
 
-  c_if_eq_te.comp₄ s     (c_const 0) (c_list_singleton zero)      $ -- if s=0, then diverge
+  c_if_eq_te.comp₄ s     (c_const 0) (c_list_singleton zero) $ -- if s=0, then diverge
 
   c_if_eq_te.comp₄ code  (c_const 0) zero_mapped   $
   c_if_eq_te.comp₄ code  (c_const 1) zero_mapped   $

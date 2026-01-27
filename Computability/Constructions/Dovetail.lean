@@ -5,15 +5,45 @@ Authors: Edwin Park
 -/
 import Computability.Constructions.Eval
 
+/-!
+# Dovetail.lean
+
+This file defines `dovetail c`, a code which dovetails the code `c`;
+`dovetail c` gives the code to the function which, on input `n`,
+returns `y` s.t. `[c](n,y)=0`.
+
+This `y` may not be minimal.
+
+If such a `y` exists, `dovetail c` is guaranteed to find it.
+
+## Construction
+
+def dovetail c x :
+  find the smallest y s.t. [c]_{y.l}(x, y.r) = 0. -- this can be done with rfind.
+  return y.r
+
+Note then that this guarantees: `∃ y,[c](x,y)=0 ↔ [dovetail c](x)↓`
+
+## Main declarations
+
+- `dovetail` : Code → Code : returns a code which dovetails the input code.
+- `dovetail_ev_0`:
+    asserts that if the dovetail procedure `dovetail c n` halts,
+    the acquired value `y` satisfies `[c](n,y)=0`.
+- `dovetail_ev_1`: asserts that the dovetail procedure `dovetail c n`
+    diverges iff there is no `y` s.t. `[c](n,y)=0`.
+- `dovetail_ev_2`: asserts that the dovetail procedure `dovetail c n`
+    halts iff there is a `y` s.t. `[c](n,y)=0`.
+
+-/
+
 open Nat Part
 
 namespace Computability.Code
 
-/--
-Given a code `c`, `dovetail c` gives the code to the function which, on input n,
-returns `y` s.t. `[c](n,y)=0`.
+/-
+We implement
 -/
-
 def dovetailn (c:Code) : Code :=
   c_rfind $
   c_if_eq'.comp₂
@@ -114,7 +144,7 @@ theorem dovetail_none_iff_dovetailn_none : (eval O (dovetail c) x) = Part.none �
   exact dovetail_dom_iff_dovetailn_dom
 theorem dovetail_ev_0 (h:(eval O (dovetail c) x).Dom) :
 let dvt := (eval O (dovetail c) x).get h
-eval O c ⟪x, dvt⟫=Part.some 0 := by
+eval O c ⟪x, dvt⟫ = Part.some 0 := by
   have : (eval O (dovetailn c) x).Dom := by
     exact dovetail_dom_iff_dovetailn_dom.mp h
   have main := dovetailn_ev_0' this

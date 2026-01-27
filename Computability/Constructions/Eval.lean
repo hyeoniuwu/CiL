@@ -17,7 +17,6 @@ see Computability/Constructions/CovRec.lean.)
 Once `evaln` is constructed `eval` follows normally via a single mu operator, as in Kleene's normal form theorem.
 
 ## Main declarations
-
 - `c_evaln`: code for `evaln`.
 - `c_evaln_evp`: asserts that `c_evaln` implements the `evaln` function.
 - `c_eval`: code for `eval`.

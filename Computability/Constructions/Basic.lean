@@ -6,6 +6,12 @@ Authors: Edwin Park
 import Computability.Constructions.Primitive
 import Computability.Constructions.Eval
 
+/-!
+# Construction of codes of basic non-primrec functions
+
+This file defines codes for basic functions which are not primitive recursive.
+-/
+
 open Computability.Code
 open Classical
 
@@ -17,8 +23,6 @@ def c_diverge := rfind' (c_const 1)
   apply Part.eq_none_iff.mpr
   simp
 theorem c_diverge_ev' : eval O c_diverge = λ _ ↦ Part.none := by funext; simp
-def c_pair_proj (x:ℕ) := pair (c_const x) c_id
-theorem c_pair_proj_evp : evalp O (c_pair_proj x) = Nat.pair x := by simp [c_pair_proj]
 
 def c_ifz1 (c) (a b:ℕ) := c_add.comp₂ (c_mul.comp₂ (c_const b) (c_sg.comp c)) (c_mul.comp₂ (c_const a) (c_sg'.comp c))
 @[simp] theorem c_ifz1_ev (hc:code_total O c) : eval O (c_ifz1 c a b) x = if (eval O c x=Part.some 0) then Part.some a else Part.some b := by
@@ -52,8 +56,7 @@ theorem exists_code_nat {O:ℕ → ℕ} {f:ℕ →. ℕ} : Nat.RecursiveIn O f �
   exact Function.Surjective.exists n2c_sur
 theorem exists_code_total {O:ℕ → ℕ} {f:ℕ → ℕ} : Nat.RecursiveIn O f ↔ ∃ c , eval O c = f ∧ code_total O c := by
   constructor
-  ·
-    intro h
+  · intro h
     rcases exists_code.mp h with ⟨c,hc⟩
     use c
     constructor
@@ -127,9 +130,6 @@ theorem rec_eval₁ : Nat.RecursiveIn O (eval₁ O) := Nat.RecursiveIn.Rin.eval
 
 end Computability.Code
 
-
-
-
 open Computability
 open Code
 namespace Nat.RecursiveIn
@@ -149,6 +149,3 @@ theorem Rin.evalRecInO' {O} {f:ℕ→.ℕ} (h:Nat.RecursiveIn O f):Nat.Recursive
 theorem Rin.none : Nat.RecursiveIn O fun _ => Part.none := by
   rw [← c_diverge_ev']
   exact RecursiveIn_of_eval
-lemma _root_.Nat.PrimrecIn.pair_proj : Nat.PrimrecIn O (Nat.pair x) := by
-  rw [←c_pair_proj_evp]
-  exact code_prim_prop

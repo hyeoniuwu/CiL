@@ -6,6 +6,13 @@ Authors: Edwin Park
 import Computability.Constructions.Primitive
 import Computability.Helper.Partial
 
+/-!
+# Construction of basic primitive recursive functions on option types
+
+This file defines basic primitive recursive codes for basic functions on option types.
+
+-/
+
 open Nat
 open Denumerable
 open Encodable
