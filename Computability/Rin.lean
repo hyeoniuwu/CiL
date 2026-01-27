@@ -5,9 +5,7 @@ Authors: Edwin Park
 -/
 import Computability.Jump
 
-namespace Nat
-namespace RecursiveIn
-namespace Rin
+namespace Nat.RecursiveIn.Rin
 open Part
 
 alias zero := _root_.Nat.RecursiveIn.zero
@@ -108,3 +106,11 @@ theorem _root_.Nat.RecursiveIn.eval_K_computable:Nat.RecursiveIn O (fun x ↦ Co
   refine Nat.RecursiveIn.Rin.partCompTotal ?_ ?_
   exact rec_eval₁
   exact Nat.RecursiveIn.Rin.of_primrecIn (Nat.PrimrecIn.pair Nat.PrimrecIn.id Nat.PrimrecIn.id)
+
+end Nat.RecursiveIn.Rin
+namespace Computability.Code
+def c_pair_proj (x:ℕ) : Code := pair (c_const x) c_id
+theorem c_pair_proj_evp : evalp O (c_pair_proj x) = Nat.pair x := by simp [c_pair_proj]
+lemma _root_.Nat.PrimrecIn.pair_proj : Nat.PrimrecIn O (Nat.pair x) := by
+  rw [←c_pair_proj_evp]
+  exact code_prim_prop

@@ -100,9 +100,7 @@ namespace Code
 section SetJumpTheorems
 open Nat
 open RecursiveIn
--- namespace Rin = RecursiveIn
 alias Rin := RecursiveIn
--- #check Rin.oracle
 
 theorem χ_leq_χSetK0 {O:Set ℕ} : Rin (χ (SetK0 O)) (χ O) := by
   /-
