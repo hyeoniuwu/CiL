@@ -487,8 +487,8 @@ def c_C :=
   funext x
   induction x with
   | zero =>
-    simp [c_C]
     unfold Simple.C
+    simp [c_C]
     rfl
   | succ s ih =>
     unfold Simple.C

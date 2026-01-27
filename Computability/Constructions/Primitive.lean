@@ -163,6 +163,18 @@ theorem Nat.PrimrecIn.sg':Nat.PrimrecIn O Nat.sg' := by rw [←c_sg'_evp]; exact
 @[simp] abbrev c_not := c_sg'
 end sgsg'
 
+section n2b
+namespace Computability.Code
+def c_n2b := c_sg
+@[cp] theorem c_n2b_prim : code_prim c_n2b := by unfold c_n2b; apply_cp 10
+@[simp] theorem c_n2b_evp:evalp O c_n2b = fun x => if n2b x = true then 1 else 0 := by
+  simp [c_n2b]
+  unfold Nat.sg; unfold n2b
+  aesop
+@[simp] theorem c_n2b_ev:eval O c_n2b = fun x => if n2b x = true then 1 else 0 := by rw [← evalp_eq_eval c_n2b_prim]; simp only [c_n2b_evp]; funext x; aesop
+end Computability.Code
+end n2b
+
 section add
 namespace Computability.Code
 def c_add := (prec c_id ((succ.comp right).comp right))

@@ -190,48 +190,35 @@ def c_kp54 :=
             simp [contra] at h2
         simp [hBₛ, hAₚ, hB_result]
 
-section n2b
-namespace Computability.Code
-def c_n2b := c_sg
-@[cp] theorem c_n2b_prim : code_prim c_n2b := by unfold c_n2b; apply_cp 10
-@[simp] theorem c_n2b_evp:evalp O c_n2b = fun x => if n2b x = true then 1 else 0 := by
-  simp [c_n2b]
-  unfold Nat.sg; unfold n2b
-  aesop
-@[simp] theorem c_n2b_ev:eval O c_n2b = fun x => if n2b x = true then 1 else 0 := by rw [← evalp_eq_eval c_n2b_prim]; simp only [c_n2b_evp]; funext x; aesop
-end Computability.Code
-end n2b
-
 theorem fzero_eq_χempty : (λ_↦0) = χ ∅ := by unfold χ; simp
 
-def c_kp54_A := c_n2b.comp $ c_list_getI.comp₂ (left.comp $ c_kp54.comp succ) c_id
-@[cp] theorem c_kp54_A_prim : code_prim c_kp54_A := by unfold c_kp54_A; apply_cp 10
-@[simp] theorem c_kp54_A_evp : evalp (K0 (λ_↦0)) c_kp54_A = χ KP54.A := by
+def c_A := c_n2b.comp $ c_list_getI.comp₂ (left.comp $ c_kp54.comp succ) c_id
+@[cp] theorem c_A_prim : code_prim c_A := by unfold c_A; apply_cp 10
+@[simp] theorem c_A_evp : evalp (K0 (λ_↦0)) c_A = χ KP54.A := by
   funext x
-  simp [c_kp54_A]; congr
+  simp [c_A]; congr
   exact getI_eq_getElem
-@[simp] theorem c_kp54_A_ev :eval (K0 (λ_↦0)) c_kp54_A = χ KP54.A := by simp [← evalp_eq_eval c_kp54_A_prim];
-theorem A_le_J1_aux : (χ KP54.A) ≤ᵀᶠ K0 (λ_↦0) := exists_code.mpr ⟨c_kp54_A, c_kp54_A_ev⟩
+@[simp] theorem c_A_ev :eval (K0 (λ_↦0)) c_A = χ KP54.A := by simp [← evalp_eq_eval c_A_prim];
+theorem A_le_J1_aux : (χ KP54.A) ≤ᵀᶠ K0 (λ_↦0) := exists_code.mpr ⟨c_A, c_A_ev⟩
 theorem A_le_J1 : KP54.A ≤ᵀ ∅⌜ := by
   apply TR_Set_iff_Fn.mpr
   apply _root_.trans (A_le_J1_aux)
   rw [fzero_eq_χempty]
   exact (K0χ_eq_χSetK ∅).1
-def c_kp54_B := c_n2b.comp $ c_list_getI.comp₂ (right.comp $ c_kp54.comp succ) c_id
-@[cp] theorem c_kp54_B_prim : code_prim c_kp54_B := by unfold c_kp54_B; apply_cp 10
-@[simp] theorem c_kp54_B_evp : evalp (K0 (λ_↦0)) c_kp54_B = χ KP54.B := by
+def c_B := c_n2b.comp $ c_list_getI.comp₂ (right.comp $ c_kp54.comp succ) c_id
+@[cp] theorem c_B_prim : code_prim c_B := by unfold c_B; apply_cp 10
+@[simp] theorem c_B_evp : evalp (K0 (λ_↦0)) c_B = χ KP54.B := by
   funext x
-  simp [c_kp54_B]; congr
+  simp [c_B]; congr
   exact getI_eq_getElem
-@[simp] theorem c_kp54_B_ev :eval (K0 (λ_↦0)) c_kp54_B = χ KP54.B := by simp [← evalp_eq_eval c_kp54_B_prim];
-theorem B_le_J1_aux : (χ KP54.B) ≤ᵀᶠ K0 (λ_↦0) := exists_code.mpr ⟨c_kp54_B, c_kp54_B_ev⟩
+@[simp] theorem c_B_ev :eval (K0 (λ_↦0)) c_B = χ KP54.B := by simp [← evalp_eq_eval c_B_prim];
+theorem B_le_J1_aux : (χ KP54.B) ≤ᵀᶠ K0 (λ_↦0) := exists_code.mpr ⟨c_B, c_B_ev⟩
 theorem B_le_J1 : KP54.B ≤ᵀ ∅⌜ := by
   apply TR_Set_iff_Fn.mpr
   apply _root_.trans (B_le_J1_aux)
   rw [fzero_eq_χempty]
   exact (K0χ_eq_χSetK ∅).1
 end kp54
-
 
 theorem ex_incomparable_sets_below_j1 : ∃ A B:Set ℕ, A≤ᵀ∅⌜ ∧ B≤ᵀ∅⌜ ∧ A|ᵀB := by
   use KP54.A
