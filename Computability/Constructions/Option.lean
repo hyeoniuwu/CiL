@@ -63,7 +63,7 @@ def c_opt_none := (c_const 0)
 @[cp] theorem c_opt_none_prim : code_prim c_opt_none := by unfold c_opt_none; apply_cp
 @[simp] theorem c_opt_none_evp : evalp O c_opt_none o = o2n Option.none := by
   simp [c_opt_none]
--- @[simp] theorem c_opt_none_ev: n2o (eval O c_opt_none o) = (Option.none : Option ℕ) := by simp [← evalp_eq_eval c_opt_none_prim]
+@[simp] theorem c_opt_none_ev: n2o <$> (eval O c_opt_none o) = (Option.none : Option ℕ) := by simp [← evalp_eq_eval c_opt_none_prim]
 end Computability.Code
 end opt_none
 
@@ -85,8 +85,6 @@ def c_opt_bind (cf cg:Code) :=  c_ifz.comp₃ cf zero (cg.comp₂ c_id (c_opt_ig
     simp [isSome.bind $ hnat_6 h]
     congr
     exact Eq.symm hnat_7
-
--- @[simp] theorem c_opt_bind_ev:eval O c_opt_bind = unpaired2 Nat.opt_bind := by rw [← evalp_eq_eval c_opt_bind_prim]; simp only [c_opt_bind_evp]
 end Computability.Code
 end opt_bind
 
@@ -106,8 +104,6 @@ def c_opt_bind' (cf cg:Code) :=  c_ifz.comp₃ cf zero cg
   | inr h =>
     simp [h]
     simp [isSome.bind $ hnat_6 h]
--- @[simp] theorem c_opt_bind'_ev:eval O c_opt_bind' = unpaired2 Nat.opt_bind' := by rw [← evalp_eq_eval c_opt_bind'_prim]; simp only [c_opt_bind'_evp]
-
 end Computability.Code
 end opt_bind'
 
