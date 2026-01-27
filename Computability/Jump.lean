@@ -8,16 +8,32 @@ import Computability.Constructions.Primitive
 import Computability.Constructions.Meta
 import Computability.Order
 
+/-!
+# Jump.lean
+
+This file defines the jump operator on total functions, and basic reducibility results
+involving the jump.
+
+## Main declarations
+- `K0`  : the K₀ operator, on total functions
+- `K`   : the K operator, on total functions
+- `jump`: the jump operator, on total functions
+
+- `K0_eq_K` : asserts that K and K0 are of the same degree
+- `jump_not_le_id` : asserts that the jump of an oracle is strictly above the oracle
+
+-/
+
 open Computability
 open Classical
 open Computability.Code
 
 @[simp] noncomputable def K0 (O : ℕ → ℕ) : ℕ → ℕ := λ n =>
   let part := eval O n.l n.r
-  if h:part.Dom then part.get h+1 else 0
+  if h : part.Dom then part.get h+1 else 0
 @[simp] noncomputable def K (O : ℕ → ℕ) : ℕ → ℕ := λ n =>
   let part := eval O n n
-  if h:part.Dom then part.get h + 1 else 0
+  if h : part.Dom then part.get h + 1 else 0
 noncomputable abbrev jump (O:ℕ→ℕ) : ℕ → ℕ := K0 O
 
 notation:10000 f"⌜" => jump f
@@ -43,11 +59,7 @@ theorem O_le_K0 (O:ℕ→ℕ) :  O ≤ᵀᶠ (K0 O) := by
   apply exists_code.mpr  -- changes goal to: ∃ c, eval (K0 O) c = O
   let q := oracle.comp (pair (c_const oracle) c_id)
   use c_jump_decode q
-
-  have compute_total : code_total (K0 O) q := by
-    apply prim_total
-    apply_cp 60
-
+  have compute_total : code_total (K0 O) q := by apply prim_total; apply_cp
   simp only [c_jump_decode_ev' compute_total]
   simp only [q]
   simp [eval, Seq.seq]
@@ -65,9 +77,7 @@ theorem K0_leq_K (O:ℕ→ℕ) : (K0 O) ≤ᵀᶠ (K O)  := by
   let compute := oracle.comp c_ev_const
   use compute
 
-  have compute_total : code_total (K O) compute := by
-    apply prim_total
-    apply_cp 60
+  have compute_total : code_total (K O) compute := by apply prim_total; apply_cp
 
   unfold compute
   funext x
@@ -86,8 +96,6 @@ theorem jump_not_le_id (O:ℕ→ℕ) : ¬(O⌜ ≤ᵀᶠ O) := by
     funext x
     have : code_total O (c_jO.comp (pair c_id c_id)) := by intro x; simp [eval,hc_jO,Seq.seq]
     simp [c_ite_ev this, eval, hc_jO, Seq.seq]
-  -- why does this blow up lean?
-  -- nvm, fixed [25-09-24 00:10:28]
   cases Classical.em (eval O g g).Dom with
   | inl hh =>
     have hh2 := hh
@@ -97,7 +105,6 @@ theorem jump_not_le_id (O:ℕ→ℕ) : ¬(O⌜ ≤ᵀᶠ O) := by
     have hh2 := hh
     rw [fg] at hh2
     simp [hh] at hh2
-
 
 theorem K_nle_O (O:ℕ→ℕ) : ¬(K O ≤ᵀᶠ O) := by
   intro h

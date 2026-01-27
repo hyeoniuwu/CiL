@@ -16,11 +16,26 @@ import Mathlib.Order.Basic
 
 We setup sets for use as oracles, (e.g. evaluation with sets as oracles, reduction between sets), and many basic definitions in degree theory, along with some basic results.
 
-section basic_definitions:
+## Structure of file
+### basic_definitions:
   With use of the characteristic function operator `χ`, we are able to talk of sets of naturals as oracles.
 
   We define `TuringDegree` to be the equivalence classes of sets of naturals under Turing equivalence i.e. `SetTuringEquivalent`.
 
+### SetJumpTheorems
+  Basic reducibility results involving the jump operator on set oracles, and the jump operator on total
+  functions, defined in Computability/Jump.lean.
+
+### computably_enumerable
+  definitions for computably enumerable sets as domains of recursive functions,
+  The main definitions are:
+  - `W O e` : domain of e^th program with oracle O
+  - `WR O e` : range of e^th program with oracle O
+  - `CEin` : proposition that a set is computably enumerable in another
+
+  We also define `dom_to_ran`, and `ran_to_dom`, which satisfy:
+  `theorem dom_to_ran_prop : W O e = WR O (dom_to_ran e)`
+  `theorem ran_to_dom_prop : WR O e = W O (ran_to_dom e)`
 -/
 
 open Nat
@@ -91,15 +106,14 @@ end basic_definitions
 
 -- lemmas
 lemma χ_eq_0or1 : (χ O x = 0) ∨ (χ O x = 1) := by by_cases h : x ∈ O <;> simp [h, χsimp]
-lemma some_comp_simp (a:Part ℕ) {f:ℕ→ℕ} {h:a.Dom}: (Part.some (f (a.get h)) = a >>= (f:ℕ→.ℕ)) := by
+lemma some_comp_simp (a:Part ℕ) {f:ℕ→ℕ} {h:a.Dom}: Part.some (f (a.get h)) = a >>= (f:ℕ→.ℕ) := by
   simp only [bind]
   rw [Part.bind]
   exact Eq.symm (Part.assert_pos h)
 
 namespace Code
 section SetJumpTheorems
-open Nat
-open RecursiveIn
+open Nat RecursiveIn
 alias Rin := RecursiveIn
 
 theorem χ_leq_χSetK0 {O:Set ℕ} : Rin (χ (SetK0 O)) (χ O) := by
@@ -319,10 +333,10 @@ def [f(e)](y):
   run [e](y)
   return y
 -/
-def c_dom_to_ran (e:Code) := c_ifdom (c_eval.comp₂ (c_const e) c_id) c_id
-theorem dom_to_ran_prop : (W O e) = (WR O (c_dom_to_ran e)) := by
+def dom_to_ran (e:Code) := c_ifdom (c_eval.comp₂ (c_const e) c_id) c_id
+theorem dom_to_ran_prop : W O e = WR O (dom_to_ran e) := by
   ext xs
-  simp [c_dom_to_ran]
+  simp [dom_to_ran]
   constructor
   · intro h
     simp [evalSet] at h
@@ -382,7 +396,7 @@ theorem ran_to_dom_ev : (eval O (ran_to_dom c) y).Dom ↔ ∃ x, y ∈ eval O c 
     use h1
     simp [eval, Seq.seq, eval₁, Part.bind_of_mem h2]
 
-theorem ran_to_dom_prop : (WR O e) = (W O (ran_to_dom e)) := by
+theorem ran_to_dom_prop : WR O e = W O (ran_to_dom e) := by
   ext xs
   constructor
   · intro h
@@ -469,7 +483,7 @@ theorem CEin_range : CEin O A ↔ ∃ c, A = WR O c := by
   constructor
   · intro h
     rcases h with ⟨c,hc⟩
-    use c_dom_to_ran c
+    use dom_to_ran c
     rw [←dom_to_ran_prop]
     exact hc
   · intro h
