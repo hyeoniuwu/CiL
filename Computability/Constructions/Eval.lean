@@ -6,6 +6,53 @@ Authors: Edwin Park
 import Computability.Constructions.CovRec
 import Computability.Constructions.Eval_Aux
 
+/-!
+# Eval.lean
+
+This file constructs codes for `evaln` and `eval`.
+
+`evaln` is constructed via course-of-values recursion on the code and steps. (For more documentation on such constructions,
+see Computability/Constructions/CovRec.lean.)
+
+Once `evaln` is constructed `eval` follows normally via a single mu operator, as in Kleene's normal form theorem.
+
+## Construction of evaln
+In building `evaln` from course-of-values recursion, we note that it is insufficient to recurse just on the code and steps; for example when calculating $[c_f\c c_g]_s(x)$, we need to look up both $[c_g]_s(x)$ and $[c_f]_s([c_g]_s(x))$. That is, we need to recurse on the input values too.
+
+This raises an immediate issue; when calculating $f(g(x))$, we will need to look up $g(x)$, but $g(x)$ may be bigger than $x$. However, course-of-values recursion only allows looking up \emph{previous} computations. That is, values which are less than the current value being considered.
+
+We solve the problem by first defining an auxiliary function, which computes $[c]_s(x)$ \emph{for all} $x\leq s$. This auxiliary function can be defined via course-of-values recursion; consider the example of calculating $[c_f\c c_g]_s(x)$., so this is something we can directly ask
+
+1. Check $x\leq s$. If this fails, diverge.
+
+2.  Calculate $[c_g]_s(x)$. A lookup for code $c_g$ and step $s$ in the previous computations will return the list
+\begin{align}
+	\Bigl\llbracket [c_g]_{s}(0),[c_g]_{s}(1),\cdots,[c_g]_{s}(s) \Bigr\rrbracket.
+\end{align}
+Looking up $x$ in this list gives our result.
+
+3. Calculate $[c_f]_s([c_g]_s(x))$. A lookup for code $c_f$ and step $s$ in the previous computations will return the list
+\begin{align}
+	\Bigl\llbracket [c_f]_{s}(0),[c_f]_{s}(1),\cdots,[c_f]_{s}(s) \Bigr\rrbracket.
+\end{align}
+Now, we try looking up the $[c_g]_s(x)\th$ entry in this list. If one is found, then we simply return the found value.
+
+If the lookup fails, this means that $[c_g]_s(x)$ is larger than the length of the list, i.e. larger than $s$. In particular, this means that $[c_f]_s([c_g]_s(x))$ diverges, as `evaln` diverges if the input is larger than the number of steps.
+
+This is the key insight; inputs that are larger than $s$ diverge, so computations of inputs up to $s$ give us all the information we need.
+
+## Main declarations
+
+- `c_evaln`: code for `evaln`.
+- `c_evaln_evp`: asserts that `c_evaln` implements the `evaln` function.
+- `c_eval`: code for `eval`.
+- `c_eval_ev`: asserts that `c_eval` implements the `eval` function.
+
+## Notation/quirks
+
+ - Where `x`, `y` are naturals, `⟪x, y⟫ = Nat.pair x y`.
+-/
+
 open List Nat
 
 section evaln
@@ -106,17 +153,13 @@ def c_evaln :=
   c_list_getI.comp₂ (c_list_getLastI.comp $ c_evaln_aux.comp (pair (c_const 17) right)) left
 theorem c_evaln_evp_aux_x_0_0 : evalp O (c_evaln) (Nat.pair x (Nat.pair 0 0)) = o2n (evaln O 0 0 x) := by
   unfold c_evaln; unfold c_evaln_aux
-  lift_lets
-  extract_lets
-  expose_names
+  lift_lets; extract_lets; expose_names
   rw [show Nat.pair 0 0 = 0 from rfl]
   simp [getI, evaln]
 
 theorem c_evaln_evp_aux_0_np1 : evalp O (c_evaln) (Nat.pair x (Nat.pair (n+1) 0)) = o2n (evaln O 0 (n+1).n2c x) := by
   unfold c_evaln; unfold c_evaln_aux
-  lift_lets
-  extract_lets
-  expose_names
+  lift_lets; extract_lets; expose_names
 
   let k:=((Nat.pair (n+1) 0))-1
   have kP1_gt_0 : (Nat.pair (n+1) 0)>0 := by
@@ -141,9 +184,7 @@ theorem c_evaln_evp_aux (hcode_val:code≤4) :
   := by
 
   unfold c_evaln; unfold c_evaln_aux
-  lift_lets
-  extract_lets
-  expose_names
+  lift_lets; extract_lets; expose_names
   simp
 
   let k:=⟪code, s+1⟫-1
@@ -282,16 +323,16 @@ lemma c_evaln_bounds_4 : Nat.pair (n + 4 + 1) s ≤ Nat.pair (n + 4 + 1) (s + 1)
 theorem c_evaln_evp_aux_nMod4 :
   evalp O (c_evaln) (Nat.pair x (Nat.pair ((n+4)+1) (s+1)))
     =
-  let m := n.div2.div2
-  let ml        := m.l
-  let mr        := m.r
+  let m  := n.div2.div2
+  let ml := m.l
+  let mr := m.r
 
   let k:=(Nat.pair ((n+4)+1) (s+1))-1
   let covrec_inp := Nat.pair 17 (Nat.pair k (evalp O c_evaln_aux (Nat.pair 17 k)))
 
-  let pc_ml_s (c') (elem) := evalp O (c_evaln) (Nat.pair (evalp O c' ⟪elem, covrec_inp⟫) (Nat.pair ml (s+1)))
-  let pc_mr_s (c') (elem) := evalp O (c_evaln) (Nat.pair (evalp O c' ⟪elem, covrec_inp⟫) (Nat.pair mr (s+1)))
-  let pc_m_s  (c') (elem) := evalp O (c_evaln) (Nat.pair (evalp O c' ⟪elem, covrec_inp⟫) (Nat.pair m  (s+1)))
+  let pc_ml_s  (c') (elem) := evalp O (c_evaln) (Nat.pair (evalp O c' ⟪elem, covrec_inp⟫) (Nat.pair ml (s+1)))
+  let pc_mr_s  (c') (elem) := evalp O (c_evaln) (Nat.pair (evalp O c' ⟪elem, covrec_inp⟫) (Nat.pair mr (s+1)))
+  let pc_m_s   (c') (elem) := evalp O (c_evaln) (Nat.pair (evalp O c' ⟪elem, covrec_inp⟫) (Nat.pair m  (s+1)))
   let pc_c_sM1 (c') (elem) := evalp O (c_evaln) (Nat.pair (evalp O c' ⟪elem, covrec_inp⟫) (Nat.pair ((n+4)+1) s))
 
   let opt_pair (elem) := o2n (do guard (elem≤s); Nat.pair<$>n2o (pc_ml_s left elem)<*>n2o (pc_mr_s left elem))
@@ -372,17 +413,12 @@ theorem c_evaln_evp_aux_nMod4 :
   let s'':=evalp O s' ⟪elem, covrec_inp⟫
   evalp O c_evaln (Nat.pair x'' (Nat.pair c'' s''))
     := by
-    lift_lets
-    extract_lets
-    expose_names
-
+    lift_lets; extract_lets; expose_names
     have aux1 : evalp O x' ⟪elem, covrec_inp⟫ = x'' := by simp [x'']
     have aux2 : evalp O c' ⟪elem, covrec_inp⟫ = c'' := by simp [c'']
     have aux3 : evalp O s' ⟪elem, covrec_inp⟫ = s'' := by simp [s'']
-
     simp [lookup]
     simp [aux1,aux2,aux3] at *
-
     simp [comp_hist]
     simp [covrec_inp]
     unfold c_evaln
@@ -659,28 +695,20 @@ theorem c_evaln_evp_aux_nMod4 :
 
   rw [show n+5=(n+4)+1 from rfl]
 
-
   cases hno:n.bodd with
   | false => cases hn2o:n.div2.bodd with
-
-    -- pair
-    | false =>
+    | false => -- pair
       have h0: n%4=0 := nMod4_eq_0 hno hn2o
       -- simplify the rhs
       simp [n2c]
       simp [evaln,hno, hn2o]
-
       rw [c_evaln_evp_aux_nMod4]
       simp [h0]
-
       rw [ih mr_s mr_s_lt_cs];
       rw [ih ml_s ml_s_lt_cs];
       simp [ml_s, mr_s, m]
-
-    -- prec
-    | true =>
+    | true => -- prec
       have h0: n%4=2 := nMod4_eq_2 hno hn2o
-
       -- simplify the rhs
       simp [n2c]
       simp only [hno, hn2o, evaln]
@@ -711,15 +739,10 @@ theorem c_evaln_evp_aux_nMod4 :
             rw [←(n2c_c2n (((n2c n.div2.div2.l).prec (n2c n.div2.div2.r))))]
             simp [rw3_aux]
           rw [rw3]
-
-
   | true => cases hn2o:n.div2.bodd with
-    -- comp
-    | false =>
+    | false => -- comp
       have h0: n%4=1 := nMod4_eq_1 hno hn2o
-
       -- simplify the rhs
-      -- simp
       simp [n2c]
       simp [evaln,hno, hn2o]
 
@@ -744,9 +767,7 @@ theorem c_evaln_evp_aux_nMod4 :
 
       | inr h =>
         simp [h,Option.bind]
-
-    -- rfind
-    | true =>
+    | true => -- rfind
       have h0: n%4=3 := nMod4_eq_3 hno hn2o
       simp [n2c]
       simp [evaln,hno, hn2o]
@@ -837,11 +858,7 @@ theorem c_evaln_evp_aux_nMod4 :
   have : x = (Nat.pair x.l (Nat.pair x.r.l x.r.r)) := by simp
   rw (config:={occs:=.pos [1]}) [this]
   exact c_evaln_evp
--- theorem Nat.PrimrecIn.evaln:Nat.PrimrecIn O (fun x => o2n $ evaln O x.r.r x.r.l x.l) := by
-
---   rw [← c_evaln_evp]; apply code_prim_prop c_evaln_prim
 end Computability.Code
--- theorem Nat.Primrec.evaln:Nat.Primrec (unpaired evaln) := by exact PrimrecIn.PrimrecIn_Empty PrimrecIn.evaln
 end evaln
 
 section eval
@@ -861,5 +878,4 @@ theorem _root_.Nat.RecursiveIn.Rin.eval:Nat.RecursiveIn O (fun ex => eval O ex.l
   exact c_eval_ev
 
 end Computability.Code
--- theorem Nat.Primrec.eval:Nat.Primrec Nat.eval := by ...
 end eval

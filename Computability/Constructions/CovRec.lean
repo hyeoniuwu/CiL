@@ -191,6 +191,14 @@ namespace Computability.Code
 /-
 This example serves as a blueprint for using `c_cov_rec` in proofs.
 
+We construct division, using this recursive form:
+  `n/d= if d=0 then 0 else (n-d)/d+1.`
+
+We define a "flipped" version `c_div_flip_aux`, where the divisor `d` comes first and dividend `n` second.
+This is because in the interface for `c_cov_rec`, the second argument is the "inductive" one.
+(In our recursive form of division above, the recursive call is made with respect to the
+dividend and the divisor stays the same. )
+
 For this specific example, one can bypass defining the auxiliary function `c_div_flip_aux` and write a shorter proof; see https://github.com/hyeoniuwu/CiL/blob/99fd356e7835d1856fb73306df7828f96b42a85c/Computability/Constructions.lean#L758.
 
 However, I've written the "longer" way, which is more efficient. For more complex constructions, this longer way becomes necessary.
@@ -451,6 +459,24 @@ lemma c_replace_oracle_evp_aux_nMod4_bounds2 : (n/2/2).r≤n+4 := by
 lemma c_replace_oracle_evp_aux_nMod4_bounds3 : (n/2/2)≤n+4 := by
   exact le_add_right_of_le (le_trans (Nat.div_le_self _ _) (Nat.div_le_self _ _))
 
+/-
+Structure of proof:
+We lift the let-bindings in the theorem statement and within the definition of `c_replace_oracle`.
+
+The let bindings in the theorem statement are named the same as their corresponding let-bindings in
+`c_replace_oracle`.
+
+For example we have
+`let m  := n.div2.div2` in the theorem statement, and
+`let m := c_div2.comp $ c_div2.comp n` in the definition of `c_replace_oracle_aux`.
+
+In the process of lifting, the names bindings from the code are attached with the suffix "_1".
+
+We show that these bindings from the code and from the theorem statement are equivalent:
+`have hm : evalp O m_1 ⟪o, n+4, inp⟫ = m := by simp [m_1, hn, m]`
+
+The theorem then follows from using these equivalence results in simplification.
+-/
 theorem c_replace_oracle_evp_aux_nMod4 :
   evalp O (c_replace_oracle) ⟪o, ((n+4)+1)⟫
     =
