@@ -6,6 +6,13 @@ Authors: Edwin Park
 import Computability.Constructions.Option
 import Mathlib.Data.Nat.PSub
 
+/-!
+# Eval_Aux.lean
+
+Auxiliary constructs for use in Computability.Constructions.Eval
+
+-/
+
 open Nat
 open Denumerable
 open Encodable
@@ -53,7 +60,6 @@ def c_ppred := c_rfind (c_if_eq'.comp₂ left (succ.comp right))
     simp
     aesop
 
-
 def c_ofOption (c:Code) := c_ppred.comp c
 theorem c_ofOption_ev (hc1:code_total O c) : eval O (c_ofOption c) x = ↑(n2o ((eval O c x).get (hc1 x))) := by
   unfold c_ofOption
@@ -63,7 +69,6 @@ theorem c_ofOption_ev (hc1:code_total O c) : eval O (c_ofOption c) x = ↑(n2o (
   | zero => simp;
   | succ n => simp;
 
--- def c_rfindOpt (c:Code) := (c_ofOption c).comp (c_rfind (c_isSome.comp (c.comp right)))
 def c_rfindOpt (c:Code) := (c_ofOption c).comp₂ c_id (c_rfind (c_isSome.comp (c)))
 @[simp] theorem c_rfindOpt_ev (hc1:code_total O c) : eval O (c_rfindOpt c) x =  Nat.rfindOpt (fun y => n2o $ (eval O c (Nat.pair x y)).get (hc1 (Nat.pair x y))) := by
   unfold c_rfindOpt

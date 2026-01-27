@@ -8,6 +8,28 @@ import Computability.Constructions.Eval_Aux
 import Computability.Constructions.Dovetail
 import Computability.Constructions.Basic
 
+/-!
+# Meta.lean
+
+This file constructs "meta-codes" (codes which implement functions from codes to codes) of various functions.
+
+We first define such codes for constructors of `Code`;
+`c_zero`, where `evalp O c_zero = c2n zero`, `c_succ`, and so on.
+
+Then, the meta-code for any subsequent code `c` can be
+implemented by replacing each of its components with its corresponding meta-code.
+
+For example, suppose `c = comp succ left`.
+
+Then the meta-code, named `c_c`, will be: `c_c = c_comp.comp₂ c_succ c_left`.
+
+## Notation/quirks
+
+ - The meta-code for a code has `c_` attached as a prefix.
+
+-/
+
+
 open Computability.Code
 open Computability
 
