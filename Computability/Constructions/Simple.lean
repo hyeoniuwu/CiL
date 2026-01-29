@@ -356,23 +356,28 @@ def c_bitwise_aux (c:Code) :=
   c_ift.comp₃ (c.comp₂ b₁ b₂)
   (succ.comp (c_add.comp₂ r r))
   (c_add.comp₂ r r)
-  -- if f b₁ b₂ then
-  --   r+r+1
-  -- else
-  --   r+r
 def c_bitwise (c) := c_list_getLastI.comp ((c_bitwise_aux c).comp₂ (c_const 17) c_id)
-
-
--- @[cp] theorem c_bitwise_prim : code_prim c_bitwise := by unfold c_bitwise; apply_cp
-#check b2n
-theorem lt_pair_lt_lt (ha : a<c) (hb : b<d) : ⟪a,b⟫ < ⟪c,d⟫ := by
+@[cp] theorem c_bitwise_prim (hc:code_prim c) : code_prim (c_bitwise c) := by
+  unfold c_bitwise;
+  unfold c_bitwise_aux
+  extract_lets;
+  expose_names;
+  have cpiP1 : code_prim iP1 := by apply_cp
+  have cpcomp_hist : code_prim comp_hist := by apply_cp
+  have cpn : code_prim n := by apply_cp
+  have cpm : code_prim m := by apply_cp
+  have cpn' : code_prim n' := by apply_cp
+  have cpm' : code_prim m' := by apply_cp
+  have cpb₁ : code_prim b₁ := by apply_cp
+  have cpb₂ : code_prim b₂ := by apply_cp
+  have cpr : code_prim r := by apply_cp
+  apply_cp 50
+theorem lt_pair_of_lt_lt (ha : a<c) (hb : b<d) : ⟪a,b⟫ < ⟪c,d⟫ := by
   have a0 : ⟪a,b⟫ < ⟪c,b⟫ := by exact Nat.pair_lt_pair_left b ha
   have a1 : ⟪c,b⟫ < ⟪c,d⟫ := by exact Nat.pair_lt_pair_right c hb
   exact Nat.lt_trans a0 a1
 theorem c_bitwise_evp_rec_bounds {n m : ℕ} : ⟪(n + 1) / 2,(m + 1) / 2⟫ < ⟪n + 1,m + 1⟫ := by
-  apply lt_pair_lt_lt
-  exact Nat.div_lt_self' n 0
-  exact Nat.div_lt_self' m 0
+  exact lt_pair_of_lt_lt (Nat.div_lt_self' n 0) (Nat.div_lt_self' m 0)
 theorem c_bitwise_evp_0_0 : evalp O (c_bitwise c) ⟪0, 0⟫ = Nat.bitwise (fun a b => n2b $ evalp O c ⟪b2n a, b2n b⟫) 0 0 := by
   unfold c_bitwise; unfold c_bitwise_aux;
   lift_lets; extract_lets; expose_names
@@ -412,7 +417,7 @@ theorem c_bitwise_evp_n_0 : evalp O (c_bitwise c) ⟪n+1, 0⟫ = Nat.bitwise (fu
   have hm : evalp O m cri = 0 := by simp [m, hiP1]
   -- terminal simp
   simp [hn, hm, b2n]
-theorem c_bitwise_evp_rec : evalp O (c_bitwise c) ⟪n+1,m+1⟫ =
+theorem c_bitwise_evp_n_m : evalp O (c_bitwise c) ⟪n+1,m+1⟫ =
     (let n' := (n+1) / 2
     let m' := (m+1) / 2
     let b₁ := (n+1) % 2
@@ -471,7 +476,7 @@ lemma mod2 (h:¬ x%2=0) : x%2 =1 := by
   | 0,    m+1  => simp [c_bitwise_evp_0_m]
   | n+1,  0    => simp [c_bitwise_evp_n_0]
   | n+1,  m+1  =>
-    simp [c_bitwise_evp_rec]
+    simp [c_bitwise_evp_n_m]
     have b0 : ⟪(n+1)/2, (m+1)/2⟫ < nm := by
       simp [nm_eq]
       exact c_bitwise_evp_rec_bounds
@@ -485,26 +490,97 @@ lemma mod2 (h:¬ x%2=0) : x%2 =1 := by
     unfold Nat.bitwise
     simp [ih0]
     simp [rw0]
+end Computability.Code
+end bitwise
+
+section lor
+namespace Computability.Code
+def c_lor := c_ifz.comp₃ left
+  (c_ifz.comp₃ right zero (c_const 1))
+  (c_const 1)
+@[cp] theorem c_lor_prim : code_prim c_lor := by unfold c_lor; apply_cp
+theorem c_lor_evp : evalp O c_lor ⟪a, b⟫ = b2n (n2b a || n2b b) := by
+  simp [c_lor]
+  simp [n2b, b2n]
+  split
+  next h => simp [h]
+  next h => simp [h]
+@[simp] theorem c_lor_evp' : (fun a b => n2b $ evalp O c_lor ⟪b2n a, b2n b⟫) = Bool.or := by
+  simp [c_lor]
+  funext a b;
+  simp [n2b, b2n]
+  split
+  next h => simp [h]
+  next h => simp [h]
+end Computability.Code
+end lor
+section lxor
+namespace Computability.Code
+def c_lxor := c_ifz.comp₃ left
+  (c_ifz.comp₃ right zero (c_const 1))
+  (c_ifz.comp₃ right (c_const 1) zero)
+@[cp] theorem c_lxor_prim : code_prim c_lxor := by unfold c_lxor; apply_cp
+theorem c_lxor_evp : evalp O c_lxor ⟪a, b⟫ = b2n (n2b a ^^ n2b b) := by
+  simp [c_lxor]
+  simp [n2b, b2n]
+  split
+  next h => simp [h]
+  next h => simp [h]
+@[simp] theorem c_lxor_evp' : (fun a b => n2b $ evalp O c_lxor ⟪b2n a, b2n b⟫) = Bool.xor := by
+  simp [c_lxor]
+  funext a b;
+  simp [n2b, b2n]
+  split
+  next h => simp [h]
+  next h => simp [h]
+end Computability.Code
+end lxor
+section land
+namespace Computability.Code
+def c_land := c_ifz.comp₃ left
+  zero
+  (c_ifz.comp₃ right zero (c_const 1))
+@[cp] theorem c_land_prim : code_prim c_land := by unfold c_land; apply_cp
+theorem c_land_evp : evalp O c_land ⟪a, b⟫ = b2n (n2b a && n2b b) := by
+  simp [c_land]
+  simp [n2b, b2n]
+  split
+  next h => simp [h]
+  next h => simp [h]
+@[simp] theorem c_land_evp' : (fun a b => n2b $ evalp O c_land ⟪b2n a, b2n b⟫) = Bool.and := by
+  simp [c_land]
+  funext a b;
+  simp [n2b, b2n]
+end Computability.Code
+end land
+section or
+namespace Computability.Code
+def c_or := c_bitwise (c_lor)
+@[cp] theorem c_or_prim : code_prim c_or := by unfold c_or; apply_cp
+@[simp] theorem c_or_evp: evalp O c_or ⟪x,y⟫ = (x ||| y) := by simp [c_or]; rfl
+end Computability.Code
+end or
+section and
+namespace Computability.Code
+def c_and := c_bitwise (c_land)
+@[cp] theorem c_and_prim : code_prim c_and := by unfold c_and; apply_cp
+@[simp] theorem c_and_evp: evalp O c_and ⟪x,y⟫ = (x &&& y) := by simp [c_and]; rfl
+end Computability.Code
+end and
+section xor
+namespace Computability.Code
+def c_xor := c_bitwise (c_lxor)
+@[cp] theorem c_xor_prim : code_prim c_xor := by unfold c_xor; apply_cp
+@[simp] theorem c_xor_evp: evalp O c_xor ⟪x,y⟫ = (x ^^^ y) := by simp [c_xor]; rfl
+end Computability.Code
+end xor
 
 section fs_add
 namespace Computability.Code
-def c_fs_add := c_ifz.comp₃
-  (c_fs_in.comp c_id)
-  (c_add.comp₂ left (c_pow.comp₂ (c_const 2) right))
-  left
+def c_fs_add := c_or.comp₂ left $ c_pow.comp₂ (c_const 2) right
 @[cp] theorem c_fs_add_prim : code_prim c_fs_add := by unfold c_fs_add; apply_cp
-theorem c_fs_add_aux (x y : ℕ) : x.testBit y ↔ x = x ||| (2^y) := by
-  constructor
-  intro h
-  apply Nat.eq_of_testBit_eq
-  grind
-  intro h
-  grind
 @[simp] theorem c_fs_add_evp: evalp O c_fs_add ⟪x,y⟫ = (fs_add x y) := by
   simp [c_fs_add,evalp];
-  simp [fs_add, fs_in, b2n]
-  sorry
-
 end Computability.Code
 end fs_add
 
