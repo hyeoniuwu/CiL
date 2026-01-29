@@ -382,17 +382,10 @@ theorem c_evaln_evp_aux_nMod4 :
   else 0
 
     := by
-
-  lift_lets
-  extract_lets
-  expose_names
-
+  lift_lets; extract_lets; expose_names
   unfold c_evaln; unfold c_evaln_aux
-  lift_lets
-  extract_lets
-  expose_names
+  lift_lets; extract_lets; expose_names
   simp
-
 
   have kP1_gt_0 : ⟪(n+4)+1, s+1⟫ > 0 := pair_nonzero_right_pos
   have hkP1: k+1 = ⟪(n+4)+1, s+1⟫ := by

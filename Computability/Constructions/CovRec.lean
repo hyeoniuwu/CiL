@@ -240,7 +240,6 @@ theorem c_div_flip_evp_aux_aux :
 
   rw (config:={occs:=.pos [1]}) [c_div_flip]
   unfold c_div_flip_aux
-
   lift_lets; extract_lets; expose_names
 
   let (eq:=hinp2) inp2 := evalp O c_div_flip_aux (Nat.pair (d+1) (n))

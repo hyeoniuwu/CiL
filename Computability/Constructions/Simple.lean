@@ -30,10 +30,10 @@ we let `c_simple` search (by dovetailing) for a step `s` such that its input is 
 
 ## Main declarations
 
-- `c_C`: 
-- `c_simple`: 
-- `c_simple_ev`: 
-- `exists_simple_set`: 
+- `c_C`:
+- `c_simple`:
+- `c_simple_ev`:
+- `exists_simple_set`:
 
 -/
 
@@ -328,6 +328,123 @@ def c_fs_in := c_mod.comp₂
   grind
 end Computability.Code
 end fs_in
+
+section bitwise
+namespace Computability.Code
+def c_bitwise_aux (c:Code) :=
+  let iP1 := succ.comp (left.comp right)
+
+  let comp_hist       := right.comp right
+  let lookup (n'' m'')     := c_list_getI.comp₂ comp_hist (pair n'' m'')
+
+  let n := left.comp iP1
+  let m := right.comp iP1
+  let n' := c_div.comp₂ n (c_const 2)
+  let m' := c_div.comp₂ m (c_const 2)
+  let b₁ := c_mod.comp₂ n (c_const 2)
+  let b₂ := c_mod.comp₂ m (c_const 2)
+  let r  := lookup n' m'
+
+  c_cov_rec
+
+  (c_const 0) $
+
+  c_ifz.comp₃ n
+    (c_ift.comp₃ (c.comp₂ zero (c_const 1)) m zero) $
+  c_ifz.comp₃ m
+    (c_ift.comp₃ (c.comp₂ (c_const 1) zero) n zero) $
+  c_ift.comp₃ (c.comp₂ b₁ b₂)
+  (succ.comp (c_add.comp₂ r r))
+  (c_add.comp₂ r r)
+  -- if f b₁ b₂ then
+  --   r+r+1
+  -- else
+  --   r+r
+def c_bitwise (c) := c_list_getLastI.comp ((c_bitwise_aux c).comp₂ (c_const 17) c_id)
+
+
+-- @[cp] theorem c_bitwise_prim : code_prim c_bitwise := by unfold c_bitwise; apply_cp
+#check b2n
+theorem lt_pair_lt_lt (ha : a<c) (hb : b<d) : ⟪a,b⟫ < ⟪c,d⟫ := by
+  have a0 : ⟪a,b⟫ < ⟪c,b⟫ := by exact Nat.pair_lt_pair_left b ha
+  have a1 : ⟪c,b⟫ < ⟪c,d⟫ := by exact Nat.pair_lt_pair_right c hb
+  exact Nat.lt_trans a0 a1
+theorem c_bitwise_evp_rec_bounds {n m : ℕ} : ⟪(n + 1) / 2,(m + 1) / 2⟫ < ⟪n + 1,m + 1⟫ := by
+  apply lt_pair_lt_lt
+  exact Nat.div_lt_self' n 0
+  exact Nat.div_lt_self' m 0
+theorem c_bitwise_evp_0_m : evalp O (c_bitwise c) ⟪0, m+1⟫ = Nat.bitwise (fun a b => n2b $ evalp O c ⟪b2n a, b2n b⟫) 0 (m+1) := by
+  unfold c_bitwise; unfold c_bitwise_aux;
+  lift_lets; extract_lets; expose_names
+  let k := ⟪0, m+1⟫ - 1
+  have hkP1: k+1 = ⟪0, m+1⟫ := Nat.sub_add_cancel pair_nonzero_right_pos
+  rw [← hkP1]
+  -- more unfolding
+  let (eq:=hinp) inp := evalp O (c_bitwise_aux c) ⟪17, k⟫
+  let (eq:=hcri) cri := ⟪17, k, inp⟫
+  unfold c_bitwise_aux at hinp; lift_lets at hinp
+  simp [← hinp, ← hcri]
+  -- simplify lets
+  have hiP1 : evalp O iP1 cri = ⟪0,m+1⟫ := by simp [iP1, cri, hkP1]
+  have hn : evalp O n cri = 0 := by simp [n, hiP1]
+  have hm : evalp O m_1 cri = m+1 := by simp [m_1, hiP1]
+  -- terminal simp
+  simp [hn, hm, b2n]
+theorem c_bitwise_evp_rec : evalp O (c_bitwise c) ⟪n+1,m+1⟫ =
+    (let n' := (n+1) / 2
+    let m' := (m+1) / 2
+    let b₁ := (n+1) % 2
+    let b₂ := (m+1) % 2
+    let r  := evalp O (c_bitwise c) ⟪n',m'⟫
+    if n2b $ evalp O c ⟪b₁, b₂⟫ then
+      r+r+1
+    else
+      r+r)
+ := by
+  lift_lets; extract_lets; expose_names
+  unfold c_bitwise; unfold c_bitwise_aux;
+  -- rw (config:={occs:=.pos [1]}) [c_bitwise]
+  lift_lets; extract_lets; expose_names
+  let k := ⟪n+1, m+1⟫ - 1
+  have kP1_gt_0 : ⟪n+1, m+1⟫ > 0 := pair_nonzero_right_pos
+  have hkP1: k+1 = ⟪n+1, m+1⟫ := by
+    exact Nat.sub_add_cancel kP1_gt_0
+  rw [←hkP1]
+
+  let (eq:=hinp) inp := evalp O (c_bitwise_aux c) ⟪17, k⟫
+  let (eq:=hcri) cri := ⟪17, k, inp⟫
+  unfold c_bitwise_aux at hinp; lift_lets at hinp
+  simp [← hinp, ← hcri]
+
+  have hiP1 : evalp O iP1 cri = ⟪n+1,m+1⟫ := by simp [iP1, cri, hkP1]
+  have hn : evalp O n_1 cri = n+1 := by simp [n_1, hiP1]
+  have hm : evalp O m_1 cri = m+1 := by simp [m_1, hiP1]
+  have hn' : evalp O n'_1 cri = n' := by simp [n'_1, hn, n']
+  have hm' : evalp O m'_1 cri = m' := by simp [m'_1, hm, m']
+  have hb₁ : evalp O b₁_1 cri = b₁ := by simp [b₁_1, hn, b₁]
+  have hb₂ : evalp O b₂_1 cri = b₂ := by simp [b₂_1, hm, b₂]
+  have hr : evalp O r_1 cri = r := by
+    simp [r_1, lookup, comp_hist, hn', hm', cri, inp]
+    simp [r]; unfold c_bitwise
+    unfold c_bitwise_aux
+    lift_lets
+    have : ⟪n',m'⟫≤k := by
+      simp [k]
+      apply Nat.le_of_lt_succ
+      simp [Nat.sub_add_cancel pair_nonzero_right_pos]
+      exact c_bitwise_evp_rec_bounds
+    simp [this]
+
+  simp [hn, hm, hb₁, hb₂, hr]
+
+@[simp] theorem c_bitwise_evp: evalp O (c_bitwise c) ⟪n,m⟫ = Nat.bitwise (fun a b => n2b $ evalp O c ⟪b2n a, b2n b⟫) n m := by
+  simp [c_bitwise,evalp];
+  simp [bitwise, fs_in, b2n]
+  sorry
+
+end Computability.Code
+end bitwise
+#exit
 
 section fs_add
 namespace Computability.Code

@@ -422,6 +422,23 @@ theorem c_ifz_ev':eval O c_ifz = fun (cab:ℕ) => if cab.l=0 then cab.r.l else c
 end Computability.Code
 end ifz
 
+section ift
+namespace Computability.Code
+def c_ift := c_ifz.comp₂ (c_sg'.comp $ left) right
+@[cp] theorem c_ift_prim : code_prim c_ift := by unfold c_ift; apply_cp
+@[simp] theorem c_ift_evp : evalp O c_ift = fun (cab:ℕ) => if (n2b cab.l) then cab.r.l else cab.r.r := by
+  simp [c_ift,evalp];
+  funext xs
+  have hsplit : xs.l = 0 ∨ ¬ (xs.l = 0) := by exact Or.symm (ne_or_eq xs.l 0)
+  cases hsplit with
+  | inl h => simp [h, n2b]
+  | inr h => simp [h, n2b]
+theorem c_ift_ev':eval O c_ift = fun (cab:ℕ) => if (n2b cab.l) then cab.r.l else cab.r.r := by rw [← evalp_eq_eval c_ift_prim]; simp only [c_ift_evp];
+@[simp] theorem c_ift_ev:eval O c_ift cab = if (n2b cab.l) then cab.r.l else cab.r.r := by
+  simp [c_ift_ev']
+end Computability.Code
+end ift
+
 section nat_iterate
 namespace Computability.Code
 def c_nat_iterate (cf:Code) :=
