@@ -59,7 +59,11 @@ theorem finite_ext_prop (halts:(finite_ext S i l).Dom) :
     contrapose this
     simp [-Denumerable.list_ofNat_succ]
     exact this
-
+theorem finite_ext_prop_div (h: ¬ (finite_ext S i l).Dom) :
+  ∀ y, ¬ (evals ((n2l S) ++ (n2l (y+1))) i l).Dom := by
+    have := dovetail_ev_1.mp (Part.eq_none_iff'.mpr h)
+    simp [c_kp54_aux_evp, -Denumerable.list_ofNat_succ] at this
+    exact fun y ↦ this y
 
 open Nat List in
 /--
@@ -341,8 +345,7 @@ private theorem R_aux_0 (i:ℕ) (h:(evals (As (2*i+1+1)) i (R_wt i)).Dom):
     apply byContradiction
     intro halts
     rcases @As_ex_ext (2*i+1) (2*i+2) (Nat.lt_add_one (2 * i + 1)) with ⟨h3,h2⟩
-    have := dovetail_ev_1.mp (Part.eq_none_iff'.mpr halts) h3
-    simp [c_kp54_aux_evp, -Denumerable.list_ofNat_succ] at this
+    have := finite_ext_prop_div halts h3
     rw [show n2l Aₚ = As (2*i+1) from rfl, h2, i_1_simp] at this
     exact this h
 
@@ -422,8 +425,7 @@ lemma As_Uninjured_1 : ¬(evals (As (2*i+1+1)) i (R_wt i)).Dom → ¬(evalSet A 
 
   simp (config := {zeta:=false}) [h0]
 
-  have a1 := dovetail_ev_1.mp (Part.eq_none_iff'.mpr h0)
-  simp [c_kp54_aux_evp, -Denumerable.list_ofNat_succ] at a1
+  have a1 := finite_ext_prop_div h0
   intro h; clear h
   contrapose a1
   simp at a1
@@ -548,8 +550,7 @@ private theorem S_aux_0 (i:ℕ) (h:(evals (Bs (2*i+1)) i (S_wt i)).Dom):
     apply byContradiction
     intro halts
     rcases @Bs_ex_ext (2*i) (2*i+1) (Nat.lt_add_one (2*i)) with ⟨h3,h2⟩
-    have := dovetail_ev_1.mp (Part.eq_none_iff'.mpr halts) h3
-    simp [c_kp54_aux_evp, -Denumerable.list_ofNat_succ] at this
+    have := finite_ext_prop_div halts h3
     rw [show n2l Bₚ = Bs (2*i) from rfl, h2, i_1_simp] at this
     exact this h
   let (eq:=hrf) rf := dvt.get halts
@@ -599,8 +600,7 @@ lemma Bs_Uninjured_1 : ¬(evals (Bs (2*i+1)) i (S_wt i)).Dom → ¬(evalSet B i 
     exact h this
   else
   simp (config := {zeta:=false}) [h0]
-  have a1 := dovetail_ev_1.mp (Part.eq_none_iff'.mpr h0)
-  simp [c_kp54_aux_evp, -Denumerable.list_ofNat_succ] at a1
+  have a1 := finite_ext_prop_div h0
   intro h; clear h
   contrapose a1
   simp at a1

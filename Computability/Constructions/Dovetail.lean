@@ -27,8 +27,7 @@ Note then that this guarantees: `∃ y,[c](x,y)=0 ↔ [dovetail c](x)↓`
 ## Main declarations
 
 - `dovetail` : Code → Code : returns a code which dovetails the input code.
-- `dovetail_ev_0`:
-    asserts that if the dovetail procedure `dovetail c n` halts,
+- `dovetail_ev_0`: asserts that if the dovetail procedure `dovetail c n` halts,
     the acquired value `y` satisfies `[c](n,y)=0`.
 - `dovetail_ev_1`: asserts that the dovetail procedure `dovetail c n`
     diverges iff there is no `y` s.t. `[c](n,y)=0`.

@@ -10,6 +10,13 @@ import Computability.Constructions.Eval
 # Construction of codes of basic non-primrec functions
 
 This file defines codes for basic functions which are not primitive recursive.
+
+## Main declarations
+
+- `c_diverge`: A code which diverges on all inputs.
+- `c_ite`: A code which implements if-then-else, where the entire computation
+  does not necessarily diverge even if one the branches does.
+
 -/
 
 open Computability.Code
@@ -17,13 +24,16 @@ open Classical
 
 namespace Computability.Code
 
+section diverge
 def c_diverge := rfind' (c_const 1)
 @[simp] theorem c_diverge_ev : eval O c_diverge x = Part.none := by
   simp [c_diverge,eval]
   apply Part.eq_none_iff.mpr
   simp
 theorem c_diverge_ev' : eval O c_diverge = λ _ ↦ Part.none := by funext; simp
+end diverge
 
+section ifz1
 def c_ifz1 (c) (a b:ℕ) := c_add.comp₂ (c_mul.comp₂ (c_const b) (c_sg.comp c)) (c_mul.comp₂ (c_const a) (c_sg'.comp c))
 @[simp] theorem c_ifz1_ev (hc:code_total O c) : eval O (c_ifz1 c a b) x = if (eval O c x=Part.some 0) then Part.some a else Part.some b := by
   simp [c_ifz1]
@@ -40,7 +50,9 @@ theorem c_ifz1_total (hc:code_total O c) : code_total O (c_ifz1 c a b) := by
   split
   next h => simp_all only [Part.some_dom]
   next h => simp_all only [Part.some_dom]
+end ifz1
 
+section ite
 def c_ite (c a b:Computability.Code) := c_eval.comp₂ (c_ifz1 c a.c2n b.c2n) (c_id)
 @[simp] theorem c_ite_ev (hc:code_total O c) : eval O (c_ite c a b) x = if (eval O c x=Part.some 0) then (eval O a x) else (eval O b x) := by
   simp [c_ite]
@@ -67,7 +79,9 @@ theorem exists_code_total {O:ℕ → ℕ} {f:ℕ → ℕ} : Nat.RecursiveIn O f 
   intro h
   rcases h with ⟨c,hc,_⟩
   apply exists_code.mpr ⟨c,hc⟩
+end ite
 
+section if_le_te'
 -- like c_if_le_te, but allows either branch to diverge
 def c_if_le_te' (c1 c2 c3 c4:Code) := c_ite (c_sub.comp₂ c1 c2) c3 c4
 @[simp] theorem c_if_le_te'_ev (hc1:code_total O c1) (hc2:code_total O c2) : eval O (c_if_le_te' c1 c2 c3 c4) x = if (eval O c1 x).get (hc1 x) ≤ (eval O c2 x).get (hc2 x) then (eval O c3 x) else (eval O c4 x) := by
@@ -81,7 +95,9 @@ def c_if_le_te' (c1 c2 c3 c4:Code) := c_ite (c_sub.comp₂ c1 c2) c3 c4
   simp [Part.Dom.bind $ hc1 x]
   simp [Part.Dom.bind $ hc2 x]
   exact Nat.sub_eq_zero_iff_le
+end if_le_te'
 
+section if_eq_te'
 -- like c_if_eq_te, but allows either branch to diverge
 def c_if_eq_te' (c1 c2 c3 c4:Code) := c_ite (c_dist.comp₂ c1 c2) c3 c4
 @[simp] theorem c_if_eq_te'_ev (hc1:code_total O c1) (hc2:code_total O c2) : eval O (c_if_eq_te' c1 c2 c3 c4) x = if (eval O c1 x).get (hc1 x) = (eval O c2 x).get (hc2 x) then (eval O c3 x) else (eval O c4 x) := by
@@ -93,8 +109,9 @@ def c_if_eq_te' (c1 c2 c3 c4:Code) := c_ite (c_dist.comp₂ c1 c2) c3 c4
   simp [Seq.seq]
   simp [Part.Dom.bind $ hc1 x]
   simp [Part.Dom.bind $ hc2 x]
+end if_eq_te'
 
-
+section ifdom
 def c_ifdom (c a:Computability.Code) := c_add.comp₂ (zero.comp c) a
 @[simp] theorem c_ifdom_ev  : eval O (c_ifdom c a) x = if (eval O c x).Dom then (eval O a x) else Part.none := by
   simp [c_ifdom]
@@ -105,10 +122,9 @@ def c_ifdom (c a:Computability.Code) := c_add.comp₂ (zero.comp c) a
     simp [Part.Dom.bind h]
   next h =>
     simp [Part.eq_none_iff'.mpr h]
+end ifdom
 
-
-
-
+section evaln₁
 def c_evaln₁ := c_evaln.comp₃ (left.comp right) (left) (right.comp right)
 def evaln₁ (O:ℕ→ℕ):ℕ→ℕ := fun abc => Encodable.encode (evaln O abc.r.r abc.l.n2c abc.r.l)
 theorem c_evaln₁_evp : evalp O c_evaln₁ = evaln₁ O := by
@@ -116,7 +132,9 @@ theorem c_evaln₁_evp : evalp O c_evaln₁ = evaln₁ O := by
   exact rfl
 theorem prim_evaln₁ : Nat.PrimrecIn O (evaln₁ O) := by
   simp [← c_evaln₁_evp]
+end evaln₁
 
+section eval₁
 def eval₁ (O:ℕ→ℕ):ℕ→.ℕ := fun ex => eval O ex.l.n2c ex.r
 def c_eval₁ := c_eval
 @[simp] theorem c_eval₁_ev : eval O c_eval₁ = eval₁ O := by
@@ -127,6 +145,7 @@ def c_eval₁ := c_eval
   exact c_eval_ev
 
 theorem rec_eval₁ : Nat.RecursiveIn O (eval₁ O) := Nat.RecursiveIn.Rin.eval
+end eval₁
 
 end Computability.Code
 

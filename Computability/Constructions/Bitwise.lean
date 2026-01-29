@@ -12,12 +12,14 @@ This file constructs primitive recursive codes for bitwise operations.
 
 The main construction is `c_bitwise`, which allows bitwise operation of an arbitrary code/function. The code constructed mirrors the Lean definition of `Nat.bitwise`, using course-of-values recursion.
 
+For more documentation on theorems related to codes using course-of-values is proven, see `Constructions\CovRec.lean`.
+
 ## Main declarations
 
-- `c_bitwise`:
-- `c_or`:
-- `c_and`:
-- `c_xor`:
+- `c_bitwise`: Code implementing `Nat.bitwise`.
+- `c_or`: Code implementing `Nat.lor`.
+- `c_and`: Code implementing `Nat.land`.
+- `c_xor`: Code implementing `Nat.xor`.
 
 -/
 
@@ -157,13 +159,10 @@ theorem c_bitwise_evp_n_m : evalp O (c_bitwise c) ⟪n+1,m+1⟫ =
     simp [this]
 
   simp [hn, hm, hb₁, hb₂, hr]
-lemma mod2 (h:¬ x%2=0) : x%2 =1 := by
-  exact Nat.mod_two_ne_zero.mp h
 @[simp] theorem c_bitwise_evp: evalp O (c_bitwise c) = Nat.unpaired2 (Nat.bitwise (fun a b => n2b $ evalp O c ⟪b2n a, b2n b⟫)) := by
   funext nm
   induction' nm using Nat.strong_induction_on with nm ih
-  let n := nm.l
-  let m := nm.r
+  let n := nm.l; let m := nm.r
   have nm_eq : nm = Nat.pair n m := by exact Eq.symm pair_lr
   rw [nm_eq]
   match hn_val:n, hm_val:m with

@@ -23,6 +23,13 @@ This file also contains two examples using course-of-values recursion; division 
 ## Notation/quirks
 
  - Where `x`, `y` are naturals, `⟪x, y⟫ = Nat.pair x y`.
+
+ ## Main declarations
+
+- `c_cov_rec`: Code implementing course-of-values recursion, with a similar interface to `prec`.
+- `c_div`: Code implementing `Nat.div`.
+- `c_replace_oracle`: Code that parses codes.
+
 -/
 
 open Computability.Code

@@ -8,6 +8,33 @@ import Computability.Constructions.Meta
 import Computability.SetOracles
 import Computability.KP54
 
+/-!
+# Constructions/KP54.lean
+
+This file constructs the function `KP54.KP54` from KP54.lean as a code.
+
+## Structure
+The difficult part of the construction is in implementing the search procedure of a `x` s.t.
+`∃ x ∈ Wn ∅ i s, x > 2*i`.
+
+This is done using `c_bdd_search`, which searches for a `x` that halts on code `c` for `s`
+steps, from a specified lower bound to an upper bound. `c` and `s` are specified from the input.
+
+Once the search procedure can be defined, `Simple.step`, and in turn `Simple.C`, can be constructed as codes
+(`c_step` and `c_C` respectively) easily.
+
+Then, we can define `c_simple` such that its domain is exactly `Simple.A`;
+we let `c_simple` search (by dovetailing) for a step `s` such that its input is in `(C s).l`.
+
+## Main declarations
+
+- `c_C`: The code which implements `Simple.C`.
+- `c_simple`: The code whose domain is `Simple.A`.
+- `c_simple_ev`: Asserts that the domain of `c_simple` is `Simple.A`.
+- `exists_simple_set`: Asserts the existence of a simple set.
+
+-/
+
 open Computability.Code
 open Computability
 
