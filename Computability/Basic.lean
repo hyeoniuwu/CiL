@@ -26,6 +26,14 @@ theorem pair_nonzero_right_pos_aux : ¬ (Nat.pair x (s+1)=0) := by
   contradiction
 @[simp] theorem pair_nonzero_right_pos : (Nat.pair x (s+1))>0 := by
   exact zero_lt_of_ne_zero pair_nonzero_right_pos_aux
+theorem pair_nonzero_left_pos_aux : ¬ (Nat.pair (s+1) x = 0) := by
+  rw [show 0=Nat.pair 0 0 from rfl]
+  rw [pair_eq_pair]
+  intro h
+  have hr := h.left
+  contradiction
+@[simp] theorem pair_nonzero_left_pos : (Nat.pair (s+1) x)>0 := by
+  exact zero_lt_of_ne_zero pair_nonzero_left_pos_aux
 @[simp] theorem map_getI : (List.map (f) (List.range (s + 1))).getI x = if x<s+1 then f x else 0 := by
   unfold List.getI
   cases Classical.em (x<s+1) with

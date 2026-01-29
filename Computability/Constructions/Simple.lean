@@ -373,6 +373,11 @@ theorem c_bitwise_evp_rec_bounds {n m : ℕ} : ⟪(n + 1) / 2,(m + 1) / 2⟫ < �
   apply lt_pair_lt_lt
   exact Nat.div_lt_self' n 0
   exact Nat.div_lt_self' m 0
+theorem c_bitwise_evp_0_0 : evalp O (c_bitwise c) ⟪0, 0⟫ = Nat.bitwise (fun a b => n2b $ evalp O c ⟪b2n a, b2n b⟫) 0 0 := by
+  unfold c_bitwise; unfold c_bitwise_aux;
+  lift_lets; extract_lets; expose_names
+  rw [show Nat.pair 0 0 = 0 from rfl]
+  simp
 theorem c_bitwise_evp_0_m : evalp O (c_bitwise c) ⟪0, m+1⟫ = Nat.bitwise (fun a b => n2b $ evalp O c ⟪b2n a, b2n b⟫) 0 (m+1) := by
   unfold c_bitwise; unfold c_bitwise_aux;
   lift_lets; extract_lets; expose_names
@@ -390,6 +395,23 @@ theorem c_bitwise_evp_0_m : evalp O (c_bitwise c) ⟪0, m+1⟫ = Nat.bitwise (fu
   have hm : evalp O m_1 cri = m+1 := by simp [m_1, hiP1]
   -- terminal simp
   simp [hn, hm, b2n]
+theorem c_bitwise_evp_n_0 : evalp O (c_bitwise c) ⟪n+1, 0⟫ = Nat.bitwise (fun a b => n2b $ evalp O c ⟪b2n a, b2n b⟫) (n+1) 0 := by
+  unfold c_bitwise; unfold c_bitwise_aux;
+  lift_lets; extract_lets; expose_names
+  let k := ⟪n+1, 0⟫ - 1
+  have hkP1: k+1 = ⟪n+1, 0⟫ := Nat.sub_add_cancel pair_nonzero_left_pos
+  rw [← hkP1]
+  -- more unfolding
+  let (eq:=hinp) inp := evalp O (c_bitwise_aux c) ⟪17, k⟫
+  let (eq:=hcri) cri := ⟪17, k, inp⟫
+  unfold c_bitwise_aux at hinp; lift_lets at hinp
+  simp [← hinp, ← hcri]
+  -- simplify lets
+  have hiP1 : evalp O iP1 cri = ⟪n+1, 0⟫ := by simp [iP1, cri, hkP1]
+  have hn : evalp O n_1 cri = n+1 := by simp [n_1, hiP1]
+  have hm : evalp O m cri = 0 := by simp [m, hiP1]
+  -- terminal simp
+  simp [hn, hm, b2n]
 theorem c_bitwise_evp_rec : evalp O (c_bitwise c) ⟪n+1,m+1⟫ =
     (let n' := (n+1) / 2
     let m' := (m+1) / 2
@@ -403,7 +425,6 @@ theorem c_bitwise_evp_rec : evalp O (c_bitwise c) ⟪n+1,m+1⟫ =
  := by
   lift_lets; extract_lets; expose_names
   unfold c_bitwise; unfold c_bitwise_aux;
-  -- rw (config:={occs:=.pos [1]}) [c_bitwise]
   lift_lets; extract_lets; expose_names
   let k := ⟪n+1, m+1⟫ - 1
   have kP1_gt_0 : ⟪n+1, m+1⟫ > 0 := pair_nonzero_right_pos
@@ -436,15 +457,34 @@ theorem c_bitwise_evp_rec : evalp O (c_bitwise c) ⟪n+1,m+1⟫ =
     simp [this]
 
   simp [hn, hm, hb₁, hb₂, hr]
-
-@[simp] theorem c_bitwise_evp: evalp O (c_bitwise c) ⟪n,m⟫ = Nat.bitwise (fun a b => n2b $ evalp O c ⟪b2n a, b2n b⟫) n m := by
-  simp [c_bitwise,evalp];
-  simp [bitwise, fs_in, b2n]
-  sorry
-
-end Computability.Code
-end bitwise
-#exit
+lemma mod2 (h:¬ x%2=0) : x%2 =1 := by
+  exact Nat.mod_two_ne_zero.mp h
+@[simp] theorem c_bitwise_evp: evalp O (c_bitwise c) = Nat.unpaired2 (Nat.bitwise (fun a b => n2b $ evalp O c ⟪b2n a, b2n b⟫)) := by
+  funext nm
+  induction' nm using Nat.strong_induction_on with nm ih
+  let n := nm.l
+  let m := nm.r
+  have nm_eq : nm = Nat.pair n m := by exact Eq.symm pair_lr
+  rw [nm_eq]
+  match hn_val:n, hm_val:m with
+  | 0,    0    => simp [c_bitwise_evp_0_0]
+  | 0,    m+1  => simp [c_bitwise_evp_0_m]
+  | n+1,  0    => simp [c_bitwise_evp_n_0]
+  | n+1,  m+1  =>
+    simp [c_bitwise_evp_rec]
+    have b0 : ⟪(n+1)/2, (m+1)/2⟫ < nm := by
+      simp [nm_eq]
+      exact c_bitwise_evp_rec_bounds
+    have ih0 := ih ⟪(n+1)/2, (m+1)/2⟫ b0
+    have rw0 {x} : b2n (decide ((x + 1) % 2 = 1)) = (x + 1) % 2 := by
+      cases Classical.em ((x + 1) % 2 = 1) with
+      | inl h => simp [h, b2n]
+      | inr h =>
+        simp [h, b2n]
+        exact (Nat.mod_two_ne_one.mp h).symm
+    unfold Nat.bitwise
+    simp [ih0]
+    simp [rw0]
 
 section fs_add
 namespace Computability.Code
