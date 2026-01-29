@@ -10,6 +10,33 @@ import Computability.Constructions.EvalString
 # KP54
 
 In this file we specify the construction procedure in the KP54 proof, and show that the sets it defines are incomparable.
+
+## Structure
+
+In section `finite_ext`, we define the procedure for finding the finite extension of a string such that it allows a certain computation
+to halt.
+
+We then define the main construction procedure, `KP54`, and the corresponding sets it builds by stage `s`, `As s` and `Bs s`.
+
+In section `AsBs_Mono`, we prove various theorems about the growth of the set with respect to the stage. In particular, `AsBsSize` shows that the sets have at least `s` elements by stage `s`, allowing us to define the completed sets `A` and `B`.
+
+Finally, we prove the requirements `R` and `S` in sections R and S respectively.
+
+## Main declarations
+
+- `KP54.KP54`: a function which takes the stage as input, and returns the sets built up to that stage.
+- `KP54.A`, `KP54.B`: The sets built by the construction procedure.
+- `KP54.R`: requirement R, asserting that `B` is not reducible to `A`.
+- `KP54.S`: requirement S, asserting that `A` is not reducible to `B`.
+
+## Notation/quirks
+
+ - Where `x`, `y` are naturals, `⟪x, y⟫ = Nat.pair x y`.
+
+## References
+
+* Cooper 2004, Computability Theory section 10.6
+
 -/
 
 open Computability.Code
@@ -23,6 +50,21 @@ end Computability.Code
 set_option linter.dupNamespace false
 namespace KP54
 
+section finite_ext
+/-!
+We define the procedure of finding a finite extension explicitly as a code, as it is simpler this way.
+
+The reason is that the search procedure has to involve dovetailing, and our dovetail implementation depends fundamentally on the code that is being dovetailed.
+
+So, there would be extra 'unnecessary' work involved to remove any codes in the definition of `finite_ext`.
+
+### Structure
+We define `c_kp54_aux` which checks whether a something is a valid finite extension or not.
+
+Then we can define the search procedure for a finite extension, `finite_ext`, via dovetailing `c_kp54_aux`.
+
+-/
+
 /--
 [c_kp54_aux i n](x,y) checks if `y` is a finite extension to `x` for the computation [i](n).
 
@@ -30,8 +72,10 @@ That is,
 [c_kp54_aux i n](x,y):
   let list = x ++ y.
   if [i:list](n) halts, then return 0 else diverge.
+
+Later simp calls blow up without `@[irreducible]`. Why?
 -/
-@[irreducible] noncomputable def c_kp54_aux (i n:ℕ) :=
+@[irreducible] def c_kp54_aux (i n:ℕ) :=
   c_ifdom
   (c_evals.comp₃ (c_list_append.comp₂ left (succ.comp right)) (c_const i) (c_const n))
   zero
@@ -48,7 +92,7 @@ theorem c_kp54_aux_evp :
 
 If no such `x` exists, returns `Part.none`.
 -/
-noncomputable def finite_ext (S i l) := eval (λ_↦0) (dovetail (c_kp54_aux i l)) S
+def finite_ext (S i l) := eval (λ_↦0) (dovetail (c_kp54_aux i l)) S
 theorem finite_ext_prop (halts:(finite_ext S i l).Dom) :
   have dvt := (finite_ext S i l).get halts
   (evals ((n2l S) ++ (n2l (dvt+1))) i l).Dom := by
@@ -64,6 +108,7 @@ theorem finite_ext_prop_div (h: ¬ (finite_ext S i l).Dom) :
     have := dovetail_ev_1.mp (Part.eq_none_iff'.mpr h)
     simp [c_kp54_aux_evp, -Denumerable.list_ofNat_succ] at this
     exact fun y ↦ this y
+end finite_ext
 
 open Nat List in
 /--
@@ -134,19 +179,13 @@ theorem AsBs_Mono_1 : (As i) <+: (As (i+j)) ∧ (Bs i) <+: (Bs (i+j)) := by
 theorem AsBs_Mono_2 (h:i≤j) : (As i) <+: (As j) ∧ (Bs i) <+: (Bs j) := by
   rw [Eq.symm (Nat.add_sub_of_le h)]
   exact AsBs_Mono_1
-theorem As_Mono_3
-(hi:k<(As i).length)
-(hh:k<(As j).length)
-: (As i)[k] = (As j)[k] := by
+theorem As_Mono_3 (hi:k<(As i).length) (hh:k<(As j).length) : (As i)[k] = (As j)[k] := by
   cases Classical.em (i≤j) with
   | inl h => exact List.IsPrefix.getElem ((AsBs_Mono_2 h).left) hi
   | inr h =>
     simp at h
     exact (List.IsPrefix.getElem (AsBs_Mono_2 (Nat.le_of_succ_le h)).left hh).symm
-theorem Bs_Mono_3
-(hi:k<(Bs i).length)
-(hh:k<(Bs j).length)
-: (Bs i)[k] = (Bs j)[k] := by
+theorem Bs_Mono_3 (hi:k<(Bs i).length) (hh:k<(Bs j).length) : (Bs i)[k] = (Bs j)[k] := by
   cases Classical.em (i≤j) with
   | inl h => exact List.IsPrefix.getElem ((AsBs_Mono_2 h).right) hi
   | inr h =>
