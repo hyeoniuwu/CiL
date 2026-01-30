@@ -13,35 +13,36 @@ import Computability.KP54
 
 This file constructs the function `KP54.KP54` from KP54.lean as a code.
 
+To properly implement `KP54`, the code requires `K0 (λ _ → 0)` as its oracle during execution, which is needed to implement the dovetail procedure which searches for a finite extension.
+
 ## Structure
-The difficult part of the construction is in implementing the search procedure of a `x` s.t.
-`∃ x ∈ Wn ∅ i s, x > 2*i`.
 
-This is done using `c_bdd_search`, which searches for a `x` that halts on code `c` for `s`
-steps, from a specified lower bound to an upper bound. `c` and `s` are specified from the input.
+To implement the search procedure, we make use of the oracle `K0 (λ _ → 0)`.
 
-Once the search procedure can be defined, `Simple.step`, and in turn `Simple.C`, can be constructed as codes
-(`c_step` and `c_C` respectively) easily.
+We may query the oracle an index of a program and an input, to which it will return the result of the computation. (0 if it diverges, output+1 if it converges.)
 
-Then, we can define `c_simple` such that its domain is exactly `Simple.A`;
-we let `c_simple` search (by dovetailing) for a step `s` such that its input is in `(C s).l`.
+The meta-code `c_finite_ext` calculates the code of the dovetail procedure. By asking the oracle whether the code produced by `c_finite_ext` along with some input halts, we are able to compute the search procedure.
+
 
 ## Main declarations
 
-- `c_C`: The code which implements `Simple.C`.
-- `c_simple`: The code whose domain is `Simple.A`.
-- `c_simple_ev`: Asserts that the domain of `c_simple` is `Simple.A`.
-- `exists_simple_set`: Asserts the existence of a simple set.
+- `c_kp54`: code implementing `KP54.KP54`.
+- `c_A`, `c_B`: codes for the characteristic functions of `KP54.A` and `KP54.B` respectively.
+- `ex_incomparable_sets_below_j1`: Asserts the existence of incomparable sets below ∅'.
 
 -/
 
 open Computability.Code
 open Computability
 
-section kp54
 
-/-- `[c_c_kp54_aux](i, n) = c2n (dovetail (c_kp54_aux i n))` -/
-def c_c_kp54_aux :=
+section c_finite_ext
+/--
+`[c_finite_ext](i, n) = c2n (dovetail (c_kp54_aux i n))`
+
+This is a meta-code. Thus, the construction is directly based on `KP54.c_kp54_aux`.
+-/
+def c_finite_ext :=
   c_dovetail.comp $
   c_c_ifdom.comp₂
   (
@@ -52,13 +53,24 @@ def c_c_kp54_aux :=
     (c_c_const.comp right)
   )
   c_zero
-@[cp] theorem c_c_kp54_aux_prim : code_prim c_c_kp54_aux := by unfold c_c_kp54_aux; apply_cp
-@[simp] theorem c_c_kp54_aux_evp : evalp O c_c_kp54_aux = λ x:ℕ ↦ c2n (dovetail (KP54.c_kp54_aux x.l x.r)) := by
-  simp [c_c_kp54_aux, KP54.c_kp54_aux]
+@[cp] theorem c_finite_ext_prim : code_prim c_finite_ext := by unfold c_finite_ext; apply_cp
+@[simp] theorem c_finite_ext_evp : evalp O c_finite_ext = λ x:ℕ ↦ c2n (dovetail (KP54.c_kp54_aux x.l x.r)) := by
+  simp [c_finite_ext, KP54.c_kp54_aux]
+end c_finite_ext
 
-def c_kp54_main :=
-  have s := left
-  have KP54s := right
+section kp54
+/--
+The function `KP54.KP54` is written recursively, where `KP54.KP54 (s+1)` makes use of `KP54.KP54 s`.
+
+`c_prec1` has exactly the recursive structure we need to implement this.
+
+We definte `def c_kp54 := c_prec1 0 c_kp54_indt`: we define the recursive case separately, as it
+helps with performance in proofs.
+
+-/
+def c_kp54_indt :=
+  let s := left
+  let KP54s := right
   let i := c_div2.comp s
   let Aₚ := left.comp (KP54s)
   let Bₚ := right.comp (KP54s)
@@ -66,7 +78,7 @@ def c_kp54_main :=
   let la := c_list_length.comp Aₚ
   c_ifz.comp₃ (c_mod.comp₂ (succ.comp s) (c_const 2))
   (
-    let q0 := oracle.comp₂ (c_c_kp54_aux.comp₂ i lb) Aₚ
+    let q0 := oracle.comp₂ (c_finite_ext.comp₂ i lb) Aₚ
     c_ifz.comp₃ q0
     (pair (c_list_concat.comp₂ Aₚ zero) (c_list_concat.comp₂ Bₚ zero))
     (
@@ -77,7 +89,7 @@ def c_kp54_main :=
     )
   )
   (
-    let q0 := oracle.comp₂ (c_c_kp54_aux.comp₂ i la) Bₚ
+    let q0 := oracle.comp₂ (c_finite_ext.comp₂ i la) Bₚ
     c_ifz.comp₃ q0
     (pair (c_list_concat.comp₂ Aₚ zero) (c_list_concat.comp₂ Bₚ zero))
     (
@@ -87,18 +99,12 @@ def c_kp54_main :=
       pair (c_list_concat.comp₂ Aₚ (c_sg'.comp B_result)) Bₛ
     )
   )
-def c_kp54 :=
-  (
-    prec
-    zero $
-    c_kp54_main.comp right
-  ).comp₂ zero c_id
+def c_kp54 := c_prec1 0 c_kp54_indt
 
 @[cp] theorem c_kp54_prim : code_prim c_kp54 := by
   unfold c_kp54
-  unfold c_kp54_main
-  extract_lets
-  expose_names
+  unfold c_kp54_indt
+  extract_lets; expose_names
 
   have cp_s : code_prim s := by apply_cp
   have cp_KP54s : code_prim KP54s := by apply_cp
@@ -120,19 +126,16 @@ def c_kp54 :=
 
 @[simp] theorem c_kp54_evp : evalp (K0 (λ_↦0)) c_kp54 x = KP54.KP54 x := by
   induction x with
-  | zero =>
-    simp [c_kp54]
-    unfold KP54.KP54
-    rfl
+  | zero => rfl
   | succ s_1 ih =>
     unfold c_kp54
     simp
-    have : (Nat.rec 0 (fun y IH ↦ evalp (K0 (λ_↦0)) c_kp54_main (Nat.pair y IH)) s_1) = evalp (K0 (λ_↦0)) c_kp54 s_1 := by
+    have : (Nat.rec 0 (fun y IH ↦ evalp (K0 (λ_↦0)) c_kp54_indt (Nat.pair y IH)) s_1) = evalp (K0 (λ_↦0)) c_kp54 s_1 := by
       unfold c_kp54
-      cases s_1 <;> simp
+      cases s_1 <;> simp 
     -- we are careful with the rewriting/unfolding order here.
     rewrite [this]; clear this
-    unfold c_kp54_main
+    unfold c_kp54_indt
     lift_lets; extract_lets; expose_names
     unfold KP54.KP54
     rw [ih]; clear ih
@@ -147,9 +150,7 @@ def c_kp54 :=
     have hBₚ : evalp (K0 (λ_↦0)) Bₚ inp = Bₚ_1 := by simp [Bₚ, Bₚ_1, hKP54s]
     have hla : evalp (K0 (λ_↦0)) la inp = la_1 := by simp [la, la_1, hAₚ]
     have hlb : evalp (K0 (λ_↦0)) lb inp = lb_1 := by simp [lb, lb_1, hBₚ]
-
-    simp (config := {zeta:=false}) [←hinp]
-    simp (config := {zeta:=false}) [hs]
+    simp (config := {zeta:=false}) [←hinp, hs]
     split
     next h0 =>
       split
@@ -216,9 +217,14 @@ def c_kp54 :=
               exact a0
             simp [contra] at h2
         simp [hBₛ, hAₚ, hB_result]
+end kp54
 
 theorem fzero_eq_χempty : (λ_↦0) = χ ∅ := by unfold χ; simp
 
+/-
+Now that we have defined KP54.KP54, we can easily define (characeristic functions for) KP54.A and KP54.B.
+(Refer to their definitions in KP54.lean)
+-/
 def c_A := c_n2b.comp $ c_list_getI.comp₂ (left.comp $ c_kp54.comp succ) c_id
 @[cp] theorem c_A_prim : code_prim c_A := by unfold c_A; apply_cp 10
 @[simp] theorem c_A_evp : evalp (K0 (λ_↦0)) c_A = χ KP54.A := by
@@ -245,7 +251,7 @@ theorem B_le_J1 : KP54.B ≤ᵀ ∅⌜ := by
   apply _root_.trans (B_le_J1_aux)
   rw [fzero_eq_χempty]
   exact (K0χ_eq_χSetK ∅).1
-end kp54
+
 
 theorem ex_incomparable_sets_below_j1 : ∃ A B:Set ℕ, A≤ᵀ∅⌜ ∧ B≤ᵀ∅⌜ ∧ A|ᵀB := by
   use KP54.A
