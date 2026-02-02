@@ -1,3 +1,6 @@
+[26-02-02 18:01:58]
+todo: in kp54 spec, split on if h : ∃ a, is_fin_ext a ...} and define the finite extension as \texttt{Nat.find h}
+
 [25-07-30 15:49:42]
 theorem prim_comp₁ : Nat.PrimrecIn O (fun ex => comp ex.unpair.1 ex.unpair.2) := by
 
