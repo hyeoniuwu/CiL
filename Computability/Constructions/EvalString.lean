@@ -96,7 +96,8 @@ def c_evalo :=
   let c := left.comp right
   let x := right.comp right
   c_eval.comp₂ (c_replace_oracle.comp₂ o c) x
-theorem c_evalo_ev (ho:code_total O o) : eval O c_evalo ⟪o, c, x⟫ = eval (λ t ↦ (eval O o t).get (ho t)) c x := by
+theorem c_evalo_ev (ho:code_total O o) : eval O c_evalo ⟪o, c, x⟫ = eval (evalt O o ho) c x := by
+  unfold evalt
   simp [c_evalo]
   simp [eval,Seq.seq]
   rw [@eval_replace_oracle_prop O o c ho]
@@ -155,6 +156,7 @@ def c_evals := c_evalo.comp₃
   have := @c_evalo_ev O _ (c_evals_code.c2n) ⟪o,c,x⟫ this
   simp at this
   simp [this]
+  unfold evalt
   simp [c_c_evals_oracle_ev]
   simp [c_evals_oracle_ev]
   simp [c_evals_code_ev]

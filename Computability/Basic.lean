@@ -281,6 +281,7 @@ end primrec
 
 section total
 namespace Computability.Code
+def evalt (O:ℕ→ℕ) (c:Code) (h:code_total O c) : ℕ→ℕ := λ x ↦ (eval O c x).get (h x)
 theorem total_pair_iff : (code_total O cf) ∧ (code_total O cg) ↔ (code_total O (pair cf cg)) :=
   ⟨
     λ h x ↦ ⟨h.left x, h.right x⟩
