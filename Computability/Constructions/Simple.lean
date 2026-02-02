@@ -42,7 +42,7 @@ open Computability.Code
 open Computability
 
 
-/-
+/--
 `c_bdd_search c` is a primrec code that, on input `⟪(s, a, k), l⟫`, evaluates:
   let e := [c]⟪s, a, k⟫
   `[e]ₛ(a+0)`
@@ -347,7 +347,22 @@ theorem evaln_dom_imp_x_le_s (h:(evaln O s c x).isSome) : x≤s := by
   | zero => simp [evaln]
   | succ n => cases c <;> simp [evaln, not_le.mpr (Nat.lt_of_succ_lt h)];
 
+/--
 -- compare to Simple.step
+
+To implement the following part of `Simple.step`:
+```
+if found : ∃ x ∈ Wn ∅ i s, x > 2*i then
+  let x := Nat.find found
+```
+
+We use `c_bdd_search`.
+
+We want to search, from y=2*i+1 to s, a value s.t. [i]_s(y) halts.
+
+`min` then extracts this value.
+
+-/
 def c_step :=
   let s := left
   let i := left.comp right
@@ -355,12 +370,12 @@ def c_step :=
 
   let Aₚ := left.comp prev
   let Rₚ := right.comp prev
-  let z21 := succ.comp $ c_mul.comp₂ (c_const 2) $ left.comp right
+  let i2P1 := succ.comp $ c_mul.comp₂ (c_const 2) $ left.comp right
   c_ifz.comp₃ (c_sg'.comp $ c_fs_in.comp₂ Rₚ i)
   prev
   (
-    let search := (c_bdd_search (right.comp right)).comp₂ ((pair s $ pair z21 i)) (s)
-    let min := c_add.comp₂ z21 (left.comp $ c_pred.comp search)
+    let search := (c_bdd_search (right.comp right)).comp₂ (pair s $ pair i2P1 i) s
+    let min := c_add.comp₂ i2P1 (left.comp $ c_pred.comp search)
     c_ifz.comp₃ search
     prev
     (pair (c_fs_add.comp₂ Aₚ min) (c_fs_add.comp₂ Rₚ i))
@@ -373,23 +388,26 @@ def c_step :=
   have hprev : code_prim prev := by apply_cp
   have hAₚ : code_prim Aₚ := by apply_cp
   have hRₚ : code_prim Rₚ := by apply_cp
-  have hz21 : code_prim z21 := by apply_cp
+  have hi2P1 : code_prim i2P1 := by apply_cp
   have hsearch : code_prim search := by apply_cp
   have hmin : code_prim min := by apply_cp
   apply_cp 60
-@[simp] theorem c_step_evp : evalp (χ ∅) c_step = λ x:ℕ ↦ Simple.step x.l x.r.l x.r.r := by
-  funext x
+@[simp] theorem c_step_evp : evalp (χ ∅) c_step ⟪s, i, prev⟫ = Simple.step s i prev := by
+  -- funext x
   unfold Simple.step
   unfold c_step
   lift_lets; extract_lets; expose_names
   simp
 
-  have hprev : (evalp (χ ∅) prev x) = x.r.r := by simp [prev]
-  have hRp_1 : (evalp (χ ∅) Rₚ x) = Rₚ_1 := by simp [Rₚ, prev, Rₚ_1]
-  have hAₚ_1 : (evalp (χ ∅) Aₚ x) = Aₚ_1 := by simp [Aₚ, prev, Aₚ_1]
-  have hi : (evalp (χ ∅) i x) = x.r.l := by simp [i]
-  have hs : (evalp (χ ∅) s x) = x.l := by simp [s]
-  have hz21 : (evalp (χ ∅) z21 x) = 2*x.r.l+1 := by simp [z21]
+  let (eq:=hinp) inp := ⟪s, i, prev⟫
+  rw [←hinp]
+
+  have hprev : (evalp (χ ∅) prev_1 inp) = prev := by simp [prev_1, inp]
+  have hRp_1 : (evalp (χ ∅) Rₚ inp) = Rₚ_1 := by simp [Rₚ, hprev, Rₚ_1]
+  have hAₚ_1 : (evalp (χ ∅) Aₚ inp) = Aₚ_1 := by simp [Aₚ, hprev, Aₚ_1]
+  have hi :    (evalp (χ ∅) i_1 inp) = i := by simp [i_1, inp]
+  have hs :    (evalp (χ ∅) s_1 inp) = s := by simp [s_1, inp]
+  have hi2P1 : (evalp (χ ∅) i2P1 inp) = 2*i+1 := by simp [i2P1, inp]
 
   simp [hprev, hRp_1, hi, hAₚ_1]
   split; rotate_left
@@ -405,30 +423,30 @@ def c_step :=
       unfold search at h0
       simp [hs] at h0
       rcases c_bdd_aux h0 with ⟨z,r, hzr⟩
-      simp [hi, hz21] at hzr
+      simp [hi, hi2P1] at hzr
       rcases c_bdd_search_evp_1.mp hzr with ⟨hzr1, hzr2, hzr3⟩
       simp at hzr1 hzr2 hzr3
-      have found_aux : (evalnSet ∅ x.l (n2c x.r.l) (2*x.r.l+1+z)).isSome = true ∧ (2*x.r.l+1+z) > 2 * x.r.l := by
+      have found_aux : (evalnSet ∅ s (n2c i) (2*i+1+z)).isSome = true ∧ (2*i+1+z) > 2 * i := by
         constructor
         simp [evalnSet]
         rw [hzr2]
         rfl
         omega
-      have found : ∃ x_1, (evalnSet ∅ x.l (n2c x.r.l) x_1).isSome = true ∧ x_1 > 2 * x.r.l := by
-        use 2*x.r.l+1+z
+      have found : ∃ x_1, (evalnSet ∅ s (n2c i) x_1).isSome = true ∧ x_1 > 2 * i := by
+        use 2*i+1+z
       simp [found]
       apply congrArg
-      simp [min, search, hs,hi, hz21]
+      simp [min, search, hs,hi, hi2P1]
       simp [hnat_12 hzr]
       let (eq:=hnf) nf := Nat.find found
       have nf0 := @Nat.find_min _ _ found
       have nf1 := @Nat.find_spec _ _ found
       rw [←hnf] at nf0 nf1 ⊢
 
-      have tri := lt_trichotomy (2 * x.r.l + 1 + z) nf
+      have tri := lt_trichotomy (2 * i + 1 + z) nf
       cases tri with
       | inl h =>
-        have := @nf0 (2 * x.r.l + 1 + z) h
+        have := @nf0 (2 * i + 1 + z) h
         simp at this
         have := this found_aux.1
         omega
@@ -436,38 +454,32 @@ def c_step :=
       cases h with
       | inl h => exact h
       | inr h =>
-        have a2 : nf - 2*x.r.l-1 < z := by omega
-        have a3 := hzr3 (nf - 2*x.r.l-1) a2
-        have a4 : (2 * x.r.l + 1 + (nf - 2 * x.r.l - 1)) = nf := by omega
+        have a2 : nf - 2*i-1 < z := by omega
+        have a3 := hzr3 (nf - 2*i-1) a2
+        have a4 : (2 * i + 1 + (nf - 2 * i - 1)) = nf := by omega
         simp [a4] at a3
         simp [evalnSet] at nf1
         simp [a3] at nf1
     next h0 =>
-      simp [search, hz21, hi, hs] at h0
+      simp [search, hi2P1, hi, hs] at h0
       have := c_bdd_search_evp_0.mp h0
       split; rotate_left
       next h1 => simp
       next h1 =>
         rcases h1 with ⟨h2,h3,h4⟩
         simp [evalnSet] at h3
-        have a0 : h2 ≤ x.l := by exact evaln_dom_imp_x_le_s h3
-        have a2 : h2-2*x.r.l-1 ≤ x.l := by omega
-        have a1 := this (h2-2*x.r.l-1) a2
+        have a0 : h2 ≤ s := by exact evaln_dom_imp_x_le_s h3
+        have a2 : h2-2*i-1 ≤ s := by omega
+        have a1 := this (h2-2*i-1) a2
         simp at a1
-        have a3 : (2 * x.r.l + 1 + (h2 - 2 * x.r.l - 1)) = h2 := by omega
+        have a3 : (2 * i + 1 + (h2 - 2 * i - 1)) = h2 := by omega
         simp [a3] at a1
         simp [a1] at h3
 
-@[simp] theorem c_step_evp' : evalp (χ ∅) c_step ⟪a,b,c⟫ = Simple.step a b c := by simp
-
-def c_C :=
-  (
-    prec
-    zero $
-    let s := left.comp right
-    let prev := right.comp right
+def c_C := c_prec1 0 $
+    let s := left
+    let prev := right
     (c_list_foldr_param c_step).comp₃ s prev (c_list_reverse.comp $ c_list_range.comp s)
-  ).comp₂ zero c_id
 
 @[cp] theorem c_C_prim : code_prim c_C := by unfold c_C; apply_cp
 
