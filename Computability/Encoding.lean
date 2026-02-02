@@ -197,7 +197,7 @@ open Code
   for `b < a`
 -/
 def eval (O : ℕ → ℕ) : Code → ℕ →. ℕ
-| .zero => λ _ ↦ Part.some 0
+| .zero => λ _ ↦ some 0
 | .succ => λ n ↦ some (n + 1)
 | .left => λ n ↦ some (Nat.unpair n).1
 | .right => λ n ↦ some (Nat.unpair n).2

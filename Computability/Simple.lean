@@ -651,7 +651,7 @@ theorem N (i:ℕ) :  Set.ncard (A ∩ {x | x ≤ 2*i}) ≤ i+1 := by
   rw [←this]
   exact le_of_le_of_eq a0 (setrange_card i)
 
--- a more useful rephrasing of `N`.
+-- a more useful rephrasing of the theorem `N` above.
 lemma N_alternate (i:ℕ) : Set.ncard (Aᶜ ∩ {x | x ≤ 2*i}) ≥ i := by
   have a1 := N i
   have a0 := Set.le_ncard_diff (A ∩ {x | x ≤ 2 * i}) {x | x ≤ 2*i}

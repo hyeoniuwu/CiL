@@ -348,19 +348,22 @@ theorem evaln_dom_imp_x_le_s (h:(evaln O s c x).isSome) : x≤s := by
   | succ n => cases c <;> simp [evaln, not_le.mpr (Nat.lt_of_succ_lt h)];
 
 /--
--- compare to Simple.step
+A code which satisfies: `evalp (χ ∅) c_step ⟪s, i, prev⟫ = Simple.step s i prev`.
 
-To implement the following part of `Simple.step`:
+Compare the defn below to the defn of `Simple.step`.
+
+The nontrivial part of implementing `Simple.step` is the following part:
 ```
 if found : ∃ x ∈ Wn ∅ i s, x > 2*i then
   let x := Nat.find found
 ```
 
-We use `c_bdd_search`.
+We use `c_bdd_search` to implement this part.
 
 We want to search, from y=2*i+1 to s, a value s.t. [i]_s(y) halts.
 
-`min` then extracts this value.
+`search` is 0 if `found` is false, otherwise is the minimal `a+1` s.t.
+`[i]_s(2*i+1+a)↓`.
 
 -/
 def c_step :=
@@ -375,10 +378,10 @@ def c_step :=
   prev
   (
     let search := (c_bdd_search (right.comp right)).comp₂ (pair s $ pair i2P1 i) s
-    let min := c_add.comp₂ i2P1 (left.comp $ c_pred.comp search)
+    let x := c_add.comp₂ i2P1 (left.comp $ c_pred.comp search)
     c_ifz.comp₃ search
     prev
-    (pair (c_fs_add.comp₂ Aₚ min) (c_fs_add.comp₂ Rₚ i))
+    (pair (c_fs_add.comp₂ Aₚ x) (c_fs_add.comp₂ Rₚ i))
   )
 @[cp] theorem c_step_prim : code_prim c_step := by
   unfold c_step
@@ -390,7 +393,7 @@ def c_step :=
   have hRₚ : code_prim Rₚ := by apply_cp
   have hi2P1 : code_prim i2P1 := by apply_cp
   have hsearch : code_prim search := by apply_cp
-  have hmin : code_prim min := by apply_cp
+  have hx : code_prim x := by apply_cp
   apply_cp 60
 @[simp] theorem c_step_evp : evalp (χ ∅) c_step ⟪s, i, prev⟫ = Simple.step s i prev := by
   -- funext x
@@ -436,7 +439,7 @@ def c_step :=
         use 2*i+1+z
       simp [found]
       apply congrArg
-      simp [min, search, hs,hi, hi2P1]
+      simp [x, search, hs,hi, hi2P1]
       simp [hnat_12 hzr]
       let (eq:=hnf) nf := Nat.find found
       have nf0 := @Nat.find_min _ _ found

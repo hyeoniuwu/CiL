@@ -30,11 +30,11 @@ open Computability.Code
 
 @[simp] noncomputable def K0 (O : ℕ → ℕ) : ℕ → ℕ := λ n =>
   let part := eval O n.l n.r
-  if h : part.Dom then part.get h+1 else 0
+  if h : part.Dom then (part.get h) + 1 else 0
 @[simp] noncomputable def K (O : ℕ → ℕ) : ℕ → ℕ := λ n =>
   let part := eval O n n
-  if h : part.Dom then part.get h + 1 else 0
-noncomputable abbrev jump (O:ℕ→ℕ) : ℕ → ℕ := K0 O
+  if h : part.Dom then (part.get h) + 1 else 0
+noncomputable abbrev jump (O : ℕ → ℕ) : ℕ → ℕ := K0 O
 
 notation:10000 f"⌜" => jump f
 
