@@ -7,7 +7,7 @@ import Computability.SetOracles
 import Computability.Constructions.EvalString
 
 /-!
-# KP54
+# KP54.lean
 
 In this file we specify the construction procedure in the KP54 proof, and show that the sets it defines are incomparable.
 

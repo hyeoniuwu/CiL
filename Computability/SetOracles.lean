@@ -46,16 +46,16 @@ namespace Computability
 
 section basic_definitions
 /-- χ O is the characteristic function of the set O.  -/
-noncomputable def χ (O:Set ℕ) : ℕ→ℕ := λ x ↦ if x ∈ O then 1 else 0
+noncomputable def χ (O : Set ℕ) : ℕ→ℕ := λ x ↦ if x ∈ O then 1 else 0
 theorem χsimp {O} : χ O = λ x ↦ if x ∈ O then 1 else 0 := by exact rfl
-@[simp] abbrev SetRecursiveIn (O:Set ℕ) (f:ℕ→.ℕ) : Prop := RecursiveIn (χ O) f
-@[simp] abbrev SetTuringReducible (A O:Set ℕ) : Prop := RecursiveIn (χ O) (χ A)
-@[simp] abbrev SetTuringReducibleStrict (A O:Set ℕ) : Prop := RecursiveIn (χ O) (χ A) ∧ ¬ RecursiveIn (χ A) (χ O)
+@[simp] abbrev SetRecursiveIn (O : Set ℕ) (f:ℕ→.ℕ) : Prop := RecursiveIn (χ O) f
+@[simp] abbrev SetTuringReducible (A O : Set ℕ) : Prop := RecursiveIn (χ O) (χ A)
+@[simp] abbrev SetTuringReducibleStrict (A O : Set ℕ) : Prop := RecursiveIn (χ O) (χ A) ∧ ¬ RecursiveIn (χ A) (χ O)
 @[simp] abbrev SetTuringEquivalent (O A:Set ℕ) : Prop := AntisymmRel SetTuringReducible O A
-noncomputable def evalSet (O:Set ℕ) : Code → ℕ→.ℕ := eval (χ O)
-noncomputable def evalnSet (O:Set ℕ) := evaln (χ O)
-@[simp] noncomputable def evalSet₁ (O:Set ℕ) : ℕ→.ℕ := eval₁ (χ O)
-@[simp] noncomputable def evalnSet₁ (O:Set ℕ) : ℕ→ℕ := evaln₁ (χ O)
+noncomputable def evalSet (O : Set ℕ) : Code → ℕ→.ℕ := eval (χ O)
+noncomputable def evalnSet (O : Set ℕ) := evaln (χ O)
+@[simp] noncomputable def evalSet₁ (O : Set ℕ) : ℕ→.ℕ := eval₁ (χ O)
+@[simp] noncomputable def evalnSet₁ (O : Set ℕ) : ℕ→ℕ := evaln₁ (χ O)
 theorem prim_evalnSet₁:Nat.PrimrecIn (χ O) (evalnSet₁ O) := by simp only [evalnSet₁]; exact prim_evaln₁
 def SetK0 (A:Set ℕ) := {ex:ℕ | (evalSet A ex.l ex.r).Dom}
 def SetK (A:Set ℕ) := {x:ℕ | (evalSet A x x).Dom}
@@ -116,7 +116,13 @@ section SetJumpTheorems
 open Nat RecursiveIn
 alias Rin := RecursiveIn
 
-theorem χ_leq_χSetK0 {O:Set ℕ} : Rin (χ (SetK0 O)) (χ O) := by
+theorem TR_Set_iff_Fn {O₁ O₂} : O₁ ≤ᵀ O₂ ↔ (χ O₁) ≤ᵀᶠ (χ O₂) := Eq.to_iff rfl
+theorem TR_Set_iff_Fn' {O₁ O₂} : O₁ ≤ᵀ O₂ ↔ Rin (χ O₂) (χ O₁) := TR_Set_iff_Fn
+theorem reducible_iff_code {A B : Set ℕ} : A≤ᵀB ↔ ∃ c, eval (χ B) c = χ A := by
+  simp [TR_Set_iff_Fn, exists_code]
+
+-- theorem χ_le_χSetK0 {O : Set ℕ} : Rin (χ (SetK0 O)) (χ O) := by
+theorem χ_le_χSetK0 {O : Set ℕ} : O ≤ᵀ (SetK0 O)  := by
   /-
   We wish to show that `χ O` can be constructed with knowledge of
     χ (SetK0 O) = k = λ ⟪e,x⟫ ↦ [e:O](x)↓ then 1 else 0.
@@ -145,10 +151,11 @@ theorem χ_leq_χSetK0 {O:Set ℕ} : Rin (χ (SetK0 O)) (χ O) := by
         | inr h2 => exact h2
   have f'_recIn_k : Rin k f' := by
     exact Rin.someTotal k (λ x ↦ k ⟪cg, x⟫) $ Rin.totalComp' Rin.oracle (Rin.of_primrecIn PrimrecIn.pair_proj)
+  refine TR_Set_iff_Fn'.mpr ?_
   rw [f_eq_f']
   exact f'_recIn_k
 
-theorem χSetK0_leq_K0χ {O:Set ℕ} : Rin (K0 (χ O)) (χ (SetK0 O)) := by
+theorem χSetK0_leq_K0χ {O : Set ℕ} : Rin (K0 (χ O)) (χ (SetK0 O)) := by
   -- We simply note that `χ (SetK0 O) = Nat.sg ∘ K0 (χ O)`.
   let k : ℕ→ℕ := λ ex ↦ if (eval (χ O) ex.l ex.r).Dom then 1 else 0
   have h0 : χ (SetK0 O) = k := by exact rfl
@@ -162,7 +169,7 @@ theorem χSetK0_leq_K0χ {O:Set ℕ} : Rin (K0 (χ O)) (χ (SetK0 O)) := by
   rw [k_eq_f]
   exact rin_f
 
-theorem K0χ_leq_χSetK0 {O:Set ℕ} : Rin (χ (SetK0 O)) (K0 (χ O)) := by
+theorem K0χ_leq_χSetK0 {O : Set ℕ} : Rin (χ (SetK0 O)) (K0 (χ O)) := by
   /-
   Let k(e,x) = if [e:O](x)↓ then 1 else 0.
   We wish to that with `k`, we can build `f = K0 (χ O)`, where
@@ -180,7 +187,7 @@ theorem K0χ_leq_χSetK0 {O:Set ℕ} : Rin (χ (SetK0 O)) (K0 (χ O)) := by
   let f := fun ex => if (k ex = 0) then Part.some 0 else (eval (χ O) ex.l ex.r) >>= (Nat.succ:ℕ→.ℕ)
   have rin_f : Rin k f := by
     exact Rin.ite Rin.oracle Rin.zero $
-    Rin.comp Rin.succ (TuringReducible.trans' Rin.eval χ_leq_χSetK0)
+    Rin.comp Rin.succ (TuringReducible.trans' Rin.eval χ_le_χSetK0)
 
   have h3 : (K0 (χ O) : ℕ→.ℕ) = f := by
     funext xs
@@ -192,10 +199,10 @@ theorem K0χ_leq_χSetK0 {O:Set ℕ} : Rin (χ (SetK0 O)) (K0 (χ O)) := by
 
   rw [h3]
   exact rin_f
-theorem K0χ_eq_χSetK0 (O:Set ℕ) : (K0 (χ O)) ≡ᵀᶠ (χ (SetK0 O)) := ⟨K0χ_leq_χSetK0, χSetK0_leq_K0χ⟩
-theorem χSetK0_eq_K0χ (O:Set ℕ) : (χ (SetK0 O)) ≡ᵀᶠ (K0 (χ O)) := (K0χ_eq_χSetK0 O).symm
+theorem K0χ_eq_χSetK0 (O : Set ℕ) : (K0 (χ O)) ≡ᵀᶠ (χ (SetK0 O)) := ⟨K0χ_leq_χSetK0, χSetK0_leq_K0χ⟩
+theorem χSetK0_eq_K0χ (O : Set ℕ) : (χ (SetK0 O)) ≡ᵀᶠ (K0 (χ O)) := (K0χ_eq_χSetK0 O).symm
 -- the next two theorems are more or less equivalent to some of the above, with minor tweaks.
-theorem χ_leq_χSetK (O:Set ℕ) : Rin (χ (SetK O)) (χ O) := by
+theorem χ_leq_χSetK (O : Set ℕ) : O ≤ᵀ (SetK O) := by
   let χK : ℕ→ℕ := fun x ↦ if (eval (χ O) x x).Dom then 1 else 0
   let g := fun x => if (χ O) x = 0 then Part.none else Part.some 0
   have hg : Rin (χ O) g :=  Rin.ite Rin.oracle Rin.none Rin.zero
@@ -227,9 +234,10 @@ theorem χ_leq_χSetK (O:Set ℕ) : Rin (χ (SetK O)) (χ O) := by
       simp [Seq.seq]
       exact rfl
 
+  refine TR_Set_iff_Fn'.mpr ?_
   rw [f_eq_f']
   exact f'_recIn_χK
-theorem Kχ_leq_χSetK (O:Set ℕ) : Nat.RecursiveIn (χ (SetK O)) (K (χ O)) := by
+theorem Kχ_leq_χSetK (O : Set ℕ) : Nat.RecursiveIn (χ (SetK O)) (K (χ O)) := by
   let k : ℕ→ℕ := fun x ↦ if (eval (χ O) (n2c x) x).Dom then 1 else 0
   have h0 : χ (SetK O) = k := by exact rfl
   have h1 (x:ℕ) : k x = 0 ↔ ¬(eval (χ O) (n2c x) x).Dom := by simp [k]
@@ -255,42 +263,38 @@ theorem Kχ_leq_χSetK (O:Set ℕ) : Nat.RecursiveIn (χ (SetK O)) (K (χ O)) :=
   rw [h0]
   rw [h3]
   exact rin_f
-theorem χSetK_leq_χSetK0 (O:Set ℕ) : Nat.RecursiveIn (χ (SetK0 O)) (χ (SetK O)) := by
+theorem χSetK_leq_χSetK0 (O : Set ℕ) : Nat.RecursiveIn (χ (SetK0 O)) (χ (SetK O)) := by
   have main : (χ (SetK O)) = (χ (SetK0 O)) ∘ fun x => Nat.pair x x := by
     funext xs
     simp [χ, SetK, SetK0]
   rw [main]
   exact Rin.totalComp Rin.oracle (Rin.of_primrecIn (PrimrecIn.pair PrimrecIn.id PrimrecIn.id))
-theorem χSetK_eq_Kχ (O:Set ℕ) : (χ (SetK O)) ≡ᵀᶠ (K (χ O)) := ⟨trans (χSetK_leq_χSetK0 O) $ trans (χSetK0_leq_K0χ) $ trans (K0_leq_K (χ O)) $ Rin.oracle , Kχ_leq_χSetK O⟩
-theorem Kχ_eq_χSetK (O:Set ℕ) : (K (χ O)) ≡ᵀᶠ (χ (SetK O)) := (χSetK_eq_Kχ O).symm
-theorem χSetK0_eq_χSetK (O:Set ℕ) : (χ (SetK0 O)) ≡ᵀᶠ (χ (SetK O)) := TuringEquivalent.trans (χSetK0_eq_K0χ O) $ .trans (@K0_eq_K (χ O)) (Kχ_eq_χSetK O)
-theorem SetK0_eq_SetK (O:Set ℕ) : (SetK0 O) ≡ᵀ (SetK O) := ⟨(χSetK0_eq_χSetK O).le, (χSetK0_eq_χSetK O).ge⟩
-theorem Set_leq_SetK (O:Set ℕ) : O ≤ᵀ (SetK O) := χ_leq_χSetK O
-theorem χSetK_eq_K0χ (O:Set ℕ) : (χ (SetK O)) ≡ᵀᶠ (K0 (χ O)) := TuringEquivalent.trans (χSetK_eq_Kχ O) K_eq_K0
-theorem K0χ_eq_χSetK (O:Set ℕ) : (K0 (χ O)) ≡ᵀᶠ (χ (SetK O)) := (χSetK_eq_K0χ O).symm
-theorem TR_Set_iff_Fn {O₁ O₂} : O₁ ≤ᵀ O₂ ↔ (χ O₁) ≤ᵀᶠ (χ O₂) := Eq.to_iff rfl
-theorem SetK0_eq_Jump (O:Set ℕ) : SetK0 O ≡ᵀ O⌜ := SetK0_eq_SetK O
+theorem χSetK_eq_Kχ (O : Set ℕ) : (χ (SetK O)) ≡ᵀᶠ (K (χ O)) := ⟨trans (χSetK_leq_χSetK0 O) $ trans (χSetK0_leq_K0χ) $ trans (K0_leq_K (χ O)) $ Rin.oracle , Kχ_leq_χSetK O⟩
+theorem Kχ_eq_χSetK (O : Set ℕ) : (K (χ O)) ≡ᵀᶠ (χ (SetK O)) := (χSetK_eq_Kχ O).symm
+theorem χSetK0_eq_χSetK (O : Set ℕ) : (χ (SetK0 O)) ≡ᵀᶠ (χ (SetK O)) := TuringEquivalent.trans (χSetK0_eq_K0χ O) $ .trans (@K0_eq_K (χ O)) (Kχ_eq_χSetK O)
+theorem SetK0_eq_SetK (O : Set ℕ) : (SetK0 O) ≡ᵀ (SetK O) := ⟨(χSetK0_eq_χSetK O).le, (χSetK0_eq_χSetK O).ge⟩
+theorem Set_leq_SetK (O : Set ℕ) : O ≤ᵀ (SetK O) := χ_leq_χSetK O
+theorem χSetK_eq_K0χ (O : Set ℕ) : (χ (SetK O)) ≡ᵀᶠ (K0 (χ O)) := TuringEquivalent.trans (χSetK_eq_Kχ O) K_eq_K0
+theorem K0χ_eq_χSetK (O : Set ℕ) : (K0 (χ O)) ≡ᵀᶠ (χ (SetK O)) := (χSetK_eq_K0χ O).symm
+theorem SetK0_eq_Jump (O : Set ℕ) : SetK0 O ≡ᵀ O⌜ := SetK0_eq_SetK O
 
-theorem SetJump_not_leq_Set (O:Set ℕ) : ¬O⌜≤ᵀO := by
+theorem SetJump_not_leq_Set (O : Set ℕ) : ¬O⌜≤ᵀO := by
   intro h
   simp only [SetJump] at h
   apply K_nle_O
   exact .trans (Kχ_leq_χSetK O) h
-theorem Set_lt_SetJump (O:Set ℕ) : O<ᵀO⌜ := ⟨Set_leq_SetK O, SetJump_not_leq_Set O⟩
+theorem Set_lt_SetJump (O : Set ℕ) : O<ᵀO⌜ := ⟨Set_leq_SetK O, SetJump_not_leq_Set O⟩
 end SetJumpTheorems
-
-theorem reducible_iff_code {A B : Set ℕ} : A≤ᵀB ↔ ∃ c, eval (χ B) c = χ A := by
-  simp [TR_Set_iff_Fn, exists_code]
 
 section computably_enumerable
 /-- `W O e` := domain of e^th oracle program -/
-abbrev W (O:Set ℕ) (e : Code) := (evalSet O e).Dom
+abbrev W (O : Set ℕ) (e : Code) := (evalSet O e).Dom
 /-- `WR O e` := range of e^th oracle program -/
-abbrev WR (O:Set ℕ) (e : Code) := (evalSet O e).ran
+abbrev WR (O : Set ℕ) (e : Code) := (evalSet O e).ran
 /-- `Wn O e s` := domain of e^th oracle program ran for s steps -/
-abbrev Wn (O:Set ℕ) (e : Code) (s : ℕ) := { x | (evalnSet O s e x).isSome }
+abbrev Wn (O : Set ℕ) (e : Code) (s : ℕ) := { x | (evalnSet O s e x).isSome }
 /-- `WRn O e s` := range of e^th oracle program ran for s steps -/
-abbrev WRn (O:Set ℕ) (e : Code) (s : ℕ) := { y | ∃ x, y ∈ evalnSet O s e x }
+abbrev WRn (O : Set ℕ) (e : Code) (s : ℕ) := { y | ∃ x, y ∈ evalnSet O s e x }
 
 theorem Wn_mono {O} : ∀ {k₁ k₂ c x}, k₁ ≤ k₂ → x ∈ Wn O c k₁ → x ∈ Wn O c k₂ := λ a b ↦ evaln_mono_dom a b
 theorem Wn_sound {O} : ∀ {k c x}, x ∈ Wn O c k → x ∈ W O c := by
@@ -471,7 +475,7 @@ theorem evalnSet_mono_dom : ∀ {k₁ k₂ : ℕ} {c n}, k₁ ≤ k₂ → (eval
   exact fun {k₁ k₂} {c} {n} a a_1 ↦ evaln_mono_dom a a_1
 
 /-- `CEin O A` means that `A` is c.e. in `O`. -/
-def CEin (O:Set ℕ) (A:Set ℕ) : Prop := ∃ c:Code, A = W O c
+def CEin (O : Set ℕ) (A:Set ℕ) : Prop := ∃ c:Code, A = W O c
 @[simp] abbrev CE (A:Set ℕ) := CEin ∅ A
 @[simp] theorem CEin_trivial : CEin O (W O a) := exists_apply_eq_apply' (W O) a
 theorem CEIn_deg (h:CEin O A) : A ≤ᵀ O⌜ := by
