@@ -488,12 +488,12 @@ theorem CEin_range : CEin O A ↔ ∃ c, A = WR O c := by
   · intro h
     rcases h with ⟨c,hc⟩
     use dom_to_ran c
-    rw [←dom_to_ran_prop]
+    rw [← dom_to_ran_prop]
     exact hc
   · intro h
     rcases h with ⟨c,hc⟩
     use ran_to_dom c
-    rw [←ran_to_dom_prop]
+    rw [← ran_to_dom_prop]
     exact hc
 
 /-
@@ -541,7 +541,7 @@ theorem Cin_iff_CEin_CEin' : A≤ᵀB ↔ (CEin B A ∧ CEin B Aᶜ) := by
     have h2 := reducible_imp_W $ Cin_iff_Cin'.mp h
     rcases h1 with ⟨c1, hc1⟩
     rcases h2 with ⟨c2, hc2⟩
-    exact ⟨⟨c1, hc1.symm⟩,⟨c2, hc2.symm⟩⟩
+    exact ⟨⟨c1, hc1.symm⟩, ⟨c2, hc2.symm⟩⟩
 
   /-
   We wish to show that if both A and its complement is computably enumerable from B,

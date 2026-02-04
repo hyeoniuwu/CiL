@@ -126,11 +126,11 @@ noncomputable def KP54 : ℕ → ℕ := λ s ↦
 match s with
 | 0 => ⟪0, 0⟫
 | s+1 =>
-  have i  := s.div2
-  have αₚ := (KP54 s).l
-  have βₚ := (KP54 s).r
-  have lb := βₚ.n2l.length
-  have la := αₚ.n2l.length
+  let i  := s.div2
+  let αₚ := (KP54 s).l
+  let βₚ := (KP54 s).r
+  let lb := βₚ.n2l.length
+  let la := αₚ.n2l.length
 
   if (s+1)%2=0 then -- then s+1=2i+2, and we will work on Rᵢ.
     let dvt := finite_ext αₚ i lb -- this is the step where we search for a finite extension.
