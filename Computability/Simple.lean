@@ -282,10 +282,10 @@ with `(C s).l`.
 
 the argument goes like this.
   1. suppose W_i is infinite.
-  2. by infinitue of W_i, we can find some `x>2i` in it eventually.
+  2. by infinitude of W_i, we can find some `x>2i` in it eventually.
   3. say `x` is enumerated into W_i by stage `s`.
   4. Now, we argue about what happens in `C (s+i+2+1)`.
-     The high stage number is used to ensure that at this stage, x is enumerated into W_i, and
+     The high stage number is used to ensure that at this stage, `x` is enumerated into W_i, and
      also that index `i` is considered in the foldr loop.
   5. We ask. Was `i` in R the previous stage?
   5A. If it was, we can use the "preserves" theorems above to show that the desired properties will hold.

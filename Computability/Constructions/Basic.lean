@@ -139,10 +139,7 @@ def eval₁ (O:ℕ→ℕ):ℕ→.ℕ := fun ex => eval O ex.l.n2c ex.r
 def c_eval₁ := c_eval
 @[simp] theorem c_eval₁_ev : eval O c_eval₁ = eval₁ O := by
   simp [c_eval₁]
-  unfold eval₁
-  funext ex
-  rw (config:={occs:=.pos [1]}) [show ex = ⟪ex.l, ex.r⟫ from by simp]
-  exact c_eval_ev
+  exact rfl
 
 theorem rec_eval₁ : Nat.RecursiveIn O (eval₁ O) := Nat.RecursiveIn.Rin.eval
 end eval₁

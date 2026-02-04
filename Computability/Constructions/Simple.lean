@@ -300,8 +300,8 @@ theorem auxaux {f: ℕ→ℕ} : List.foldr (fun a b ↦ ⟪a.l,f ⟪a.l,⟪a.r,b
   (
     List.foldr
     (fun a b => evalp O cf ⟪param, a, b⟫)
-    (init)
-    (n2l lN)
+    init
+    lN.n2l
   )
   := by
     simp [c_list_foldr_param_aux]
@@ -310,8 +310,8 @@ theorem auxaux {f: ℕ→ℕ} : List.foldr (fun a b ↦ ⟪a.l,f ⟪a.l,⟪a.r,b
   (
     List.foldr
     (fun a b => evalp O cf ⟪param, a, b⟫)
-    (init)
-    (n2l lN)
+    init
+    lN.n2l
   ) := by
     simp [c_list_foldr_param]
 end Computability.Code

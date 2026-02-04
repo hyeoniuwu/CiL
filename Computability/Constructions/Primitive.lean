@@ -225,14 +225,15 @@ section prec1
 namespace Computability.Code
 def c_prec1 (m) (cf:Code) := ((prec (c_const m) (cf.comp right)).comp (zero.pair c_id))
 @[cp] theorem c_prec1_prim (hcf : code_prim cf) : code_prim (@c_prec1 m cf) := by unfold c_prec1; apply_cp
-@[simp] theorem c_prec1_ev : evalp O (c_prec1 m cf) = (fun n => n.rec m fun y IH => evalp O cf <| Nat.pair y IH) := by simp [c_prec1,evalp]
+@[simp] theorem c_prec1_evp : evalp O (c_prec1 m cf) = (fun n => n.rec m fun y IH => evalp O cf <| Nat.pair y IH) := by simp [c_prec1,evalp]
 end Computability.Code
+theorem Nat.PrimrecIn.prec1 : Nat.PrimrecIn O (fun n => n.rec m fun y IH => evalp O cf <| Nat.pair y IH) := by rw [← c_prec1_evp]; exact code_prim_prop
 end prec1
 section casesOn1
 namespace Computability.Code
 def c_casesOn1 (m) (cf:Code) := @c_prec1 m (cf.comp left)
 @[cp] theorem c_casesOn1_prim (hcf : code_prim cf): code_prim (c_casesOn1 m cf) := by unfold c_casesOn1; apply_cp
-@[simp] theorem c_casesOn1_ev : evalp O (@c_casesOn1 m cf) = (Nat.casesOn · m (evalp O cf)) := by simp [c_casesOn1,evalp]
+@[simp] theorem c_casesOn1_evp : evalp O (@c_casesOn1 m cf) = (Nat.casesOn · m (evalp O cf)) := by simp [c_casesOn1,evalp]
 end Computability.Code
 end casesOn1
 

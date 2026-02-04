@@ -25,8 +25,10 @@ open Denumerable
 open Encodable
 open List
 
-abbrev n2l := @ofNat (List ℕ) _
-abbrev l2n := @encode (List ℕ) _
+-- abbrev n2l := @ofNat (List ℕ) _
+-- abbrev l2n := @encode (List ℕ) _
+abbrev Nat.n2l : ℕ → List ℕ := @ofNat (List ℕ) _
+abbrev Nat.l2n : List ℕ → ℕ := @encode (List ℕ) _
 
 instance : OfNat (List ℕ) lN where ofNat := n2l lN
 instance : Coe ℕ (List ℕ) := ⟨n2l⟩
@@ -36,8 +38,8 @@ section list_nil
 namespace Computability.Code
 def c_list_nil := zero
 @[cp] theorem c_list_nil_prim : code_prim c_list_nil := by unfold c_list_nil; apply_cp
-@[simp] theorem c_list_nil_evp :evalp O c_list_nil x = l2n ([]) := by simp [c_list_nil]
-@[simp] theorem c_list_nil_ev :eval O c_list_nil x = l2n ([]) := by simp [←evalp_eq_eval c_list_nil_prim]
+@[simp] theorem c_list_nil_evp  : evalp O c_list_nil x = l2n ([]) := by simp [c_list_nil]
+@[simp] theorem c_list_nil_ev  : eval O c_list_nil x = l2n ([]) := by simp [←evalp_eq_eval c_list_nil_prim]
 end Computability.Code
 end list_nil
 
@@ -45,8 +47,8 @@ section list_cons
 namespace Computability.Code
 def c_list_cons := succ
 @[cp] theorem c_list_cons_prim : code_prim c_list_cons := by unfold c_list_cons; apply_cp
-@[simp] theorem c_list_cons_evp :evalp O c_list_cons ⟪a, lN⟫= l2n (List.cons a (n2l lN)) := by simp [c_list_cons]
-@[simp] theorem c_list_cons_ev :eval O c_list_cons ⟪a, lN⟫= l2n (List.cons a (n2l lN)) := by simp [←evalp_eq_eval c_list_cons_prim]
+@[simp] theorem c_list_cons_evp  : evalp O c_list_cons ⟪a, lN⟫= l2n (List.cons a (n2l lN)) := by simp [c_list_cons]
+@[simp] theorem c_list_cons_ev  : eval O c_list_cons ⟪a, lN⟫= l2n (List.cons a (n2l lN)) := by simp [←evalp_eq_eval c_list_cons_prim]
 end Computability.Code
 end list_cons
 
@@ -106,7 +108,7 @@ def c_list_casesOn (cl cf cg:Code) :=
   by_cases hl:(evalp O cl input)=0
   · simp [hl]
   · rw [←(exists_add_one_eq.mpr (one_le_iff_ne_zero.mpr hl)).choose_spec]; simp
--- @[simp] theorem c_list_casesOn_ev :eval O (c_list_casesOn cl cf cg) input =
+-- @[simp] theorem c_list_casesOn_ev  : eval O (c_list_casesOn cl cf cg) input =
 --   List.casesOn
 --   (n2l (evalp O cl input))
 --   (evalp O cf input)
@@ -129,7 +131,7 @@ def c_list_casesOn' (cl cf cg:Code) :=
   by_cases hl:(evalp O cl input)=0
   · simp [hl]
   · rw [←(exists_add_one_eq.mpr (one_le_iff_ne_zero.mpr hl)).choose_spec]; simp
--- @[simp] theorem c_list_casesOn'_ev :eval O (c_list_casesOn' cf cg) lN =
+-- @[simp] theorem c_list_casesOn'_ev  : eval O (c_list_casesOn' cf cg) lN =
 --   List.casesOn
 --   (n2l lN)
 --   (evalp O cf lN)

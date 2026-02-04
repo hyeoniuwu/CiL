@@ -51,7 +51,7 @@ def c_jump_decode (c:Code) := c_ite c c_diverge (c_pred.comp c)
     simp [-Part.some_get]
   else
     simp [Part.eq_none_iff'.mpr h]
-theorem c_jump_decode_ev' (hc:code_total O c): eval O (c_jump_decode c) = fun x => if eval O c x = Part.some 0 then Part.none else (Nat.pred <$> eval O c x) := by
+@[simp] theorem c_jump_decode_ev' (hc:code_total O c): eval O (c_jump_decode c) = fun x => if eval O c x = Part.some 0 then Part.none else (Nat.pred <$> eval O c x) := by
   funext xs
   exact c_jump_decode_ev hc
 
@@ -60,9 +60,7 @@ theorem O_le_K0 (O:ℕ→ℕ) :  O ≤ᵀᶠ (K0 O) := by
   let q := oracle.comp (pair (c_const oracle) c_id)
   use c_jump_decode q
   have compute_total : code_total (K0 O) q := by apply prim_total; apply_cp
-  simp only [c_jump_decode_ev' compute_total]
-  simp only [q]
-  simp [eval, Seq.seq]
+  simp [compute_total, q, eval, Seq.seq]
   exact rfl
 theorem O_le_J (O:ℕ→ℕ) : O ≤ᵀᶠ O⌜ :=  O_le_K0 O
 

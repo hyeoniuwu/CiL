@@ -42,6 +42,7 @@ Finally, we prove the requirements `R` and `S` in sections R and S respectively.
 open Computability.Code
 open Classical
 open Computability
+open Nat
 
 namespace Computability.Code
 
@@ -78,11 +79,11 @@ Later simp calls blow up without `@[irreducible]`. Why?
 @[irreducible] def c_kp54_aux (i n:ℕ) :=
   c_ifdom
   (c_evals.comp₃ (c_list_append.comp₂ left (succ.comp right)) (c_const i) (c_const n))
-  zero
+  Code.zero
 theorem c_kp54_aux_evp :
   eval (λ_↦0) (c_kp54_aux i n) x
     =
-  if (evals ((n2l x.l) ++ (n2l (x.r+1))) i n).Dom then Part.some 0 else Part.none
+  if (evals (x.l.n2l ++ (x.r+1).n2l) i n).Dom then Part.some 0 else Part.none
 := by
   simp [c_kp54_aux, -Denumerable.list_ofNat_succ]
   simp [Computability.eval, -Denumerable.list_ofNat_succ]
@@ -92,10 +93,10 @@ theorem c_kp54_aux_evp :
 
 If no such `x` exists, returns `Part.none`.
 -/
-def finite_ext (S i l) := eval (λ_↦0) (dovetail (c_kp54_aux i l)) S
-theorem finite_ext_prop (halts:(finite_ext S i l).Dom) :
-  have dvt := (finite_ext S i l).get halts
-  (evals ((n2l S) ++ (n2l (dvt+1))) i l).Dom := by
+def finite_ext (S i n) := eval (λ_↦0) (dovetail (c_kp54_aux i n)) S
+theorem finite_ext_prop (halts:(finite_ext S i n).Dom) :
+  have dvt := (finite_ext S i n).get halts
+  (evals ((n2l S) ++ (n2l (dvt+1))) i n).Dom := by
     have := dovetail_ev_0 halts
     extract_lets at this ⊢
     expose_names
@@ -103,8 +104,8 @@ theorem finite_ext_prop (halts:(finite_ext S i l).Dom) :
     contrapose this
     simp [-Denumerable.list_ofNat_succ]
     exact this
-theorem finite_ext_prop_div (h: ¬ (finite_ext S i l).Dom) :
-  ∀ y, ¬ (evals ((n2l S) ++ (n2l (y+1))) i l).Dom := by
+theorem finite_ext_prop_div (h: ¬ (finite_ext S i n).Dom) :
+  ∀ y, ¬ (evals ((n2l S) ++ (n2l (y+1))) i n).Dom := by
     have := dovetail_ev_1.mp (Part.eq_none_iff'.mpr h)
     simp [c_kp54_aux_evp, -Denumerable.list_ofNat_succ] at this
     exact fun y ↦ this y
@@ -115,40 +116,40 @@ open Nat List in
 The construction procedure in the KP54 proof.
 
 Input: stage `s`
-Output: (string `Aₛ`, string `Bₛ`)
+Output: (string `αₛ`, string `βₛ`)
 
 (The strings are encoded as a list of naturals.)
 
-Each string `Aₛ` and `Bₛ` increase in length by at least 1 every stage.
+Each string `αₛ` and `βₛ` increase in length by at least 1 every stage.
 -/
 noncomputable def KP54 : ℕ → ℕ := λ s ↦
 match s with
 | 0 => ⟪0, 0⟫
 | s+1 =>
   have i  := s.div2
-  have Aₚ := (KP54 s).l
-  have Bₚ := (KP54 s).r
-  have lb := (n2l Bₚ).length
-  have la := (n2l Aₚ).length
+  have αₚ := (KP54 s).l
+  have βₚ := (KP54 s).r
+  have lb := βₚ.n2l.length
+  have la := αₚ.n2l.length
 
   if (s+1)%2=0 then -- then s+1=2i+2, and we will work on Rᵢ.
-    let dvt := finite_ext Aₚ i lb -- this is the step where we search for a finite extension.
+    let dvt := finite_ext αₚ i lb -- this is the step where we search for a finite extension.
     if halts : dvt.Dom then
-      let rf := dvt.get halts -- rf is a natural such that (eval_string ((n2l A) ++ (n2l rf)) i n).Dom.
-      let Aₛ := (n2l Aₚ) ++ (n2l (rf+1))
-      let A_result := (evals Aₛ i lb).get (finite_ext_prop halts)
-      Nat.pair Aₛ ((n2l Bₚ).concat (Nat.sg' A_result))
-    else
-      Nat.pair (l2n $ (n2l Aₚ).concat 0) (l2n $ (n2l Bₚ).concat 0)
+      let rf := dvt.get halts -- rf is a natural such that (evals (αₚ ++ (rf+1)) i n).Dom.
+      let αₛ := αₚ.n2l ++ (rf+1).n2l
+      let A_result := (evals αₛ i lb).get (finite_ext_prop halts)
+      Nat.pair αₛ (βₚ.n2l.concat (Nat.sg' A_result))
+    else -- if there is no finite extension, extend both strings by 0
+      Nat.pair (αₚ.n2l.concat 0) (βₚ.n2l.concat 0)
   else -- then s+1=2i+1, and we will work on Sᵢ.
-    let dvt := finite_ext Bₚ i la
+    let dvt := finite_ext βₚ i la
     if halts : dvt.Dom then
       let rf := dvt.get halts
-      let Bₛ := (n2l Bₚ) ++ (n2l (rf+1))
-      let B_result := (evals (Bₛ) i la).get (finite_ext_prop halts)
-      Nat.pair ((n2l Aₚ).concat (Nat.sg' B_result)) Bₛ
+      let βₛ := βₚ.n2l ++ (rf+1).n2l
+      let B_result := (evals (βₛ) i la).get (finite_ext_prop halts)
+      Nat.pair (αₚ.n2l.concat (Nat.sg' B_result)) βₛ
     else
-      Nat.pair (l2n $ (n2l Aₚ).concat 0) (l2n $ (n2l Bₚ).concat 0)
+      Nat.pair (αₚ.n2l.concat 0) (βₚ.n2l.concat 0)
 @[simp] theorem KP54_0_r : n2l (KP54 0).r = [] := by simp [KP54]
 @[simp] theorem KP54_0_l : n2l (KP54 0).l = [] := by simp [KP54]
 
@@ -218,7 +219,7 @@ theorem AsSize_e2o : (As (2*i+1)).length < (As (2*i+2)).length:= by
   unfold KP54
   simp (config := {zeta:=false})
   extract_lets; expose_names
-  rw [show As (2*i+1) = n2l Aₚ from rfl]
+  rw [show As (2*i+1) = n2l αₚ from rfl]
   if h0:dvt.Dom then simp [h0]
   else simp [h0]
 theorem BsSize_o2e : (Bs (2*i+2)).length = (Bs (2*i+1)).length + 1 := by
@@ -232,7 +233,7 @@ theorem BsSize_e2o : (Bs (2*i)).length < (Bs (2*i+1)).length:= by
   unfold KP54
   simp (config := {zeta:=false})
   extract_lets; expose_names
-  rw [show Bs (2*i) = n2l Bₚ from rfl]
+  rw [show Bs (2*i) = n2l βₚ from rfl]
   if h0:dvt.Dom then simp [h0]
   else simp [h0]
 
@@ -253,7 +254,7 @@ theorem AsSize_mono (hij:i<j) : (As i).length < (As j).length := by
   have a0 := @AsSize_mono' i
   have a1 := (@AsBs_Mono_2 (i+1) j (hij)).left
   exact Nat.lt_of_lt_of_le a0 (List.IsPrefix.length_le a1)
-theorem append_len_geq (A B : List α) (h1 : A.length < B.length) (h2 : A ++ l = B) : l.length > 0 := by
+theorem append_len_geq (A B : List α) (h1 : A.length < B.length) (h2 : A ++ lst = B) : lst.length > 0 := by
   grind
 theorem nonempt_l2n (A : List ℕ) (h1 : A.length > 0) : l2n A ≠ 0 := by
   contrapose h1
@@ -376,7 +377,7 @@ private theorem R_aux_0 (i:ℕ) (h:(evals (As (2*i+1+1)) i (R_wt i)).Dom):
 
   lift_lets; extract_lets; expose_names
   have i_1_simp: i_1 = i := rfl
-  let (eq:=hdvt) dvt := (finite_ext Aₚ i_1 lb)
+  let (eq:=hdvt) dvt := (finite_ext αₚ i_1 lb)
   simp (config := {zeta:=false}) only [←hdvt]
 
   -- if ¬ dvt.Dom, then our entire computation would have diverged, contradicting `h`.
@@ -385,18 +386,18 @@ private theorem R_aux_0 (i:ℕ) (h:(evals (As (2*i+1+1)) i (R_wt i)).Dom):
     intro halts
     rcases @As_ex_ext (2*i+1) (2*i+2) (Nat.lt_add_one (2 * i + 1)) with ⟨h3,h2⟩
     have := finite_ext_prop_div halts h3
-    rw [show n2l Aₚ = As (2*i+1) from rfl, h2, i_1_simp] at this
+    rw [show n2l αₚ = As (2*i+1) from rfl, h2, i_1_simp] at this
     exact this h
 
   let (eq:=hrf) rf := dvt.get halts -- rf is a natural such that (eval_string ((n2l A) ++ (n2l rf)) i n).Dom.
-  let (eq:=hAₛ) Aₛ := (n2l Aₚ) ++ (n2l (rf+1))
-  simp (config := {zeta:=false}) only [←hrf, ←hAₛ, halts]
+  let (eq:=hαₛ) αₛ := (n2l αₚ) ++ (n2l (rf+1))
+  simp (config := {zeta:=false}) only [←hrf, ←hαₛ, halts]
   simp (config := {zeta:=false}) []
   lift_lets; extract_lets; expose_names
 
-  have lbrw : R_wt i = (n2l Bₚ).length := rfl
+  have lbrw : R_wt i = (n2l βₚ).length := rfl
   simp [lbrw]; simp only [←lbrw]
-  simp [show (evals (Aₛ) i (R_wt i)).get (finite_ext_prop halts) = A_result from rfl]
+  simp [show (evals (αₛ) i (R_wt i)).get (finite_ext_prop halts) = A_result from rfl]
   cases A_result <;> simp [n2b,b2n]
 
 theorem R_aux_χ: χ B (R_wt i) = b2n (n2b ((Bs (2 * (i + 1)))[(R_wt i)]'(@BsSize_o2e_Rwt i))) := by
@@ -477,8 +478,8 @@ lemma As_Uninjured_1 : ¬(evals (As (2*i+1+1)) i (R_wt i)).Dom → ¬(evalSet A 
   rw [←keqlb]
   simp only [evals]
   have use_dom := e2u final_comp_halts
-  let use_compl := (use (χ A) (n2c i) (R_wt i)).get use_dom
-  rw [show n2l Aₚ = As (2*i+1) from rfl]
+  let use_compl := (use (χ A) (i.n2c) (R_wt i)).get use_dom
+  rw [show n2l αₚ = As (2*i+1) from rfl]
   /-
   As the final computation (on index `i`, input `R_wt i`) only uses up to `use_compl`, this means we only need our string `As` to be as long as `use_compl` for our computation to halt.
 
@@ -533,7 +534,7 @@ lemma As_Uninjured_1 : ¬(evals (As (2*i+1+1)) i (R_wt i)).Dom → ¬(evalSet A 
       simp only [zero_add, List.length_append, le_add_iff_nonneg_right, zero_le]
 
   -- showing that the current use is equivalent to the final computation's use
-  have mainrw : use (fun e ↦ b2n (n2b ((As (2 * i + 1) ++ n2l (0 + 1)).getD e whatever))) (n2c i) (R_wt i) = use (χ A) (n2c i) (R_wt i):= by
+  have mainrw : use (fun e ↦ b2n (n2b ((As (2 * i + 1) ++ n2l (0 + 1)).getD e whatever))) i.n2c (R_wt i) = use (χ A) i.n2c (R_wt i):= by
     apply Eq.symm
     refine use_principle_use final_comp_halts ?_
     intro i2 hi2
@@ -583,23 +584,23 @@ private theorem S_aux_0 (i:ℕ) (h:(evals (Bs (2*i+1)) i (S_wt i)).Dom):
   simp (config := {zetaHave:=false}) only []
   lift_lets; extract_lets; expose_names
   have i_1_simp: i_1 = i := rfl
-  let (eq:=hdvt) dvt := (finite_ext Bₚ i_1 la)
+  let (eq:=hdvt) dvt := (finite_ext βₚ i_1 la)
   simp (config := {zeta:=false}) only [←hdvt]
   have halts : dvt.Dom := by
     apply byContradiction
     intro halts
     rcases @Bs_ex_ext (2*i) (2*i+1) (Nat.lt_add_one (2*i)) with ⟨h3,h2⟩
     have := finite_ext_prop_div halts h3
-    rw [show n2l Bₚ = Bs (2*i) from rfl, h2, i_1_simp] at this
+    rw [show n2l βₚ = Bs (2*i) from rfl, h2, i_1_simp] at this
     exact this h
   let (eq:=hrf) rf := dvt.get halts
-  let (eq:=hBₛ) Bₛ := (n2l Bₚ) ++ (n2l (rf+1))
-  simp (config := {zeta:=false}) only [←hrf, ←hBₛ, halts]
+  let (eq:=hβₛ) βₛ := (n2l βₚ) ++ (n2l (rf+1))
+  simp (config := {zeta:=false}) only [←hrf, ←hβₛ, halts]
   simp (config := {zeta:=false}) []
   lift_lets; extract_lets; expose_names
-  have lbrw : S_wt i = (n2l Aₚ).length := rfl
+  have lbrw : S_wt i = (n2l αₚ).length := rfl
   simp [lbrw]; simp only [←lbrw]
-  simp [show (evals (Bₛ) i (S_wt i)).get (finite_ext_prop halts) = B_result from rfl]
+  simp [show (evals (βₛ) i (S_wt i)).get (finite_ext_prop halts) = B_result from rfl]
   cases B_result <;> simp [n2b,b2n]
 theorem S_aux_χ: χ A (S_wt i) = b2n (n2b ((As (2*i+1))[(S_wt i)]'(@AsSize_o2e_wt i))) := by
   simp [A, χ]
@@ -649,8 +650,8 @@ lemma Bs_Uninjured_1 : ¬(evals (Bs (2*i+1)) i (S_wt i)).Dom → ¬(evalSet B i 
   rw [←keqlb]
   simp only [evals]
   have use_dom := e2u final_comp_halts
-  let use_compl := (use (χ B) (n2c i) (S_wt i)).get use_dom
-  rw [show n2l Bₚ = Bs (2*i) from rfl]
+  let use_compl := (use (χ B) (i.n2c) (S_wt i)).get use_dom
+  rw [show n2l βₚ = Bs (2*i) from rfl]
   if h0 : 2*i ≤ use_compl then
     rcases @Bs_ex_ext (2*i) (use_compl+1) (Nat.lt_add_one_of_le h0) with ⟨x,hx⟩
     use x
@@ -678,7 +679,7 @@ lemma Bs_Uninjured_1 : ¬(evals (Bs (2*i+1)) i (S_wt i)).Dom → ¬(evalSet B i 
     _     ≤ (Bs (2*i)).length := (@AsBsSize $ 2*i).right
     _     ≤ (Bs (2*i) ++ n2l (0 + 1)).length := by
       simp only [zero_add, List.length_append, le_add_iff_nonneg_right, zero_le]
-  have mainrw : use (fun e ↦ b2n (n2b ((Bs (2*i) ++ n2l (0 + 1)).getD e whatever))) (n2c i) (S_wt i) = use (χ B) (n2c i) (S_wt i):= by
+  have mainrw : use (fun e ↦ b2n (n2b ((Bs (2*i) ++ n2l (0 + 1)).getD e whatever))) (i.n2c) (S_wt i) = use (χ B) (i.n2c) (S_wt i):= by
     apply Eq.symm
     refine use_principle_use final_comp_halts ?_
     intro i2 hi2
