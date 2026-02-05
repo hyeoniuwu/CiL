@@ -83,72 +83,8 @@ We split the proof into 4 main sections;
 -/
 
 open Classical
-/-
-We specify the construction procedure for a simple set here.
-
-We roughly follow the procedure outlined in Computability Theory [Cooper] (2004), page 91.
-
-In each step of the construction, we keep track of:
-
-`A`: the simple set being built
-`R`: the list of (positive) requirements that have been satisfied so far.
-
-At stage `s` of the construction, we do the following:
-  for each i < s:
-    1. check i is not already satisfied.
-    2. now, check if there is a x ∈ W_i,s s.t. x>2i.
-      if so, then set:
-        A = A ++ x
-        R = R ++ i
-      otherwise, move on.
-
-  We also note here that step 2 can be done computably, as W_i is finite (elements are bounded by i.)
-
-We implement the main loop via a foldr. The step function is given below.
--/
-
-noncomputable def step (s:ℕ) := λ i prev ↦
-  let Aₚ := prev.l
-  let Rₚ := prev.r
-  if ¬ fs_in Rₚ i then
-    if found : ∃ x ∈ Wn ∅ i s, x > 2*i then
-      let x := Nat.find found
-      ⟪fs_add Aₚ x, fs_add Rₚ i⟫
-    else prev
-  else prev
-/--
-C stands for construction.
-Input: stage `s`
-Output:
-  ⟪A, R⟫, where
-  A = natural representing the simple set A built so far
-  R = natural representing set of requirements satisfied so far
--/
-noncomputable def C : ℕ → ℕ := λ s ↦
-match s with
-| 0 => ⟪0, 0⟫
-| s+1 => foldr (step s) (C s) (range s).reverse
-
-/-- The simple set built by our construction procedure. -/
-def A : Set ℕ := {x | ∃ s, fs_in (C s).l x}
-
-#check List.range'
--- def fmax' (f : ℕ → ℕ) (r : ℕ) := (List.max? (List.map f $ List.range (r+1)))
--- #eval range 5
--- #eval 0 :: range' 1 4
--- theorem fmax'_some : (fmax' f r).isSome := by
---   simp [fmax']
---   have : range (r+1) = 0 :: range' 1 r := by
---     simp [range_eq_range']
---     exact rfl
---   rw [this]
---   simp
--- def fmax (f : ℕ → ℕ) (r : ℕ) := (fmax' f r).get (fmax'_some)
--- def fmax (f : ℕ → ℕ) (r : ℕ) := List.foldl Nat.max (0) (List.range' 1 (r-1))
 lemma range_3_way_split_2 {i r : ℕ} (hi : i ≤ r) : (range (r+1)) = range i ++ [i] ++ (range' (i+1) (r-i)) := by
   simp
-  -- simp only [append_assoc, cons_append, nil_append, reverse_eq_append_iff, reverse_cons,
-    -- reverse_reverse]
   have : i :: range' (i + 1) (r - i) = range' (i) (r - i + 1) := by
     aesop
   rw [this]
@@ -179,6 +115,34 @@ theorem fmax_max : ∀ i ≤ r, f i ≤ fmax f r := by
   apply Nat.le_trans ?_ foldl_max_base
   exact Nat.le_max_right ?_ ?_
   -- have := foldl_max_base
+
+noncomputable def step (s:ℕ) := λ i prev ↦
+  let Aₚ := prev.l
+  let Rₚ := prev.r
+  if ¬ fs_in Rₚ i then
+    let r := fmax (λ s => o2n (usen (χ ∅) i s i)) i
+    if found : ∃ x ∈ Wn ∅ i s, x > (Nat.max (2*i) r) then
+      let x := Nat.find found
+      ⟪fs_add Aₚ x, fs_add Rₚ i⟫
+    else prev
+  else prev
+/--
+C stands for construction.
+Input: stage `s`
+Output:
+  ⟪A, R⟫, where
+  A = natural representing the simple set A built so far
+  R = natural representing set of requirements satisfied so far
+-/
+noncomputable def C : ℕ → ℕ := λ s ↦
+match s with
+| 0 => ⟪0, 0⟫
+| s+1 => foldr (step s) (C s) (range s).reverse
+
+/-- The simple set built by our construction procedure. -/
+def A : Set ℕ := {x | ∃ s, fs_in (C s).l x}
+
+
 
 #exit
 section step_lemmas
