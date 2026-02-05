@@ -268,55 +268,6 @@ theorem c_bdd_search_evp_1:
         | inr h => exact Nat.le_of_lt_succ h
       exact ⟨h2,h3⟩
 
-
-section list_foldr_param
-namespace Computability.Code
-def c_list_foldr_param_aux (cf:Code) :=
-  let param := left
-  let init := left.comp right
-  let lN := right.comp right
-  (c_list_foldr $
-  (pair (left.comp left) $ cf.comp₃ (left.comp left) (right.comp left) (right.comp right))).comp₂
-  (pair param init)
-  ((c_list_zipWith c_id).comp₂ (c_list_replicate.comp₂ (c_list_length.comp lN) (param)) lN)
-def c_list_foldr_param (cf:Code) := right.comp (c_list_foldr_param_aux cf)
-@[cp] theorem c_list_foldr_param_aux_prim (hcf:code_prim cf) : code_prim (c_list_foldr_param_aux cf) := by unfold c_list_foldr_param_aux; apply_cp 60
-@[cp] theorem c_list_foldr_param_prim (hcf:code_prim cf) : code_prim (c_list_foldr_param cf) := by
-  rewrite [c_list_foldr_param]
-  apply_cp 60
-theorem auxaux {f: ℕ→ℕ} : List.foldr (fun a b ↦ ⟪a.l,f ⟪a.l,⟪a.r,b.r⟫⟫⟫) ⟪param,init⟫
-    (List.zipWith (fun (x y : ℕ) ↦ ⟪x,y⟫) (List.replicate (l).length param) (l)) =
-  ⟪param,List.foldr (fun a b ↦ f ⟪param,⟪a,b⟫⟫) init (l)⟫ := by
-    induction l with
-    | nil => simp
-    | cons head tail ih =>
-      simp
-      have : (List.zipWith (fun x y ↦ ⟪x,y⟫) (List.replicate (tail.length + 1) param) (head :: tail)) = ⟪param, head⟫ :: (List.zipWith (fun x y ↦ ⟪x,y⟫) (List.replicate tail.length param) tail) := by
-        rfl
-      simp only [this]
-      simp [ih]
-@[simp] theorem c_list_foldr_param_aux_evp : evalp O (c_list_foldr_param_aux cf) ⟪param, init, lN⟫ =
-  Nat.pair param
-  (
-    List.foldr
-    (fun a b => evalp O cf ⟪param, a, b⟫)
-    init
-    lN.n2l
-  )
-  := by
-    simp [c_list_foldr_param_aux]
-    exact auxaux
-@[simp] theorem c_list_foldr_param_evp : evalp O (c_list_foldr_param cf) ⟪param, init, lN⟫ =
-  (
-    List.foldr
-    (fun a b => evalp O cf ⟪param, a, b⟫)
-    init
-    lN.n2l
-  ) := by
-    simp [c_list_foldr_param]
-end Computability.Code
-end list_foldr_param
-
 section fs_in
 namespace Computability.Code
 def c_fs_in := c_mod.comp₂
