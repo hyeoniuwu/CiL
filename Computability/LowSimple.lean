@@ -43,7 +43,6 @@ theorem immuneIn_not_CEIn : immuneIn O A → ¬ CEin O A := by
   aesop
 theorem immuneIn_not_CEIn_contrapositive :  CEin O A → ¬ immuneIn O A  := by
   contrapose
-  simp only [not_not]
   exact fun a ↦ immuneIn_not_CEIn a
 
 /-- simpleIn O A := A is simple in O -/

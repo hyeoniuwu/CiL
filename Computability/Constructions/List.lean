@@ -264,7 +264,6 @@ def c_list_foldl (cf:Code) := left.comp (c_list_foldl_aux2 cf)
       ·
         simp [ih]
         simp [hl2]
-        simp [List.drop_of_length_le hl2]
         simp [List.take_of_length_le hl2]
         simp [List.take_of_length_le (le_add_right_of_le hl2)]
         exact le_add_right_of_le hl2

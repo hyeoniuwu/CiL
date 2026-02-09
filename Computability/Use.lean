@@ -72,7 +72,6 @@ lemma evaln_mono'
 theorem evaln_sG1 (h:(evaln O s c x).isSome) : s=s-1+1 := by
   have : s≠0 := by
     contrapose h
-    simp only [ne_eq, Decidable.not_not] at h
     simp [h,evaln]
   exact Eq.symm (succ_pred_eq_of_ne_zero this)
 theorem evaln_xles (h:(evaln O (s+1) c x).isSome) : x≤s :=le_of_lt_succ (evaln_bound (Option.get_mem h))
@@ -161,7 +160,7 @@ theorem evaln_rfind_as_eval_rfind
       contrapose h4
       simp [rwasd]
       have : asd≠0 := by
-        contrapose h4; simp only [ne_eq, Decidable.not_not] at h4 ⊢
+        contrapose h4;
         rw [h4] at rwasd
         rw [show 0=(Option.some 0).get (Option.isSome_some) from rfl] at rwasd
         exact Option.get_inj.mp rwasd
@@ -340,7 +339,6 @@ theorem evaln_rfind_as_eval_rfind_reverse
     simp at h2
     have : s≠0 := by
       contrapose h2
-      simp at h2
       simp [h2,evaln]
     have sss : s=s-1+1 := by
       exact Eq.symm (succ_pred_eq_of_ne_zero this)
@@ -377,7 +375,6 @@ theorem evaln_rfind_as_eval_rfind_reverse'
 := by
   have : s≠0 := by
     contrapose h
-    simp at h
     rw [h]
     simp [evaln]
   have : s=s-1+1 := by exact Eq.symm (succ_pred_eq_of_ne_zero this)
@@ -450,12 +447,10 @@ theorem nrfind'_obtain_prop_4 (h:(evaln O (s+1) (rfind' cf) x).isSome) :
   rwa [Eq.symm (Simproc.sub_add_eq_comm (s + 1) m j)]
 private lemma mem_shambles {o:Option ℕ} {p:Part ℕ} (h0:x∉o) (h1:o.isSome) (h2:o.get h1∈p) : (x∉p) := by
   contrapose h2
-  simp at h2
   rw [Part.eq_some_iff.mpr h2] -- `p` => `Part.some x`
   simp
   have : o ≠ some x := h0
   contrapose this
-  simp only [ne_eq, Decidable.not_not] at this ⊢
   rw [←this]
   exact Option.eq_some_of_isSome h1
 theorem nrfind'_prop
@@ -1059,7 +1054,7 @@ lemma nrf_aux (h:(usen O (rfind' cf) k x).isSome) :
  k=k-1+1
 := by
   have : k≠0 := by
-    contrapose h; simp at h; simp [h]
+    contrapose h; simp [h]
     simp [usen]
   have keqkM1P1 : k=k-1+1 := by exact Eq.symm (succ_pred_eq_of_ne_zero this)
   exact keqkM1P1
@@ -1424,7 +1419,6 @@ y∈(do
           simp at this
           rw [add_comm] at this
           contrapose this
-          simp at this ⊢
           rw [←this]
           simp
         simp at this
@@ -1592,7 +1586,6 @@ y∈(do
         simp at this
         rw [add_comm] at this
         contrapose this
-        simp at this ⊢
         rw [←this]
         simp
       simp at this
@@ -1738,8 +1731,11 @@ theorem usen_sound : ∀ {c s n x}, x ∈ usen O c s n → x ∈ use O c n
     -- revert 0
     induction h7 - n.r generalizing base with
     | zero =>
-      -- simp [hind] at this
-      simp
+      -- todo: this simp call was from old mathlib
+      simp? says simp only [nonpos_iff_eq_zero, forall_eq, tsub_zero, add_zero, pair_lr, zero_add, range_one,
+        reverse_cons, reverse_nil, nil_append, forIn_cons, Option.pure_def, forIn_nil,
+        Option.bind_eq_bind, Part.pure_eq_some, Part.bind_eq_bind, Part.mem_bind_iff,
+        Part.mem_some_iff, forall_exists_index]
       intro h3 h4 this
       use (ForInStep.yield (base.max h1))
       constructor
@@ -1750,7 +1746,7 @@ theorem usen_sound : ∀ {c s n x}, x ∈ usen O c s n → x ∈ use O c n
       simp_all
     | succ nn ih =>
       simp (config:={singlePass:=true}) [rr_indt]
-      simp
+      simp [-existsAndEq]
       intro urop1
       have aux0 : (∀ j ≤ nn, ∃ y, usen O cf (k + 1 - j) (Nat.pair n.l (n.r + j)) = some y) := by
         intro j jnn
@@ -1759,7 +1755,8 @@ theorem usen_sound : ∀ {c s n x}, x ∈ usen O c s n → x ∈ use O c n
       rcases urop1 (nn+1) (Nat.le_refl (nn + 1)) with ⟨h3,h4⟩
       simp at h4
       ac_nf at h4 ⊢
-      simp [h4]
+      -- todo: this remove -existsAndEq
+      simp [h4, -existsAndEq]
 
       have hf2 := @hfih (k-nn) (le_add_right_of_le (sub_le k nn)) (Nat.pair n.l (nn + (n.r+1))) h3 h4
 
@@ -2139,7 +2136,10 @@ theorem usen_complete {c n x} : x ∈ use O c n ↔ ∃ s, x ∈ usen O c s n :=
 
     induction h1-n.r generalizing a n with
     | zero =>
-      simp_all
+      simp_all only [zero_add, pair_lr, nonpos_iff_eq_zero, forall_eq, not_lt_zero',
+        IsEmpty.forall_iff, implies_true, and_true, add_zero, range_one, reverse_cons, reverse_nil,
+        nil_append, forIn_cons, Part.pure_eq_some, forIn_nil, Part.bind_eq_bind, Part.mem_bind_iff,
+        Part.mem_some_iff, forall_exists_index, and_imp, forall_const]
       intro urop1 rop1 h2 rop6 h4 h5 h6 h7 h8
 
       rcases evaln_complete.mp h2 with ⟨h9,h10⟩
@@ -2175,7 +2175,8 @@ theorem usen_complete {c n x} : x ∈ use O c n ↔ ∃ s, x ∈ usen O c s n :=
 
     | succ nn ih =>
       simp (config:={singlePass:=true}) [rr_indt]
-      simp
+      simp only [Part.pure_eq_some, Part.bind_eq_bind, Part.mem_bind_iff, Part.mem_some_iff,
+        Option.pure_def, Option.bind_eq_bind, forall_exists_index, and_imp]
       intro urop1 rop1 rop2 rop4 rop6 rop3 h2 h3 h5 h6 h7 h8
 
       have rop10 := rop1 1 (le_add_left 1 nn)
@@ -2969,7 +2970,7 @@ A lot of the complexity comes from the "mono" and "dom" theorems used, which ass
   "dom" theorems assert that if e.g. c1.prec c2 halts, then the subexpressions c1 and c2 halt
   "mono" theorems assert that the use of the sub-computations (e.g. use of c1 and c2) are
     less than the use of the main computation (e.g c1.prec c2.)
-  
+
   These two theorems are required to use the inductive hypotheses.
 
   The "mono" and "dom" theorems are especially complex for the rfind' case.
@@ -3126,7 +3127,7 @@ theorem usen_principle {O₁ O₂} {s c x}
       apply hcf ⟪x.l, j+x.r⟫ ((s-1+1-j)) aux1 ?_
       simp [sG1j]
       exact λ x h ↦ hO x $ le_trans h (usen_mono_rfind' (en2un hh) (show j≤nrfind'_obtain hh from hjro))
-      
+
     have aux0 : (evaln O₂ (s-1+1) cf.rfind' x).isSome := by
       apply evaln_rfind_as_eval_rfind_reverse
       simp

@@ -127,7 +127,6 @@ theorem hnat_6 (h:i≠0) : (n2o i).isSome := by
   rfl
 theorem hnat_8 (h:(n2o o).isSome): o≠0 := by
   contrapose h
-  simp at h
   simp [h]
 theorem hnat_7 : (n2o o).get h = o-1 := by
   have : o ≠ 0 := by exact hnat_8 h

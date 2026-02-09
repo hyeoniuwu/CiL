@@ -427,7 +427,6 @@ theorem As_Uninjured_0 (hh:(evals (As (2*(i+1))) i k).Dom): evals (As (2*(i+1)))
 /- contrapositive of As_Uninjured_0. -/
 theorem As_Uninjured_0' {i:ℕ} : ¬ (evalSet A i k).Dom → ¬ (evals (As (2*(i+1))) i k).Dom := by
   contrapose
-  simp only [Decidable.not_not]
   intro h
   rwa [←As_Uninjured_0 h]
 
@@ -468,7 +467,7 @@ lemma As_Uninjured_1 : ¬(evals (As (2*i+1+1)) i (R_wt i)).Dom → ¬(evalSet A 
   have a1 := finite_ext_prop_div h0
   intro h; clear h
   contrapose a1
-  simp at a1
+  -- simp at a1
   rename' a1 => final_comp_halts
   simp [-Denumerable.list_ofNat_succ]
   -- the goal now reads:
@@ -502,7 +501,7 @@ lemma As_Uninjured_1 : ¬(evals (As (2*i+1+1)) i (R_wt i)).Dom → ¬(evalSet A 
 
   -/
   if h0 : 2*i+1 ≤ use_compl then
-    rcases @As_ex_ext (2*i+1) (use_compl+1) (add_lt_add_right h0 1) with ⟨x,hx⟩
+    rcases @As_ex_ext (2*i+1) (use_compl+1) (Nat.add_lt_add_right h0 1) with ⟨x,hx⟩
     use x
     rw [hx]
     -- showing that the current use is equivalent to the final computation's use
@@ -619,7 +618,6 @@ theorem Bs_Uninjured_0 (hh:(evals (Bs (2*i+1)) i k).Dom): evals (Bs (2*i+1)) i k
   split <;> next h => simp [b2n,h]
 theorem Bs_Uninjured_0' {i:ℕ} : ¬ (evalSet B i k).Dom → ¬ (evals (Bs (2*i+1)) i k).Dom := by
   contrapose
-  simp only [Decidable.not_not]
   intro h
   rwa [←Bs_Uninjured_0 h]
 lemma Bs_Uninjured_1 : ¬(evals (Bs (2*i+1)) i (S_wt i)).Dom → ¬(evalSet B i (S_wt i)).Dom := by
@@ -643,7 +641,6 @@ lemma Bs_Uninjured_1 : ¬(evals (Bs (2*i+1)) i (S_wt i)).Dom → ¬(evalSet B i 
   have a1 := finite_ext_prop_div h0
   intro h; clear h
   contrapose a1
-  simp at a1
   rename' a1 => final_comp_halts
   simp [-Denumerable.list_ofNat_succ]
   rw [i_1_simp]

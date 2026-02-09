@@ -55,14 +55,12 @@ theorem pair_l_gt0 {x} : x>0→(Nat.pair x y)>0 := by
   simp [unpair_zero]
 theorem pair_r_ne_0 {x} : x≠0→(Nat.pair y x)≠0 := by
   contrapose
-  simp
   intro h
   rw [show x=(Nat.pair y x).unpair.2 from by simp [unpair_pair]]
   rw [h]
   simp [unpair_zero]
 theorem pair_l_ne_0 {x} : x≠0→(Nat.pair x y)≠0 := by
   contrapose
-  simp
   intro h
   rw [show x=(Nat.pair x y).unpair.1 from by simp [unpair_pair]]
   rw [h]

@@ -79,7 +79,8 @@ theorem c_bitwise_evp_0_0 : evalp O (c_bitwise c) ⟪0, 0⟫ = Nat.bitwise (fun 
   unfold c_bitwise; unfold c_bitwise_aux;
   lift_lets; extract_lets; expose_names
   rw [show Nat.pair 0 0 = 0 from rfl]
-  simp
+  simp [Nat.bitwise]
+  
 theorem c_bitwise_evp_0_m : evalp O (c_bitwise c) ⟪0, m+1⟫ = Nat.bitwise (fun a b => n2b $ evalp O c ⟪b2n a, b2n b⟫) 0 (m+1) := by
   unfold c_bitwise; unfold c_bitwise_aux;
   lift_lets; extract_lets; expose_names
@@ -96,7 +97,7 @@ theorem c_bitwise_evp_0_m : evalp O (c_bitwise c) ⟪0, m+1⟫ = Nat.bitwise (fu
   have hn : evalp O n cri = 0 := by simp [n, hiP1]
   have hm : evalp O m_1 cri = m+1 := by simp [m_1, hiP1]
   -- terminal simp
-  simp [hn, hm, b2n]
+  simp [hn, hm, b2n, Nat.bitwise]
 theorem c_bitwise_evp_n_0 : evalp O (c_bitwise c) ⟪n+1, 0⟫ = Nat.bitwise (fun a b => n2b $ evalp O c ⟪b2n a, b2n b⟫) (n+1) 0 := by
   unfold c_bitwise; unfold c_bitwise_aux;
   lift_lets; extract_lets; expose_names
@@ -113,7 +114,7 @@ theorem c_bitwise_evp_n_0 : evalp O (c_bitwise c) ⟪n+1, 0⟫ = Nat.bitwise (fu
   have hn : evalp O n_1 cri = n+1 := by simp [n_1, hiP1]
   have hm : evalp O m cri = 0 := by simp [m, hiP1]
   -- terminal simp
-  simp [hn, hm, b2n]
+  simp [hn, hm, b2n, Nat.bitwise]
 theorem c_bitwise_evp_n_m : evalp O (c_bitwise c) ⟪n+1,m+1⟫ =
     (let n' := (n+1) / 2
     let m' := (m+1) / 2

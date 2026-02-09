@@ -10,6 +10,7 @@ import Computability.Oracle
 import Mathlib.Data.Option.Basic
 import Mathlib.Logic.Encodable.Pi
 import Mathlib.Algebra.Order.Ring.Nat
+import Mathlib.Tactic.Cases -- for induction'
 
 open Nat
 open Encodable Denumerable

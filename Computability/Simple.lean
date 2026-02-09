@@ -43,7 +43,6 @@ theorem immuneIn_not_CEIn : immuneIn O A → ¬ CEin O A := by
   aesop
 theorem immuneIn_not_CEIn_contrapositive :  CEin O A → ¬ immuneIn O A  := by
   contrapose
-  simp only [not_not]
   exact fun a ↦ immuneIn_not_CEIn a
 
 /-- simpleIn O A := A is simple in O -/
@@ -479,7 +478,6 @@ theorem mem_A_iff_enumerated {x} : x ∈ A ↔ ∃ i s:ℕ, ( ¬fs_in (C s).r i 
     have h_iM1_R : ¬ fs_in prev.r i := by
       simp [step] at h_i
       contrapose h_i
-      simp at h_i
       simp [h_i]
       exact h_iM1
     simp [step, h_iM1_R] at h_i
@@ -487,7 +485,6 @@ theorem mem_A_iff_enumerated {x} : x ∈ A ↔ ∃ i s:ℕ, ( ¬fs_in (C s).r i 
     constructor
     · contrapose h_iM1_R 
       -- the goal now becomes, if `i∈R` by stage `s-1`, it will be in R later.
-      simp at h_iM1_R ⊢
       exact step_preserves_R_mem (@fold_preserves_R_mem _ sM1 (C sM1) (range iM1).reverse h_iM1_R)
     constructor
     · omega
@@ -551,7 +548,6 @@ lemma hf_injective_aux (hx:x∈A) (hy:y∈A) (hxy:x≠y) : choose (mem_A_iff_enu
   rw [show choose (mem_A_iff_enumerated.mp hy) = ywit from rfl] at *
 
   contrapose hxy
-  simp at hxy
   rw [hxy] at hxs
 
   let s := choose hxs
@@ -594,7 +590,7 @@ lemma hf_injective_aux (hx:x∈A) (hy:y∈A) (hxy:x≠y) : choose (mem_A_iff_enu
     exact False.elim (a0 a1)
   | inr h =>
   cases h with
-  | inl h => exact fun a ↦ a h
+  | inl h => exact Nat.add_right_cancel (congrFun (congrArg HAdd.hAdd h) x)
   | inr h =>
     have a0 := (hs.2 y h)
     have a1 := hs2.1
@@ -644,7 +640,7 @@ theorem N (i:ℕ) :  Set.ncard (A ∩ {x | x ≤ 2*i}) ≤ i+1 := by
   have : s.ncard = t.ncard := Set.ncard_congr f ?_ ?_ ?_
   rotate_left
   · exact fun a ha ↦ ha
-  · exact fun a b ha hb a_1 ↦ Subtype.eq a_1
+  · exact fun a b ha hb a_1 ↦ Subtype.ext a_1
   · exact fun b hb ↦ ⟨⟨b, hb⟩, hb, rfl⟩
   · simp [hf_le]
   · exact Set.finite_le_nat i

@@ -188,7 +188,7 @@ theorem c_usen_evp_aux (hcode_val:code≤4) :
       simp [usen]
       cases Classical.em (elem≤s) with
       | inl h => simp [h, Nat.not_lt_of_le h]
-      | inr h => simp [h, gt_of_not_le h, Option.bind]
+      | inr h => simp [h, gt_of_not_le h]
   have hopt_oracle :
     (fun ele => evalp O opt_oracle ⟪ele, covrec_inp⟫)
       =
@@ -199,7 +199,7 @@ theorem c_usen_evp_aux (hcode_val:code≤4) :
       simp [usen]
       cases Classical.em (elem≤s) with
       | inl h => simp [h, Nat.not_lt_of_le h]
-      | inr h => simp [h, gt_of_not_le h, Option.bind]
+      | inr h => simp [h, gt_of_not_le h]
   have hzero_mapped:evalp O zero_mapped covrec_inp = (map (o2n ∘ usen O zero (s+1)) (range (s+1))) := by simp [zero_mapped, hs,hopt_zero]
   have horacle_mapped:evalp O oracle_mapped covrec_inp = (map (o2n ∘ usen O oracle (s+1)) (range (s+1))) := by simp [oracle_mapped, hs,hopt_oracle]
 
@@ -210,27 +210,27 @@ theorem c_usen_evp_aux (hcode_val:code≤4) :
     simp [hzero_mapped]
     cases Classical.em (x<s+1) with
     | inl h => simp [h, n2c, usen, le_of_lt_succ h]
-    | inr h => simp [h, n2c, usen, Nat.not_le_of_lt (not_lt.mp h), Option.bind]
+    | inr h => simp [h, n2c, usen, Nat.not_le_of_lt (not_lt.mp h)]
   | 1 =>
     simp [hzero_mapped]
     cases Classical.em (x<s+1) with
     | inl h => simp [h, n2c, usen, le_of_lt_succ h]
-    | inr h => simp [h, n2c, usen, Nat.not_le_of_lt (not_lt.mp h), Option.bind]
+    | inr h => simp [h, n2c, usen, Nat.not_le_of_lt (not_lt.mp h)]
   | 2 =>
     simp [hzero_mapped]
     cases Classical.em (x<s+1) with
     | inl h => simp [h, n2c, usen, le_of_lt_succ h]
-    | inr h => simp [h, n2c, usen, Nat.not_le_of_lt (not_lt.mp h), Option.bind]
+    | inr h => simp [h, n2c, usen, Nat.not_le_of_lt (not_lt.mp h)]
   | 3 =>
     simp [hzero_mapped]
     cases Classical.em (x<s+1) with
     | inl h => simp [h, n2c, usen, le_of_lt_succ h]
-    | inr h => simp [h, n2c, usen, Nat.not_le_of_lt (not_lt.mp h), Option.bind]
+    | inr h => simp [h, n2c, usen, Nat.not_le_of_lt (not_lt.mp h)]
   | 4 =>
     simp [horacle_mapped]
     cases Classical.em (x<s+1) with
     | inl h => simp [h, n2c, usen, le_of_lt_succ h]
-    | inr h => simp [h, n2c, usen, Nat.not_le_of_lt (not_lt.mp h), Option.bind]
+    | inr h => simp [h, n2c, usen, Nat.not_le_of_lt (not_lt.mp h)]
   | n+5 => simp at hcode_val
 
 
@@ -395,7 +395,7 @@ theorem c_usen_evp_aux_nMod4 :
       simp [hpc_ml_s, hpc_mr_s]
       simp [opt_pair]
       cases Classical.em (elem≤s) with
-      | inr h => simp [h, gt_of_not_le h, Option.bind]
+      | inr h => simp [h, gt_of_not_le h]
       | inl h =>
         simp [h, Nat.not_lt_of_le h]
         cases Classical.em (pc_ml_s left elem=o2n Option.none) with
@@ -421,7 +421,7 @@ theorem c_usen_evp_aux_nMod4 :
       simp [hsM1,ele]
       simp [opt_comp]
       cases Classical.em (elem≤s) with
-      | inr h => simp [h, gt_of_not_le h, Option.bind]
+      | inr h => simp [h, gt_of_not_le h]
       | inl h =>
         simp [h, Nat.not_lt_of_le h]
         simp [hcomp_usen_cg]
@@ -480,7 +480,7 @@ theorem c_usen_evp_aux_nMod4 :
       simp [opt_prec]
 
       cases Classical.em (elem≤s) with
-      | inr h => simp [h, gt_of_not_le h, Option.bind]
+      | inr h => simp [h, gt_of_not_le h]
       | inl h =>
         simp [h, Nat.not_lt_of_le h]
         simp [pc_ml_s]
@@ -521,7 +521,7 @@ theorem c_usen_evp_aux_nMod4 :
       simp [hsM1,ele]
       simp [opt_rfind']
       cases Classical.em (elem≤s) with
-      | inr h => simp [gt_of_not_le h, h]; rfl
+      | inr h => simp [gt_of_not_le h, h];
       | inl h =>
         simp [h, Nat.not_lt_of_le h]
         simp [hrfind'_use_base]
@@ -553,25 +553,21 @@ theorem c_usen_evp_aux_nMod4 :
     unfold opt_pair
     intro hh
     simp [Nat.not_le_of_lt hh]
-    simp [Option.bind]
   | 1 =>
     simp [hcomp_mapped]
     unfold opt_comp
     intro hh
     simp [Nat.not_le_of_lt hh]
-    simp [Option.bind]
   | 2 =>
     simp [hprec_mapped]
     unfold opt_prec
     intro hh
     simp [Nat.not_le_of_lt hh]
-    simp [Option.bind]
   | 3 =>
     simp [hrfind'_mapped]
     unfold opt_rfind'
     intro hh
     simp [Nat.not_le_of_lt hh]
-    simp [Option.bind]
   | x+4 =>
     have contrad : n%4<4 := by
       apply Nat.mod_lt
@@ -720,7 +716,7 @@ theorem c_usen_evp_aux_nMod4 :
           rw [←n2c_c2n ((n2c n.div2.div2).rfind')]
           simp [rw0_aux]
         rw [rw0]
-      | inr h => simp [h,Option.bind]
+      | inr h => simp [h]
 
 @[cp] theorem c_usen_prim:code_prim c_usen := by
   unfold c_usen

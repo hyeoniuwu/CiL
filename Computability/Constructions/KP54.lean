@@ -124,6 +124,9 @@ def c_kp54 := c_prec1 0 c_kp54_indt
 
   apply_cp 60
 
+-- set_option pp.raw true in
+-- set_option maxRecDepth 5006 in
+-- set_option trace.Meta.Tactic.simp true in
 @[simp] theorem c_kp54_evp : evalp (K0 (λ_↦0)) c_kp54 x = KP54.KP54 x := by
   induction x with
   | zero => rfl
@@ -138,7 +141,7 @@ def c_kp54 := c_prec1 0 c_kp54_indt
     unfold c_kp54_indt
     lift_lets; extract_lets; expose_names
     unfold KP54.KP54
-    rw [ih]; clear ih
+    rewrite [ih]; clear ih
     lift_lets; extract_lets; expose_names
 
     let (eq:=hinp) inp := (Nat.pair s_1 (KP54.KP54 s_1))
@@ -150,7 +153,9 @@ def c_kp54 := c_prec1 0 c_kp54_indt
     have hβₚ : evalp (K0 (λ_↦0)) βₚ inp = βₚ_1 := by simp [βₚ, βₚ_1, hKP54s]
     have hla : evalp (K0 (λ_↦0)) la inp = la_1 := by simp [la, la_1, hαₚ]
     have hlb : evalp (K0 (λ_↦0)) lb inp = lb_1 := by simp [lb, lb_1, hβₚ]
-    simp (config := {zeta:=false}) [←hinp, hs]
+    rewrite [←hinp]
+    simp (config := {zeta:=false}) [hs]
+    -- simp (config := {zeta:=false}) [←hinp, hs]
     split
     next h0 =>
       split
@@ -164,7 +169,7 @@ def c_kp54 := c_prec1 0 c_kp54_indt
         simp (config := {zeta:=false}) [this]
         lift_lets; extract_lets; expose_names
         have hrf : evalp (K0 (λ_↦0)) rf inp = rf_2 := by
-          simp [rf, rf_2,q0]
+          simp only [rf, rf_2, q0]; unfold evalp; simp -- instead of just `simp [rf, rf_2, q0]` bc that blows up memory somehow
           split
           next h2 => simp [hi, hlb, hαₚ]; congr
           next h2 =>
@@ -172,7 +177,7 @@ def c_kp54 := c_prec1 0 c_kp54_indt
             simp [dvt, KP54.finite_ext, h2] at this
         have hαₛ : evalp (K0 (λ_↦0)) αₛ inp = αₛ_1 := by simp [αₛ, αₛ_1, hαₚ, hrf, -Denumerable.list_ofNat_succ]
         have hA_result : evalp (K0 (λ_↦0)) A_result inp = A_result_1 := by
-          simp [A_result, A_result_1]
+          simp only [A_result, A_result_1]; unfold evalp; simp -- same remark as above
           split
           next h2 => simp [hαₛ, hi, hlb]
           next h2 =>
@@ -196,7 +201,7 @@ def c_kp54 := c_prec1 0 c_kp54_indt
         simp (config := {zeta:=false}) [this]
         lift_lets; extract_lets; expose_names
         have hrf : evalp (K0 (λ_↦0)) rf_1 inp = rf_2 := by
-          simp [rf_1, rf_2,q0_1]
+          simp only [rf_1, rf_2,q0_1]; unfold evalp; simp
           split
           next h2 => simp [hi]; congr
           next h2 =>
@@ -204,7 +209,7 @@ def c_kp54 := c_prec1 0 c_kp54_indt
             simp [dvt_1, KP54.finite_ext, h2] at this
         have hβₛ : evalp (K0 (λ_↦0)) βₛ inp = βₛ_1 := by simp [βₛ, βₛ_1, hβₚ, hrf, -Denumerable.list_ofNat_succ]
         have hB_result : evalp (K0 (λ_↦0)) B_result inp = B_result_1 := by
-          simp [B_result, B_result_1]
+          simp only [B_result, B_result_1]; unfold evalp; simp
           split
           next h2 => simp [hβₛ, hi, hla]
           next h2 =>

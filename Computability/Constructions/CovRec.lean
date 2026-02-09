@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Edwin Park
 -/
 import Computability.Constructions.List
+import Mathlib.Data.List.GetD -- for getI_eq_getElem
 
 /-!
 # CovRec.lean
@@ -105,7 +106,7 @@ theorem c_cov_rec_evp_last :
   getLastI (evalp O (c_cov_rec cf cg) ⟪x,i⟫)
     =
   (n2l (evalp O (c_cov_rec cf cg) ⟪x,i⟫))[i] := by
-  rw [getLastI_eq_getLast?]
+  rw [getLastI_eq_getLast?_getD]
   rw [getLast?_eq_getElem?]
   simp [c_cov_rec_evp_size]
 theorem c_cov_rec_evp_last_I :
