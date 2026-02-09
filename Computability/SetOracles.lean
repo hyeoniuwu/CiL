@@ -36,6 +36,7 @@ We setup sets for use as oracles, (e.g. evaluation with sets as oracles, reducti
   We also define `dom_to_ran`, and `ran_to_dom`, which satisfy:
   `theorem dom_to_ran_prop : W O e = WR O (dom_to_ran e)`
   `theorem ran_to_dom_prop : WR O e = W O (ran_to_dom e)`
+  , and show that these functions are primitive recursive.
 
 ### join
   we define the `join` of two sets, and show:
@@ -370,6 +371,13 @@ theorem dom_to_ran_prop : W O e = WR O (dom_to_ran e) := by
     split at h1
     next h => exact Part.dom_iff_mem.mp h
     · simp_all only [Part.notMem_none]
+
+def c_dom_to_ran := c_c_ifdom.comp₂ (c_comp₂.comp₃ (c_const c_eval) (c_c_const) (c_const c_id)) (c_const c_id)
+@[cp] theorem c_dom_to_ran_prim : code_prim c_dom_to_ran := by unfold c_dom_to_ran; apply_cp
+@[simp] theorem c_dom_to_ran_evp : evalp O c_dom_to_ran = λ (x:ℕ) ↦ c2n (dom_to_ran x) := by
+  simp [c_dom_to_ran, dom_to_ran]
+theorem Nat.PrimrecIn.dom_to_ran : Nat.PrimrecIn O (λ (x:ℕ) ↦ (dom_to_ran x).c2n) := by
+  rw [← c_dom_to_ran_evp]; exact code_prim_prop
 end dom_to_ran
 
 section ran_to_dom
@@ -417,6 +425,15 @@ theorem ran_to_dom_prop : WR O e = W O (ran_to_dom e) := by
     simp at h
     rcases h with ⟨y,hy⟩
     exact ran_to_dom_ev.mp (Part.mem_imp_dom hy)
+
+def c_ran_to_dom := c_dovetail.comp $
+  c_comp₂.comp₃ (c_const c_if_eq') c_left $
+  c_comp₂.comp₃ (c_const c_eval₁) c_c_const c_right
+@[cp] theorem c_ran_to_dom_prim : code_prim c_ran_to_dom := by unfold c_ran_to_dom; apply_cp
+@[simp] theorem c_ran_to_dom_evp : evalp O c_ran_to_dom = λ (x:ℕ) ↦ c2n (ran_to_dom x) := by
+  simp [c_ran_to_dom, ran_to_dom]
+theorem Nat.PrimrecIn.ran_to_dom : Nat.PrimrecIn O (λ (x:ℕ) ↦ (ran_to_dom x).c2n) := by
+  rw [← c_ran_to_dom_evp]; exact code_prim_prop
 end ran_to_dom
 
 theorem empty_le : ∀ A : Set ℕ, ∅ ≤ᵀ A := by

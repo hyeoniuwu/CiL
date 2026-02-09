@@ -158,8 +158,8 @@ def c_sg' := comp (prec (c_const 1) (((zero).comp left).comp left)) (pair zero c
   | succ n _ => simp
 @[simp] theorem c_sg'_ev : eval O c_sg' = Nat.sg' := by rw [← evalp_eq_eval c_sg'_prim]; simp only [c_sg'_evp]
 end Computability.Code
-theorem Nat.PrimrecIn.sg:Nat.PrimrecIn O Nat.sg := by rw [←c_sg_evp]; exact code_prim_prop
-theorem Nat.PrimrecIn.sg':Nat.PrimrecIn O Nat.sg' := by rw [←c_sg'_evp]; exact code_prim_prop
+theorem Nat.PrimrecIn.sg : Nat.PrimrecIn O Nat.sg := by rw [←c_sg_evp]; exact code_prim_prop
+theorem Nat.PrimrecIn.sg' : Nat.PrimrecIn O Nat.sg' := by rw [←c_sg'_evp]; exact code_prim_prop
 @[simp] abbrev c_not := c_sg'
 end sgsg'
 
