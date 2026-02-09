@@ -36,6 +36,13 @@ We setup sets for use as oracles, (e.g. evaluation with sets as oracles, reducti
   We also define `dom_to_ran`, and `ran_to_dom`, which satisfy:
   `theorem dom_to_ran_prop : W O e = WR O (dom_to_ran e)`
   `theorem ran_to_dom_prop : WR O e = W O (ran_to_dom e)`
+
+### join
+  we define the `join` of two sets, and show:
+  - `join_upper`: that the join is an upper bound
+  - `join_least`: that the join is a least upper bound
+
+  We then lift this to Turing degrees in section `TuringDegree.join`, which allows us to show that the Turing degrees are an upper semilattice.
 -/
 
 open Nat
@@ -80,7 +87,7 @@ theorem SetTuringEquivalent.equivalence : Equivalence SetTuringEquivalent := (An
 @[trans] theorem SetTuringEquivalent.trans (f g h : Set ℕ) (h₁ : SetTuringEquivalent f g) (h₂ : SetTuringEquivalent g h) : SetTuringEquivalent f h := Equivalence.trans equivalence h₁ h₂
 instance : IsPreorder (Set ℕ) SetTuringReducible where refl := SetTuringReducible.refl ; trans := @SetTuringReducible.trans
 -- Turing degrees are the equivalence classes of sets of naturals under Turing equivalence.
-abbrev TuringDegree := Antisymmetrization (Set ℕ) SetTuringReducible
+  abbrev TuringDegree := Antisymmetrization (Set ℕ) SetTuringReducible
 private instance : Preorder (Set ℕ) where
   le := SetTuringReducible
   le_refl := .refl
@@ -412,58 +419,6 @@ theorem ran_to_dom_prop : WR O e = W O (ran_to_dom e) := by
     exact ran_to_dom_ev.mp (Part.mem_imp_dom hy)
 end ran_to_dom
 
-section join
-
-def join (A B : Set ℕ) : Set ℕ := {2*x | x∈A} ∪ {2*x+1 | x∈B}
-scoped[Computability] infix:50 "∨" => join
-
-theorem even_odd_1 : (1 + y * 2 = x * 2) ↔ False := by grind
-theorem even_odd_2 : (y * 2 = 1 + x * 2) ↔ False := by grind
-
-theorem join_upper (A B : Set ℕ) : A ≤ᵀ (A ∨ B) ∧ B ≤ᵀ (A ∨ B) := by
-  constructor
-  apply reducible_iff_code.mpr
-  use oracle.comp c_mul2
-  unfold χ
-  funext x
-  simp [eval, join]
-  ac_nf; simp [even_odd_1]
-
-  apply reducible_iff_code.mpr
-  use oracle.comp (succ.comp c_mul2)
-  unfold χ
-  funext x
-  simp [eval, join]
-  ac_nf; simp [even_odd_2]
-
-theorem bodd_false_mod2 (h:n.bodd=false) : n%2=0 := by
-  rw [← codes_aux_aux_0 h]
-  exact mul_mod_right 2 n.div2
-theorem bodd_true_mod2 (h:n.bodd=true) : n%2=1 := by
-  rw [← codes_aux_aux_1 h]
-  omega
-theorem join_least (A B C : Set ℕ) : A ≤ᵀ C ∧ B ≤ᵀ C → (A ∨ B) ≤ᵀ C := by
-  intro ⟨h1,h2⟩
-  rcases reducible_iff_code.mp h1 with ⟨c1,hc1⟩
-  rcases reducible_iff_code.mp h2 with ⟨c2,hc2⟩
-  apply reducible_iff_code.mpr
-
-  use c_ifz.comp₃ (c_mod.comp₂ c_id (c_const 2)) (c1.comp c_div2) (c2.comp c_div2)
-
-  simp [Seq.seq, eval, hc1, hc2]
-  unfold χ; simp [join]
-  funext x; simp
-
-  cases hx:x.bodd
-  · rw [← codes_aux_aux_0 hx]; simp
-    ac_nf
-    simp [even_odd_1]
-  · rw [← codes_aux_aux_1 hx]; simp
-    ac_nf
-    simp [even_odd_2]
-
-end join
-
 theorem empty_le : ∀ A : Set ℕ, ∅ ≤ᵀ A := by
   intro A
   apply reducible_iff_code.mpr
@@ -637,5 +592,87 @@ theorem Cin_iff_CEin_CEin' : A≤ᵀB ↔ (CEin B A ∧ CEin B Aᶜ) := by
       simp [dvt] at this
       exact Part.get_eq_iff_eq_some.mp this
 
-
 end computably_enumerable
+
+
+
+section join
+
+def join (A B : Set ℕ) : Set ℕ := {2*x | x∈A} ∪ {2*x+1 | x∈B}
+scoped[Computability] infix:50 "∨" => join
+
+theorem even_odd_1 : (1 + y * 2 = x * 2) ↔ False := by grind
+theorem even_odd_2 : (y * 2 = 1 + x * 2) ↔ False := by grind
+
+theorem join_upper (A B : Set ℕ) : A ≤ᵀ (A ∨ B) ∧ B ≤ᵀ (A ∨ B) := by
+  constructor
+  apply reducible_iff_code.mpr
+  use oracle.comp c_mul2
+  unfold χ
+  funext x
+  simp [eval, join]
+  ac_nf; simp [even_odd_1]
+
+  apply reducible_iff_code.mpr
+  use oracle.comp (succ.comp c_mul2)
+  unfold χ
+  funext x
+  simp [eval, join]
+  ac_nf; simp [even_odd_2]
+
+theorem bodd_false_mod2 (h:n.bodd=false) : n%2=0 := by
+  rw [← codes_aux_aux_0 h]
+  exact mul_mod_right 2 n.div2
+theorem bodd_true_mod2 (h:n.bodd=true) : n%2=1 := by
+  rw [← codes_aux_aux_1 h]
+  omega
+theorem join_least (A B C : Set ℕ) : A ≤ᵀ C → B ≤ᵀ C → (A ∨ B) ≤ᵀ C := by
+  intro h1 h2
+  rcases reducible_iff_code.mp h1 with ⟨c1,hc1⟩
+  rcases reducible_iff_code.mp h2 with ⟨c2,hc2⟩
+  apply reducible_iff_code.mpr
+
+  use c_ifz.comp₃ (c_mod.comp₂ c_id (c_const 2)) (c1.comp c_div2) (c2.comp c_div2)
+
+  simp [Seq.seq, eval, hc1, hc2]
+  unfold χ; simp [join]
+  funext x; simp
+
+  cases hx:x.bodd
+  · rw [← codes_aux_aux_0 hx]; simp
+    ac_nf
+    simp [even_odd_1]
+  · rw [← codes_aux_aux_1 hx]; simp
+    ac_nf
+    simp [even_odd_2]
+
+end join
+
+section TuringDegree.join
+lemma join_preserves_eq {A A' B B' : Set ℕ}
+  (hA : SetTuringReducible A A' ∧ SetTuringReducible A' A)
+  (hB : SetTuringReducible B B' ∧ SetTuringReducible B' B) :
+  SetTuringReducible (join A B) (join A' B') ∧
+  SetTuringReducible (join A' B') (join A B) := by
+    constructor
+    exact join_least A B (A'∨B')
+      (.trans hA.1 (join_upper A' B').1)
+      (.trans hB.1 (join_upper A' B').2)
+    exact join_least A' B' (A∨B)
+      (.trans hA.2 (join_upper A B).1)
+      (.trans hB.2 (join_upper A B).2)
+def TuringDegree.join : TuringDegree → TuringDegree → TuringDegree := Quotient.lift₂
+    (λ X Y => Quot.mk _ (Code.join X Y))
+    (λ _ _ _ _ hx hy => Quotient.sound (join_preserves_eq hx hy))
+theorem TuringDegree.le_sup_left (X Y : TuringDegree) : X ≤ TuringDegree.join X Y :=
+  Quot.induction_on₂ X Y λ _ _ ↦ (Code.join_upper _ _).1
+theorem TuringDegree.le_sup_right (X Y : TuringDegree) : Y ≤ TuringDegree.join X Y :=
+  Quot.induction_on₂ X Y λ _ _ ↦ (Code.join_upper _ _).2
+theorem TuringDegree.join_least (X Y Z: TuringDegree) : X ≤ Z → Y ≤ Z → TuringDegree.join X Y ≤ Z :=
+  Quotient.inductionOn₃ X Y Z λ X Y Z hx hy ↦ Code.join_least X Y Z hx hy
+instance : SemilatticeSup TuringDegree where
+  sup := TuringDegree.join
+  le_sup_left := TuringDegree.le_sup_left
+  le_sup_right := TuringDegree.le_sup_right
+  sup_le X Y Z := TuringDegree.join_least X Y Z
+end TuringDegree.join
