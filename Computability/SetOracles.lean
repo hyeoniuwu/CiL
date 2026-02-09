@@ -88,7 +88,7 @@ theorem SetTuringEquivalent.equivalence : Equivalence SetTuringEquivalent := (An
 @[trans] theorem SetTuringEquivalent.trans (f g h : Set ℕ) (h₁ : SetTuringEquivalent f g) (h₂ : SetTuringEquivalent g h) : SetTuringEquivalent f h := Equivalence.trans equivalence h₁ h₂
 instance : IsPreorder (Set ℕ) SetTuringReducible where refl := SetTuringReducible.refl ; trans := @SetTuringReducible.trans
 -- Turing degrees are the equivalence classes of sets of naturals under Turing equivalence.
-  abbrev TuringDegree := Antisymmetrization (Set ℕ) SetTuringReducible
+abbrev TuringDegree := Antisymmetrization (Set ℕ) SetTuringReducible
 private instance : Preorder (Set ℕ) where
   le := SetTuringReducible
   le_refl := .refl
