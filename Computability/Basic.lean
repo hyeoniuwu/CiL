@@ -12,43 +12,53 @@ import Mathlib.Data.Nat.BitIndices
 /-!
 # Notations, helper functions
 
-In this file we define helper functions which will be used later on.
+In this file we define helper functions which will be used in later computability arguments.
 -/
 
 open Nat Classical Computability.Code
 
 -- general helper functions
-theorem pair_nonzero_right_pos_aux : ¬ (Nat.pair x (s+1)=0) := by
+section pair
+notation "⟪" x "," y "⟫" => Nat.pair x y
+notation "⟪" x "," y "⟫" => Nat.pair <$> x <*> y
+notation "⟪" x "," y "," z "⟫" => Nat.pair x (Nat.pair y z)
+notation "⟪" x "," y "," z "⟫" => Nat.pair <$> x <*> (Nat.pair <$> y <*> z)
+notation "⟪" x "," y "," z "," w "⟫" => Nat.pair (Nat.pair x y) (Nat.pair z w)
+notation "⟪" x "," y "," z "," w "⟫" => Nat.pair <$> (Nat.pair <$> x <*> y) <*> (Nat.pair <$> z <*> w)
+def Nat.l (n : ℕ) := n.unpair.1
+def Nat.r (n : ℕ) := n.unpair.2
+@[simp] theorem pair_l {x y} : (Nat.pair x y).l = x := by simp [Nat.l]
+@[simp] theorem pair_r {x y} : (Nat.pair x y).r = y := by simp [Nat.r]
+@[simp] theorem pair_lr {x} : (Nat.pair x.l x.r) = x := by simp [Nat.r, Nat.l]
+@[simp] theorem unpair1_to_l {n : ℕ} : (n.unpair.1) = n.l := by simp [Nat.l]
+@[simp] theorem unpair2_to_r {n : ℕ} : (n.unpair.2) = n.r := by simp [Nat.r]
+@[simp, reducible] def Nat.unpaired2 {α} (f : ℕ → ℕ → α) (n : ℕ) : α := f n.l n.r
+theorem pair_nonzero_right_pos_aux {x s : ℕ} : ¬ ⟪x, s+1⟫ = 0 := by
   rw [show 0=Nat.pair 0 0 from rfl]
   rw [pair_eq_pair]
   intro h
   have hr := h.right
   contradiction
-@[simp] theorem pair_nonzero_right_pos : (Nat.pair x (s+1))>0 := by
-  exact zero_lt_of_ne_zero pair_nonzero_right_pos_aux
-theorem pair_nonzero_left_pos_aux : ¬ (Nat.pair (s+1) x = 0) := by
+@[simp] theorem pair_nonzero_right_pos {x s : ℕ} : ⟪x, s+1⟫ > 0 :=
+  zero_lt_of_ne_zero pair_nonzero_right_pos_aux
+theorem pair_nonzero_left_pos_aux {x s : ℕ} : ¬ (⟪s+1, x⟫ = 0) := by
   rw [show 0=Nat.pair 0 0 from rfl]
   rw [pair_eq_pair]
   intro h
   have hr := h.left
   contradiction
-@[simp] theorem pair_nonzero_left_pos : (Nat.pair (s+1) x)>0 := by
-  exact zero_lt_of_ne_zero pair_nonzero_left_pos_aux
-@[simp] theorem map_getI : (List.map (f) (List.range (s + 1))).getI x = if x<s+1 then f x else 0 := by
-  unfold List.getI
-  cases Classical.em (x<s+1) with
-  | inl h => simp [h]
-  | inr h => simp [h]
+@[simp] theorem pair_nonzero_left_pos {x s : ℕ} : ⟪s+1, x⟫ > 0 :=
+  zero_lt_of_ne_zero pair_nonzero_left_pos_aux
 theorem pair_r_gt0 {x} : x>0→(Nat.pair y x)>0 := by
   contrapose
-  simp
+  simp only [gt_iff_lt, not_lt, nonpos_iff_eq_zero]
   intro h
   rw [show x=(Nat.pair y x).unpair.2 from by simp [unpair_pair]]
   rw [h]
   simp [unpair_zero]
 theorem pair_l_gt0 {x} : x>0→(Nat.pair x y)>0 := by
   contrapose
-  simp
+  simp only [gt_iff_lt, not_lt, nonpos_iff_eq_zero]
   intro h
   rw [show x=(Nat.pair x y).unpair.1 from by simp [unpair_pair]]
   rw [h]
@@ -65,29 +75,16 @@ theorem pair_l_ne_0 {x} : x≠0→(Nat.pair x y)≠0 := by
   rw [show x=(Nat.pair x y).unpair.1 from by simp [unpair_pair]]
   rw [h]
   simp [unpair_zero]
+end pair
 
-notation "⟪" x "," y "⟫" => Nat.pair x y
-notation "⟪" x "," y "⟫" => Nat.pair <$> x <*> y
-notation "⟪" x "," y "," z "⟫" => Nat.pair x (Nat.pair y z)
-notation "⟪" x "," y "," z "⟫" => Nat.pair <$> x <*> (Nat.pair <$> y <*> z)
-notation "⟪" x "," y "," z "," w "⟫" => Nat.pair (Nat.pair x y) (Nat.pair z w)
-notation "⟪" x "," y "," z "," w "⟫" => Nat.pair <$> (Nat.pair <$> x <*> y) <*> (Nat.pair <$> z <*> w)
-def Nat.l (n:ℕ) := n.unpair.1
-def Nat.r (n:ℕ) := n.unpair.2
-@[simp] theorem pair_l {x y} : (Nat.pair x y).l = x := by simp [Nat.l]
-@[simp] theorem pair_r {x y} : (Nat.pair x y).r = y := by simp [Nat.r]
-@[simp] theorem pair_lr {x} : (Nat.pair x.l x.r) = x := by simp [Nat.r, Nat.l]
-@[simp] theorem unpair1_to_l {n : ℕ} : (n.unpair.1) = n.l := by simp [Nat.l]
-@[simp] theorem unpair2_to_r {n : ℕ} : (n.unpair.2) = n.r := by simp [Nat.r]
-@[simp, reducible] def Nat.unpaired2 {α} (f : ℕ → ℕ → α) (n : ℕ) : α := f n.l n.r
-@[simp] abbrev Nat.fzero : ℕ→ℕ := λ_↦0
-def n2b (n:ℕ) : Bool := if n=0 then false else true
-def b2n (b:Bool) : ℕ := if b then 1 else 0
-def n2b' (n:ℕ) : Bool := if n=0 then true else false
-def b'2n (b:Bool) : ℕ := if b then 0 else 1
+
+def n2b (n : ℕ) : Bool := if n = 0 then false else true
+def b2n (b : Bool) : ℕ := if b then 1 else 0
+def n2b' (n : ℕ) : Bool := if n=0 then true else false
+def b'2n (b : Bool) : ℕ := if b then 0 else 1
 theorem b2n_a0 {x} : b2n x = 0 ↔ x = false := by simp [b2n]
-open Denumerable
-open Encodable
+
+open Denumerable Encodable
 abbrev n2o := @ofNat (Option ℕ) _
 abbrev o2n := @encode (Option ℕ) _
 
@@ -124,10 +121,6 @@ namespace Computability.Code.nc_to_nn
 @[coe] protected def lift (f:ℕ→Code) : ℕ→ℕ := fun x => c2n (f x)
 instance : Coe (ℕ→Code) (ℕ→ℕ) := ⟨Computability.Code.nc_to_nn.lift⟩
 end Computability.Code.nc_to_nn
--- namespace Computability.Code.cn_to_nn
--- @[coe] protected def lift (f:Code→ℕ) : ℕ→ℕ := fun x => (f x)
--- instance coe : Coe (Code→ℕ) (ℕ→ℕ) := ⟨Computability.Code.cn_to_nn.lift⟩
--- end Computability.Code.cn_to_nn
 namespace Computability.Code.cc_to_nn
 @[coe] protected def lift (f:Code→Code) : ℕ→ℕ := c2n ∘ f ∘ n2c
 instance : Coe (Code→Code) (ℕ→ℕ) := ⟨Computability.Code.cc_to_nn.lift⟩

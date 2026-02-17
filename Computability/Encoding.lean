@@ -12,9 +12,19 @@ import Mathlib.Logic.Encodable.Pi
 import Mathlib.Algebra.Order.Ring.Nat
 import Mathlib.Tactic.Cases -- for induction'
 
-open Nat
-open Encodable Denumerable
+/-!
+# Gödel Numbering for Functions Partial Recursive in an Oracle.
 
+This file is a relativisation of Mathlib/Computability/PartrecCode.lean; notable notions relativised include:
+
+- `Computability.Code`: where a constructor for the oracle is added;
+- `Computability.Code.c2n`: A relativisation of `Nat.Partrec.Code.encodeCode`
+- `Computability.Code.n2c`: A relativisation of `Nat.Partrec.Code.ofNatCode`
+- `Computability.eval` : A relativisation of `Nat.Partrec.Code.eval`
+
+-/
+
+open Nat Encodable Denumerable
 
 namespace Computability
 
@@ -29,17 +39,10 @@ inductive Code : Type
 | prec   : Code → Code → Code
 | rfind' : Code → Code
 
-
 compile_inductive% Code
-
--- end Nat.RecursiveIn
 end Computability
-
--- namespace Nat.RecursiveIn.Code
 namespace Computability.Code
-
-instance instInhabited : Inhabited Code :=
-  ⟨zero⟩
+instance instInhabited : Inhabited Code := ⟨zero⟩
 
 /-- Returns a code for the constant function outputting a particular natural. -/
 protected def const : ℕ → Code
@@ -62,8 +65,7 @@ protected def id : Code :=
 def curry (c : Code) (n : ℕ) : Code :=
   comp c (pair (Code.const n) Code.id)
 
-
-
+/-- An encoding of a `Computability.Code` as a ℕ. -/
 def c2n : Code → ℕ
 | Code.zero        => 0
 | Code.succ        => 1
@@ -76,6 +78,8 @@ def c2n : Code → ℕ
 | Code.rfind' cf   => 2*(2*(c2n cf                            )+1)+1 + 5
 
 /--
+A decoder for `Computability.Code.c2n`, taking any ℕ to the `Computability.Code` it represents.
+
 Procedure for decoding:
 
 If n≤4. trivial.
@@ -87,11 +91,11 @@ prec
 rfind'
 -/
 def n2c : ℕ → Code
-| 0 => Code.zero
-| 1 => Code.succ
-| 2 => Code.left
-| 3 => Code.right
-| 4 => Code.oracle
+| 0 => zero
+| 1 => succ
+| 2 => left
+| 3 => right
+| 4 => oracle
 | n + 5 =>
   let m := n.div2.div2
   have hm : m < n + 5 := by
@@ -102,10 +106,10 @@ def n2c : ℕ → Code
   have _m1 : m.unpair.1 < n + 5 := lt_of_le_of_lt m.unpair_left_le hm
   have _m2 : m.unpair.2 < n + 5 := lt_of_le_of_lt m.unpair_right_le hm
   match n.bodd, n.div2.bodd with
-  | false, false => Code.pair (n2c m.unpair.1) (n2c m.unpair.2) -- n%4=0
-  | true , false => Code.comp (n2c m.unpair.1) (n2c m.unpair.2) -- n%4=1
-  | false, true  => Code.prec (n2c m.unpair.1) (n2c m.unpair.2) -- n%4=2
-  | true , true  => Code.rfind' (n2c m)                                 -- n%4=3
+  | false, false => pair (n2c m.unpair.1) (n2c m.unpair.2) -- n%4=0
+  | true , false => comp (n2c m.unpair.1) (n2c m.unpair.2) -- n%4=1
+  | false, true  => prec (n2c m.unpair.1) (n2c m.unpair.2) -- n%4=2
+  | true , true  => rfind' (n2c m)                         -- n%4=3
 
 instance : OfNat (Code) m where ofNat := n2c m
 instance : Coe ℕ Code := ⟨n2c⟩
@@ -133,7 +137,7 @@ abbrev ofNatCode := n2c
     have IH := c2n_n2c m
     have IH1 := c2n_n2c m.unpair.1
     have IH2 := c2n_n2c m.unpair.2
-    conv_rhs => rw [← Nat.bit_decomp n, ← Nat.bit_decomp n.div2]
+    conv_rhs => rw [← Nat.bit_bodd_div2 n, ← Nat.bit_bodd_div2 n.div2]
     simp only [n2c.eq_6]
     cases n.bodd <;> cases n.div2.bodd <;> simp [m, c2n, IH, IH1, IH2, Nat.bit_val]
 instance instDenumerable : Denumerable Code := mk' ⟨c2n, n2c, n2c_c2n, c2n_n2c⟩
@@ -146,8 +150,7 @@ theorem encodeCode_inj : Function.Injective c2n  := Function.Bijective.injective
 theorem encodeCode_sur : Function.Surjective c2n := Function.Bijective.surjective encodeCode_bij
 
 
-
-/-- Proof that `Nat.RecursiveIn.Code.ofNatCode` is the inverse of `Nat.RecursiveIn.Code.encodeCode` -/
+/-- Proof that `Computability.Code.ofNatCode` is the inverse of `Computability.Code.encodeCode` -/
 private theorem encode_ofNatCode : ∀ n, c2n (ofNatCode n) = n := by exact fun n ↦c2n_n2c n
 
 theorem encodeCode_eq : encode = c2n :=
@@ -180,20 +183,19 @@ theorem encode_lt_rfind' (cf) : encode cf < encode (rfind' cf) := by
 
 end Code
 
--- namespace Code
 open Code
-
-/-- The interpretation of a `Nat.RecursiveIn.Code` as a partial function.
-* `Nat.RecursiveIn.Code.zero`: The constant zero function.
-* `Nat.RecursiveIn.Code.succ`: The successor function.
-* `Nat.RecursiveIn.Code.left`: Left unpairing of a pair of ℕ (encoded by `Nat.pair`)
-* `Nat.RecursiveIn.Code.right`: Right unpairing of a pair of ℕ (encoded by `Nat.pair`)
-* `Nat.RecursiveIn.Code.pair`: Pairs the outputs of argument codes using `Nat.pair`.
-* `Nat.RecursiveIn.Code.comp`: Composition of two argument codes.
-* `Nat.RecursiveIn.Code.prec`: Primitive recursion. Given an argument of the form `Nat.pair a n`:
+/-- The interpretation of a `Computability.Code` as a partial function.
+* `Computability.Code.zero`: The constant zero function.
+* `Computability.Code.succ`: The successor function.
+* `Computability.Code.left`: Left unpairing of a pair of ℕ (encoded by `Nat.pair`)
+* `Computability.Code.right`: Right unpairing of a pair of ℕ (encoded by `Nat.pair`)
+* `Computability.Code.oracle`: The oracle function.
+* `Computability.Code.pair`: Pairs the outputs of argument codes using `Nat.pair`.
+* `Computability.Code.comp`: Composition of two argument codes.
+* `Computability.Code.prec`: Primitive recursion. Given an argument of the form `Nat.pair a n`:
   * If `n = 0`, returns `eval O cf a`.
   * If `n = succ k`, returns `eval O cg (pair a (pair k (eval O (prec cf cg) (pair a k))))`
-* `Nat.RecursiveIn.Code.rfind'`: Minimization. For `f` an argument of the form `Nat.pair a m`,
+* `Computability.Code.rfind'`: Minimization. For `f` an argument of the form `Nat.pair a m`,
   `rfind' f m` returns the least `a` such that `f a m = 0`, if one exists and `f b m` terminates
   for `b < a`
 -/
@@ -227,9 +229,6 @@ theorem eval_prec_succ (cf cg : Code) (a k : ℕ) :
       do {let ih ← eval O (prec cf cg) (Nat.pair a k); eval O cg (Nat.pair a (Nat.pair k ih))} := by
   rw [eval, Nat.unpaired, Part.bind_eq_bind, Nat.unpair_pair]
   simp
-
--- instance : Membership (ℕ →. ℕ) Code :=
---   ⟨fun c f => eval O c = f⟩
 
 @[simp]
 theorem eval_const : ∀ n m, eval O (Code.const n) m = Part.some n
@@ -266,8 +265,6 @@ theorem exists_code {f : ℕ →. ℕ} : Nat.RecursiveIn O f ↔ ∃ c : Code, e
       rcases hf with ⟨cf, rfl⟩
       use rfind' cf
       exact rfl
-      -- refine ⟨.comp (rfind' cf) (.pair Code.id .zero), ?_⟩
-      -- simp [eval, Seq.seq, pure, PFun.pure, Part.map_id']
   · rintro ⟨c, rfl⟩
     induction c with
     | zero => exact Nat.RecursiveIn.zero
@@ -281,11 +278,10 @@ theorem exists_code {f : ℕ →. ℕ} : Nat.RecursiveIn O f ↔ ∃ c : Code, e
     | rfind' cf pf =>
       simp [eval]
       exact RecursiveIn.rfind pf
-      -- exact pf.rfind'
 
 /- A modified evaluation for the code which returns an `Option ℕ` instead of a `Part ℕ`. To avoid
 undecidability, `evaln` takes a parameter `k` and fails if it encounters a number ≥ k in the course
-of its execution. Other than this, the semantics are the same as in `Nat.RecursiveIn.Code.eval`.
+of its execution. Other than this, the semantics are the same as in `Computability.Code.eval`.
 -/
 def evaln (O:ℕ→ℕ) : ℕ → Code → ℕ → Option ℕ
 | 0, _ => fun _ => Option.none
@@ -479,15 +475,10 @@ theorem evaln_complete {c n x} : x ∈ eval O c n ↔ ∃ k, x ∈ evaln O k c n
         evaln_mono (Nat.succ_le_succ <| le_max_right _ _) hk₂
   | _ => exact ⟨⟨_, le_rfl⟩, h.symm⟩
 
-
 section
-
--- open RecursiveIn ComputableIn
 open RecursiveIn
-
 theorem eval_eq_rfindOpt (c n) : eval O c n = Nat.rfindOpt fun k => evaln O k c n :=
   Part.ext fun x => by
     refine evaln_complete.trans (Nat.rfindOpt_mono ?_).symm
     intro a m n hl; apply evaln_mono hl
-
 end

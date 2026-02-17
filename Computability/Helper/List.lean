@@ -37,3 +37,10 @@ theorem list_access_small {i} {l1 l2 : List α} (h:i<l1.length) : (l1 ++ l2)[i]?
 @[simp] theorem getI_eq_getElem {l:List ℕ} {h:i<l.length} : l.getI i = l[i] := by
   unfold List.getI
   simp [h]
+
+@[simp] theorem map_getI :
+    (List.map f (List.range (s + 1))).getI x = if x < s+1 then f x else 0 := by
+  unfold List.getI
+  cases Classical.em (x<s+1) with
+  | inl h => simp [h]
+  | inr h => simp [h]

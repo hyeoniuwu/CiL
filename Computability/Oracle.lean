@@ -142,6 +142,7 @@ theorem rfindOpt_mono {α} {f : ℕ → Option α} (H : ∀ {a m n}, m ≤ n →
 def unpaired {α} (f : ℕ → ℕ → α) (n : ℕ) : α :=
   f n.unpair.1 n.unpair.2
 
+/-- `Nat.RecursiveIn O f` asserts that the partial function `f : ℕ →. ℕ` is partial recursive in `O : ℕ → ℕ`. -/
 inductive RecursiveIn (O : ℕ → ℕ) : (ℕ →. ℕ) → Prop
   | zero : RecursiveIn O fun _ => 0
   | succ : RecursiveIn O Nat.succ
@@ -162,8 +163,6 @@ inductive RecursiveIn (O : ℕ → ℕ) : (ℕ →. ℕ) → Prop
       RecursiveIn O
         $ Nat.unpaired fun a m =>
           (Nat.rfind fun n => (fun x => x = 0) <$> f (Nat.pair a (n + m))).map (· + m)
---       RecursiveIn O fun a =>
---         Nat.rfind fun n => (fun m => m = 0) <$> f (Nat.pair a n)
 
 /-- The primitive recursive functions `ℕ → ℕ`. -/
 protected inductive PrimrecIn (O : ℕ → ℕ) : (ℕ → ℕ) → Prop

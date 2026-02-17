@@ -5,6 +5,7 @@ Authors: Edwin Park
 -/
 import Computability.Constructions.CovRec
 import Computability.Constructions.Eval_Aux
+import Computability.Helper.List
 
 /-!
 # Eval.lean
