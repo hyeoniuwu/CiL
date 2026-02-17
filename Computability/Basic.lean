@@ -77,6 +77,14 @@ theorem pair_l_ne_0 {x} : x≠0→(Nat.pair x y)≠0 := by
   simp [unpair_zero]
 end pair
 
+section list
+abbrev Nat.n2l : ℕ → List ℕ := @Denumerable.ofNat (List ℕ) _
+abbrev Nat.l2n : List ℕ → ℕ := @Encodable.encode (List ℕ) _
+instance {lN} : OfNat (List ℕ) lN where ofNat := n2l lN
+instance : Coe ℕ (List ℕ) := ⟨n2l⟩
+instance : Coe (List ℕ) ℕ := ⟨l2n⟩
+
+end list
 
 def n2b (n : ℕ) : Bool := if n = 0 then false else true
 def b2n (b : Bool) : ℕ := if b then 1 else 0

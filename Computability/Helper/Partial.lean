@@ -134,9 +134,11 @@ theorem hnat_7 : (n2o o).get h = o-1 := by
   simp (config:={singlePass:=true}) [this]
 theorem hnat_9 : o.get h = (o2n o)-1 := by
   exact Eq.symm (hnat_2 h)
-theorem iget_eq_get {o:Option ℕ} (h:o.isSome) : o.iget = o.get h := by
-  have : o= some (o.get h) := by exact Option.dom_imp_some h
+theorem iget_eq_get {o:Option ℕ} (h : o.isSome) : o.iget = o.get h := by
+  have : o = some (o.get h) := by exact Option.dom_imp_some h
   exact Option.iget_of_mem this
+theorem getD_eq_get {o:Option ℕ} (h : o.isSome) : o.getD x = o.get h :=
+  Eq.symm (Option.get_eq_getD o)
 theorem o2n_a0 : o2n x = 0 ↔ x = Option.none := by
   constructor
   · intro h

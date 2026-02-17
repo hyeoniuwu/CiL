@@ -535,7 +535,7 @@ theorem c_usen_evp_aux_nMod4 :
           | inr hhh =>
             simp [hnat_1 hhh]
             simp [isSome.bind $ isSome_iff_not_none.mp hhh]
-            simp [iget_eq_get $ isSome_iff_not_none.mp hhh]
+            simp [getD_eq_get $ isSome_iff_not_none.mp hhh]
             cases (evaln O (s + 1) (n2c m) elem).get (isSome_iff_not_none.mp hhh) with
             | zero => simp; exact ge_0_rw (not_none_imp_not_zero hh)
             | succ _ =>

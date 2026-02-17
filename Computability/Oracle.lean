@@ -164,7 +164,7 @@ inductive RecursiveIn (O : ℕ → ℕ) : (ℕ →. ℕ) → Prop
         $ Nat.unpaired fun a m =>
           (Nat.rfind fun n => (fun x => x = 0) <$> f (Nat.pair a (n + m))).map (· + m)
 
-/-- The primitive recursive functions `ℕ → ℕ`. -/
+/-- The primitive recursive functions, but with the oracle `O` as an additional initial function. -/
 protected inductive PrimrecIn (O : ℕ → ℕ) : (ℕ → ℕ) → Prop
   | zero : Nat.PrimrecIn O fun _ => 0
   | protected succ : Nat.PrimrecIn O succ

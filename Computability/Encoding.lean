@@ -218,33 +218,33 @@ def eval (O : ℕ → ℕ) : Code → ℕ →. ℕ
 
 /-- Helper lemma for the evaluation of `prec` in the base case. -/
 @[simp]
-theorem eval_prec_zero (cf cg : Code) (a : ℕ) : eval O (prec cf cg) (Nat.pair a 0) = eval O cf a := by
+theorem eval_prec_zero {O : ℕ → ℕ} (cf cg : Code) (a : ℕ) : eval O (prec cf cg) (Nat.pair a 0) = eval O cf a := by
   rw [eval, Nat.unpaired, Nat.unpair_pair]
   simp (config := { Lean.Meta.Simp.neutralConfig with proj := true }) only []
   rw [Nat.rec_zero]
 
 /-- Helper lemma for the evaluation of `prec` in the recursive case. -/
-theorem eval_prec_succ (cf cg : Code) (a k : ℕ) :
+theorem eval_prec_succ {O : ℕ → ℕ} (cf cg : Code) (a k : ℕ) :
     eval O (prec cf cg) (Nat.pair a (Nat.succ k)) =
       do {let ih ← eval O (prec cf cg) (Nat.pair a k); eval O cg (Nat.pair a (Nat.pair k ih))} := by
   rw [eval, Nat.unpaired, Part.bind_eq_bind, Nat.unpair_pair]
   simp
 
 @[simp]
-theorem eval_const : ∀ n m, eval O (Code.const n) m = Part.some n
+theorem eval_const {O : ℕ → ℕ} : ∀ n m, eval O (Code.const n) m = Part.some n
   | 0, _ => rfl
   | n + 1, m => by simp! [eval_const n m]
 
 @[simp]
-theorem eval_id (n) : eval O Code.id n = Part.some n := by simp! [Seq.seq, Code.id]
+theorem eval_id {O : ℕ → ℕ} (n) : eval O Code.id n = Part.some n := by simp! [Seq.seq, Code.id]
 
 @[simp]
-theorem eval_curry (c n x) : eval O (curry c n) x = eval O c (Nat.pair n x) := by simp! [Seq.seq, curry]
+theorem eval_curry {O : ℕ → ℕ} (c n x) : eval O (curry c n) x = eval O c (Nat.pair n x) := by simp! [Seq.seq, curry]
 
 
 /-- A function is partial recursive if and only if there is a code implementing it. Therefore,
 `eval` is a **universal partial recursive function**. -/
-theorem exists_code {f : ℕ →. ℕ} : Nat.RecursiveIn O f ↔ ∃ c : Code, eval O c = f := by
+theorem exists_code {O : ℕ → ℕ} {f : ℕ →. ℕ} : Nat.RecursiveIn O f ↔ ∃ c : Code, eval O c = f := by
   refine ⟨fun h => ?_, ?_⟩
   · induction h with
     | zero => exact ⟨.zero, rfl⟩
@@ -322,14 +322,14 @@ def evaln (O:ℕ→ℕ) : ℕ → Code → ℕ → Option ℕ
     else
       evaln O k (rfind' cf) (Nat.pair a (m + 1))
 
-theorem evaln_bound : ∀ {k c n x}, x ∈ evaln O k c n → n < k
+theorem evaln_bound {O : ℕ → ℕ} : ∀ {k c n x}, x ∈ evaln O k c n → n < k
   | 0, c, n, x, h => by simp [evaln] at h
   | k + 1, c, n, x, h => by
     suffices ∀ {o : Option ℕ}, x ∈ do { guard (n ≤ k); o } → n < k + 1 by
       cases c <;> rw [evaln] at h <;> exact this h
     simpa [Option.bind_eq_some_iff] using Nat.lt_succ_of_le
 
-theorem evaln_mono : ∀ {k₁ k₂ c n x}, k₁ ≤ k₂ → x ∈ evaln O k₁ c n → x ∈ evaln O k₂ c n
+theorem evaln_mono {O : ℕ → ℕ} : ∀ {k₁ k₂ c n x}, k₁ ≤ k₂ → x ∈ evaln O k₁ c n → x ∈ evaln O k₂ c n
   | 0, k₂, c, n, x, _, h => by simp [evaln] at h
   | k + 1, k₂ + 1, c, n, x, hl, h => by
     have hl' := Nat.le_of_succ_le_succ hl
@@ -368,7 +368,7 @@ theorem evaln_mono : ∀ {k₁ k₂ c n x}, k₁ ≤ k₂ → x ∈ evaln O k₁
       by_cases x0 : x = 0 <;> simp [x0]
       exact evaln_mono hl'
 
-theorem evaln_sound : ∀ {k c n x}, x ∈ evaln O k c n → x ∈ eval O c n
+theorem evaln_sound {O : ℕ → ℕ} : ∀ {k c n x}, x ∈ evaln O k c n → x ∈ eval O c n
   | 0, _, n, x, h => by simp [evaln] at h
   | k + 1, c, n, x, h => by
     induction' c with cf cg hf hg cf cg hf hg cf cg hf hg cf hf generalizing x n <;>
@@ -406,7 +406,7 @@ theorem evaln_sound : ∀ {k c n x}, x ∈ evaln O k c n → x ∈ eval O c n
         · rcases hy₂ (Nat.lt_of_succ_lt_succ im) with ⟨z, hz, z0⟩
           exact ⟨z, by simpa [add_comm, add_left_comm] using hz, z0⟩
 
-theorem evaln_complete {c n x} : x ∈ eval O c n ↔ ∃ k, x ∈ evaln O k c n := by
+theorem evaln_complete {O : ℕ → ℕ} {c n x} : x ∈ eval O c n ↔ ∃ k, x ∈ evaln O k c n := by
   refine ⟨fun h => ?_, fun ⟨k, h⟩ => evaln_sound h⟩
   rsuffices ⟨k, h⟩ : ∃ k, x ∈ evaln O (k + 1) c n
   · exact ⟨k + 1, h⟩
@@ -477,7 +477,7 @@ theorem evaln_complete {c n x} : x ∈ eval O c n ↔ ∃ k, x ∈ evaln O k c n
 
 section
 open RecursiveIn
-theorem eval_eq_rfindOpt (c n) : eval O c n = Nat.rfindOpt fun k => evaln O k c n :=
+theorem eval_eq_rfindOpt {O : ℕ → ℕ} (c n) : eval O c n = Nat.rfindOpt fun k => evaln O k c n :=
   Part.ext fun x => by
     refine evaln_complete.trans (Nat.rfindOpt_mono ?_).symm
     intro a m n hl; apply evaln_mono hl

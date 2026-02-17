@@ -66,8 +66,7 @@ instance : IsPreorder (ℕ→ℕ) TuringReducible where
   refl := TuringReducible.refl
   trans := @TuringReducible.trans
 
-abbrev FuncTuringDegree :=
-  Antisymmetrization _ TuringReducible
+abbrev FuncTuringDegree := Antisymmetrization _ TuringReducible
 private instance : Preorder (ℕ→ℕ) where
   le := TuringReducible
   le_refl := .refl
