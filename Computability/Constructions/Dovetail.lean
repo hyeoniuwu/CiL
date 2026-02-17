@@ -49,7 +49,7 @@ def dovetailn (c:Code) : Code :=
   (c_evaln.comp₃ (pair left (left.comp right)) (c_const c) (right.comp right))
   (c_const 1)
 
-theorem dovetailn_ev_0 (h:(eval O (dovetailn c) x).Dom) :
+theorem dovetailn_ev_0 {O : ℕ → ℕ} {c: Code} {x : ℕ} (h:(eval O (dovetailn c) x).Dom) :
 let (eq:=hdvt) dvt := (eval O (dovetailn c) x).get h
 evaln O dvt.r c ⟪x, dvt.l⟫=Option.some 0 := by
   extract_lets; expose_names
@@ -64,7 +64,7 @@ evaln O dvt.r c ⟪x, dvt.l⟫=Option.some 0 := by
   have := Part.eq_some_iff.mpr h4; clear h4
   simp [o2n] at this
   exact Encodable.encode_inj.mp this
-theorem dovetailn_ev_0' (h:(eval O (dovetailn c) x).Dom) :
+theorem dovetailn_ev_0' {O : ℕ → ℕ} {c: Code} {x : ℕ} (h:(eval O (dovetailn c) x).Dom) :
 let dvt := (eval O (dovetailn c) x).get h
 eval O c ⟪x, dvt.l⟫=Part.some 0 := by
   have := dovetailn_ev_0 h
@@ -73,75 +73,60 @@ eval O c ⟪x, dvt.l⟫=Part.some 0 := by
   extract_lets at this
   exact Part.eq_some_iff.mpr (evaln_sound this)
 
-theorem dovetailn_ev_1' : eval O (dovetailn c) x=Part.none ↔ ∀ s y, evaln O s c ⟪x, y⟫≠Option.some 0 := by
+theorem dovetailn_ev_1' {O : ℕ → ℕ} {c: Code} {x : ℕ} : eval O (dovetailn c) x=Part.none ↔ ∀ s y, evaln O s c ⟪x, y⟫≠Option.some 0 := by
   constructor
-  ·
-    contrapose
-    simp
-    intro s y
-    intro h
+  · contrapose
+    simp? says
+      simp only [ne_eq, not_forall, Decidable.not_not, forall_exists_index]
+    intro s y h
     apply Part.not_none_iff_dom.mpr
-
     unfold dovetailn
     simp only [c_rfind_ev]
     simp only [comp₂, comp₃] -- without this theres a recursion depth error. why?
-    simp []
-
+    simp? says
+      simp only [rfind_dom, map_eq_map, mem_map_iff, decide_eq_true_eq, exists_eq_right, map_Dom]
     use ⟪y, s⟫
-    simp [eval]
-    simp [Seq.seq]
-    constructor
-    ·
-      aesop? says
-        simp_all only [Encodable.encode_some, Encodable.encode_nat, succ_eq_add_one, zero_add, ↓reduceIte,
-        Part.mem_some_iff]
-    aesop? says
-      intro m a
-      split
-      next h_1 => simp_all only [Part.some_dom]
-      next h_1 => simp_all only [Part.some_dom]
-
-  ·
-    contrapose
+    simp [eval, Seq.seq]
+    constructor <;> aesop
+  · contrapose
     intro h
-    simp
+    simp? says simp only [ne_eq, not_forall, Decidable.not_not]
     have hh := Part.not_none_iff_dom.mp h
     have := dovetailn_ev_0 hh
-
     aesop? says
       apply Exists.intro
       apply Exists.intro
       exact this
 
-theorem dovetailn_ev_1_aux : (∀ s y, evaln O s c ⟪x, y⟫≠Option.some 0) ↔ ∀ y, eval O c ⟪x, y⟫≠Part.some 0 := by
+theorem dovetailn_ev_1_aux {O : ℕ → ℕ} {c: Code} {x : ℕ} : (∀ s y, evaln O s c ⟪x, y⟫≠Option.some 0) ↔ ∀ y, eval O c ⟪x, y⟫≠Part.some 0 := by
   constructor
   · contrapose
-    simp
+    simp only [ne_eq, not_forall, not_not, forall_exists_index]
     intro y h
     have := evaln_complete.mp (Part.eq_some_iff.mp h)
     aesop
   · contrapose
-    simp
+    simp only [ne_eq, not_forall, Decidable.not_not, not_not, forall_exists_index]
     intro s y h
     use y
     exact Part.eq_some_iff.mpr (evaln_sound h)
 
-theorem dovetailn_ev_1 : eval O (dovetailn c) x=Part.none ↔ ∀ y, eval O c ⟪x, y⟫≠Part.some 0 := by
-  exact Iff.trans dovetailn_ev_1' dovetailn_ev_1_aux
-theorem dovetailn_ev_2 : (eval O (dovetailn c) x).Dom ↔ ∃ y, eval O c ⟪x, y⟫=Part.some 0 := by
+theorem dovetailn_ev_1 {O : ℕ → ℕ} {c: Code} {x : ℕ} : eval O (dovetailn c) x=Part.none ↔ ∀ y, eval O c ⟪x, y⟫≠Part.some 0 :=
+  Iff.trans dovetailn_ev_1' dovetailn_ev_1_aux
+theorem dovetailn_ev_2 {O : ℕ → ℕ} {c: Code} {x : ℕ} : (eval O (dovetailn c) x).Dom ↔ ∃ y, eval O c ⟪x, y⟫=Part.some 0 := by
   have := (@dovetailn_ev_1 O c x).not
   simp at this
   exact Iff.trans (Iff.symm Part.not_none_iff_dom) this
 
 def dovetail (c:Code) : Code := left.comp (dovetailn c)
 
-theorem dovetail_dom_iff_dovetailn_dom : (eval O (dovetail c) x).Dom ↔ (eval O (dovetailn c) x).Dom := by
+theorem dovetail_dom_iff_dovetailn_dom {O : ℕ → ℕ} {c: Code} {x : ℕ} : (eval O (dovetail c) x).Dom ↔ (eval O (dovetailn c) x).Dom := by
   simp [dovetail,eval]
-theorem dovetail_none_iff_dovetailn_none : (eval O (dovetail c) x) = Part.none ↔ (eval O (dovetailn c) x) = Part.none := by
+theorem dovetail_none_iff_dovetailn_none {O : ℕ → ℕ} {c: Code} {x : ℕ} : (eval O (dovetail c) x) = Part.none ↔ (eval O (dovetailn c) x) = Part.none := by
   apply not_iff_not.mp
   simp [not_none_iff_dom]
   exact dovetail_dom_iff_dovetailn_dom
-theorem dovetail_ev_0 (h:(eval O (dovetail c) x).Dom) :
+theorem dovetail_ev_0 {O : ℕ → ℕ} {c: Code} {x : ℕ} (h:(eval O (dovetail c) x).Dom) :
 let dvt := (eval O (dovetail c) x).get h
 eval O c ⟪x, dvt⟫ = Part.some 0 := by
   have : (eval O (dovetailn c) x).Dom := by
@@ -155,12 +140,12 @@ eval O c ⟪x, dvt⟫ = Part.some 0 := by
   rw [this]
   exact main
 
-theorem dovetail_ev_1' : eval O (dovetail c) x=Part.none ↔ ∀ s y, evaln O s c ⟪x, y⟫≠Option.some 0 := by
+theorem dovetail_ev_1' {O : ℕ → ℕ} {c: Code} {x : ℕ} : eval O (dovetail c) x=Part.none ↔ ∀ s y, evaln O s c ⟪x, y⟫≠Option.some 0 := by
   simp [dovetail_none_iff_dovetailn_none]
   exact dovetailn_ev_1'
-theorem dovetail_ev_1 : eval O (dovetail c) x=Part.none ↔ ∀ y, eval O c ⟪x, y⟫≠Part.some 0 := by
+theorem dovetail_ev_1 {O : ℕ → ℕ} {c: Code} {x : ℕ} : eval O (dovetail c) x=Part.none ↔ ∀ y, eval O c ⟪x, y⟫≠Part.some 0 := by
   exact Iff.trans dovetail_ev_1' dovetailn_ev_1_aux
-theorem dovetail_ev_2 : (eval O (dovetail c) x).Dom ↔ ∃ y, eval O c ⟪x, y⟫=Part.some 0 := by
+theorem dovetail_ev_2 {O : ℕ → ℕ} {c: Code} {x : ℕ} : (eval O (dovetail c) x).Dom ↔ ∃ y, eval O c ⟪x, y⟫=Part.some 0 := by
   have := (@dovetail_ev_1 O c x).not
   simp at this
   exact Iff.trans (Iff.symm Part.not_none_iff_dom) this
