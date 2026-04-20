@@ -21,10 +21,10 @@ For the construction of these functions via codes, see Computability/Constructio
 namespace Oracle.Single.Code
 
 -- stands for "evaln clamped"
-noncomputable def evalnc (O : ℕ→ℕ) (u : ℕ) : ℕ → Code → ℕ → Option ℕ := fun s c x ↦ do
+noncomputable def evalnc (O : ℕ → ℕ) (u : ℕ) : ℕ → Code → ℕ → Option ℕ := fun s c x ↦ do
   let use ← usen O c s x
   if use ≤ u  then evaln O s c x else Option.none
-noncomputable def evalc (O : ℕ→ℕ) (u : ℕ) : Code → ℕ → Part ℕ := fun c x ↦ do
+noncomputable def evalc (O : ℕ → ℕ) (u : ℕ) : Code → ℕ → Part ℕ := fun c x ↦ do
   let use ← use O c x
   if use ≤ u  then eval O c x else Part.none
 theorem evalnc_imp_usen {O u s c x} (h : (evalnc O u s c x).isSome) : (usen O c s x).isSome := by

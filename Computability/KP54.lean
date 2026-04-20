@@ -131,7 +131,7 @@ noncomputable def KP54 : ℕ → ℕ := fun s ↦
 match s with
 | 0 => ⟪0, 0⟫
 | s+1 =>
-  let i  := s.div2
+  let i := s.div2
   let αₚ := (KP54 s).l
   let βₚ := (KP54 s).r
   let lb := βₚ.n2l.length
@@ -515,7 +515,7 @@ lemma As_Uninjured_1 {i} : ¬(evals (As (2*i+1+1)) i (R_wt i)).Dom → ¬(evalSe
       intro i2 hi2
       simp [χ,A]
       have hi3 : i2 < (As (use_compl + 1)).length := calc
-        i2 < use_compl  := hi2
+        i2 < use_compl := hi2
         use_compl <  (As (use_compl + 1)).length := AsSize
       rw [@As_Mono_4 i2 (use_compl+1) (i2 + 1) whatever hi3 (AsSize)]
       simp only [b2n, ite_eq_ite]
@@ -663,7 +663,7 @@ lemma Bs_Uninjured_1 {i} : ¬(evals (Bs (2*i+1)) i (S_wt i)).Dom → ¬(evalSet 
       intro i2 hi2
       simp [χ,B]
       have hi3 : i2 < (Bs (use_compl + 1)).length := calc
-        i2 < use_compl  := hi2
+        i2 < use_compl := hi2
         use_compl <  (Bs (use_compl + 1)).length := BsSize
       rw [@Bs_Mono_4 i2 (use_compl+1) (i2 + 1) whatever hi3 (BsSize)]
       simp only [b2n, ite_eq_ite]

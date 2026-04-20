@@ -110,7 +110,7 @@ fs_in 0b0010 3 = false
 -/
 
 /-- `fs_add a x` gives the natural representing the set with `x` added to `a` interpreted as a finite set. -/
-abbrev fs_add : ℕ→ℕ→ℕ := fun a x ↦ a ||| (2^x)
+abbrev fs_add : ℕ → ℕ→ℕ := fun a x ↦ a ||| (2^x)
 
 /-- `fs_add a` gives the the size of `a` interepreted as a finite set. -/
 def fs_size := List.length.comp Nat.bitIndices
@@ -126,12 +126,12 @@ theorem fs_in_singleton' {x y}: Nat.testBit (2^y) x = false ↔ y≠x := by grin
 end fs
 
 namespace Oracle.Single.Code.nc_to_nn
-@[coe] protected def lift (f : ℕ→Code) : ℕ→ℕ := fun x => c2n (f x)
-instance : Coe (ℕ→Code) (ℕ→ℕ) := ⟨Oracle.Single.Code.nc_to_nn.lift⟩
+@[coe] protected def lift (f : ℕ→Code) : ℕ → ℕ := fun x => c2n (f x)
+instance : Coe (ℕ→Code) (ℕ → ℕ) := ⟨Oracle.Single.Code.nc_to_nn.lift⟩
 end Oracle.Single.Code.nc_to_nn
 namespace Oracle.Single.Code.cc_to_nn
-@[coe] protected def lift (f : Code→Code) : ℕ→ℕ := c2n ∘ f ∘ n2c
-instance : Coe (Code→Code) (ℕ→ℕ) := ⟨Oracle.Single.Code.cc_to_nn.lift⟩
+@[coe] protected def lift (f : Code→Code) : ℕ → ℕ := c2n ∘ f ∘ n2c
+instance : Coe (Code→Code) (ℕ → ℕ) := ⟨Oracle.Single.Code.cc_to_nn.lift⟩
 end Oracle.Single.Code.cc_to_nn
 
 section primrec
@@ -181,7 +181,7 @@ theorem prim_total {O} {c} (h : code_prim c): code_total O c := by
     induction x.r with
     | zero => exact ha_ih x.l
     | succ y' IH' => use IH'; apply hb_ih
-@[simp] def evalp (O : ℕ→ℕ) : Code→ℕ→ℕ
+@[simp] def evalp (O : ℕ → ℕ) : Code→ℕ → ℕ
 | zero       => fun _ ↦ 0
 | succ       => Nat.succ
 | left       => Nat.l
@@ -280,7 +280,7 @@ end primrec
 
 section total
 namespace Oracle.Single.Code
-def evalt (O : ℕ→ℕ) (c : Code) (h : code_total O c) : ℕ→ℕ := fun x ↦ (eval O c x).get (h x)
+def evalt (O : ℕ → ℕ) (c : Code) (h : code_total O c) : ℕ → ℕ := fun x ↦ (eval O c x).get (h x)
 theorem total_pair_iff {O cf cg} : (code_total O cf) ∧ (code_total O cg) ↔ (code_total O (pair cf cg)) :=
   ⟨
     fun h x ↦ ⟨h.left x, h.right x⟩

@@ -15,8 +15,8 @@ This file defines the jump operator on total functions, and basic reducibility r
 involving the jump.
 
 ## Main declarations
-- `K0`  : the K₀ operator, on total functions
-- `K`   : the K operator, on total functions
+- `K0` : the K₀ operator, on total functions
+- `K`  : the K operator, on total functions
 - `jump`: the jump operator, on total functions
 
 - `K0_eq_K` : asserts that K and K0 are of the same degree
@@ -55,22 +55,22 @@ def c_jump_decode (c : Code) := c_ite c c_diverge (c_pred.comp c)
   funext xs
   exact c_jump_decode_ev hc
 
-theorem O_le_K0 (O : ℕ→ℕ) :  O ≤ᵀᶠ (K0 O) := by
+theorem O_le_K0 (O : ℕ → ℕ) :  O ≤ᵀᶠ (K0 O) := by
   apply exists_code.mpr  -- changes goal to: ∃ c, eval (K0 O) c = O
   let q := oracle.comp (pair (c_const oracle) c_id)
   use c_jump_decode q
   have compute_total : code_total (K0 O) q := by apply prim_total; apply_cp
   simp [compute_total, q, eval, Seq.seq]
   exact rfl
-theorem O_le_J (O : ℕ→ℕ) : O ≤ᵀᶠ O⌜ :=  O_le_K0 O
+theorem O_le_J (O : ℕ → ℕ) : O ≤ᵀᶠ O⌜ :=  O_le_K0 O
 
-theorem K_leq_K0 (O : ℕ→ℕ) : (K O) ≤ᵀᶠ (K0 O) := by
+theorem K_leq_K0 (O : ℕ → ℕ) : (K O) ≤ᵀᶠ (K0 O) := by
   apply exists_code.mpr
   use oracle.comp <| pair c_id c_id
 
   simp [eval,Seq.seq]
   exact rfl
-theorem K0_leq_K (O : ℕ→ℕ) : (K0 O) ≤ᵀᶠ (K O)  := by
+theorem K0_leq_K (O : ℕ → ℕ) : (K0 O) ≤ᵀᶠ (K O) := by
   apply exists_code.mpr
   let compute := oracle.comp c_ev_const
   use compute
@@ -82,8 +82,8 @@ theorem K0_leq_K (O : ℕ→ℕ) : (K0 O) ≤ᵀᶠ (K O)  := by
   rw [eval_total_comp compute_total]
   simp [eval, c_ev_const_ev']
 theorem K_eq_K0 {O} : (K O)  ≡ᵀᶠ (K0 O) := ⟨K_leq_K0 O,K0_leq_K O⟩
-theorem K0_eq_K {O} : (K0 O) ≡ᵀᶠ (K O)  := K_eq_K0.symm
-theorem O_le_K (O : ℕ→ℕ) : O ≤ᵀᶠ (K O) := TuringReducible.trans (O_le_K0 O) (K0_leq_K O)
+theorem K0_eq_K {O} : (K0 O) ≡ᵀᶠ (K O) := K_eq_K0.symm
+theorem O_le_K (O : ℕ → ℕ) : O ≤ᵀᶠ (K O) := TuringReducible.trans (O_le_K0 O) (K0_leq_K O)
 
 theorem jump_not_le_id (O : ℕ → ℕ) : ¬(O⌜ ≤ᵀᶠ O) := by
   intro h
@@ -104,9 +104,9 @@ theorem jump_not_le_id (O : ℕ → ℕ) : ¬(O⌜ ≤ᵀᶠ O) := by
     rw [fg] at hh2
     simp [hh] at hh2
 
-theorem K_nle_O (O : ℕ→ℕ) : ¬(K O ≤ᵀᶠ O) := by
+theorem K_nle_O (O : ℕ → ℕ) : ¬(K O ≤ᵀᶠ O) := by
   intro h
   apply jump_not_le_id
   exact TuringReducible.trans (K0_leq_K O) h
 
-theorem O_lt_K0 {O : ℕ→ℕ} : O <ᵀᶠ (K0 O) := ⟨O_le_J O,jump_not_le_id O⟩
+theorem O_lt_K0 {O : ℕ → ℕ} : O <ᵀᶠ (K0 O) := ⟨O_le_J O,jump_not_le_id O⟩

@@ -8,15 +8,15 @@ import Computability.Jump
 namespace Nat.RecursiveIn.Rin
 open Part
 
-alias zero   := _root_.Nat.RecursiveIn.zero
-alias succ   := _root_.Nat.RecursiveIn.succ
-alias left   := _root_.Nat.RecursiveIn.left
-alias right  := _root_.Nat.RecursiveIn.right
+alias zero  := _root_.Nat.RecursiveIn.zero
+alias succ  := _root_.Nat.RecursiveIn.succ
+alias left  := _root_.Nat.RecursiveIn.left
+alias right := _root_.Nat.RecursiveIn.right
 alias oracle := _root_.Nat.RecursiveIn.oracle
-alias pair   := _root_.Nat.RecursiveIn.pair
-alias comp   := _root_.Nat.RecursiveIn.comp
-alias prec   := _root_.Nat.RecursiveIn.prec
-alias rfind  := _root_.Nat.RecursiveIn.rfind
+alias pair  := _root_.Nat.RecursiveIn.pair
+alias comp  := _root_.Nat.RecursiveIn.comp
+alias prec  := _root_.Nat.RecursiveIn.prec
+alias rfind := _root_.Nat.RecursiveIn.rfind
 
 theorem of_eq {O} {f g : ℕ →. ℕ} (hf : RecursiveIn O f) (H : ∀ n, f n = g n) : RecursiveIn O g :=
   (funext H : f = g) ▸ hf
@@ -44,14 +44,14 @@ theorem of_primrecIn {O} {f : ℕ → ℕ} (hf : Nat.PrimrecIn O f) : RecursiveI
       simp only [mem_bind_iff, mem_some_iff]
       exact ⟨_, IH, rfl⟩
 
-@[simp] lemma partCompTotal {O : ℕ → ℕ} {f : ℕ→.ℕ} {g : ℕ → ℕ} (h1: Nat.RecursiveIn O f) (h2: Nat.RecursiveIn O g) : (Nat.RecursiveIn O ↑(f∘g)) := by
-  have h3 : (↑(f∘g) : ℕ→.ℕ) = fun x => g x >>= (↑f : ℕ→.ℕ) := by
+@[simp] lemma partCompTotal {O : ℕ → ℕ} {f : ℕ →. ℕ} {g : ℕ → ℕ} (h1: Nat.RecursiveIn O f) (h2: Nat.RecursiveIn O g) : (Nat.RecursiveIn O ↑(f∘g)) := by
+  have h3 : (↑(f∘g) : ℕ →. ℕ) = fun x => g x >>= (↑f : ℕ →. ℕ) := by
     funext xs
     simp only [Function.comp_apply, Part.coe_some, Part.bind_eq_bind, Part.bind_some]
   rw [h3]
   exact comp h1 h2
 @[simp] lemma totalComp {O : ℕ → ℕ} {f g : ℕ → ℕ} (h1: Nat.RecursiveIn O f) (h2: Nat.RecursiveIn O g) : (Nat.RecursiveIn O ↑(f∘g)) := by
-  have h3 : (↑(f∘g) : ℕ→.ℕ) = fun x => g x >>= (↑f : ℕ→.ℕ) := by
+  have h3 : (↑(f∘g) : ℕ →. ℕ) = fun x => g x >>= (↑f : ℕ →. ℕ) := by
     funext xs
     simp only [PFun.coe_val, Function.comp_apply, Part.coe_some, Part.bind_eq_bind, Part.bind_some]
   rw [h3]
@@ -61,12 +61,12 @@ theorem of_primrecIn {O} {f : ℕ → ℕ} (hf : Nat.PrimrecIn O f) : RecursiveI
   apply totalComp
   · exact h1
   · apply id
-@[simp] lemma pair' (f g : ℕ → ℕ) : ((↑fun x ↦ Nat.pair (f x) (g x)) : ℕ→.ℕ)= fun (x : ℕ) => (Nat.pair <$> (f x) <*> (g x)) := by
+@[simp] lemma pair' (f g : ℕ → ℕ) : ((↑fun x ↦ Nat.pair (f x) (g x)) : ℕ →. ℕ)= fun (x : ℕ) => (Nat.pair <$> (f x) <*> (g x)) := by
   simp [Seq.seq]
   funext xs
   simp only [PFun.coe_val]
 @[simp] lemma totalComp' {O : ℕ → ℕ} {f g : ℕ → ℕ} (hf: Nat.RecursiveIn O f) (hg: Nat.RecursiveIn O g): (Nat.RecursiveIn O (fun x => (f (g x)) : ℕ → ℕ) ) := by apply totalComp (hf) (hg)
-@[simp] lemma comp₂ {O : ℕ → ℕ} {f : ℕ → ℕ→.ℕ} {g h : ℕ → ℕ} (hf: Nat.RecursiveIn O fun x => f x.unpair.1 x.unpair.2) (hg: Nat.RecursiveIn O g) (hh: Nat.RecursiveIn O h): (Nat.RecursiveIn O (fun x => (f (g x) (h x))) ) := by
+@[simp] lemma comp₂ {O : ℕ → ℕ} {f : ℕ → ℕ →. ℕ} {g h : ℕ → ℕ} (hf: Nat.RecursiveIn O fun x => f x.unpair.1 x.unpair.2) (hg: Nat.RecursiveIn O g) (hh: Nat.RecursiveIn O h): (Nat.RecursiveIn O (fun x => (f (g x) (h x))) ) := by
   have main : (fun x => (f (g x) (h x))) = ((fun x => f x.unpair.1 x.unpair.2) ∘ (fun n ↦ Nat.pair (g n) (h n))) := by
     funext xs
     simp only [Function.comp_apply, unpair_pair]
@@ -74,7 +74,7 @@ theorem of_primrecIn {O} {f : ℕ → ℕ} (hf : Nat.PrimrecIn O f) : RecursiveI
   refine partCompTotal hf ?_
   · rw [pair']
     apply pair hg hh
-@[simp] lemma totalComp₂ {O : ℕ → ℕ} {f : ℕ → ℕ→ℕ} {g h : ℕ → ℕ} (hf: Nat.RecursiveIn O fun x => f x.unpair.1 x.unpair.2) (hg: Nat.RecursiveIn O g) (hh: Nat.RecursiveIn O h): (Nat.RecursiveIn O (fun x => (f (g x) (h x)) : ℕ → ℕ) ) := by
+@[simp] lemma totalComp₂ {O : ℕ → ℕ} {f : ℕ → ℕ → ℕ} {g h : ℕ → ℕ} (hf: Nat.RecursiveIn O fun x => f x.unpair.1 x.unpair.2) (hg: Nat.RecursiveIn O g) (hh: Nat.RecursiveIn O h): (Nat.RecursiveIn O (fun x => (f (g x) (h x)) : ℕ → ℕ) ) := by
   have main : (fun x => (f (g x) (h x)) : ℕ → ℕ) = ((fun x => f x.unpair.1 x.unpair.2) ∘ (fun n ↦ Nat.pair (g n) (h n))) := by
     funext xs
     simp only [Function.comp_apply, Nat.unpair_pair]
@@ -87,7 +87,7 @@ theorem of_primrecIn {O} {f : ℕ → ℕ} (hf : Nat.PrimrecIn O f) : RecursiveI
 @[simp] lemma Nat.PrimrecIn.totalComp {O : ℕ → ℕ} {f g : ℕ → ℕ} (h1: Nat.PrimrecIn O f) (h2: Nat.PrimrecIn O g) : Nat.PrimrecIn O ↑(f∘g) := by
   rw [show (f∘g) = fun x => f (g x) from rfl]
   exact PrimrecIn.comp h1 h2
-@[simp] lemma Nat.PrimrecIn.comp₂ {O : ℕ → ℕ} {f : ℕ → ℕ→ℕ} {g h : ℕ → ℕ} (hf: Nat.PrimrecIn O fun x => f x.unpair.1 x.unpair.2) (hg: Nat.PrimrecIn O g) (hh: Nat.PrimrecIn O h): (Nat.PrimrecIn O (fun x => (f (g x) (h x)) : ℕ → ℕ) ) := by
+@[simp] lemma Nat.PrimrecIn.comp₂ {O : ℕ → ℕ} {f : ℕ → ℕ → ℕ} {g h : ℕ → ℕ} (hf: Nat.PrimrecIn O fun x => f x.unpair.1 x.unpair.2) (hg: Nat.PrimrecIn O g) (hh: Nat.PrimrecIn O h): (Nat.PrimrecIn O (fun x => (f (g x) (h x)) : ℕ → ℕ) ) := by
   have main : (fun x => (f (g x) (h x)) : ℕ → ℕ) = ((fun x => f x.unpair.1 x.unpair.2) ∘ (fun n ↦ Nat.pair (g n) (h n))) := by
     funext xs
     simp only [Function.comp_apply, Nat.unpair_pair]

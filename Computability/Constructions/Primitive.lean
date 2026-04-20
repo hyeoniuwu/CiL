@@ -13,7 +13,7 @@ This file defines basic primitive recursive codes for basic functions, such as i
 ## Structure
 Each construction is roughly structured as follows.
 
-Suppose we want to construct a primitive recursive function `f : ℕ→ℕ`.
+Suppose we want to construct a primitive recursive function `f : ℕ → ℕ`.
 
 `def c_f := ...`
   · the code which will implement `f`
@@ -72,7 +72,7 @@ def comp₃ := fun c1 c2 c3 c4 : Code => c1.comp₂ c2 (pair c3 c4)
   simp [comp₃,evalp]
 @[simp] theorem comp₃_ev {c1 c2 c3 c4} {O : ℕ → ℕ} : eval O (comp₃ c1 c2 c3 c4) = fun x ↦
   ⟪eval O c2 x, eval O c3 x, eval O c4 x⟫ >>= (eval O c1)
-  := by
+ := by
     simp [comp₃, eval, comp₂, Seq.seq]
 
 end Oracle.Single.Code

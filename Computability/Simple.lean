@@ -42,7 +42,7 @@ theorem immuneIn_not_CEIn {O A} : immuneIn O A → ¬ CEin O A := by
   unfold CEin
   unfold immuneIn at h
   aesop
-theorem immuneIn_not_CEIn_contrapositive {O A} :  CEin O A → ¬ immuneIn O A  := by
+theorem immuneIn_not_CEIn_contrapositive {O A} :  CEin O A → ¬ immuneIn O A := by
   contrapose
   exact fun a ↦ immuneIn_not_CEIn a
 
@@ -397,7 +397,7 @@ theorem mem_A_iff_enumerated {x} : x ∈ A ↔ ∃ i s : ℕ, ( ¬fs_in (C s).r 
     have hstep : ∃ j, j+1≤sM1 ∧
     fs_in (foldr (step sM1) (C sM1) ((range' (j + 1) (sM1 - 1 - j)).reverse ++ [j] ++ (range j).reverse)).l x ∧
     fs_in (step sM1 j (foldr (step sM1) (C sM1) (range j).reverse)).l x
-    := by
+   := by
       use sM1-1
       have a2 : sM1-1+1 ≤ sM1 := le_of_eq (Nat.sub_add_cancel sM1G1)
 
@@ -409,8 +409,8 @@ theorem mem_A_iff_enumerated {x} : x ∈ A ↔ ∃ i s : ℕ, ( ¬fs_in (C s).r 
         simp only [tsub_self, range'_zero, reverse_nil, nil_append, cons_append, foldr_cons] at a4
         exact a4⟩
 
-    let  i   := Nat.find hstep
-    have hi_prop  := Nat.find_spec hstep
+    let  i  := Nat.find hstep
+    have hi_prop := Nat.find_spec hstep
     have hi_min := @Nat.find_min _ _ hstep
     rw [show Nat.find hstep = i from rfl] at hi_prop hi_min
     use i; use sM1

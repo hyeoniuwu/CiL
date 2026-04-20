@@ -119,14 +119,14 @@ theorem c_cov_rec_evp_get_aux {O cf cg x j i} (h : j≤i) :
   (n2l (evalp O (c_cov_rec cf cg) ⟪x,i⟫))[j]'(by simp [c_cov_rec_evp_size]; omega)
     =
   (n2l (evalp O (c_cov_rec cf cg) ⟪x, i+1⟫))[j]'(by simp [c_cov_rec_evp_size]; omega)
-  := by
+ := by
   simp [c_cov_rec_evp_indt]
   exact getElem_append_left' _ _
 theorem c_cov_rec_evp_get_aux_I {O cf cg x j i} (h : j≤i) :
   getI (n2l (evalp O (c_cov_rec cf cg) ⟪x,i⟫)) j
     =
   getI (n2l (evalp O (c_cov_rec cf cg) ⟪x, i+1⟫)) j
-  := by
+ := by
   simp [c_cov_rec_evp_indt]
 
   have bounds1: j<(n2l (evalp O (c_cov_rec cf cg) ⟪x,i⟫)).length := by
@@ -164,7 +164,7 @@ end Oracle.Single.Code
 end cov_rec
 
 section div
-def div_flip_aux : ℕ→ℕ→ℕ := fun d n => if d=0 then 0 else (if n<d then 0 else (div_flip_aux d (n-d))+1)
+def div_flip_aux : ℕ → ℕ→ℕ := fun d n => if d=0 then 0 else (if n<d then 0 else (div_flip_aux d (n-d))+1)
 open Nat in
 theorem div_flip_aux_eq_div_flip : div_flip_aux = (flip ((· / ·) : ℕ → ℕ → ℕ)) := by
   funext d n
@@ -184,7 +184,7 @@ theorem div_flip_aux_eq_div_flip : div_flip_aux = (flip ((· / ·) : ℕ → ℕ
       rw [h]
       simp [Nat.not_lt.mpr h2]
       have h3 : (n-(n_1+1)*1)/(n_1+1) = n/(n_1+1)-1 := by exact sub_mul_div n (n_1 + 1) 1
-      have h4 : 0 < n/(n_1+1)  := by
+      have h4 : 0 < n/(n_1+1) := by
         apply Nat.div_pos_iff.mpr
         constructor
         · exact zero_lt_succ n_1
@@ -244,7 +244,7 @@ theorem c_div_flip_evp_aux_aux {O d n} :
   evalp O c_div_flip ⟪d+1, n+1⟫
     =
   if n<d then 0 else evalp O c_div_flip ⟪d+1, n-d⟫ + 1
-    := by
+   := by
 
   rw (config := {occs := .pos [1]}) [c_div_flip]
   unfold c_div_flip_aux
@@ -390,20 +390,20 @@ def replace_oracle (o : Code) : Code → Code
 `eval c_replace_oracle (o,code) = replace_oracle o code`.
 -/
 def c_replace_oracle_aux :=
-  let o               := left
+  let o              := left
   let input_to_decode := succ.comp (left.comp right)
-  let comp_hist       := right.comp right
-  let n               := c_sub.comp₂ input_to_decode (c_const 5)
-  let m               := c_div2.comp <| c_div2.comp n
-  let lookup (c')     := c_list_getI.comp₂ comp_hist c'
-  let ml              := lookup (left.comp m)
-  let mr              := lookup (right.comp m)
-  let mp              := lookup m
-  let nMod4           := c_mod.comp₂ n (c_const 4)
-  let pair_code       := c_add.comp₂ (            c_mul2.comp <|             c_mul2.comp (pair ml mr)) (c_const 5)
-  let comp_code       := c_add.comp₂ (succ.comp <| c_mul2.comp <|             c_mul2.comp (pair ml mr)) (c_const 5)
-  let prec_code       := c_add.comp₂ (            c_mul2.comp <| succ.comp <| c_mul2.comp (pair ml mr)) (c_const 5)
-  let rfind'_code     := c_add.comp₂ (succ.comp <| c_mul2.comp <| succ.comp <| c_mul2.comp mp          ) (c_const 5)
+  let comp_hist      := right.comp right
+  let n              := c_sub.comp₂ input_to_decode (c_const 5)
+  let m              := c_div2.comp <| c_div2.comp n
+  let lookup (c')    := c_list_getI.comp₂ comp_hist c'
+  let ml             := lookup (left.comp m)
+  let mr             := lookup (right.comp m)
+  let mp             := lookup m
+  let nMod4          := c_mod.comp₂ n (c_const 4)
+  let pair_code      := c_add.comp₂ (            c_mul2.comp <|             c_mul2.comp (pair ml mr)) (c_const 5)
+  let comp_code      := c_add.comp₂ (succ.comp <| c_mul2.comp <|             c_mul2.comp (pair ml mr)) (c_const 5)
+  let prec_code      := c_add.comp₂ (            c_mul2.comp <| succ.comp <| c_mul2.comp (pair ml mr)) (c_const 5)
+  let rfind'_code    := c_add.comp₂ (succ.comp <| c_mul2.comp <| succ.comp <| c_mul2.comp mp          ) (c_const 5)
 
   c_cov_rec
 
@@ -474,7 +474,7 @@ The let bindings in the theorem statement are named the same as their correspond
 `c_replace_oracle`.
 
 For example we have
-`let m  := n.div2.div2` in the theorem statement, and
+`let m := n.div2.div2` in the theorem statement, and
 `let m := c_div2.comp <| c_div2.comp n` in the definition of `c_replace_oracle_aux`.
 
 In the process of lifting, the names bindings from the code are attached with the suffix "_1".
@@ -487,7 +487,7 @@ The theorem then follows from using these equivalence results in simplification.
 theorem c_replace_oracle_evp_aux_nMod4 {O o n} :
   evalp O (c_replace_oracle) ⟪o, ((n+4)+1)⟫
     =
-  let m  := n.div2.div2
+  let m := n.div2.div2
   let ml := evalp O (c_replace_oracle) ⟪o, m.l⟫
   let mr := evalp O (c_replace_oracle) ⟪o, m.r⟫
   let mp := evalp O (c_replace_oracle) ⟪o, m  ⟫
@@ -498,7 +498,7 @@ theorem c_replace_oracle_evp_aux_nMod4 {O o n} :
   else if n%4=3 then 2*(2*(mp)  +1)+1     + 5
   else 0
 
-  := by
+ := by
   lift_lets; extract_lets; expose_names
   unfold c_replace_oracle;
   unfold c_replace_oracle_aux

@@ -31,16 +31,16 @@ c.f. the definition of `bitwise` in Init\Data\Nat\Bitwise\Basic.lean.
 def c_bitwise_aux (c : Code) :=
   let iP1 := succ.comp (left.comp right)
 
-  let comp_hist          := right.comp right
-  let lookup (n'' m'')   := c_list_getI.comp₂ comp_hist (pair n'' m'')
+  let comp_hist         := right.comp right
+  let lookup (n'' m'')  := c_list_getI.comp₂ comp_hist (pair n'' m'')
 
-  let n  := left.comp iP1
-  let m  := right.comp iP1
+  let n := left.comp iP1
+  let m := right.comp iP1
   let n' := c_div.comp₂ n (c_const 2)
   let m' := c_div.comp₂ m (c_const 2)
   let b₁ := c_mod.comp₂ n (c_const 2)
   let b₂ := c_mod.comp₂ m (c_const 2)
-  let r  := lookup n' m'
+  let r := lookup n' m'
 
   c_cov_rec
     (c_const 0) <|
@@ -118,7 +118,7 @@ theorem c_bitwise_evp_n_m {O c n m} : evalp O (c_bitwise c) ⟪n+1,m+1⟫ = (
     let m' := (m+1) / 2
     let b₁ := (n+1) % 2
     let b₂ := (m+1) % 2
-    let r  := evalp O (c_bitwise c) ⟪n',m'⟫
+    let r := evalp O (c_bitwise c) ⟪n',m'⟫
     if n2b <| evalp O c ⟪b₁, b₂⟫ then r+r+1 else r+r) := by
   lift_lets; extract_lets; expose_names
   unfold c_bitwise; unfold c_bitwise_aux;

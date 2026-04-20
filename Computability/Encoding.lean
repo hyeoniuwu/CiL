@@ -29,14 +29,14 @@ open Nat Encodable Denumerable
 namespace Oracle.Single
 
 inductive Code : Type
-| zero   : Code
-| succ   : Code
-| left   : Code
-| right  : Code
+| zero  : Code
+| succ  : Code
+| left  : Code
+| right : Code
 | oracle : Code
-| pair   : Code → Code → Code
-| comp   : Code → Code → Code
-| prec   : Code → Code → Code
+| pair  : Code → Code → Code
+| comp  : Code → Code → Code
+| prec  : Code → Code → Code
 | rfind' : Code → Code
 
 compile_inductive% Code
@@ -143,10 +143,10 @@ fun c => match c with
 instance instDenumerable : Denumerable Code := mk' ⟨c2n, n2c, n2c_c2n, c2n_n2c⟩
 
 theorem n2c_bij : Function.Bijective n2c := Function.bijective_iff_has_inverse.mpr ⟨c2n, ⟨fun x ↦ c2n_n2c x, fun x ↦ n2c_c2n x⟩⟩
-theorem n2c_inj : Function.Injective n2c  := Function.Bijective.injective n2c_bij
+theorem n2c_inj : Function.Injective n2c := Function.Bijective.injective n2c_bij
 theorem n2c_sur : Function.Surjective n2c := Function.Bijective.surjective n2c_bij
 theorem encodeCode_bij : Function.Bijective c2n := Function.bijective_iff_has_inverse.mpr ⟨n2c, ⟨fun x ↦ n2c_c2n x, fun x ↦ c2n_n2c x⟩⟩
-theorem encodeCode_inj : Function.Injective c2n  := Function.Bijective.injective encodeCode_bij
+theorem encodeCode_inj : Function.Injective c2n := Function.Bijective.injective encodeCode_bij
 theorem encodeCode_sur : Function.Surjective c2n := Function.Bijective.surjective encodeCode_bij
 
 
@@ -283,7 +283,7 @@ theorem exists_code {O : ℕ → ℕ} {f : ℕ →. ℕ} : Nat.RecursiveIn O f �
 undecidability, `evaln` takes a parameter `k` and fails if it encounters a number ≥ k in the course
 of its execution. Other than this, the semantics are the same as in `Oracle.Single.Code.eval`.
 -/
-def evaln (O : ℕ→ℕ) : ℕ → Code → ℕ → Option ℕ
+def evaln (O : ℕ → ℕ) : ℕ → Code → ℕ → Option ℕ
 | 0, _ => fun _ => Option.none
 | k + 1, .zero => fun n => do
   guard (n ≤ k)

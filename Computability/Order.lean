@@ -25,7 +25,7 @@ protected theorem TuringReducible.rfl {f} : f ≤ᵀᶠ f := .refl _
 instance : IsRefl (ℕ → ℕ) TuringReducible where refl _ := .rfl
 
 theorem TuringReducible.trans {f g h} (hg : f ≤ᵀᶠ g) (hh : g ≤ᵀᶠ h) : f ≤ᵀᶠ h := by
-  generalize z : (↑f : ℕ→.ℕ)=x at hg
+  generalize z : (↑f : ℕ →. ℕ)=x at hg
   simp only [TuringReducible,z] at *
   induction hg with
   | zero => exact Nat.RecursiveIn.zero
@@ -39,7 +39,7 @@ theorem TuringReducible.trans {f g h} (hg : f ≤ᵀᶠ g) (hh : g ≤ᵀᶠ h) 
   | rfind hf ih => (expose_names; exact Nat.RecursiveIn.rfind ih)
 
 theorem TuringReducible.trans' {f g h} (hg : Nat.RecursiveIn g f) (hh : g ≤ᵀᶠ h) : Nat.RecursiveIn h f := by
-  generalize z : (↑f : ℕ→.ℕ)=x at hg
+  generalize z : (↑f : ℕ →. ℕ)=x at hg
   simp only [TuringReducible,z] at *
   induction hg with
   | zero => exact Nat.RecursiveIn.zero
@@ -52,22 +52,22 @@ theorem TuringReducible.trans' {f g h} (hg : Nat.RecursiveIn g f) (hh : g ≤ᵀ
   | prec hf hh hf_ih hh_ih => (expose_names; exact Nat.RecursiveIn.prec hf_ih hh_ih)
   | rfind hf ih => (expose_names; exact Nat.RecursiveIn.rfind ih)
 
-instance : IsTrans (ℕ→ℕ) TuringReducible := ⟨@TuringReducible.trans⟩
-instance : IsPreorder (ℕ→ℕ) TuringReducible where refl := .refl
+instance : IsTrans (ℕ → ℕ) TuringReducible := ⟨@TuringReducible.trans⟩
+instance : IsPreorder (ℕ → ℕ) TuringReducible where refl := .refl
 theorem TuringEquivalent.equivalence : Equivalence TuringEquivalent := (AntisymmRel.setoid _ _).iseqv
-@[refl] protected theorem TuringEquivalent.refl (f : ℕ→ℕ) : f ≡ᵀᶠ f := Equivalence.refl equivalence f
-@[symm] theorem TuringEquivalent.symm {f g : ℕ→ℕ} (h : f ≡ᵀᶠ g) : g ≡ᵀᶠ f := Equivalence.symm equivalence h
-@[trans] theorem TuringEquivalent.trans {f g h : ℕ→ℕ} (h₁ : f ≡ᵀᶠ g) (h₂ : g ≡ᵀᶠ h) : f ≡ᵀᶠ h := Equivalence.trans equivalence h₁ h₂
+@[refl] protected theorem TuringEquivalent.refl (f : ℕ → ℕ) : f ≡ᵀᶠ f := Equivalence.refl equivalence f
+@[symm] theorem TuringEquivalent.symm {f g : ℕ → ℕ} (h : f ≡ᵀᶠ g) : g ≡ᵀᶠ f := Equivalence.symm equivalence h
+@[trans] theorem TuringEquivalent.trans {f g h : ℕ → ℕ} (h₁ : f ≡ᵀᶠ g) (h₂ : g ≡ᵀᶠ h) : f ≡ᵀᶠ h := Equivalence.trans equivalence h₁ h₂
 
 /--
 Instance declaring that `Nat.RecursiveIn` is a preorder.
 -/
-instance : IsPreorder (ℕ→ℕ) TuringReducible where
+instance : IsPreorder (ℕ → ℕ) TuringReducible where
   refl := TuringReducible.refl
   trans := @TuringReducible.trans
 
 abbrev FuncTuringDegree := Antisymmetrization _ TuringReducible
-private instance : Preorder (ℕ→ℕ) where
+private instance : Preorder (ℕ → ℕ) where
   le := TuringReducible
   le_refl := .refl
   le_trans _ _ _ := TuringReducible.trans
