@@ -180,10 +180,13 @@ end list_getElem?
 
 section list_getD
 namespace Oracle.Single.Code
-def c_list_getD := c_opt_getD.comp₂ (c_list_getElem?.comp₂ left (left.comp right)) (right.comp right)
+def c_list_getD :=
+  c_opt_getD.comp₂ (c_list_getElem?.comp₂ left (left.comp right)) (right.comp right)
 @[cp] theorem c_list_getD_prim : code_prim c_list_getD := by unfold c_list_getD; apply_cp
-@[simp, evp_simps] theorem c_list_getD_evp {O : ℕ → ℕ} {lN i d : ℕ} : evalp O c_list_getD ⟪lN, i, d⟫ = (n2l lN).getD i d := by simp [c_list_getD]
-@[simp] theorem c_list_getD_ev {O : ℕ → ℕ} {lN i d : ℕ} : eval O c_list_getD ⟪lN, i, d⟫ = (n2l lN).getD i d := by simp [← evalp_eq_eval c_list_getD_prim]
+@[simp, evp_simps] theorem c_list_getD_evp {O : ℕ → ℕ} {lN i d : ℕ} :
+  evalp O c_list_getD ⟪lN, i, d⟫ = (n2l lN).getD i d := by simp [c_list_getD]
+@[simp] theorem c_list_getD_ev {O : ℕ → ℕ} {lN i d : ℕ} :
+  eval O c_list_getD ⟪lN, i, d⟫ = (n2l lN).getD i d := by simp [← evalp_eq_eval c_list_getD_prim]
 end Oracle.Single.Code
 end list_getD
 

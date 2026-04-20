@@ -40,6 +40,7 @@ open Oracle.Single
 open Oracle.Single.Code
 open Computability
 
+namespace Oracle.Single
 
 section c_finite_ext
 /--
@@ -59,7 +60,8 @@ def c_finite_ext :=
   )
   c_zero
 @[cp] theorem c_finite_ext_prim : code_prim c_finite_ext := by unfold c_finite_ext; apply_cp
-@[simp, evp_simps] theorem c_finite_ext_evp {O} : evalp O c_finite_ext = fun x : ℕ ↦ c2n (dovetail (KP54.c_kp54_aux x.l x.r)) := by
+@[simp, evp_simps] theorem c_finite_ext_evp {O} :
+    evalp O c_finite_ext = fun x : ℕ ↦ c2n (dovetail (KP54.c_kp54_aux x.l x.r)) := by
   simp [c_finite_ext, KP54.c_kp54_aux]
 end c_finite_ext
 
@@ -71,7 +73,6 @@ The function `KP54.KP54` is written recursively, where `KP54.KP54 (s+1)` makes u
 
 We definte `def c_kp54 := c_prec1 0 c_kp54_indt`: we define the recursive case separately, as it
 helps with performance in proofs.
-
 -/
 def c_kp54_indt :=
   let s := left
@@ -110,7 +111,6 @@ def c_kp54 := c_prec1 0 c_kp54_indt
   unfold c_kp54
   unfold c_kp54_indt
   extract_lets; expose_names
-
   have cp_s : code_prim s := by apply_cp
   have cp_KP54s : code_prim KP54s := by apply_cp
   have cp_i : code_prim i := by apply_cp
@@ -126,19 +126,17 @@ def c_kp54 := c_prec1 0 c_kp54_indt
   have cp_rf_1 : code_prim rf_1 := by apply_cp
   have cp_βₛ : code_prim βₛ := by apply_cp
   have cp_B_result : code_prim B_result := by apply_cp
-
   apply_cp 60
 
--- set_option pp.raw true in
--- set_option maxRecDepth 5006 in
--- set_option trace.Meta.Tactic.simp true in
 @[simp, evp_simps] theorem c_kp54_evp {x} : evalp (K0 (fun _↦0)) c_kp54 x = KP54.KP54 x := by
   induction x with
   | zero => rfl
   | succ s_1 ih =>
     unfold c_kp54
-    simp
-    have : (Nat.rec 0 (fun y IH ↦ evalp (K0 (fun _↦0)) c_kp54_indt (Nat.pair y IH)) s_1) = evalp (K0 (fun _↦0)) c_kp54 s_1 := by
+    simp only [c_prec1_evp]
+    have :
+        (Nat.rec 0 (fun y IH ↦ evalp (K0 (fun _↦0)) c_kp54_indt (Nat.pair y IH)) s_1) =
+        evalp (K0 (fun _↦0)) c_kp54 s_1 := by
       unfold c_kp54
       cases s_1 <;> simp 
     -- we are careful with the rewriting/unfolding order here.
@@ -148,9 +146,9 @@ def c_kp54 := c_prec1 0 c_kp54_indt
     unfold KP54.KP54
     rewrite [ih]; clear ih
     lift_lets; extract_lets; expose_names
-
+    -- we will simplify terms in the goal with inp
     let (eq := hinp) inp := (Nat.pair s_1 (KP54.KP54 s_1))
-
+    -- show that the code let-bindings correspond to our let-bindings
     have hs : evalp (K0 (fun _↦0)) s inp = s_1 := by simp [s, inp]
     have hi : evalp (K0 (fun _↦0)) i inp = i_1 := by simp [i, i_1, hs]
     have hKP54s : evalp (K0 (fun _↦0)) KP54s inp = KP54.KP54 s_1 := by simp [KP54s, inp]
@@ -160,71 +158,79 @@ def c_kp54 := c_prec1 0 c_kp54_indt
     have hlb : evalp (K0 (fun _↦0)) lb inp = lb_1 := by simp [lb, lb_1, hβₚ]
     rewrite [←hinp]
     simp (config := {zeta := false}) [hs]
-    -- simp (config := {zeta := false}) [←hinp, hs]
     split
     next h0 =>
       split
       next h1 =>
         have : ¬ dvt.Dom := by
-          simp [q0, hi, hlb, hαₚ] at h1;
-          exact h1
+          simpa [q0, hi, hlb, hαₚ] using h1;
         simp (config := {zeta := false}) [this, hαₚ, hβₚ]
       next h1 =>
-        have : dvt.Dom := by simp [q0, hi, hlb, hαₚ] at h1; exact h1
-        simp (config := {zeta := false}) [this]
+        have : dvt.Dom := by simpa [q0, hi, hlb, hαₚ] using h1
+        simp (config := { zeta := false }) only [this, ↓reduceDIte, Lean.Elab.WF.paramLet]
         lift_lets; extract_lets; expose_names
         have hrf : evalp (K0 (fun _↦0)) rf inp = rf_2 := by
-          simp only [rf, rf_2, q0]; unfold evalp; simp -- instead of just `simp [rf, rf_2, q0]` bc that blows up memory somehow
+          simp only [rf, rf_2, q0]; unfold evalp;
+          -- instead of just `simp [rf, rf_2, q0]` bc that blows up memory somehow
+          simp only [evp_simps]
+          simp only [K0, pair_l, pair_r, n2c_c2n, Nat.pred_eq_sub_one]
           split
           next h2 => simp [hi, hlb, hαₚ]; congr
           next h2 =>
             simp [hi, hlb, hαₚ] at h2
             simp [dvt, KP54.finite_ext, h2] at this
-        have hαₛ : evalp (K0 (fun _↦0)) αₛ inp = αₛ_1 := by simp [αₛ, αₛ_1, hαₚ, hrf, -Denumerable.list_ofNat_succ]
+        have hαₛ : evalp (K0 (fun _↦0)) αₛ inp = αₛ_1 := by
+          simp [αₛ, αₛ_1, hαₚ, hrf, -Denumerable.list_ofNat_succ]
         have hA_result : evalp (K0 (fun _↦0)) A_result inp = A_result_1 := by
-          simp only [A_result, A_result_1]; unfold evalp; simp -- same remark as above
+          simp only [A_result, A_result_1]; unfold evalp;
+          -- same remark as above
+          simp only [evp_simps]
+          simp only [K0, pair_l, pair_r, n2c_c2n, Nat.pred_eq_sub_one]
           split
           next h2 => simp [hαₛ, hi, hlb]
           next h2 =>
             -- this case is a contradiction, as we know the evals must halt from "this".
-            simp [dvt] at this
+            simp only [dvt] at this
             simp [hαₛ, hi, hlb] at h2
             have contra : (evals αₛ_1 (n2c i_1) lb_1).Dom := by
               have a0 := dovetail_ev_0 this
-              simp [KP54.c_kp54_aux_evp, -Denumerable.list_ofNat_succ] at a0
-              exact a0
+              simpa [KP54.c_kp54_aux_evp, -Denumerable.list_ofNat_succ] using a0
             simp [contra] at h2
         simp [hαₛ, hβₚ, hA_result]
     -- proof practically idential to above.
     next h0 =>
       split
       next h1 =>
-        have : ¬ dvt_1.Dom := by simp [q0_1, hi, hla, hβₚ] at h1; exact h1
+        have : ¬ dvt_1.Dom := by simpa [q0_1, hi, hla, hβₚ] using h1
         simp (config := {zeta := false}) [this, hαₚ, hβₚ]
       next h1 =>
-        have : dvt_1.Dom := by simp [q0_1, hi, hla, hβₚ] at h1; exact h1
-        simp (config := {zeta := false}) [this]
+        have : dvt_1.Dom := by simpa [q0_1, hi, hla, hβₚ] using h1
+        simp (config := { zeta := false }) only [this, ↓reduceDIte, Lean.Elab.WF.paramLet]
         lift_lets; extract_lets; expose_names
         have hrf : evalp (K0 (fun _↦0)) rf_1 inp = rf_2 := by
-          simp only [rf_1, rf_2,q0_1]; unfold evalp; simp
+          simp only [rf_1, rf_2,q0_1]; unfold evalp;
+          simp only [evp_simps]
+          simp only [K0, pair_l, pair_r, n2c_c2n, Nat.pred_eq_sub_one]
           split
           next h2 => simp [hi]; congr
           next h2 =>
             simp [hi, hla, hβₚ] at h2
             simp [dvt_1, KP54.finite_ext, h2] at this
-        have hβₛ : evalp (K0 (fun _↦0)) βₛ inp = βₛ_1 := by simp [βₛ, βₛ_1, hβₚ, hrf, -Denumerable.list_ofNat_succ]
+        have hβₛ : evalp (K0 (fun _↦0)) βₛ inp = βₛ_1 := by
+          simp [βₛ, βₛ_1, hβₚ, hrf, -Denumerable.list_ofNat_succ]
         have hB_result : evalp (K0 (fun _↦0)) B_result inp = B_result_1 := by
-          simp only [B_result, B_result_1]; unfold evalp; simp
+          simp only [B_result, B_result_1]; unfold evalp;
+          simp only [evp_simps]
+          simp only [K0, pair_l, n2c_c2n, pair_r, c_evals_ev, Nat.pred_eq_sub_one]
           split
           next h2 => simp [hβₛ, hi, hla]
           next h2 =>
             -- this case is a contradiction, as we know the evals must halt from "this".
-            simp [dvt_1] at this
+            simp only [dvt_1] at this
             simp [hβₛ, hi, hla] at h2
             have contra : (evals βₛ_1 (n2c i_1) la_1).Dom := by
               have a0 := dovetail_ev_0 this
-              simp [KP54.c_kp54_aux_evp, -Denumerable.list_ofNat_succ] at a0
-              exact a0
+              simpa [KP54.c_kp54_aux_evp, -Denumerable.list_ofNat_succ] using a0
             simp [contra] at h2
         simp [hβₛ, hαₚ, hB_result]
 end kp54
@@ -232,14 +238,14 @@ end kp54
 theorem fzero_eq_χempty : (fun _↦0) = χ ∅ := by unfold χ; simp
 
 /-
-Now that we have defined KP54.KP54, we can easily define (characeristic functions for) KP54.A and KP54.B.
-(Refer to their definitions in KP54.lean)
+Now that we have defined KP54.KP54, we can easily define (characeristic functions for) KP54.A and
+KP54.B. (Refer to their definitions in KP54.lean)
 -/
 def c_A := c_n2b.comp <| c_list_getI.comp₂ (left.comp <| c_kp54.comp succ) c_id
 @[cp] theorem c_A_prim : code_prim c_A := by unfold c_A; apply_cp 10
 @[simp, evp_simps] theorem c_A_evp : evalp (K0 (fun _↦0)) c_A = χ KP54.A := by
   funext x
-  simp [c_A]; congr
+  simp only [c_A, evp_simps]; congr
   exact getI_eq_getElem
 @[simp] theorem c_A_ev :eval (K0 (fun _↦0)) c_A = χ KP54.A := by simp [← evalp_eq_eval c_A_prim];
 theorem A_le_J1_aux : (χ KP54.A) ≤ᵀᶠ K0 (fun _↦0) := exists_code.mpr ⟨c_A, c_A_ev⟩
@@ -252,7 +258,7 @@ def c_B := c_n2b.comp <| c_list_getI.comp₂ (right.comp <| c_kp54.comp succ) c_
 @[cp] theorem c_B_prim : code_prim c_B := by unfold c_B; apply_cp 10
 @[simp, evp_simps] theorem c_B_evp : evalp (K0 (fun _↦0)) c_B = χ KP54.B := by
   funext x
-  simp [c_B]; congr
+  simp only [c_B, evp_simps]; congr
   exact getI_eq_getElem
 @[simp] theorem c_B_ev :eval (K0 (fun _↦0)) c_B = χ KP54.B := by simp [← evalp_eq_eval c_B_prim];
 theorem B_le_J1_aux : (χ KP54.B) ≤ᵀᶠ K0 (fun _↦0) := exists_code.mpr ⟨c_B, c_B_ev⟩
@@ -283,3 +289,4 @@ theorem ex_incomparable_sets_below_j1 : ∃ A B : Set ℕ, A≤ᵀ∅⌜ ∧ B�
     apply exists_code_nat.mp at h
     rcases h with ⟨c,hc⟩
     exact KP54.R c hc
+end Oracle.Single
