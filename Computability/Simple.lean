@@ -210,7 +210,7 @@ lemma range_3_way_split {s j} (hs : j+1≤ s) : (range s).reverse = (range' (j+1
 /--
 `R_foldr` states that when conditions are met, `j` will be added to `R` when executing the main foldr loop.
 -/
-lemma R_foldr {j s X} (h : ¬fs_in X.r j) (h2: ∃ x ∈ Wn ∅ j s, x > 2*j) (hs : j+1≤s):
+lemma R_foldr {j s X} (h : ¬fs_in X.r j) (h2: ∃ x ∈ Wn ∅ j s, x > 2*j) (hs : j+1 ≤ s):
 fs_in (foldr (step s) X (range s).reverse).r j := by
   rw [range_3_way_split hs]
   simp [-foldr_reverse]
@@ -372,7 +372,7 @@ Let i := the exact step. (We define this by noting it must've been enumerated at
 
 The minimality of `i` is then used to prove the goal.
 -/
-theorem mem_A_iff_enumerated {x} : x ∈ A ↔ ∃ i s : ℕ, ( ¬fs_in (C s).r i ∧ i+1≤s ∧
+theorem mem_A_iff_enumerated {x} : x ∈ A ↔ ∃ i s : ℕ, ( ¬fs_in (C s).r i ∧ i+1 ≤ s ∧
   let cond t := t ∈ Wn ∅ i s ∧ t > 2*i
   cond x ∧ ∀ t<x, ¬ cond t
 ) := by
@@ -394,7 +394,7 @@ theorem mem_A_iff_enumerated {x} : x ∈ A ↔ ∃ i s : ℕ, ( ¬fs_in (C s).r 
     have hx : ¬ fs_in (C sM1).l x := @Nat.find_min _ _ h sM1 (Nat.sub_one_lt_of_lt a0)
     have sM1G1 : sM1 > 0 := by contrapose hs; simp at hs; simp [hs, C]
 
-    have hstep : ∃ j, j+1≤sM1 ∧
+    have hstep : ∃ j, j+1 ≤ sM1 ∧
     fs_in (foldr (step sM1) (C sM1) ((range' (j + 1) (sM1 - 1 - j)).reverse ++ [j] ++ (range j).reverse)).l x ∧
     fs_in (step sM1 j (foldr (step sM1) (C sM1) (range j).reverse)).l x
    := by

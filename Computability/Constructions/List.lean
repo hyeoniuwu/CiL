@@ -406,7 +406,7 @@ def c_list_zipWith (c : Code) := c_list_reverse.comp <| left.comp (c_list_zipWit
 
 @[cp] theorem c_list_zipWith_aux_prim  {c : Code} (hc : code_prim c) : code_prim (c_list_zipWith_aux c) := by unfold c_list_zipWith_aux; apply_cp
 @[cp] theorem c_list_zipWith_prim  {c : Code} (hc : code_prim c) : code_prim (c_list_zipWith c) := by unfold c_list_zipWith; apply_cp
-theorem c_list_zipWith_evp_aux_2 {a b c : List ℕ} {f : ℕ → ℕ→ℕ} (h : a.length≤b.length) : zipWith f (b++c) a = zipWith f b a := by
+theorem c_list_zipWith_evp_aux_2 {a b c : List ℕ} {f : ℕ → ℕ → ℕ} (h : a.length ≤ b.length) : zipWith f (b++c) a = zipWith f b a := by
   -- rw `b` => `take a.length b ++ drop a.length b`
   rewrite [(take_append_drop a.length b).symm]
   -- rw `take a.length b ++ drop a.length b ++ c` => `take a.length b ++ (drop a.length b ++ c)`
@@ -424,12 +424,12 @@ theorem zipWith_flip {α β γ : Type} {f : α → β → γ} {a : List α} {b :
     | nil => simp
     | cons _ _ yih => simp [xih, flip]
 
-theorem c_list_zipWith_evp_aux_1 {a b c : List ℕ} {f : ℕ → ℕ→ℕ} (h : a.length≤b.length) : zipWith f a (b++c) = zipWith f a b := by
+theorem c_list_zipWith_evp_aux_1 {a b c : List ℕ} {f : ℕ → ℕ → ℕ} (h : a.length ≤ b.length) : zipWith f a (b++c) = zipWith f a b := by
   rw [zipWith_flip]
   rw (config := {occs := .pos [2]}) [zipWith_flip]
   exact c_list_zipWith_evp_aux_2 h
 
-theorem c_list_zipWith_evp_aux_3 {f : ℕ → ℕ→ℕ} {head} {tail : List ℕ} {l2N head2 list2} (hh : tail.length < (n2l l2N).length) (hl2 : drop tail.length (n2l l2N) = head2 :: list2) : (f head (head2 :: list2).headI :: (zipWith f tail.reverse (n2l l2N)).reverse) = (zipWith f (tail.reverse ++ [head]) (n2l l2N)).reverse := by
+theorem c_list_zipWith_evp_aux_3 {f : ℕ → ℕ → ℕ} {head} {tail : List ℕ} {l2N head2 list2} (hh : tail.length < (n2l l2N).length) (hl2 : drop tail.length (n2l l2N) = head2 :: list2) : (f head (head2 :: list2).headI :: (zipWith f tail.reverse (n2l l2N)).reverse) = (zipWith f (tail.reverse ++ [head]) (n2l l2N)).reverse := by
   simp
   have aux5 : (n2l l2N) = (take tail.length (n2l l2N)) ++ [head2] ++ list2 := by
     -- rw `(n2l l2N)` => `(take tail.length (n2l l2N)) ++ drop tail.length (n2l l2N)`

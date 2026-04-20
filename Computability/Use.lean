@@ -50,7 +50,7 @@ namespace Oracle.Single.Code
 section evaln_lemmas
 -- general lemmas for evaln
 lemma evaln_sing {O s1 c x a s2 b} (h1 : a∈(evaln O s1 c x)) (h2 : b∈(evaln O s2 c x)): a=b := by
-  cases Classical.em (s1≤s2) with
+  cases Classical.em (s1 ≤ s2) with
   | inl h =>
     have := evaln_mono h h1
     simp_all only [Option.mem_def, Option.some.injEq]
@@ -64,7 +64,7 @@ lemma evaln_sing'' {O s1 c x s2}
 : (evaln O s1 c x) = (evaln O s2 c x) := Option.get_inj.mp (@evaln_sing' O s1 c x h1 s2 h2)
 lemma evaln_mono' {O s1 c x s2}
 (h1 : (evaln O s1 c x).isSome)
-(h2 : s1≤s2)
+(h2 : s1 ≤ s2)
 : (evaln O s2 c x) = (evaln O s1 c x) := by
   have := evaln_mono h2 (Option.get_mem h1)
   simp_all only [Option.mem_def, Option.some_get]
@@ -74,8 +74,8 @@ theorem evaln_sG1 {O s c x} (h : (evaln O s c x).isSome) : s=s-1+1 := by
     contrapose h
     simp [h,evaln]
   exact Eq.symm (succ_pred_eq_of_ne_zero this)
-theorem evaln_xles {O s c x} (h : (evaln O (s+1) c x).isSome) : x≤s :=le_of_lt_succ (evaln_bound (Option.get_mem h))
-theorem evaln_xles' {O s c x} (h : (evaln O s c x).isSome) : x≤s-1 := by
+theorem evaln_xles {O s c x} (h : (evaln O (s+1) c x).isSome) : x ≤ s :=le_of_lt_succ (evaln_bound (Option.get_mem h))
+theorem evaln_xles' {O s c x} (h : (evaln O s c x).isSome) : x ≤ s-1 := by
   rw [evaln_sG1 h] at h
   exact evaln_xles h
 abbrev en2e {O s c x} : (evaln O s c x).isSome → (eval O c x).Dom := by
@@ -317,7 +317,7 @@ theorem evaln_rfind_as_eval_rfind_reverse {O s c x}
   induction h1 generalizing s x with
   | zero =>
     simp [evaln]
-    have xles : x≤s := by
+    have xles : x ≤ s := by
       simp at h2
       contrapose h2
       simp at h2
@@ -351,7 +351,7 @@ theorem evaln_rfind_as_eval_rfind_reverse {O s c x}
       simp at this
       rw [← sss]
       ac_nf at this ⊢
-    have xles : x≤s := evaln_xles h30
+    have xles : x ≤ s := evaln_xles h30
     simp [xles]
 
     have := @h3 0 (zero_lt_succ n)
@@ -623,26 +623,26 @@ match c with
 def usen (O : ℕ → ℕ) (c : Code) (s : ℕ) : ℕ → Option ℕ :=
 match c,s with
 | _, 0            => fun _ ↦ Option.none
-| zero      , s+1 => fun x ↦ do guard (x≤s); return 0
-| succ      , s+1 => fun x ↦ do guard (x≤s); return 0
-| left      , s+1 => fun x ↦ do guard (x≤s); return 0
-| right     , s+1 => fun x ↦ do guard (x≤s); return 0
-| oracle    , s+1 => fun x ↦ do guard (x≤s); return x+1
+| zero      , s+1 => fun x ↦ do guard (x ≤ s); return 0
+| succ      , s+1 => fun x ↦ do guard (x ≤ s); return 0
+| left      , s+1 => fun x ↦ do guard (x ≤ s); return 0
+| right     , s+1 => fun x ↦ do guard (x ≤ s); return 0
+| oracle    , s+1 => fun x ↦ do guard (x ≤ s); return x+1
 | pair cf cg, s+1 => fun x ↦
   do
-    guard (x≤s);
+    guard (x ≤ s);
     let usen_cf ← usen O cf (s+1) x
     let usen_cg ← usen O cg (s+1) x
     return Nat.max usen_cf usen_cg
 | comp cf cg, s+1  => fun x ↦
   do
-    guard (x≤s);
+    guard (x ≤ s);
     let usen_cg  ← usen O cg (s+1) x
     let evaln_cg ← evaln O (s+1) cg x
     let usen_cf  ← usen O cf (s+1) evaln_cg
     return Nat.max usen_cf usen_cg
 | prec cf cg, s+1 => fun x ↦ do
-  guard (x≤s);
+  guard (x ≤ s);
   let (xl, i) := Nat.unpair x
   (i.casesOn
   (usen O cf (s+1) xl)
@@ -654,7 +654,7 @@ match c,s with
     return Nat.max usen_prev usen_indt)
 | rfind' cf, s+1 => fun x ↦
   do
-    guard (x≤s);
+    guard (x ≤ s);
     let usen_base  ← usen O cf (s+1) x
     let evaln_base ← evaln O (s+1) cf x
     if evaln_base=0 then usen_base else
@@ -668,12 +668,12 @@ theorem usen_bound {O} : ∀ {k c n x}, x ∈ usen O c k n → n < k
     suffices ∀ {o : Option ℕ}, x ∈ do { guard (n ≤ k); o } → n < k + 1 by
       cases c <;> rw [usen] at h <;> exact this h
     simpa [Option.bind_eq_some_iff] using Nat.lt_succ_of_le
-private lemma guard_imp {k₂ n a} {k : ℕ} (h : k≤k₂) : guard (n ≤ k) = some a → (guard (n ≤ k₂) : Option Unit) = some a := by
+private lemma guard_imp {k₂ n a} {k : ℕ} (h : k ≤ k₂) : guard (n ≤ k) = some a → (guard (n ≤ k₂) : Option Unit) = some a := by
   intro h3
-  have : n≤k := by
+  have : n ≤ k := by
     contrapose h3
     simp only [h3, guard_false, reduceCtorEq, not_false_eq_true]
-  have : n≤k₂ := by exact Nat.le_trans this h
+  have : n ≤ k₂ := by exact Nat.le_trans this h
   simp [this]
 theorem usen_mono {O} : ∀ {k₁ k₂ c n x}, k₁ ≤ k₂ → x ∈ usen O c k₁ n → x ∈ usen O c k₂ n
 | 0, k₂, c, n, x, _, h => by simp [usen] at h
@@ -765,7 +765,7 @@ theorem evaln_mono_dom {O} : ∀ {k₁ k₂ c n}, k₁ ≤ k₂ → (evaln O k�
   exact Option.isSome_of_mem (evaln_mono k1k2 (Option.get_mem h1))
 
 lemma usen_sing {O c s1 x a s2 b} (h1 : a∈(usen O c s1 x)) (h2 : b∈(usen O c s2 x)): a=b := by
-  cases Classical.em (s1≤s2) with
+  cases Classical.em (s1 ≤ s2) with
   | inl h =>
     have := usen_mono h h1
     simp_all only [Option.mem_def, Option.some.injEq]
@@ -776,7 +776,7 @@ lemma usen_sing' {O c s1 x h1 s2 h2} : (usen O c s1 x).get h1 = (usen O c s2 x).
 
 lemma usen_mono' {O c s1 x s2}
 (h1 : (usen O c s1 x).isSome)
-(h2 : s1≤s2)
+(h2 : s1 ≤ s2)
 : (usen O c s2 x) = (usen O c s1 x) := by
   have := usen_mono h2 (Option.get_mem h1)
   simp_all only [Option.mem_def, Option.some_get]
@@ -814,7 +814,7 @@ theorem usen_none_iff_evaln_none {O c s x} : (usen O c s x) = Option.none ↔ (e
   | case7 s cf cg hcf hcg =>
     simp [usen,evaln]
     simp [Seq.seq]
-    cases Classical.em (x≤s) with
+    cases Classical.em (x ≤ s) with
     | inr h => simp [h]
     | inl h =>
     simp [h]
@@ -833,7 +833,7 @@ theorem usen_none_iff_evaln_none {O c s x} : (usen O c s x) = Option.none ↔ (e
       exact hcg.mpr (hh a2 ha2)
   | case8 s cf cg hcf hcg =>
     simp [usen,evaln]
-    cases Classical.em (x≤s) with
+    cases Classical.em (x ≤ s) with
     | inr h => simp [h]
     | inl h =>
     simp [h]
@@ -846,7 +846,7 @@ theorem usen_none_iff_evaln_none {O c s x} : (usen O c s x) = Option.none ↔ (e
     · exact fun hh a ha a3 ha3 ↦ Option.eq_none_iff_forall_ne_some.mp (hcf.mpr (hh a3 ha3))
   | case9 s cf cg hcf hcg ih =>
     simp [usen,evaln]
-    cases Classical.em (x≤s) with
+    cases Classical.em (x ≤ s) with
     | inr h => simp [h]
     | inl h =>
     simp [h]
@@ -866,7 +866,7 @@ theorem usen_none_iff_evaln_none {O c s x} : (usen O c s x) = Option.none ↔ (e
     · exact fun hh a ha a3 ha3 ↦ Option.eq_none_iff_forall_ne_some.mp (hcg.mpr (hh a3 ha3))
   | case10 s cf hcf ih =>
     simp [usen,evaln]
-    cases Classical.em (x≤s) with
+    cases Classical.em (x ≤ s) with
     | inr h => simp [h]
     | inl h =>
     simp [h]
@@ -1000,7 +1000,7 @@ theorem usen_rfind_prop_aux'' {O k n} {cf : Code} :
   intro h
   simp [usen] at h
   simp [evaln]
-  have nlek : n≤k := by contrapose h; simp at h; simp [h]
+  have nlek : n ≤ k := by contrapose h; simp at h; simp [h]
   simp [nlek] at h ⊢
   have usen_base_dom : (usen O cf (k + 1) n).isSome := by contrapose h; simp at h; simp [h]
   simp [isSome.bind usen_base_dom] at h
@@ -1029,7 +1029,7 @@ theorem usen_rfind_prop_aux {O k n x} {cf : Code} :
   exact usen_rfind_prop_aux' this
 
 theorem usen_rfind_prop' {O cf k n} (hu : (usen O (rfind' cf) (k + 1) n).isSome):
-∀j≤rfind'_obtain (usen_rfind_prop_aux' hu),
+∀j ≤ rfind'_obtain (usen_rfind_prop_aux' hu),
   (usen O cf (k + 1 - j) (Nat.pair n.l (n.r+j))).isSome
   -- and also the maximum of these is equal to the usen.
 := by
@@ -1037,7 +1037,7 @@ theorem usen_rfind_prop' {O cf k n} (hu : (usen O (rfind' cf) (k + 1) n).isSome)
   rw (config := {occs := .pos [2]}) [add_comm]
   exact en2un ((nrfind'_obtain_prop' (un2en hu)).right.left j hjro)
 theorem usen_rfind_prop {O k n x cf} (h : x ∈ usen O cf.rfind' (k + 1) n):
-∀j≤rfind'_obtain (usen_rfind_prop_aux h),
+∀j ≤ rfind'_obtain (usen_rfind_prop_aux h),
   ∃y,y∈ (usen O cf (k + 1 - j) (Nat.pair n.l (n.r+j)))
   -- and also the maximum of these is equal to the usen.
 := by
@@ -1053,7 +1053,7 @@ lemma nrf_aux {O cf k x} (h : (usen O (rfind' cf) k x).isSome) :
   have keqkM1P1 : k=k-1+1 := by exact Eq.symm (succ_pred_eq_of_ne_zero this)
   exact keqkM1P1
 lemma nrf {O cf k x} (h : (usen O (rfind' cf) k x).isSome) :
-x≤k-1
+x ≤ k-1
 ∧
 (usen O cf k x).isSome
 ∧
@@ -1063,7 +1063,7 @@ x≤k-1
   simp (config := {singlePass := true}) [keqkM1P1] at h ⊢
 
   simp [usen] at h
-  have xlek : x≤k-1 := by
+  have xlek : x ≤ k-1 := by
     contrapose h;
     simp [h, Option.bind]
   simp [xlek] at h ⊢
@@ -1153,7 +1153,7 @@ lemma unrpeq0 {O cf k x y} :
   intro h
   have evaln_ver_dom : (evaln O (k + 1) cf.rfind' x).isSome := un2en (Option.isSome_of_mem h)
   simp [usen] at h
-  have xlek : x≤k := evaln_xles evaln_ver_dom
+  have xlek : x ≤ k := evaln_xles evaln_ver_dom
   simp [xlek] at h
   have usen_base_dom : (usen O cf (k+1) x).isSome := by contrapose h; simp at h; simp [h]
   simp [isSome.bind usen_base_dom] at h
@@ -1170,14 +1170,14 @@ lemma unrpeq0 {O cf k x y} :
   rcases h with ⟨h1,h2,h3⟩
   simp at h3
   simp [usen]
-  have xlek : x≤k := le_of_lt_succ (evaln_bound (Option.get_mem h1))
+  have xlek : x ≤ k := le_of_lt_succ (evaln_bound (Option.get_mem h1))
   simp [xlek]
   simp [isSome.bind (en2un h1)]
   simp [isSome.bind (h1)]
   simp_all [@unrpeq2 O k cf x h1 h2]
 
 lemma unrpeq1 {x k O cf y} : (y∈(do
-  guard (x≤k);
+  guard (x ≤ k);
   let guard ← evaln O (k+1) (rfind' cf) x;
   let ro := guard - x.r
   let mut max := 0
@@ -1194,7 +1194,7 @@ lemma unrpeq1 {x k O cf y} : (y∈(do
   simp
   constructor
   intro h
-  have xlek : x≤k := by
+  have xlek : x ≤ k := by
     contrapose h;
     simp [h, Option.bind]
   simp [xlek] at h ⊢
@@ -1204,7 +1204,7 @@ lemma unrpeq1 {x k O cf y} : (y∈(do
 
   intro h
   rcases h with ⟨h1,h2⟩
-  have xlek : x≤k := by
+  have xlek : x ≤ k := by
     simp [evaln] at h1
     contrapose h1;
     simp [h1]
@@ -1276,7 +1276,7 @@ theorem usen_rfind_prop2 {O k x y cf} :
 (y ∈ usen O cf.rfind' (k + 1) x)
 ↔
 y∈(do
-  guard (x≤k);
+  guard (x ≤ k);
   let guard ← evaln O (k+1) (rfind' cf) x;
   let ro := guard - x.r
   let mut max := 0
@@ -1388,7 +1388,7 @@ y∈(do
           have := Option.isSome_of_mem this
           ac_nf at this ⊢
           simp at this ⊢
-          exact usen_mono_dom (show k-1≤k from sub_le k 1) (en2un this)
+          exact usen_mono_dom (show k-1 ≤ k from sub_le k 1) (en2un this)
         simp [isSome.bind this]
         apply congrArg
         apply congrArg
@@ -1488,7 +1488,7 @@ y∈(do
       have := nrop.right.left 1 (le_add_left 1 roM1)
       simp at this
       rw [add_comm] at this
-      exact evaln_mono_dom (show k≤k+1 from le_add_right k 1) this
+      exact evaln_mono_dom (show k ≤ k+1 from le_add_right k 1) this
 
     have ih1 := @ih
       ⟪x.l, x.r+1⟫
@@ -1498,7 +1498,7 @@ y∈(do
       ?_
       ?_
     rotate_left
-    · exact Option.isSome_of_mem (evaln_mono (show k≤k+1 from le_add_right k 1) (Option.get_mem evalnindtdom))
+    · exact Option.isSome_of_mem (evaln_mono (show k ≤ k+1 from le_add_right k 1) (Option.get_mem evalnindtdom))
     ·
       exact aux0
     ·
@@ -1555,7 +1555,7 @@ y∈(do
         have := Option.isSome_of_mem this
         ac_nf at this ⊢
         simp at this ⊢
-        exact usen_mono_dom (show k-1≤k from sub_le k 1) (en2un this)
+        exact usen_mono_dom (show k-1 ≤ k from sub_le k 1) (en2un this)
       simp [isSome.bind this]
       apply congrArg
       apply congrArg
@@ -1592,7 +1592,7 @@ theorem usen_rfind_prop2' {O cf k x}
 (usen O cf.rfind' (k + 1) x).get h
 =
 (do
-  guard (x≤k);
+  guard (x ≤ k);
   let guard ← evaln O (k+1) (rfind' cf) x;
   let ro := guard - x.r
   let mut max := 0
@@ -1606,7 +1606,7 @@ theorem usen_rfind_prop2' {O cf k x}
       (Option.get_of_eq_some (Option.isSome_of_mem (usen_rfind_prop2.mp (Option.get_mem h))) this)
 theorem usen_rfind_prop2'' {O k x cf} :
 (usen O cf.rfind' (k + 1) x)=(do
-  guard (x≤k);
+  guard (x ≤ k);
   let guard ← evaln O (k+1) (rfind' cf) x;
   let ro := guard - x.r
   let mut max := 0
@@ -1618,7 +1618,7 @@ theorem usen_rfind_prop2'' {O k x cf} :
     apply Option.eq_of_eq_some
     intro y
     exact usen_rfind_prop2
-theorem usen_xles {O c s x} (h : (usen O c (s+1) x).isSome) : x≤s := le_of_lt_succ (usen_bound (Option.get_mem h))
+theorem usen_xles {O c s x} (h : (usen O c (s+1) x).isSome) : x ≤ s := le_of_lt_succ (usen_bound (Option.get_mem h))
 theorem usen_sound {O} : ∀ {c s n x}, x ∈ usen O c s n → x ∈ use O c n
 := by
   intro c k n x h
@@ -1787,7 +1787,7 @@ theorem use_dom_iff_eval_dom {O c x} : (use O c x).Dom ↔ (eval O c x).Dom := b
 abbrev e2u {O c x} : (eval O c x).Dom → (use O c x).Dom := use_dom_iff_eval_dom.mpr
 abbrev u2e {O c x} : (use O c x).Dom → (eval O c x).Dom := use_dom_iff_eval_dom.mp
 theorem use_rfind_prop {O cf n} (hu : (use O (rfind' cf) n).Dom):
-∀j≤rfind'_obtain (u2e hu),
+∀j ≤ rfind'_obtain (u2e hu),
   (use O cf (Nat.pair n.l (n.r+j))).Dom
   -- and also the maximum of these is equal to the usen.
 := by
@@ -1967,7 +1967,7 @@ lemma lemlemlem3 {O cf nn h5 h57 kk x}
       rw [this]
       exact iihh2
 lemma eval_rfind_prop5 {O cf y x} :
-x∈eval O (rfind' cf) y→y.r≤x := by
+x∈eval O (rfind' cf) y→y.r ≤ x := by
   simp [eval]
   grind
 
@@ -2064,7 +2064,7 @@ theorem usen_complete {O} {c n x} : x ∈ use O c n ↔ ∃ s, x ∈ usen O c s 
   | rfind' cf hf =>
     simp [use] at h
     suffices ∃k,x∈(do
-  guard (n≤k);
+  guard (n ≤ k);
   let guard ← evaln O (k+1) (rfind' cf) n;
   let ro := guard - n.r
   let mut max := 0
@@ -2080,7 +2080,7 @@ theorem usen_complete {O} {c n x} : x ∈ use O c n ↔ ∃ s, x ∈ usen O c s 
     generalize 0=a at h ⊢
     rcases h with ⟨h1,h2,h3⟩
 
-    have rogeq : n.r≤h1 := eval_rfind_prop5 h2
+    have rogeq : n.r ≤ h1 := eval_rfind_prop5 h2
     rw [show h1=h1-n.r+n.r from by simp [rogeq]] at h2
     clear rogeq
 
@@ -2374,7 +2374,7 @@ let evaln_prev := (evaln O s (prec cf cg) ⟪x, i⟫).get (evaln_prec_dom_aux h)
     constructor
     · have aux0 := evaln_prec_dom_aux h
       have sG1 := evaln_sG1 aux0
-      have aux1 := evaln_mono_dom (show s≤s+1 from le_add_right s 1) aux0
+      have aux1 := evaln_mono_dom (show s ≤ s+1 from le_add_right s 1) aux0
       have ih1 := @ih (s-1) ?_
       rotate_left
       · rw [← sG1]
@@ -2601,7 +2601,7 @@ theorem clause_mono_2
 {f : (a : ℕ)→(l' : List ℕ)→(∃l'',l''++l'=l)→(a∈l')→ℕ}
 (hf : ∀ a head tail (m : a∈tail) (l' : List ℕ) (h3t : ∃l'',l''++l'=l) (hht : head :: tail=l'), (f a (head :: tail) (cm_aux_0 h3t hht) (List.mem_cons_of_mem head (List.forIn'_congr._proof_1 (Eq.refl tail) a m))) = f a tail (cm_aux_1 h3t hht) m)
 {h : ∀ (l') (base : ℕ) (htt : ∃l'',l''++l'=l),  (forIn' (l') (base) fun a h b ↦ Part.some (ForInStep.yield (b.max (f a l' (htt) h)))).Dom}
-{h2 : base1≤base2}
+{h2 : base1 ≤ base2}
 :
 ((forIn' l base1 fun a h b ↦ Part.some (ForInStep.yield (b.max (f a l ⟨[],rfl⟩ h)))).get (h l base1 (⟨[],rfl⟩))
 ≤
@@ -2653,7 +2653,7 @@ theorem clause_mono_2_opt
 {f : (a : ℕ)→(l' : List ℕ)→(∃l'',l''++l'=l)→(a∈l')→ℕ}
 (hf : ∀ a head tail (m : a∈tail) (l' : List ℕ) (h3t : ∃l'',l''++l'=l) (hht : head :: tail=l'), (f a (head :: tail) (cm_aux_0 h3t hht) (List.mem_cons_of_mem head (List.forIn'_congr._proof_1 (Eq.refl tail) a m))) = f a tail (cm_aux_1 h3t hht) m)
 {h : ∀ (l') (base : ℕ) (htt : ∃l'',l''++l'=l),  (forIn' (l') (base) fun a h b ↦ some (ForInStep.yield (b.max (f a l' (htt) h)))).isSome}
-{h2 : base1≤base2}
+{h2 : base1 ≤ base2}
 :
 ((forIn' l base1 fun a h b ↦ some (ForInStep.yield (b.max (f a l ⟨[],rfl⟩ h)))).get (h l base1 (⟨[],rfl⟩))
 ≤
@@ -2700,7 +2700,7 @@ theorem clause_mono_2_opt
     exact ⟨ih1.left,le_of_max_le_left ih1.right⟩
 
 
-theorem le_of_le_sub {c} {a b :ℕ}(h : a≤b-c): a≤b := by
+theorem le_of_le_sub {c} {a b :ℕ}(h : a ≤ b-c): a ≤ b := by
   grind
 
 
@@ -2755,12 +2755,12 @@ theorem usen_mono_rfind' {O cf s x j} (hh : (usen O (rfind' cf) (s+1) x).isSome)
   -- simp only [forIn_eq_forIn']
   have : (usen O cf (s+1) x).isSome := by exact en2un aux3
   have domaux2 : (usen O cf (s+1-ro) (Nat.pair x.l (ro + x.r))).isSome := en2un <| rop2 ro le_rfl
-  have domaux3aux {a' k} (h0 : k≤ro) (h : a' ∈ (List.range k).reverse) : a' ∈ (List.range ro).reverse := by
+  have domaux3aux {a' k} (h0 : k ≤ ro) (h : a' ∈ (List.range k).reverse) : a' ∈ (List.range ro).reverse := by
     simp at h ⊢
     exact Nat.lt_of_lt_of_le h h0
     -- exact?
-  have domaux3 (a' k m) (h0 : k≤ro) := en2un (rop2 a' (rr_mem_bound (List.forIn'_congr._proof_1 listrw a' (List.mem_cons_of_mem ro (domaux3aux h0 m)))))
-  have forInDom {k :ℕ} (base : ℕ) (h : k≤ro):
+  have domaux3 (a' k m) (h0 : k ≤ ro) := en2un (rop2 a' (rr_mem_bound (List.forIn'_congr._proof_1 listrw a' (List.mem_cons_of_mem ro (domaux3aux h0 m)))))
+  have forInDom {k :ℕ} (base : ℕ) (h : k ≤ ro):
   (forIn' (List.range k).reverse (base) fun a' m b ↦
         some (ForInStep.yield (b.max ((usen O cf (s+1-a') (Nat.pair x.l (a' + x.r))).get (domaux3 a' k m h))))).isSome := by
     induction k generalizing base with
@@ -2803,7 +2803,7 @@ theorem usen_mono_rfind' {O cf s x j} (hh : (usen O (rfind' cf) (s+1) x).isSome)
         unfold f
         rcases listrevlem htt with ⟨h1,h2,h3⟩
         simp [h2]
-        have : h1≤ro := by (expose_names; exact Nat.le_trans h3 hjro_1)
+        have : h1 ≤ ro := by (expose_names; exact Nat.le_trans h3 hjro_1)
         exact forInDom base this
       have := (@clause_mono_2_opt base base (List.range j).reverse f (fun a head tail m l' h3t hht ↦ rfl) bigaux (le_rfl)).right
 
@@ -2820,7 +2820,7 @@ theorem usen_mono_rfind' {O cf s x j} (hh : (usen O (rfind' cf) (s+1) x).isSome)
       induction k with
       | zero => simp
       | succ n ih =>
-        -- do cases on if ro-n≤0
+        -- do cases on if ro-n ≤ 0
         cases Nat.eq_zero_or_pos (ro - n) with
         | inl hh =>
           simp [show ro-(n+1)=ro-n-1 from rfl]
@@ -2850,7 +2850,7 @@ theorem usen_mono_rfind' {O cf s x j} (hh : (usen O (rfind' cf) (s+1) x).isSome)
           let base2 := (((usen O cf (s+1-(ro - n - 1 + 1)) (Nat.pair x.l (ro - n - 1 + 1 + x.r))).get domaux10).max
           ((usen O cf (s+1-(ro - n - 1 )) (Nat.pair x.l (ro - n - 1 + x.r))).get domaux11))
           let base1 := (usen O cf (s+1-(ro - n - 1 )) (Nat.pair x.l (ro - n - 1 + x.r))).get domaux11
-          have base1_le_base2 : base1≤base2 := by
+          have base1_le_base2 : base1 ≤ base2 := by
             exact Nat.le_max_right ((usen O cf (s+1-(ro - n - 1 + 1)) (Nat.pair x.l (ro - n - 1 + 1 + x.r))).get domaux10) base1
           let f (a : ℕ) (l' : List ℕ) (h2 : ∃ l'' : List ℕ, l'' ++ l' = (List.range (ro - n - 1)).reverse) (h3 : a ∈ l')
            := (usen O cf (s+1-a) (Nat.pair x.l (a + x.r))).get (
@@ -2866,7 +2866,7 @@ theorem usen_mono_rfind' {O cf s x j} (hh : (usen O (rfind' cf) (s+1) x).isSome)
             unfold f
             rcases listrevlem htt with ⟨h1,h2,h3⟩
             simp [h2]
-            have : h1≤ro := by exact le_of_le_sub (le_of_le_sub h3)
+            have : h1 ≤ ro := by exact le_of_le_sub (le_of_le_sub h3)
             exact forInDom base this
           -- let f (a : ℕ) (l : List ℕ) (h : a ∈ l) :ℕ := usen O cf (s+1-) (Nat.pair x.l (a + x.r))
           have mainclause := @clause_mono_2_opt base1 base2 (List.range (ro - n - 1)).reverse f (fun a head tail m l' h3t hht ↦ rfl) aux12 base1_le_base2
@@ -2939,7 +2939,7 @@ theorem usen_principle {O₁ O₂} {s c x}
   evaln O₁ s c x = evaln O₂ s c x ∧ usen O₁ c s x = usen O₂ c s x
 := by
   have sG1 := evaln_sG1 hh
-  have xles : x≤s-1 := evaln_xles' hh
+  have xles : x ≤ s-1 := evaln_xles' hh
   rw [sG1] at ⊢ hh
   have hO: ∀ i<(usen O₁ c (s-1+1) x).get (en2un hh), O₁ i = O₂ i := by
     simp [← sG1]
@@ -2980,7 +2980,7 @@ theorem usen_principle {O₁ O₂} {s c x}
     simp only [evaln, usen];
 
     -- deal with trivial case where functions diverge immediately
-    if h : ¬x≤s-1 then simp [h,Option.bind]
+    if h : ¬x ≤ s-1 then simp [h,Option.bind]
     else
     simp at h; simp [h]; clear h
 
@@ -3016,7 +3016,7 @@ theorem usen_principle {O₁ O₂} {s c x}
     simp? says simp only [pair_lr, unpaired, unpair1_to_l, Option.bind_eq_bind, unpair2_to_r, Option.pure_def]
 
     -- deal with trivial case where functions diverge immediately
-    if h : ¬x≤s-1 then simp [h,Option.bind]
+    if h : ¬x ≤ s-1 then simp [h,Option.bind]
     else
     simp at h; simp [h]; clear h
 
@@ -3084,7 +3084,7 @@ theorem usen_principle {O₁ O₂} {s c x}
 
       apply hcf ⟪x.l, j+x.r⟫ ((s-1+1-j)) aux1 ?_
       simp [sG1j]
-      exact fun x h ↦ hO x <| le_trans h (usen_mono_rfind' (en2un hh) (show j≤nrfind'_obtain hh from hjro))
+      exact fun x h ↦ hO x <| le_trans h (usen_mono_rfind' (en2un hh) (show j ≤ nrfind'_obtain hh from hjro))
 
     have aux0 : (evaln O₂ (s-1+1) cf.rfind' x).isSome := by
       apply evaln_rfind_as_eval_rfind_reverse
@@ -3094,7 +3094,7 @@ theorem usen_principle {O₁ O₂} {s c x}
       · rw [← (ihAll nro le_rfl).left]
         exact nrop1
       intro j hjro
-      have hjro : j≤nro := by exact le_of_succ_le hjro
+      have hjro : j ≤ nro := by exact le_of_succ_le hjro
       rw [← (ihAll j hjro).left]
       exact nrop2 j hjro
 
@@ -3129,7 +3129,7 @@ theorem usen_principle {O₁ O₂} {s c x}
     -- we rephrase the proof to be of the for loop form found in use, rather than the inductive form of usen
     suffices
     (do
-  guard (x≤s-1);
+  guard (x ≤ s-1);
   let guard ← evaln O₁ (s-1+1) (rfind' cf) x;
   let ro := guard - x.r
   let mut max := 0
@@ -3139,7 +3139,7 @@ theorem usen_principle {O₁ O₂} {s c x}
   max :Option ℕ)
   =
   (do
-  guard (x≤s-1);
+  guard (x ≤ s-1);
   let guard ← evaln O₂ (s-1+1) (rfind' cf) x;
   let ro := guard - x.r
   let mut max := 0

@@ -6,11 +6,11 @@ theorem rr_indt (n): (range (n + 1)).reverse = n :: (range n).reverse := by
   simp only [reverse_eq_cons_iff, reverse_reverse]
   exact range_succ
 
-theorem rr_mem_bound {ro} {i} (h : i ∈ (range (ro + 1)).reverse) : i≤ro := by
+theorem rr_mem_bound {ro} {i} (h : i ∈ (range (ro + 1)).reverse) : i ≤ ro := by
   contrapose h
   simpa using h
 
-lemma listrevlem {l' x} (h : ∃ l'' : List ℕ, l'' ++ l' = (range x).reverse) : ∃ y, l'=(range y).reverse∧y≤x := by
+lemma listrevlem {l' x} (h : ∃ l'' : List ℕ, l'' ++ l' = (range x).reverse) : ∃ y, l'=(range y).reverse∧y ≤ x := by
   rcases h with ⟨h1,h2⟩
   induction h1 generalizing x with
   | nil =>

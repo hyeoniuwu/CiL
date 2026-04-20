@@ -30,7 +30,7 @@ noncomputable def evalc (O : ℕ → ℕ) (u : ℕ) : Code → ℕ → Part ℕ 
 theorem evalnc_imp_usen {O u s c x} (h : (evalnc O u s c x).isSome) : (usen O c s x).isSome := by
   unfold evalnc at h
   exact Option.isSome_of_isSome_bind h
-theorem evalnc_prop_1 {O u s c x} (h : (evalnc O u s c x).isSome) : (usen O c s x).get (evalnc_imp_usen h)≤u := by
+theorem evalnc_prop_1 {O u s c x} (h : (evalnc O u s c x).isSome) : (usen O c s x).get (evalnc_imp_usen h) ≤ u := by
   unfold evalnc at h
   simp at h
   simp [isSome.bind (evalnc_imp_usen h)] at h
@@ -38,7 +38,7 @@ theorem evalnc_prop_1 {O u s c x} (h : (evalnc O u s c x).isSome) : (usen O c s 
 theorem evalc_imp_use {O u c x} (h : (evalc O u c x).Dom) : (use O c x).Dom := by
   unfold evalc at h
   exact Part.Dom.of_bind h
-theorem evalc_prop_1 {O u c x} (h : (evalc O u c x).Dom) : (use O c x).get (evalc_imp_use h)≤u := by
+theorem evalc_prop_1 {O u c x} (h : (evalc O u c x).Dom) : (use O c x).get (evalc_imp_use h) ≤ u := by
   unfold evalc at h
   simp at h
   rcases h with ⟨h0,h1⟩
@@ -47,15 +47,15 @@ theorem evalc_prop_0 {O u c x} (h : (evalc O u c x).Dom) : evalc O u c x = eval 
   simp [evalc]
   simp [Part.Dom.bind <| evalc_imp_use h]
   simp [evalc_prop_1 h]
-theorem evalc_prop_2 {O u c x} (h : (eval O c x).Dom) (h0 : (use O c x).get (e2u h)≤u) : (evalc O u c x).Dom := by
+theorem evalc_prop_2 {O u c x} (h : (eval O c x).Dom) (h0 : (use O c x).get (e2u h) ≤ u) : (evalc O u c x).Dom := by
   simp [evalc]
   use e2u h
   simpa [h0]
-theorem evalc_prop_3 {O u c x} (h : (eval O c x).Dom) (h0 : (use O c x).get (e2u h)≤u) : evalc O u c x=Part.some ((eval O c x).get h) := by
+theorem evalc_prop_3 {O u c x} (h : (eval O c x).Dom) (h0 : (use O c x).get (e2u h) ≤ u) : evalc O u c x=Part.some ((eval O c x).get h) := by
   simp [evalc]
   simp [Part.Dom.bind <| e2u h]
   simp [h0]
-theorem evalc_prop_4 {O u c x h}: (use O c x).get h≤u ↔ (evalc O u c x).Dom :=
+theorem evalc_prop_4 {O u c x h}: (use O c x).get h ≤ u ↔ (evalc O u c x).Dom :=
   ⟨
     fun h0 ↦ Part.eq_some_imp_dom <| evalc_prop_3 (u2e h) h0,
     fun h0 ↦ evalc_prop_1 h0

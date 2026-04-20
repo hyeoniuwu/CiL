@@ -110,7 +110,7 @@ fs_in 0b0010 3 = false
 -/
 
 /-- `fs_add a x` gives the natural representing the set with `x` added to `a` interpreted as a finite set. -/
-abbrev fs_add : ℕ → ℕ→ℕ := fun a x ↦ a ||| (2^x)
+abbrev fs_add : ℕ → ℕ → ℕ := fun a x ↦ a ||| (2^x)
 
 /-- `fs_add a` gives the the size of `a` interepreted as a finite set. -/
 def fs_size := List.length.comp Nat.bitIndices

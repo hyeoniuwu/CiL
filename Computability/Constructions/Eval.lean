@@ -196,7 +196,7 @@ theorem c_evaln_evp_aux_0_np1 {O x n} : evalp O (c_evaln) (Nat.pair x (Nat.pair 
   have hs : evalp O s covrec_inp = 0 := by simp [s,code_s,covrec_inp,hkP1]
   simp [hs, getI, evaln]
 
-theorem c_evaln_evp_aux {O code x s} (hcode_val : code≤4) :
+theorem c_evaln_evp_aux {O code x s} (hcode_val : code ≤ 4) :
   evalp O (c_evaln) (Nat.pair x (Nat.pair code (s+1)))
     =
   o2n (evaln O (s+1) code.n2c x)
@@ -228,7 +228,7 @@ theorem c_evaln_evp_aux {O code x s} (hcode_val : code≤4) :
     (o2n ∘ evaln O (s+1) zero) := by
       funext elem
       simp [opt_zero, hsM1, ele, evaln]
-      cases Classical.em (elem≤s) with
+      cases Classical.em (elem ≤ s) with
       | inl h => simp [h, Nat.not_lt_of_le h]
       | inr h => simp [h, gt_of_not_le h]
   have hopt_succ :
@@ -237,7 +237,7 @@ theorem c_evaln_evp_aux {O code x s} (hcode_val : code≤4) :
     (o2n ∘ evaln O (s+1) succ) := by
       funext elem
       simp [opt_succ, hsM1, ele, evaln]
-      cases Classical.em (elem≤s) with
+      cases Classical.em (elem ≤ s) with
       | inl h => simp [h, Nat.not_lt_of_le h]
       | inr h => simp [h, gt_of_not_le h]
   have hopt_left :
@@ -246,7 +246,7 @@ theorem c_evaln_evp_aux {O code x s} (hcode_val : code≤4) :
     (o2n ∘ evaln O (s+1) left) := by
       funext elem
       simp [opt_left, hsM1, ele, evaln]
-      cases Classical.em (elem≤s) with
+      cases Classical.em (elem ≤ s) with
       | inl h => simp [h, Nat.not_lt_of_le h]
       | inr h => simp [h, gt_of_not_le h]
   have hopt_right :
@@ -255,7 +255,7 @@ theorem c_evaln_evp_aux {O code x s} (hcode_val : code≤4) :
     (o2n ∘ evaln O (s+1) right) := by
       funext elem
       simp [opt_right, hsM1, ele, evaln]
-      cases Classical.em (elem≤s) with
+      cases Classical.em (elem ≤ s) with
       | inl h => simp [h, Nat.not_lt_of_le h]
       | inr h => simp [h, gt_of_not_le h]
   have hopt_oracle :
@@ -264,7 +264,7 @@ theorem c_evaln_evp_aux {O code x s} (hcode_val : code≤4) :
     (o2n ∘ evaln O (s+1) oracle) := by
       funext elem
       simp [opt_oracle, hsM1, ele, evaln]
-      cases Classical.em (elem≤s) with
+      cases Classical.em (elem ≤ s) with
       | inl h => simp [h, Nat.not_lt_of_le h]
       | inr h => simp [h, gt_of_not_le h]
   have hzero_mapped : evalp O zero_mapped covrec_inp = (map (o2n ∘ evaln O (s+1) zero) (range (s+1))) := by simp [zero_mapped, hs,hopt_zero]
@@ -349,8 +349,8 @@ theorem c_evaln_evp_aux_nMod4 {O x n s} :
   let pc_m_s   c' elem := evalp O (c_evaln) ⟪evalp O c' ⟪elem, covrec_inp⟫, m,       s+1⟫
   let pc_c_sM1 c' elem := evalp O (c_evaln) ⟪evalp O c' ⟪elem, covrec_inp⟫, (n+4)+1, s⟫
 
-  let opt_pair elem := o2n (do guard (elem≤s); Nat.pair<$>n2o (pc_ml_s left elem)<*>n2o (pc_mr_s left elem))
-  let opt_comp elem := o2n (do guard (elem≤s); let intermediate ← (n2o (pc_mr_s left elem)); n2o (pc_ml_s left intermediate))
+  let opt_pair elem := o2n (do guard (elem ≤ s); Nat.pair<$>n2o (pc_ml_s left elem)<*>n2o (pc_mr_s left elem))
+  let opt_comp elem := o2n (do guard (elem ≤ s); let intermediate ← (n2o (pc_mr_s left elem)); n2o (pc_ml_s left intermediate))
 
   let opt_prec elem :=
   o2n (
@@ -477,7 +477,7 @@ theorem c_evaln_evp_aux_nMod4 {O x n s} :
       unfold ele
       simp [hpc_ml_s, hpc_mr_s]
       simp [opt_pair]
-      cases Classical.em (elem≤s) with
+      cases Classical.em (elem ≤ s) with
       | inl h =>
         simp [h, Nat.not_lt_of_le h]
         cases Classical.em (pc_ml_s left elem=o2n Option.none) with
@@ -501,7 +501,7 @@ theorem c_evaln_evp_aux_nMod4 {O x n s} :
       simp [opt_comp_1]
       simp [hsM1,hpc_mr_s,ele]
       simp [opt_comp]
-      cases Classical.em (elem≤s) with
+      cases Classical.em (elem ≤ s) with
       | inl h =>
         simp [h, Nat.not_lt_of_le h]
         cases Classical.em (pc_mr_s left elem=o2n Option.none) with
@@ -544,7 +544,7 @@ theorem c_evaln_evp_aux_nMod4 {O x n s} :
       simp [hpc_mr_s]
 
       simp [opt_prec]
-      cases Classical.em (elem≤s) with
+      cases Classical.em (elem ≤ s) with
       | inl h =>
         simp [h, Nat.not_lt_of_le h]
         cases helemr : elem.r with
@@ -594,7 +594,7 @@ theorem c_evaln_evp_aux_nMod4 {O x n s} :
       simp [hpc_m_s]
 
       simp [opt_rfind']
-      cases Classical.em (elem≤s) with
+      cases Classical.em (elem ≤ s) with
       | inl h =>
         simp [h, Nat.not_lt_of_le h]
         simp [pc_m_s]
@@ -721,7 +721,7 @@ theorem c_evaln_evp_aux_nMod4 {O x n s} :
         rw [ih mr_s mr_s_lt_cs];
       simp [ih_i]
 
-      cases Classical.em (x≤sM1) with
+      cases Classical.em (x ≤ sM1) with
       | inr h => simp [h]
       | inl h =>
         simp [h, ml_s, mr_s, c_sM1, m]
@@ -751,7 +751,7 @@ theorem c_evaln_evp_aux_nMod4 {O x n s} :
       rw [ih mr_s mr_s_lt_cs];
       simp [mr_s, m]
 
-      cases Classical.em (x≤sM1) with
+      cases Classical.em (x ≤ sM1) with
       | inl h =>
         simp [h]
         cases Classical.em (evaln O (sM1 + 1) (n2c n.div2.div2.r) x=Option.none) with
@@ -776,7 +776,7 @@ theorem c_evaln_evp_aux_nMod4 {O x n s} :
       rw [ih m_s m_s_lt_cs];
       rw [ih c_sM1 c_sM1_lt_cs]
 
-      cases Classical.em (x≤sM1) with
+      cases Classical.em (x ≤ sM1) with
       | inl h =>
         simp [h]
         simp [m_s]

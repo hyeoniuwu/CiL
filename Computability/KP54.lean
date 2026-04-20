@@ -182,17 +182,17 @@ theorem AsBs_Mono_1 {i j : ℕ} : (As i) <+: (As (i+j)) ∧ (Bs i) <+: (Bs (i+j)
     constructor
     exact List.IsPrefix.trans ihj.left (@AsBs_Mono_0 (i + jM1)).left
     exact List.IsPrefix.trans ihj.right (@AsBs_Mono_0 (i + jM1)).right
-theorem AsBs_Mono_2 {i j : ℕ} (h : i≤j) : (As i) <+: (As j) ∧ (Bs i) <+: (Bs j) := by
+theorem AsBs_Mono_2 {i j : ℕ} (h : i ≤ j) : (As i) <+: (As j) ∧ (Bs i) <+: (Bs j) := by
   rw [Eq.symm (Nat.add_sub_of_le h)]
   exact AsBs_Mono_1
 theorem As_Mono_3 {k i j} (hi : k<(As i).length) (hh : k<(As j).length) : (As i)[k] = (As j)[k] := by
-  cases Classical.em (i≤j) with
+  cases Classical.em (i ≤ j) with
   | inl h => exact List.IsPrefix.getElem ((AsBs_Mono_2 h).left) hi
   | inr h =>
     simp at h
     exact (List.IsPrefix.getElem (AsBs_Mono_2 (Nat.le_of_succ_le h)).left hh).symm
 theorem Bs_Mono_3 {k i j} (hi : k<(Bs i).length) (hh : k<(Bs j).length) : (Bs i)[k] = (Bs j)[k] := by
-  cases Classical.em (i≤j) with
+  cases Classical.em (i ≤ j) with
   | inl h => exact List.IsPrefix.getElem ((AsBs_Mono_2 h).right) hi
   | inr h =>
     simp at h
@@ -294,7 +294,7 @@ theorem Bs_ex_ext {i j : ℕ} (hij : i<j): ∃ lM1, (Bs i)++(n2l (lM1+1))=Bs j :
   have a4 : (l2n h1)-1+1=l2n h1 := Nat.succ_pred_eq_of_ne_zero (nonempt_l2n h1 a2)
   use (l2n h1)-1
   simpa [a4]
-theorem AsBsSize {i : ℕ} : i≤(As i).length ∧ i≤(Bs i).length := by
+theorem AsBsSize {i : ℕ} : i ≤ (As i).length ∧ i ≤ (Bs i).length := by
   induction i with
   | zero => exact ⟨Nat.zero_le (As 0).length, Nat.zero_le (Bs 0).length⟩
   | succ i ih =>

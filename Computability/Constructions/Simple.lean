@@ -291,7 +291,7 @@ def c_fs_add := c_or.comp₂ left <| c_pow.comp₂ (c_const 2) right
 end Oracle.Single.Code
 end fs_add
 
-theorem evaln_dom_imp_x_le_s {O s c x} (h : (evaln O s c x).isSome) : x≤s := by
+theorem evaln_dom_imp_x_le_s {O s c x} (h : (evaln O s c x).isSome) : x ≤ s := by
   contrapose h
   simp at h
   simp

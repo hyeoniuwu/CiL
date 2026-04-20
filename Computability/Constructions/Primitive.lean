@@ -350,17 +350,17 @@ end if_lt_te
 
 section if_le_te
 namespace Oracle.Single.Code
--- we use the fact that `a<b+1 ↔ a≤b`.
-/-- eval c_if_le_te (x,y) = [x≤y] -/
+-- we use the fact that `a<b+1 ↔ a ≤ b`.
+/-- eval c_if_le_te (x,y) = [x ≤ y] -/
 def c_if_le_te := c_if_lt_te.comp (pair (pair (left.comp left) (succ.comp <| right.comp left)) right)
 @[cp] theorem c_if_le_te_prim : code_prim c_if_le_te := by unfold c_if_le_te; apply_cp
-@[simp] theorem c_if_le_te_evp {O : ℕ → ℕ} {a b c d} : evalp O c_if_le_te ⟪a,b,c,d⟫ = if a≤b then c else d := by
+@[simp] theorem c_if_le_te_evp {O : ℕ → ℕ} {a b c d} : evalp O c_if_le_te ⟪a,b,c,d⟫ = if a ≤ b then c else d := by
   simp [c_if_le_te,evalp];
   -- funext xs
   cases Classical.em (a<b+1) with
   | inl h => simp [h, Nat.lt_add_one_iff.mp h]
   | inr h => simp [h, Nat.lt_add_one_iff.not.mp h]
-@[simp] theorem c_if_le_te_ev {O : ℕ → ℕ} {a b c d} : eval O c_if_le_te ⟪a,b,c,d⟫ = if a≤b then c else d := by
+@[simp] theorem c_if_le_te_ev {O : ℕ → ℕ} {a b c d} : eval O c_if_le_te ⟪a,b,c,d⟫ = if a ≤ b then c else d := by
   rw [← evalp_eq_eval c_if_le_te_prim]; simp
 end Oracle.Single.Code
 end if_le_te

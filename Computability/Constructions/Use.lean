@@ -153,7 +153,7 @@ theorem c_usen_evp_aux_0_np1 {O x n} : evalp O c_usen ⟪x, n+1, 0⟫ = o2n (use
   have hs : evalp O s covrec_inp = 0 := by simp [s,code_s,covrec_inp,hkP1]
   simp [hs, getI, usen]
 
-theorem c_usen_evp_aux {O code x s} (hcode_val : code≤4) :
+theorem c_usen_evp_aux {O code x s} (hcode_val : code ≤ 4) :
   evalp O c_usen (Nat.pair x (Nat.pair code (s+1)))
     =
   o2n (usen O code.n2c (s+1) x)
@@ -186,7 +186,7 @@ theorem c_usen_evp_aux {O code x s} (hcode_val : code≤4) :
       simp [opt_zero]
       simp [hsM1,ele]
       simp [usen]
-      cases Classical.em (elem≤s) with
+      cases Classical.em (elem ≤ s) with
       | inl h => simp [h, Nat.not_lt_of_le h]
       | inr h => simp [h, gt_of_not_le h]
   have hopt_oracle :
@@ -197,7 +197,7 @@ theorem c_usen_evp_aux {O code x s} (hcode_val : code≤4) :
       simp [opt_oracle]
       simp [hsM1,ele]
       simp [usen]
-      cases Classical.em (elem≤s) with
+      cases Classical.em (elem ≤ s) with
       | inl h => simp [h, Nat.not_lt_of_le h]
       | inr h => simp [h, gt_of_not_le h]
   have hzero_mapped : evalp O zero_mapped covrec_inp = (map (o2n ∘ usen O zero (s+1)) (range (s+1))) := by simp [zero_mapped, hs,hopt_zero]
@@ -251,20 +251,20 @@ theorem c_usen_evp_aux_nMod4 {O x n s} :
   let pc_c_sM1 c' elem := evalp O c_usen ⟪evalp O c' ⟪elem, covrec_inp⟫, (n+4)+1, s⟫
 
   let opt_pair elem := o2n do
-    guard (elem≤s)
+    guard (elem ≤ s)
     let usen_cf ← n2o (pc_ml_s left elem)
     let usen_cg ← n2o (pc_mr_s left elem)
     return Nat.max usen_cf usen_cg
 
   let opt_comp elem := o2n do
-    guard (elem≤s);
+    guard (elem ≤ s);
     let usen_cg ← n2o (pc_mr_s left elem)
     let evaln_cg ← evaln O (s+1) mr.n2c elem
     let usen_cf  ← n2o (pc_ml_s left evaln_cg)
     Nat.max usen_cf usen_cg
 
   let opt_prec x := o2n do
-    guard (x≤s)
+    guard (x ≤ s)
     let (xl, i) := Nat.unpair x
     (i.casesOn
     (n2o (pc_ml_s left xl))
@@ -276,7 +276,7 @@ theorem c_usen_evp_aux_nMod4 {O x n s} :
       return Nat.max usen_prev usen_indt)
 
   let opt_rfind' x := (o2n do
-    guard (x≤s);
+    guard (x ≤ s);
     let usen_base  ← n2o <| pc_m_s left x
     let evaln_base ← evaln O (s+1) m.n2c x
     if evaln_base=0 then usen_base else
@@ -394,7 +394,7 @@ theorem c_usen_evp_aux_nMod4 {O x n s} :
       unfold ele
       simp [hpc_ml_s, hpc_mr_s]
       simp [opt_pair]
-      cases Classical.em (elem≤s) with
+      cases Classical.em (elem ≤ s) with
       | inr h => simp [h, gt_of_not_le h]
       | inl h =>
         simp [h, Nat.not_lt_of_le h]
@@ -420,7 +420,7 @@ theorem c_usen_evp_aux_nMod4 {O x n s} :
       simp [opt_comp_1]
       simp [hsM1,ele]
       simp [opt_comp]
-      cases Classical.em (elem≤s) with
+      cases Classical.em (elem ≤ s) with
       | inr h => simp [h, gt_of_not_le h]
       | inl h =>
         simp [h, Nat.not_lt_of_le h]
@@ -479,7 +479,7 @@ theorem c_usen_evp_aux_nMod4 {O x n s} :
       simp [opt_prec_1,hsM1,ele,hprec_i,hprec_usen_base]
       simp [opt_prec]
 
-      cases Classical.em (elem≤s) with
+      cases Classical.em (elem ≤ s) with
       | inr h => simp [h, gt_of_not_le h]
       | inl h =>
         simp [h, Nat.not_lt_of_le h]
@@ -520,7 +520,7 @@ theorem c_usen_evp_aux_nMod4 {O x n s} :
       simp [opt_rfind'_1]
       simp [hsM1,ele]
       simp [opt_rfind']
-      cases Classical.em (elem≤s) with
+      cases Classical.em (elem ≤ s) with
       | inr h => simp [gt_of_not_le h, h];
       | inl h =>
         simp [h, Nat.not_lt_of_le h]
@@ -705,7 +705,7 @@ theorem c_usen_evp_aux_nMod4 {O x n s} :
       rw [ih m_s m_s_lt_cs];
       rw [ih c_sM1 c_sM1_lt_cs]
 
-      cases Classical.em (x≤sM1) with
+      cases Classical.em (x ≤ sM1) with
       | inl h =>
         simp [h,m_s,m,c_sM1]
         have rw0_aux : c2n ((n2c n.div2.div2).rfind') = n + 4 + 1 := by
