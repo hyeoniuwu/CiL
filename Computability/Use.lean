@@ -551,7 +551,7 @@ theorem rfind'_obtain_prop {O cf x}
     fun j jj => evaln_sound''' (nrop2 j (le_of_succ_le jj)) (nrop3 j jj)
   ⟩
 theorem rfind'_obtain_prop_4 {O cf x} (h:(eval O (rfind' cf) x).Dom) : ∀ j ≤ rfind'_obtain h, (eval O (rfind' cf) ⟪x.l, j+x.r⟫).Dom :=
-  fun j jj => en2e $ nrfind'_obtain_prop_4' (Option.isSome_of_eq_some (evaln_complete''.mp (Part.get_mem h)).choose_spec) j jj
+  fun j jj => en2e <| nrfind'_obtain_prop_4' (Option.isSome_of_eq_some (evaln_complete''.mp (Part.get_mem h)).choose_spec) j jj
 
 theorem rfind'_prop {O cf x y}
 (h:(eval O (rfind' cf) x).Dom)
@@ -1303,7 +1303,7 @@ y∈(do
     =
   (if (evaln O (k + 1) cf.rfind' x).get h2 - x.r = 0 then (some (base'.max ((usen O cf (k + 1) x).get (en2un h1)))) else
     (usen O cf.rfind' (k + 1 - 1) ⟪x.l, x.r+1⟫).bind fun usen_indt ↦
-      some (base'.max $ ((usen O cf (k + 1) x).get (en2un h1)).max usen_indt))
+      some (base'.max <| ((usen O cf (k + 1) x).get (en2un h1)).max usen_indt))
   := by
     simp [show base'=0 from rfl]
   rw [this] at h3
@@ -1319,7 +1319,7 @@ y∈(do
   induction (evaln O (k + 1) cf.rfind' x).get h2 - x.r generalizing base h2 x with
   | zero =>
     simp
-    simp [isSome.bind $ en2un h1]
+    simp [isSome.bind <| en2un h1]
   | succ roM1 ih =>
     simp
     simp at ih
@@ -1441,7 +1441,7 @@ y∈(do
     =
   (if (evaln O (k + 1) cf.rfind' x).get h2 - x.r = 0 then (some (base'.max ((usen O cf (k + 1) x).get (en2un h1)))) else
     (usen O cf.rfind' (k + 1 - 1) ⟪x.l, x.r+1⟫).bind fun usen_indt ↦
-      some (base'.max $ ((usen O cf (k + 1) x).get (en2un h1)).max usen_indt))
+      some (base'.max <| ((usen O cf (k + 1) x).get (en2un h1)).max usen_indt))
   := by
     simp [show base'=0 from rfl]
   rw [this]
@@ -1458,7 +1458,7 @@ y∈(do
   clear base'
 
   induction (evaln O (k + 1) cf.rfind' x).get h2 - x.r generalizing base h2 x with
-  | zero => simp [isSome.bind $ en2un h1]
+  | zero => simp [isSome.bind <| en2un h1]
   | succ roM1 ih =>
     simp at ih ⊢
     intro asd h
@@ -1781,7 +1781,7 @@ theorem use_dom_iff_eval_dom {O c x} : (use O c x).Dom ↔ (eval O c x).Dom := b
       exact x_1
   intro h
   rcases eval_dom_imp_evaln h with ⟨s, hs⟩
-  exact Part.mem_imp_dom $ usen_sound $ Option.get_mem $ en2un hs
+  exact Part.mem_imp_dom <| usen_sound <| Option.get_mem <| en2un hs
 
 
 abbrev e2u {O c x} : (eval O c x).Dom → (use O c x).Dom := use_dom_iff_eval_dom.mpr
@@ -2444,7 +2444,7 @@ let eval_prev := (evaln O s (prec cf cg) ⟪x, i⟫).get (usen_prec_dom_aux h)
   have h':=h
   simp [usen] at h'
   simp [usen_xles h] at h'
-  simp [isSome.bind (en2un $ usen_prec_dom_aux h)] at h'
+  simp [isSome.bind (en2un <| usen_prec_dom_aux h)] at h'
   simp [isSome.bind (usen_prec_dom_aux h)] at h'
   simp []
 
@@ -2524,7 +2524,7 @@ theorem usen_mono_prec' {O cf cg s x} (hh:(usen O (prec cf cg) (s+1) ⟪x,0⟫).
 := by
   simp [usen]
 theorem usen_mono_prec_1 {O cf cg s x i} (hh:(usen O (prec cf cg) (s+1) ⟪x, i+1⟫).isSome):
-(usen O (prec cf cg) (s) ⟪x, i⟫).get (en2un $ usen_prec_dom_aux hh) ≤ (usen O (prec cf cg) (s+1) ⟪x, i+1⟫).get hh
+(usen O (prec cf cg) (s) ⟪x, i⟫).get (en2un <| usen_prec_dom_aux hh) ≤ (usen O (prec cf cg) (s+1) ⟪x, i+1⟫).get hh
   := by
     simp [usen.eq_9]
 -- todo: simplify below proof
@@ -2737,10 +2737,10 @@ theorem usen_mono_rfind' {O cf s x j} (hh:(usen O (rfind' cf) (s+1) x).isSome):
       : (i : ℕ) → i ∈ (List.range (ro + 1)).reverse → ℕ → Option (ForInStep ℕ))
     = (fun i h r ↦
         some (ForInStep.yield (r.max
-        ((usen O cf (s+1-i) ⟪x.l, i+x.r⟫).get (en2un $ rop2 i (rr_mem_bound h)))))
+        ((usen O cf (s+1-i) ⟪x.l, i+x.r⟫).get (en2un <| rop2 i (rr_mem_bound h)))))
       : (i : ℕ) → i ∈ (List.range (ro + 1)).reverse → ℕ → Option (ForInStep ℕ)) := by
         funext i h r
-        simp [isSome.bind (en2un $ rop2 i (rr_mem_bound h))]
+        simp [isSome.bind (en2un <| rop2 i (rr_mem_bound h))]
   simp [this]
 
   have listrw : (List.range (ro + 1)).reverse = ro :: (List.range ro).reverse := by
@@ -2754,7 +2754,7 @@ theorem usen_mono_rfind' {O cf s x j} (hh:(usen O (rfind' cf) (s+1) x).isSome):
   -- 3. that forin range j ~ ≤ forin range full.
   -- simp only [forIn_eq_forIn']
   have : (usen O cf (s+1) x).isSome := by exact en2un aux3
-  have domaux2 : (usen O cf (s+1-ro) (Nat.pair x.l (ro + x.r))).isSome := en2un $ rop2 ro le_rfl
+  have domaux2 : (usen O cf (s+1-ro) (Nat.pair x.l (ro + x.r))).isSome := en2un <| rop2 ro le_rfl
   have domaux3aux {a' k} (h0:k≤ro) (h:a' ∈ (List.range k).reverse) : a' ∈ (List.range ro).reverse  := by
     simp at h ⊢
     exact Nat.lt_of_lt_of_le h h0
@@ -3062,7 +3062,7 @@ theorem usen_principle {O₁ O₂} {s c x}
       rw [← ih_c.left]
       rw [← ih_c.right]
       simp only [isSome.bind aux00]
-      simp only [isSome.bind $ en2un aux00]
+      simp only [isSome.bind <| en2un aux00]
       simp [ih_cg]
 
   | hrfind' cf s x hcf =>
@@ -3084,7 +3084,7 @@ theorem usen_principle {O₁ O₂} {s c x}
 
       apply hcf ⟪x.l, j+x.r⟫ ((s-1+1-j)) aux1 ?_
       simp [sG1j]
-      exact λ x h ↦ hO x $ le_trans h (usen_mono_rfind' (en2un hh) (show j≤nrfind'_obtain hh from hjro))
+      exact λ x h ↦ hO x <| le_trans h (usen_mono_rfind' (en2un hh) (show j≤nrfind'_obtain hh from hjro))
 
     have aux0 : (evaln O₂ (s-1+1) cf.rfind' x).isSome := by
       apply evaln_rfind_as_eval_rfind_reverse
@@ -3179,7 +3179,7 @@ theorem usen_principle {O₁ O₂} {s c x}
       have := a2 (nron+1) (le_rfl)
       simp at this; simp [← this]; clear this
 
-      have := en2un $ nrop2 (nron+1) (Nat.le_refl (nron + 1))
+      have := en2un <| nrop2 (nron+1) (Nat.le_refl (nron + 1))
       simp at this
       simp [isSome.bind this]
       exact @ih

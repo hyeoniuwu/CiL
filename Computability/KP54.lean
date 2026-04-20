@@ -342,14 +342,14 @@ section R
 We wish to prove
 `theorem R (i:ℕ) : eval A i ≠ χ B`.
 
-We shall prove this with two auxiliary lemmas. The first, `R_aux_0`, states that for any $i\in\N$, $n=\sz{B_s(2i+1)}$ witnesses:
+We shall prove this with two auxiliary lemmas. The first, `R_aux_0`, states that for any <|i\in\N$, <|n=\sz{B_s(2i+1)}$ witnesses:
 \begin{align}
 	[i:A_{2i+2}](n)\ne \lss{n\in B_{2i+2}}.
 \end{align}
 
 We will define that witness as `R_wt`.
 
-The second, `As_Uninjured`, states that the computation $[i:A_{2i+2}](x)$ will have its value unchanged through subsequent stages.
+The second, `As_Uninjured`, states that the computation <|[i:A_{2i+2}](x)$ will have its value unchanged through subsequent stages.
 
 We split the proof into two cases, `As_Uninjured_0` and `As_Uninjured_1`, depending on whether the value halts or not (respectively).
 -/
@@ -372,7 +372,7 @@ that [i:As](R_wt i) ≠ (R_wt i) ∈ Bs.
 The proof follows easily from unravelling if-statements.
 -/
 private theorem R_aux_0 (i:ℕ) (h:(evals (As (2*i+1+1)) i (R_wt i)).Dom):
-(evals (As (2*i+1+1)) i (R_wt i)).get h ≠ b2n (n2b $ (Bs (2*i+1+1))[R_wt i]'(@BsSize_o2e_Rwt i)) := by
+(evals (As (2*i+1+1)) i (R_wt i)).get h ≠ b2n (n2b <| (Bs (2*i+1+1))[R_wt i]'(@BsSize_o2e_Rwt i)) := by
   unfold Bs
   unfold As
   unfold KP54
@@ -439,7 +439,7 @@ If `[i:As](k)` diverges, then it will always diverge in subsequent steps.
 
 This is proven by contraposition; if the final computation converges, we must have found some finite extension.
 
-If the final computation converges, it must have some finite use $u$.
+If the final computation converges, it must have some finite use <|u$.
 
 To show \mono{(evals (As (2*(i+1))) i (R\_wt i)).Dom}, it suffices to show that the corresponding finite extension was found in the KP54 construction procedure.
 
@@ -563,7 +563,7 @@ theorem R_aux_1 (i:ℕ) : (evalSet A i (R_wt i)) ≠ Part.some ((χ B) (R_wt i))
   if h0 : (evalSet A i (R_wt i)).Dom then
     rw [R_aux_χ] -- rw the rhs
     simp only [As_Uninjured i] -- rw the lhs
-    exact Part.ne_of_get_ne' $ R_aux_0 i (As_Uninjured_1' h0)
+    exact Part.ne_of_get_ne' <| R_aux_0 i (As_Uninjured_1' h0)
   else
     simp [Part.eq_none_iff'.mpr h0]
 
@@ -579,7 +579,7 @@ private noncomputable def S_wt (i:ℕ) := (As (2*i)).length
   rw [show S_wt i = (As (2*i)).length from rfl]
   exact AsSize_mono'
 private theorem S_aux_0 (i:ℕ) (h:(evals (Bs (2*i+1)) i (S_wt i)).Dom):
-(evals (Bs (2*i+1)) i (S_wt i)).get h ≠ b2n (n2b $ (As (2*i+1))[S_wt i]'(@AsSize_o2e_wt i)) := by
+(evals (Bs (2*i+1)) i (S_wt i)).get h ≠ b2n (n2b <| (As (2*i+1))[S_wt i]'(@AsSize_o2e_wt i)) := by
   unfold Bs
   unfold As
   unfold KP54
@@ -674,10 +674,10 @@ lemma Bs_Uninjured_1 {i} : ¬(evals (Bs (2*i+1)) i (S_wt i)).Dom → ¬(evalSet 
   use 0
   have a6 : use_compl < (Bs (2*i)).length := calc
     use_compl < 2*i := h0
-    _     ≤ (Bs (2*i)).length := (@AsBsSize $ 2*i).right
+    _     ≤ (Bs (2*i)).length := (@AsBsSize <| 2*i).right
   have a5 : use_compl ≤ (Bs (2*i) ++ n2l (0 + 1)).length := calc
     use_compl ≤ 2*i := Nat.le_of_succ_le h0
-    _     ≤ (Bs (2*i)).length := (@AsBsSize $ 2*i).right
+    _     ≤ (Bs (2*i)).length := (@AsBsSize <| 2*i).right
     _     ≤ (Bs (2*i) ++ n2l (0 + 1)).length := by
       simp only [zero_add, List.length_append, le_add_iff_nonneg_right, zero_le]
   have mainrw : use (fun e ↦ b2n (n2b ((Bs (2*i) ++ n2l (0 + 1)).getD e whatever))) (i.n2c) (S_wt i) = use (χ B) (i.n2c) (S_wt i):= by
@@ -703,7 +703,7 @@ theorem S_aux_1 (i:ℕ) : (evalSet B i (S_wt i)) ≠ Part.some ((χ A) (S_wt i))
   if h0 : (evalSet B i (S_wt i)).Dom then
     rw [S_aux_χ]
     simp only [Bs_Uninjured i]
-    exact Part.ne_of_get_ne' $ S_aux_0 i (Bs_Uninjured_1' h0)
+    exact Part.ne_of_get_ne' <| S_aux_0 i (Bs_Uninjured_1' h0)
   else
     simp [Part.eq_none_iff'.mpr h0]
 theorem S (i:ℕ) : evalSet B i ≠ χ A := Function.ne_iff.mpr ⟨S_wt i, S_aux_1 i⟩

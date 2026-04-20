@@ -66,7 +66,7 @@ theorem O_le_J (O:ℕ→ℕ) : O ≤ᵀᶠ O⌜ :=  O_le_K0 O
 
 theorem K_leq_K0 (O:ℕ→ℕ) : (K O) ≤ᵀᶠ (K0 O) := by
   apply exists_code.mpr
-  use oracle.comp $ pair c_id c_id
+  use oracle.comp <| pair c_id c_id
 
   simp [eval,Seq.seq]
   exact rfl

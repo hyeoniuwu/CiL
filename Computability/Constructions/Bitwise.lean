@@ -43,11 +43,11 @@ def c_bitwise_aux (c : Code) :=
   let r  := lookup n' m'
 
   c_cov_rec
-    (c_const 0) $
+    (c_const 0) <|
     c_ifz.comp₃ n
-      (c_ift.comp₃ (c.comp₂ zero (c_const 1)) m zero) $
+      (c_ift.comp₃ (c.comp₂ zero (c_const 1)) m zero) <|
     c_ifz.comp₃ m
-      (c_ift.comp₃ (c.comp₂ (c_const 1) zero) n zero) $
+      (c_ift.comp₃ (c.comp₂ (c_const 1) zero) n zero) <|
     c_ift.comp₃ (c.comp₂ b₁ b₂)
     (succ.comp (c_add.comp₂ r r))
     (c_add.comp₂ r r)
@@ -73,13 +73,13 @@ lemma lt_pair_of_lt_lt {a c b d} (ha : a<c) (hb : b<d) : ⟪a,b⟫ < ⟪c,d⟫ :
   exact Nat.lt_trans a0 a1
 lemma c_bitwise_evp_rec_bounds {n m : ℕ} : ⟪(n + 1) / 2,(m + 1) / 2⟫ < ⟪n + 1,m + 1⟫ := by
   exact lt_pair_of_lt_lt (Nat.div_lt_self' n 0) (Nat.div_lt_self' m 0)
-theorem c_bitwise_evp_0_0 {O c} : evalp O (c_bitwise c) ⟪0, 0⟫ = Nat.bitwise (fun a b => n2b $ evalp O c ⟪b2n a, b2n b⟫) 0 0 := by
+theorem c_bitwise_evp_0_0 {O c} : evalp O (c_bitwise c) ⟪0, 0⟫ = Nat.bitwise (fun a b => n2b <| evalp O c ⟪b2n a, b2n b⟫) 0 0 := by
   unfold c_bitwise; unfold c_bitwise_aux;
   lift_lets; extract_lets; expose_names
   rw [show Nat.pair 0 0 = 0 from rfl]
   simp [Nat.bitwise]
   
-theorem c_bitwise_evp_0_m {O c m} : evalp O (c_bitwise c) ⟪0, m+1⟫ = Nat.bitwise (fun a b => n2b $ evalp O c ⟪b2n a, b2n b⟫) 0 (m+1) := by
+theorem c_bitwise_evp_0_m {O c m} : evalp O (c_bitwise c) ⟪0, m+1⟫ = Nat.bitwise (fun a b => n2b <| evalp O c ⟪b2n a, b2n b⟫) 0 (m+1) := by
   unfold c_bitwise; unfold c_bitwise_aux;
   lift_lets; extract_lets; expose_names
   let k := ⟪0, m+1⟫ - 1
@@ -96,7 +96,7 @@ theorem c_bitwise_evp_0_m {O c m} : evalp O (c_bitwise c) ⟪0, m+1⟫ = Nat.bit
   have hm : evalp O m_1 cri = m+1 := by simp [m_1, hiP1]
   -- terminal simp
   simp [hn, hm, b2n, Nat.bitwise]
-theorem c_bitwise_evp_n_0 {O c n} : evalp O (c_bitwise c) ⟪n+1, 0⟫ = Nat.bitwise (fun a b => n2b $ evalp O c ⟪b2n a, b2n b⟫) (n+1) 0 := by
+theorem c_bitwise_evp_n_0 {O c n} : evalp O (c_bitwise c) ⟪n+1, 0⟫ = Nat.bitwise (fun a b => n2b <| evalp O c ⟪b2n a, b2n b⟫) (n+1) 0 := by
   unfold c_bitwise; unfold c_bitwise_aux;
   lift_lets; extract_lets; expose_names
   let k := ⟪n+1, 0⟫ - 1
@@ -119,7 +119,7 @@ theorem c_bitwise_evp_n_m {O c n m} : evalp O (c_bitwise c) ⟪n+1,m+1⟫ = (
     let b₁ := (n+1) % 2
     let b₂ := (m+1) % 2
     let r  := evalp O (c_bitwise c) ⟪n',m'⟫
-    if n2b $ evalp O c ⟪b₁, b₂⟫ then r+r+1 else r+r) := by
+    if n2b <| evalp O c ⟪b₁, b₂⟫ then r+r+1 else r+r) := by
   lift_lets; extract_lets; expose_names
   unfold c_bitwise; unfold c_bitwise_aux;
   lift_lets; extract_lets; expose_names
@@ -154,7 +154,7 @@ theorem c_bitwise_evp_n_m {O c n m} : evalp O (c_bitwise c) ⟪n+1,m+1⟫ = (
     simp [this]
 
   simp [hn, hm, hb₁, hb₂, hr]
-@[simp] theorem c_bitwise_evp {O c}: evalp O (c_bitwise c) = Nat.unpaired2 (Nat.bitwise (fun a b => n2b $ evalp O c ⟪b2n a, b2n b⟫)) := by
+@[simp] theorem c_bitwise_evp {O c}: evalp O (c_bitwise c) = Nat.unpaired2 (Nat.bitwise (fun a b => n2b <| evalp O c ⟪b2n a, b2n b⟫)) := by
   funext nm
   induction' nm using Nat.strong_induction_on with nm ih
   let n := nm.l; let m := nm.r
@@ -190,7 +190,7 @@ def c_lor := c_ifz.comp₃ left
 theorem c_lor_evp {O a b} : evalp O c_lor ⟪a, b⟫ = b2n (n2b a || n2b b) := by
   simp [c_lor, n2b, b2n]
   split <;> simp_all
-@[simp] theorem c_lor_evp' {O} : (fun a b => n2b $ evalp O c_lor ⟪b2n a, b2n b⟫) = Bool.or := by
+@[simp] theorem c_lor_evp' {O} : (fun a b => n2b <| evalp O c_lor ⟪b2n a, b2n b⟫) = Bool.or := by
   funext a b;
   simp [c_lor, n2b, b2n]
   split <;> simp_all
@@ -206,7 +206,7 @@ def c_lxor := c_ifz.comp₃ left
 theorem c_lxor_evp {O a b} : evalp O c_lxor ⟪a, b⟫ = b2n (n2b a ^^ n2b b) := by
   simp [c_lxor, n2b, b2n]
   split <;> simp_all
-@[simp] theorem c_lxor_evp' {O} : (fun a b => n2b $ evalp O c_lxor ⟪b2n a, b2n b⟫) = Bool.xor := by
+@[simp] theorem c_lxor_evp' {O} : (fun a b => n2b <| evalp O c_lxor ⟪b2n a, b2n b⟫) = Bool.xor := by
   funext a b;
   simp [c_lxor, n2b, b2n]
   split <;> simp_all
@@ -222,7 +222,7 @@ def c_land := c_ifz.comp₃ left
 theorem c_land_evp {O a b} : evalp O c_land ⟪a, b⟫ = b2n (n2b a && n2b b) := by
   simp [c_land, n2b, b2n]
   split <;> simp_all
-@[simp] theorem c_land_evp' {O} : (fun a b => n2b $ evalp O c_land ⟪b2n a, b2n b⟫) = Bool.and := by
+@[simp] theorem c_land_evp' {O} : (fun a b => n2b <| evalp O c_land ⟪b2n a, b2n b⟫) = Bool.and := by
   funext a b;
   simp [c_land, n2b, b2n]
 end Oracle.Single.Code

@@ -44,7 +44,7 @@ namespace Oracle.Single.Code
 We implement
 -/
 def dovetailn (c:Code) : Code :=
-  c_rfind $
+  c_rfind <|
   c_if_eq'.comp₂
   (c_evaln.comp₃ (pair left (left.comp right)) (c_const c) (right.comp right))
   (c_const 1)

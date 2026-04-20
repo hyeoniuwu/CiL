@@ -22,9 +22,9 @@ section isSome
 namespace Oracle.Single.Code
 def c_isSome := c_sg'
 @[cp] theorem c_isSome_prim : code_prim c_isSome := by unfold c_isSome; apply_cp
-@[simp] theorem c_isSome_evp {O : ℕ → ℕ} : evalp O c_isSome = fun o => b'2n $ (n2o o).isSome := by
+@[simp] theorem c_isSome_evp {O : ℕ → ℕ} : evalp O c_isSome = fun o => b'2n <| (n2o o).isSome := by
   funext x; cases x <;> simp [c_isSome, b'2n, n2o]
-@[simp] theorem c_isSome_ev {O} : eval O c_isSome = fun o => b'2n $ (n2o o).isSome := by rw [← evalp_eq_eval c_isSome_prim]; simp only [c_isSome_evp];
+@[simp] theorem c_isSome_ev {O} : eval O c_isSome = fun o => b'2n <| (n2o o).isSome := by rw [← evalp_eq_eval c_isSome_prim]; simp only [c_isSome_evp];
 end Oracle.Single.Code
 end isSome
 
@@ -86,7 +86,7 @@ def c_opt_bind (cf cg:Code) :=  c_ifz.comp₃ cf zero (cg.comp₂ c_id (c_opt_ig
   | inl h => simp [h]
   | inr h =>
     simp [h]
-    simp [isSome.bind $ hnat_6 h]
+    simp [isSome.bind <| hnat_6 h]
     congr
     exact Eq.symm hnat_7
 end Oracle.Single.Code
@@ -107,7 +107,7 @@ def c_opt_bind' (cf cg:Code) :=  c_ifz.comp₃ cf zero cg
   | inl h => simp [h]
   | inr h =>
     simp [h]
-    simp [isSome.bind $ hnat_6 h]
+    simp [isSome.bind <| hnat_6 h]
 end Oracle.Single.Code
 end opt_bind'
 

@@ -39,7 +39,7 @@ def c_evalnc :=
   let x1 := x0.comp bind_prev
 
   c_opt_bind
-  (c_usen.comp₃ x0 c0 s0) $
+  (c_usen.comp₃ x0 c0 s0) <|
   c_if_le_te.comp₄ right u1 (c_evaln.comp₃ x1 c1 s1) zero
 @[cp] theorem c_evalnc_prim : code_prim c_evalnc := by unfold c_evalnc; apply_cp 90
 @[simp] theorem c_evalnc_evp {O u s c x} : evalp O c_evalnc ⟪u,s,c,x⟫ = o2n (evalnc O u s c x) := by
@@ -64,7 +64,7 @@ def c_evalc :=
   let x1 := x0.comp bind_prev
 
   c_part_bind
-  (c_use.comp₂ c0 x0) $
+  (c_use.comp₂ c0 x0) <|
   c_if_le_te' right u1 (c_eval.comp₂ c1 x1) c_diverge
 
 @[simp] theorem c_evalc_ev {O u c x}: eval O c_evalc ⟪u, c, x⟫ = (evalc O u c x) := by
@@ -107,10 +107,10 @@ end c_evalo
 section evals
 namespace Oracle.Single.Code
 section c_evals_oracle
-def c_evals_oracle (o:Code):= c_sg.comp $ c_list_getD.comp₃ (c_const o) c_id (c_const whatever)
+def c_evals_oracle (o:Code):= c_sg.comp <| c_list_getD.comp₃ (c_const o) c_id (c_const whatever)
 @[cp] theorem c_evals_oracle_prim {o} : code_prim (c_evals_oracle o) := by unfold c_evals_oracle; apply_cp
 theorem c_evals_oracle_evp {O o} : evalp O (c_evals_oracle o) =
-λ x:ℕ ↦ b2n $ n2b $ (n2l o).getD x whatever := by
+λ x:ℕ ↦ b2n <| n2b <| (n2l o).getD x whatever := by
   simp [c_evals_oracle]
   funext x
   split
@@ -120,14 +120,14 @@ theorem c_evals_oracle_evp {O o} : evalp O (c_evals_oracle o) =
     simp [n2b]
     exact rfl
 theorem c_evals_oracle_ev {O o} : eval O (c_evals_oracle o) =
-λ x:ℕ ↦ b2n $ n2b $ (n2l o).getD x whatever
+λ x:ℕ ↦ b2n <| n2b <| (n2l o).getD x whatever
 := by
   simp [← evalp_eq_eval c_evals_oracle_prim]
   simp [c_evals_oracle_evp]
 end c_evals_oracle
 
 section c_c_evals_oracle
-def c_c_evals_oracle := c_comp.comp₂ (c_const c_sg) (c_comp₃.comp₄ (c_const c_list_getD) (c_c_const.comp left) (c_const c_id) (c_const $ c_const whatever))
+def c_c_evals_oracle := c_comp.comp₂ (c_const c_sg) (c_comp₃.comp₄ (c_const c_list_getD) (c_c_const.comp left) (c_const c_id) (c_const <| c_const whatever))
 @[cp] def c_c_evals_oracle_prim : code_prim c_c_evals_oracle := by unfold c_c_evals_oracle; apply_cp
 @[simp] theorem c_c_evals_oracle_evp {O o c x} : evalp O c_c_evals_oracle ⟪o,c,x⟫ =
 c2n (c_evals_oracle o) := by simp [c_c_evals_oracle, c_evals_oracle]
@@ -152,7 +152,7 @@ def c_evals := c_evalo.comp₃
     simp [c_c_evals_oracle_ev]
     apply prim_total
     exact c_evals_oracle_prim
-  simp [Part.Dom.bind $ t1 ⟪o,c,x⟫]
+  simp [Part.Dom.bind <| t1 ⟪o,c,x⟫]
   have := @c_evalo_ev O _ (c_evals_code.c2n) ⟪o,c,x⟫ this
   simp at this
   simp [this]
@@ -167,7 +167,7 @@ def c_c_evals :=
   c_comp₃.comp₄
   (c_const c_evalo)
   (c_const c_c_evals_oracle)
-  (c_const $ c_const c_evals_code)
+  (c_const <| c_const c_evals_code)
   (c_const c_id)
 @[cp] theorem c_c_evals_prim : code_prim c_c_evals := by unfold c_c_evals; apply_cp
 @[simp] theorem c_c_evals_evp {O x} : evalp O c_c_evals x = c_evals := by simp [c_c_evals, c_evals]

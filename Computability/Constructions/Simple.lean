@@ -59,27 +59,27 @@ open Computability
 def c_bdd_search (c:Code) := prec
   (
     let compt := c_evaln.comp₃ (left.comp right) c (left) -- = [e]ₛ(a)
-    c_ifz.comp₃ compt zero $
-    succ.comp $ pair zero $ c_pred.comp compt
+    c_ifz.comp₃ compt zero <|
+    succ.comp <| pair zero <| c_pred.comp compt
   )
   (
     let prev_comp := right.comp right -- = [e]ₛ(a+i)
-    let iP1 := succ.comp $ left.comp right
+    let iP1 := succ.comp <| left.comp right
     let s := left.comp left
-    let a := left.comp $ right.comp left
-    let k := right.comp $ right.comp left
-    let aPi := c_add.comp₂ a $ iP1
+    let a := left.comp <| right.comp left
+    let k := right.comp <| right.comp left
+    let aPi := c_add.comp₂ a <| iP1
     let computation := c_evaln.comp₃ (aPi) (c.comp₃ s a k) s -- = [e]ₛ(a+i+1)
 
     c_ifz.comp₃ prev_comp
     (
       c_ifz.comp₃ computation
       zero
-      (succ.comp $ pair iP1 $ c_pred.comp computation)
+      (succ.comp <| pair iP1 <| c_pred.comp computation)
     )
     prev_comp
   )
-@[cp] theorem c_bdd_search_prim {c} (h:code_prim c):code_prim $ c_bdd_search c := by
+@[cp] theorem c_bdd_search_prim {c} (h:code_prim c):code_prim <| c_bdd_search c := by
   unfold c_bdd_search
   lift_lets
   extract_lets
@@ -137,7 +137,7 @@ theorem c_bdd_search_evp_0 {O c s a k l} :
         · intro h
           simp at h
         · intro h
-          have := o2n_a0.mpr $ h (n+1) (le_refl (n+1))
+          have := o2n_a0.mpr <| h (n+1) (le_refl (n+1))
           simp [h3] at this
     next h2 =>
       constructor
@@ -275,7 +275,7 @@ def c_fs_in := c_mod.comp₂
   (c_div.comp₂ left (c_pow.comp₂ (c_const 2) right))
   (c_const 2)
 @[cp] theorem c_fs_in_prim : code_prim c_fs_in := by unfold c_fs_in; apply_cp
-@[simp] theorem c_fs_in_evp {O x y}: evalp O c_fs_in ⟪x,y⟫ = (b2n $ fs_in x y) := by
+@[simp] theorem c_fs_in_evp {O x y}: evalp O c_fs_in ⟪x,y⟫ = (b2n <| fs_in x y) := by
   simp [c_fs_in,evalp];
   simp [fs_in, b2n]
   grind
@@ -284,7 +284,7 @@ end fs_in
 
 section fs_add
 namespace Oracle.Single.Code
-def c_fs_add := c_or.comp₂ left $ c_pow.comp₂ (c_const 2) right
+def c_fs_add := c_or.comp₂ left <| c_pow.comp₂ (c_const 2) right
 @[cp] theorem c_fs_add_prim : code_prim c_fs_add := by unfold c_fs_add; apply_cp
 @[simp] theorem c_fs_add_evp {O x y}: evalp O c_fs_add ⟪x,y⟫ = (fs_add x y) := by
   simp [c_fs_add,evalp];
@@ -325,12 +325,12 @@ def c_step :=
 
   let Aₚ := left.comp prev
   let Rₚ := right.comp prev
-  let i2P1 := succ.comp $ c_mul.comp₂ (c_const 2) $ left.comp right
-  c_ifz.comp₃ (c_sg'.comp $ c_fs_in.comp₂ Rₚ i)
+  let i2P1 := succ.comp <| c_mul.comp₂ (c_const 2) <| left.comp right
+  c_ifz.comp₃ (c_sg'.comp <| c_fs_in.comp₂ Rₚ i)
   prev
   (
-    let search := (c_bdd_search (right.comp right)).comp₂ (pair s $ pair i2P1 i) s
-    let x := c_add.comp₂ i2P1 (left.comp $ c_pred.comp search)
+    let search := (c_bdd_search (right.comp right)).comp₂ (pair s <| pair i2P1 i) s
+    let x := c_add.comp₂ i2P1 (left.comp <| c_pred.comp search)
     c_ifz.comp₃ search
     prev
     (pair (c_fs_add.comp₂ Aₚ x) (c_fs_add.comp₂ Rₚ i))
@@ -431,10 +431,10 @@ def c_step :=
         simp [a3] at a1
         simp [a1] at h3
 
-def c_C := c_prec1 0 $
+def c_C := c_prec1 0 <|
     let s := left
     let prev := right
-    (c_list_foldr_param c_step).comp₃ s prev (c_list_reverse.comp $ c_list_range.comp s)
+    (c_list_foldr_param c_step).comp₃ s prev (c_list_reverse.comp <| c_list_range.comp s)
 
 @[cp] theorem c_C_prim : code_prim c_C := by unfold c_C; apply_cp
 
@@ -450,10 +450,10 @@ def c_C := c_prec1 0 $
     rw [←ih]
     simp [c_C, -List.foldr_reverse]
 
-def c_simple := dovetail $
+def c_simple := dovetail <|
   let x := left
   let s := right
-  c_sg'.comp $ c_fs_in.comp₂ (left.comp $ c_C.comp s) x
+  c_sg'.comp <| c_fs_in.comp₂ (left.comp <| c_C.comp s) x
 
 theorem W_eq_iff_mem {O c A} : W O c = A ↔ (∀ x, x∈A ↔ (evalSet O c x).Dom) := by
   simp [W]

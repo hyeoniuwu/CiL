@@ -33,29 +33,29 @@ open List Nat
 section evaln
 /-!
 ## Construction of evaln
-In building `evaln` from course-of-values recursion, we note that it is insufficient to recurse just on the code and steps; for example when calculating $[c_f\c c_g]_s(x)$, we need to look up both $[c_g]_s(x)$ and $[c_f]_s([c_g]_s(x))$. That is, we need to recurse on the input values too.
+In building `evaln` from course-of-values recursion, we note that it is insufficient to recurse just on the code and steps; for example when calculating <|[c_f\c c_g]_s(x)$, we need to look up both <|[c_g]_s(x)$ and <|[c_f]_s([c_g]_s(x))$. That is, we need to recurse on the input values too.
 
-This raises an immediate issue; when calculating $f(g(x))$, we will need to look up $g(x)$, but $g(x)$ may be bigger than $x$. However, course-of-values recursion only allows looking up \emph{previous} computations. That is, values which are less than the current value being considered.
+This raises an immediate issue; when calculating <|f(g(x))$, we will need to look up <|g(x)$, but <|g(x)$ may be bigger than <|x$. However, course-of-values recursion only allows looking up \emph{previous} computations. That is, values which are less than the current value being considered.
 
-We solve the problem by first defining an auxiliary function, which computes $[c]_s(x)$ \emph{for all} $x\leq s$. This auxiliary function can be defined via course-of-values recursion; consider the example of calculating $[c_f\c c_g]_s(x)$., so this is something we can directly ask
+We solve the problem by first defining an auxiliary function, which computes <|[c]_s(x)$ \emph{for all} <|x\leq s$. This auxiliary function can be defined via course-of-values recursion; consider the example of calculating <|[c_f\c c_g]_s(x)$., so this is something we can directly ask
 
-1. Check $x\leq s$. If this fails, diverge.
+1. Check <|x\leq s$. If this fails, diverge.
 
-2.  Calculate $[c_g]_s(x)$. A lookup for code $c_g$ and step $s$ in the previous computations will return the list
+2.  Calculate <|[c_g]_s(x)$. A lookup for code <|c_g$ and step <|s$ in the previous computations will return the list
 \begin{align}
 	\Bigl\llbracket [c_g]_{s}(0),[c_g]_{s}(1),\cdots,[c_g]_{s}(s) \Bigr\rrbracket.
 \end{align}
-Looking up $x$ in this list gives our result.
+Looking up <|x$ in this list gives our result.
 
-3. Calculate $[c_f]_s([c_g]_s(x))$. A lookup for code $c_f$ and step $s$ in the previous computations will return the list
+3. Calculate <|[c_f]_s([c_g]_s(x))$. A lookup for code <|c_f$ and step <|s$ in the previous computations will return the list
 \begin{align}
 	\Bigl\llbracket [c_f]_{s}(0),[c_f]_{s}(1),\cdots,[c_f]_{s}(s) \Bigr\rrbracket.
 \end{align}
-Now, we try looking up the $[c_g]_s(x)\th$ entry in this list. If one is found, then we simply return the found value.
+Now, we try looking up the <|[c_g]_s(x)\th$ entry in this list. If one is found, then we simply return the found value.
 
-If the lookup fails, this means that $[c_g]_s(x)$ is larger than the length of the list, i.e. larger than $s$. In particular, this means that $[c_f]_s([c_g]_s(x))$ diverges, as `evaln` diverges if the input is larger than the number of steps.
+If the lookup fails, this means that <|[c_g]_s(x)$ is larger than the length of the list, i.e. larger than <|s$. In particular, this means that <|[c_f]_s([c_g]_s(x))$ diverges, as `evaln` diverges if the input is larger than the number of steps.
 
-This is the key insight; inputs that are larger than $s$ diverge, so computations of inputs up to $s$ give us all the information we need.
+This is the key insight; inputs that are larger than <|s$ diverge, so computations of inputs up to <|s$ give us all the information we need.
 
 ## Outline of section
   · `c_evaln_aux` : main body of construction, using c_cov_rec
@@ -88,7 +88,7 @@ def c_evaln_aux :=
   let sM1       := c_pred.comp s
   let comp_hist := right.comp right
   let n         := c_sub.comp₂ code (c_const 5)
-  let m         := c_div2.comp $ c_div2.comp n
+  let m         := c_div2.comp <| c_div2.comp n
   let ml        := left.comp m
   let mr        := right.comp m
   let nMod4     := c_mod.comp₂ n (c_const 4)
@@ -96,11 +96,11 @@ def c_evaln_aux :=
   let ele := left
 -- the opt_* functions will be used with c_list_map'.
 -- so, it will take inputs of the form (number in list, covrec_input).
-  let opt_zero   := c_if_gt_te.comp₄ ele (sM1.comp right) (c_const 0) $ succ.comp (zero.comp     ele)
-  let opt_succ   := c_if_gt_te.comp₄ ele (sM1.comp right) (c_const 0) $ succ.comp (succ.comp     ele)
-  let opt_left   := c_if_gt_te.comp₄ ele (sM1.comp right) (c_const 0) $ succ.comp (left.comp     ele)
-  let opt_right  := c_if_gt_te.comp₄ ele (sM1.comp right) (c_const 0) $ succ.comp (right.comp    ele)
-  let opt_oracle := c_if_gt_te.comp₄ ele (sM1.comp right) (c_const 0) $ succ.comp (oracle.comp   ele)
+  let opt_zero   := c_if_gt_te.comp₄ ele (sM1.comp right) (c_const 0) <| succ.comp (zero.comp     ele)
+  let opt_succ   := c_if_gt_te.comp₄ ele (sM1.comp right) (c_const 0) <| succ.comp (succ.comp     ele)
+  let opt_left   := c_if_gt_te.comp₄ ele (sM1.comp right) (c_const 0) <| succ.comp (left.comp     ele)
+  let opt_right  := c_if_gt_te.comp₄ ele (sM1.comp right) (c_const 0) <| succ.comp (right.comp    ele)
+  let opt_oracle := c_if_gt_te.comp₄ ele (sM1.comp right) (c_const 0) <| succ.comp (oracle.comp   ele)
 
   let zero_mapped   := (c_list_map' opt_zero).comp₂   (c_list_range.comp s) c_id
   let succ_mapped   := (c_list_map' opt_succ).comp₂   (c_list_range.comp s) c_id
@@ -116,17 +116,17 @@ def c_evaln_aux :=
   let pc_c_sM1 c' := lookup c' (code.comp right) (sM1.comp right) -- `[code]_{s-1}(x)`
 
   -- pair
-  let opt_pair := c_if_gt_te.comp₄ ele (sM1.comp right) (c_opt_none) $
-    c_ifz.comp₃ (pc_ml_s ele) (c_opt_none) $
-    c_ifz.comp₃ (pc_mr_s ele) (c_opt_none) $
+  let opt_pair := c_if_gt_te.comp₄ ele (sM1.comp right) (c_opt_none) <|
+    c_ifz.comp₃ (pc_ml_s ele) (c_opt_none) <|
+    c_ifz.comp₃ (pc_mr_s ele) (c_opt_none) <|
     succ.comp (pair (c_opt_iget.comp (pc_ml_s ele)) (c_opt_iget.comp (pc_mr_s ele)))
   let pair_mapped := ((c_list_map' opt_pair).comp₂ (c_list_range.comp s) c_id)
 
   -- comp
-  let opt_comp := c_if_gt_te.comp₄ ele (sM1.comp right) (c_opt_none) $
-    c_ifz.comp₃ (pc_mr_s ele) (c_opt_none) $
-    c_ifz.comp₃ (pc_ml_s $ c_pred.comp (pc_mr_s ele)) (c_opt_none) $
-    (pc_ml_s $ c_pred.comp (pc_mr_s ele))
+  let opt_comp := c_if_gt_te.comp₄ ele (sM1.comp right) (c_opt_none) <|
+    c_ifz.comp₃ (pc_mr_s ele) (c_opt_none) <|
+    c_ifz.comp₃ (pc_ml_s <| c_pred.comp (pc_mr_s ele)) (c_opt_none) <|
+    (pc_ml_s <| c_pred.comp (pc_mr_s ele))
   let comp_mapped := ((c_list_map' opt_comp).comp₂ (c_list_range.comp s) c_id)
 
   -- prec
@@ -137,39 +137,39 @@ def c_evaln_aux :=
   let prec_prev_case      := pc_c_sM1 (pair prec_x (prec_iM1))
   let prec_inductive_case := pc_mr_s (pair prec_x (pair prec_iM1 (c_pred.comp prec_prev_case)))
 
-  let opt_prec := c_if_gt_te.comp₄ ele (sM1.comp right) (c_opt_none) $
-    c_ifz.comp₃ prec_i prec_base_case $
+  let opt_prec := c_if_gt_te.comp₄ ele (sM1.comp right) (c_opt_none) <|
+    c_ifz.comp₃ prec_i prec_base_case <|
     c_ifz.comp₃ prec_prev_case (zero) prec_inductive_case
   let prec_mapped := ((c_list_map' opt_prec).comp₂ (c_list_range.comp s) c_id)
 
   -- rfind'
   let rfind'_base := pc_m_s ele
   let rfind'_indt := pc_c_sM1 (pair (left.comp ele) (succ.comp (right.comp ele)))
-  let opt_rfind' := c_if_gt_te.comp₄ ele (sM1.comp right) (c_opt_none) $
-    c_ifz.comp₃ rfind'_base zero $
-    c_ifz.comp₃ (c_pred.comp rfind'_base) (succ.comp $ right.comp ele) rfind'_indt
+  let opt_rfind' := c_if_gt_te.comp₄ ele (sM1.comp right) (c_opt_none) <|
+    c_ifz.comp₃ rfind'_base zero <|
+    c_ifz.comp₃ (c_pred.comp rfind'_base) (succ.comp <| right.comp ele) rfind'_indt
   let rfind'_mapped := ((c_list_map' opt_rfind').comp₂ (c_list_range.comp s) c_id)
 
   c_cov_rec
 
-  (c_list_singleton zero) $
+  (c_list_singleton zero) <|
 
-  c_if_eq_te.comp₄ s     (c_const 0) (c_list_singleton zero)      $ -- if s=0, then diverge
+  c_if_eq_te.comp₄ s     (c_const 0) (c_list_singleton zero)      <| -- if s=0, then diverge
 
-  c_if_eq_te.comp₄ code  (c_const 0) zero_mapped   $
-  c_if_eq_te.comp₄ code  (c_const 1) succ_mapped   $
-  c_if_eq_te.comp₄ code  (c_const 2) left_mapped   $
-  c_if_eq_te.comp₄ code  (c_const 3) right_mapped  $
-  c_if_eq_te.comp₄ code  (c_const 4) oracle_mapped $
+  c_if_eq_te.comp₄ code  (c_const 0) zero_mapped   <|
+  c_if_eq_te.comp₄ code  (c_const 1) succ_mapped   <|
+  c_if_eq_te.comp₄ code  (c_const 2) left_mapped   <|
+  c_if_eq_te.comp₄ code  (c_const 3) right_mapped  <|
+  c_if_eq_te.comp₄ code  (c_const 4) oracle_mapped <|
 
-  c_if_eq_te.comp₄ nMod4 (c_const 0) pair_mapped   $
-  c_if_eq_te.comp₄ nMod4 (c_const 1) comp_mapped   $
-  c_if_eq_te.comp₄ nMod4 (c_const 2) prec_mapped   $
+  c_if_eq_te.comp₄ nMod4 (c_const 0) pair_mapped   <|
+  c_if_eq_te.comp₄ nMod4 (c_const 1) comp_mapped   <|
+  c_if_eq_te.comp₄ nMod4 (c_const 2) prec_mapped   <|
                                      rfind'_mapped
 
 /-- api: `Nat.pair x (Nat.pair code s)` -/
 def c_evaln :=
-  c_list_getI.comp₂ (c_list_getLastI.comp $ c_evaln_aux.comp (pair (c_const 17) right)) left
+  c_list_getI.comp₂ (c_list_getLastI.comp <| c_evaln_aux.comp (pair (c_const 17) right)) left
 theorem c_evaln_evp_aux_x_0_0 {O x} : evalp O (c_evaln) (Nat.pair x (Nat.pair 0 0)) = o2n (evaln O 0 0 x) := by
   unfold c_evaln; unfold c_evaln_aux
   lift_lets; extract_lets; expose_names
@@ -370,7 +370,7 @@ theorem c_evaln_evp_aux_nMod4 {O x n s} :
   o2n (do
     guard (elem ≤ s)
     (unpaired fun a m => do
-      let x ← n2o $ pc_m_s left elem
+      let x ← n2o <| pc_m_s left elem
       if x = 0 then pure m
       else n2o (pc_c_sM1 left (Nat.pair a (m + 1))))
       elem : Option ℕ
@@ -851,7 +851,7 @@ theorem c_evaln_evp_aux_nMod4 {O x n s} :
   rw [← evalp_eq_eval c_evaln_prim];
   simp only [PFun.coe_val, c_evaln_evp, Part.coe_some]
 
-@[simp] theorem c_evaln_evp' {O}: evalp O (c_evaln) = fun x => o2n $ evaln O x.r.r x.r.l.n2c x.l := by
+@[simp] theorem c_evaln_evp' {O}: evalp O (c_evaln) = fun x => o2n <| evaln O x.r.r x.r.l.n2c x.l := by
   funext x
   have : x = (Nat.pair x.l (Nat.pair x.r.l x.r.r)) := by simp
   rw (config:={occs:=.pos [1]}) [this]

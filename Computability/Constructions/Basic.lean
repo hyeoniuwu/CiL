@@ -87,13 +87,13 @@ def c_if_le_te' (c1 c2 c3 c4:Code) := c_ite (c_sub.comp₂ c1 c2) c3 c4
 @[simp] theorem c_if_le_te'_ev {O c1 c2 c3 c4 x} (hc1:code_total O c1) (hc2:code_total O c2) : eval O (c_if_le_te' c1 c2 c3 c4) x = if (eval O c1 x).get (hc1 x) ≤ (eval O c2 x).get (hc2 x) then (eval O c3 x) else (eval O c4 x) := by
   simp [c_if_le_te']
   have : code_total O (c_sub.comp₂ c1 c2) := by
-    apply total_comp_of $ prim_total c_sub_prim
+    apply total_comp_of <| prim_total c_sub_prim
     apply total_pair_of hc1 hc2
   simp [this]
   congr
   simp [Seq.seq]
-  simp [Part.Dom.bind $ hc1 x]
-  simp [Part.Dom.bind $ hc2 x]
+  simp [Part.Dom.bind <| hc1 x]
+  simp [Part.Dom.bind <| hc2 x]
   exact Nat.sub_eq_zero_iff_le
 end if_le_te'
 
@@ -103,12 +103,12 @@ def c_if_eq_te' (c1 c2 c3 c4:Code) := c_ite (c_dist.comp₂ c1 c2) c3 c4
 @[simp] theorem c_if_eq_te'_ev {O c1 c2 c3 c4 x} (hc1:code_total O c1) (hc2:code_total O c2) : eval O (c_if_eq_te' c1 c2 c3 c4) x = if (eval O c1 x).get (hc1 x) = (eval O c2 x).get (hc2 x) then (eval O c3 x) else (eval O c4 x) := by
   simp [c_if_eq_te']
   have : code_total O (c_dist.comp₂ c1 c2) := by
-    apply total_comp_of $ prim_total c_dist_prim
+    apply total_comp_of <| prim_total c_dist_prim
     apply total_pair_of hc1 hc2
   simp [this]
   simp [Seq.seq]
-  simp [Part.Dom.bind $ hc1 x]
-  simp [Part.Dom.bind $ hc2 x]
+  simp [Part.Dom.bind <| hc1 x]
+  simp [Part.Dom.bind <| hc2 x]
 end if_eq_te'
 
 section ifdom

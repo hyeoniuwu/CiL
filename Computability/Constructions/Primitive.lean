@@ -327,7 +327,7 @@ section if_lt_te
 namespace Oracle.Single.Code
 /-- eval c_if_lt_te (x,y) = [x<y] -/
 def c_if_lt_te :=
-  let lt := c_sg.comp $ c_sub.comp₂ (succ.comp $ left.comp left) (right.comp left);
+  let lt := c_sg.comp <| c_sub.comp₂ (succ.comp <| left.comp left) (right.comp left);
 
   c_add.comp₂
   (c_mul.comp₂ lt (right.comp right))
@@ -352,7 +352,7 @@ section if_le_te
 namespace Oracle.Single.Code
 -- we use the fact that `a<b+1 ↔ a≤b`.
 /-- eval c_if_le_te (x,y) = [x≤y] -/
-def c_if_le_te := c_if_lt_te.comp (pair (pair (left.comp left) (succ.comp $ right.comp left)) right)
+def c_if_le_te := c_if_lt_te.comp (pair (pair (left.comp left) (succ.comp <| right.comp left)) right)
 @[cp] theorem c_if_le_te_prim : code_prim c_if_le_te := by unfold c_if_le_te; apply_cp
 @[simp] theorem c_if_le_te_evp {O : ℕ → ℕ} {a b c d} : evalp O c_if_le_te ⟪a,b,c,d⟫ = if a≤b then c else d := by
   simp [c_if_le_te,evalp];
@@ -401,7 +401,7 @@ end if_ge_te
 
 section ifz
 namespace Oracle.Single.Code
-def c_ifz := c_add.comp $ pair (c_mul.comp $ pair (c_sg'.comp left) (left.comp right)) (c_mul.comp $ pair (c_sg.comp left) (right.comp right))
+def c_ifz := c_add.comp <| pair (c_mul.comp <| pair (c_sg'.comp left) (left.comp right)) (c_mul.comp <| pair (c_sg.comp left) (right.comp right))
 @[cp] theorem c_ifz_prim : code_prim c_ifz := by unfold c_ifz; apply_cp
 @[simp] theorem c_ifz_evp {O : ℕ → ℕ} : evalp O c_ifz = fun (cab:ℕ) => if cab.l=0 then cab.r.l else cab.r.r := by
   simp [c_ifz,evalp];
@@ -418,7 +418,7 @@ end ifz
 
 section ift
 namespace Oracle.Single.Code
-def c_ift := c_ifz.comp₂ (c_sg'.comp $ left) right
+def c_ift := c_ifz.comp₂ (c_sg'.comp <| left) right
 @[cp] theorem c_ift_prim : code_prim c_ift := by unfold c_ift; apply_cp
 @[simp] theorem c_ift_evp {O : ℕ → ℕ} : evalp O c_ift = fun (cab:ℕ) => if (n2b cab.l) then cab.r.l else cab.r.r := by
   simp [c_ift,evalp];

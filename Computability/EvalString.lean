@@ -45,7 +45,7 @@ theorem evalc_prop_1 {O u c x} (h:(evalc O u c x).Dom) : (use O c x).get (evalc_
   contrapose h1; simp [h1]
 theorem evalc_prop_0 {O u c x} (h:(evalc O u c x).Dom) : evalc O u c x = eval O c x := by
   simp [evalc]
-  simp [Part.Dom.bind $ evalc_imp_use h]
+  simp [Part.Dom.bind <| evalc_imp_use h]
   simp [evalc_prop_1 h]
 theorem evalc_prop_2 {O u c x} (h:(eval O c x).Dom) (h0:(use O c x).get (e2u h)≤u) : (evalc O u c x).Dom := by
   simp [evalc]
@@ -53,17 +53,17 @@ theorem evalc_prop_2 {O u c x} (h:(eval O c x).Dom) (h0:(use O c x).get (e2u h)�
   simpa [h0]
 theorem evalc_prop_3 {O u c x} (h:(eval O c x).Dom) (h0:(use O c x).get (e2u h)≤u) : evalc O u c x=Part.some ((eval O c x).get h) := by
   simp [evalc]
-  simp [Part.Dom.bind $ e2u h]
+  simp [Part.Dom.bind <| e2u h]
   simp [h0]
 theorem evalc_prop_4 {O u c x h}: (use O c x).get h≤u ↔ (evalc O u c x).Dom :=
   ⟨
-    λ h0 ↦ Part.eq_some_imp_dom $ evalc_prop_3 (u2e h) h0,
+    λ h0 ↦ Part.eq_some_imp_dom <| evalc_prop_3 (u2e h) h0,
     λ h0 ↦ evalc_prop_1 h0
   ⟩
 
--- the b2n $ n2b is to simplify later proofs where evals will be compared against _.
+-- the b2n <| n2b is to simplify later proofs where evals will be compared against _.
 def whatever := 0
-noncomputable def evals (σ:List ℕ) (c:Code) (x:ℕ) := evalc (λ e ↦ b2n $ n2b $ σ.getD e whatever) σ.length c x
+noncomputable def evals (σ:List ℕ) (c:Code) (x:ℕ) := evalc (λ e ↦ b2n <| n2b <| σ.getD e whatever) σ.length c x
 /-
 the `whatever` *should* be unnecessary, because the evaluation is clamped by
 `σ.length`, so out-of-bound values are never passed to the function.

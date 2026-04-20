@@ -48,7 +48,7 @@ section c_finite_ext
 This is a meta-code. Thus, the construction is directly based on `KP54.c_kp54_aux`.
 -/
 def c_finite_ext :=
-  c_dovetail.comp $
+  c_dovetail.comp <|
   c_c_ifdom.comp₂
   (
     c_comp₃.comp₄
@@ -89,7 +89,7 @@ def c_kp54_indt :=
     (
       let rf := c_pred.comp q0
       let αₛ := c_list_append.comp₂ αₚ (succ.comp rf)
-      let A_result := c_pred.comp $ oracle.comp₂ c_c_evals (pair αₛ (pair i lb))
+      let A_result := c_pred.comp <| oracle.comp₂ c_c_evals (pair αₛ (pair i lb))
       pair αₛ (c_list_concat.comp₂ βₚ (c_sg'.comp A_result))
     )
   )
@@ -100,7 +100,7 @@ def c_kp54_indt :=
     (
       let rf := c_pred.comp q0
       let βₛ := c_list_append.comp₂ βₚ (succ.comp rf)
-      let B_result := c_pred.comp $ oracle.comp₂ c_c_evals (pair βₛ (pair i la))
+      let B_result := c_pred.comp <| oracle.comp₂ c_c_evals (pair βₛ (pair i la))
       pair (c_list_concat.comp₂ αₚ (c_sg'.comp B_result)) βₛ
     )
   )
@@ -235,7 +235,7 @@ theorem fzero_eq_χempty : (λ_↦0) = χ ∅ := by unfold χ; simp
 Now that we have defined KP54.KP54, we can easily define (characeristic functions for) KP54.A and KP54.B.
 (Refer to their definitions in KP54.lean)
 -/
-def c_A := c_n2b.comp $ c_list_getI.comp₂ (left.comp $ c_kp54.comp succ) c_id
+def c_A := c_n2b.comp <| c_list_getI.comp₂ (left.comp <| c_kp54.comp succ) c_id
 @[cp] theorem c_A_prim : code_prim c_A := by unfold c_A; apply_cp 10
 @[simp] theorem c_A_evp : evalp (K0 (λ_↦0)) c_A = χ KP54.A := by
   funext x
@@ -248,7 +248,7 @@ theorem A_le_J1 : KP54.A ≤ᵀ ∅⌜ := by
   apply _root_.trans (A_le_J1_aux)
   rw [fzero_eq_χempty]
   exact (K0χ_eq_χSetK ∅).1
-def c_B := c_n2b.comp $ c_list_getI.comp₂ (right.comp $ c_kp54.comp succ) c_id
+def c_B := c_n2b.comp <| c_list_getI.comp₂ (right.comp <| c_kp54.comp succ) c_id
 @[cp] theorem c_B_prim : code_prim c_B := by unfold c_B; apply_cp 10
 @[simp] theorem c_B_evp : evalp (K0 (λ_↦0)) c_B = χ KP54.B := by
   funext x

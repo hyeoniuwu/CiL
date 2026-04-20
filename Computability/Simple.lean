@@ -329,7 +329,7 @@ theorem P (i:ℕ) : (W ∅ i).Infinite → (W ∅ i ∩ A).Nonempty := by
   intro h
   rcases P_aux i h with ⟨s, _, hs1⟩
   unfold A
-  exact Set.inter_nonempty.mpr $ hs1.elim (λ x hx ↦ ⟨x,hx.1,by simp; use s; exact hx.2⟩)
+  exact Set.inter_nonempty.mpr <| hs1.elim (λ x hx ↦ ⟨x,hx.1,by simp; use s; exact hx.2⟩)
 end positive_requirement
 
 section negative_requirement

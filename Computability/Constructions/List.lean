@@ -55,7 +55,7 @@ end list_tail
 
 section list_head?
 namespace Oracle.Single.Code
-def c_list_head? := c_ifz.comp₃ c_id zero $ succ.comp (left.comp c_pred)
+def c_list_head? := c_ifz.comp₃ c_id zero <| succ.comp (left.comp c_pred)
 @[cp] theorem c_list_head?_prim : code_prim c_list_head? := by unfold c_list_head?; apply_cp
 @[simp] theorem c_list_head?_evp {O : ℕ → ℕ} {lN : ℕ} : evalp O c_list_head? lN = o2n (head? (n2l lN)) := by
   simp [c_list_head?]
@@ -121,7 +121,7 @@ namespace Oracle.Single.Code
 def c_list_drop :=
   (
     prec
-    c_id $
+    c_id <|
     c_list_tail.comp (right.comp right)
   ).comp c_flip
 @[cp] theorem c_list_drop_prim : code_prim c_list_drop := by unfold c_list_drop; apply_cp
@@ -311,7 +311,7 @@ end list_length
 
 section list_getLast?
 namespace Oracle.Single.Code
-def c_list_getLast? := c_list_getElem?.comp₂ c_id (c_pred.comp $ c_list_length.comp c_id)
+def c_list_getLast? := c_list_getElem?.comp₂ c_id (c_pred.comp <| c_list_length.comp c_id)
 @[cp] theorem c_list_getLast?_prim : code_prim c_list_getLast? := by unfold c_list_getLast?; apply_cp
 @[simp] theorem c_list_getLast?_evp {O : ℕ → ℕ} {lN : ℕ} : evalp O c_list_getLast? lN = o2n (getLast? (n2l lN)) := by
   simp [c_list_getLast?]
@@ -383,7 +383,7 @@ section list_zipWith
 namespace Oracle.Single.Code
 /-
 zipL :: [a] -> [b] -> [(a,b)]
-zipL xs ys = reverse $ fst $ foldl step ([], ys) xs
+zipL xs ys = reverse <| fst <| foldl step ([], ys) xs
   where
     step (acc, y:ys') x = ((x,y) : acc, ys')
     step (acc, [])    _ = (acc, [])
@@ -402,7 +402,7 @@ def c_list_zipWith_aux (c : Code) :=
     (pair (c_list_cons.comp₂ (c.comp₂ x y) acc) ys')
 
   (c_list_foldl step).comp₂ (pair c_list_nil right) left
-def c_list_zipWith (c:Code) := c_list_reverse.comp $ left.comp (c_list_zipWith_aux c)
+def c_list_zipWith (c:Code) := c_list_reverse.comp <| left.comp (c_list_zipWith_aux c)
 
 @[cp] theorem c_list_zipWith_aux_prim  {c : Code} (hc : code_prim c) : code_prim (c_list_zipWith_aux c) := by unfold c_list_zipWith_aux; apply_cp
 @[cp] theorem c_list_zipWith_prim  {c : Code} (hc : code_prim c) : code_prim (c_list_zipWith c) := by unfold c_list_zipWith; apply_cp
@@ -590,8 +590,8 @@ def c_list_foldr_param_aux (c:Code) :=
   let param := left
   let init := left.comp right
   let lN := right.comp right
-  (c_list_foldr $
-  (pair (left.comp left) $ c.comp₃ (left.comp left) (right.comp left) (right.comp right))).comp₂
+  (c_list_foldr <|
+  (pair (left.comp left) <| c.comp₃ (left.comp left) (right.comp left) (right.comp right))).comp₂
   (pair param init)
   ((c_list_zipWith c_id).comp₂ (c_list_replicate.comp₂ (c_list_length.comp lN) (param)) lN)
 def c_list_foldr_param (c:Code) := right.comp (c_list_foldr_param_aux c)

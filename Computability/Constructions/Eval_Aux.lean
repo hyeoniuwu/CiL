@@ -70,7 +70,7 @@ theorem c_ofOption_ev {O c x} (hc1:code_total O c) : eval O (c_ofOption c) x = â
   | succ n => simp;
 
 def c_rfindOpt (c:Code) := (c_ofOption c).compâ‚‚ c_id (c_rfind (c_isSome.comp (c)))
-@[simp] theorem c_rfindOpt_ev {O c x} (hc1:code_total O c) : eval O (c_rfindOpt c) x =  Nat.rfindOpt (fun y => n2o $ (eval O c (Nat.pair x y)).get (hc1 (Nat.pair x y))) := by
+@[simp] theorem c_rfindOpt_ev {O c x} (hc1:code_total O c) : eval O (c_rfindOpt c) x =  Nat.rfindOpt (fun y => n2o <| (eval O c (Nat.pair x y)).get (hc1 (Nat.pair x y))) := by
   unfold c_rfindOpt
   simp [c_rfind_ev']
   unfold rfindOpt

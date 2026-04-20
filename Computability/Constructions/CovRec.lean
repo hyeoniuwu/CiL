@@ -44,7 +44,7 @@ Given an input of the form ``⟪x, i, list⟫``, the code (c_efl_prec c) compute
 (The form above is what you would expect in the inductive case in primitive recursion.)
 -/
 def c_efl_prec := λ c ↦ c_list_concat.comp (pair (c_id.comp (right.comp right)) c)
-@[cp] theorem c_efl_prec_prim {c} (h:code_prim c):code_prim $ c_efl_prec c := by unfold c_efl_prec; apply_cp
+@[cp] theorem c_efl_prec_prim {c} (h:code_prim c):code_prim <| c_efl_prec c := by unfold c_efl_prec; apply_cp
 @[simp] theorem c_efl_prec_evp {O c x} : evalp O (c_efl_prec c) x = l2n ((n2l x.r.r).concat (evalp O c x)) := by
   simp [c_efl_prec]
 end Oracle.Single.Code
@@ -61,7 +61,7 @@ base case:
 
 inductive case:
   let `l` be the list of previous values, from `j=0` to `i`.
-  Then `eval (c_cov_rec cf cg) (x, i+1) = l.append $ eval cg (x, i, l)`.
+  Then `eval (c_cov_rec cf cg) (x, i+1) = l.append <| eval cg (x, i, l)`.
 -/
 def c_cov_rec (cf cg : Code) :=
   prec
@@ -80,7 +80,7 @@ def c_cov_rec (cf cg : Code) :=
 theorem c_cov_rec_evp_indt {O cf cg x i} :
   evalp O (c_cov_rec cf cg) ⟪x, i+1⟫
     =
-  (l2n $ List.concat
+  (l2n <| List.concat
   (n2l (evalp O (c_cov_rec cf cg) ⟪x,i⟫))
   (evalp O cg ⟪x, i, evalp O (c_cov_rec cf cg) ⟪x,i⟫⟫)
   ) := by
@@ -225,17 +225,17 @@ input that the code `cg` will get looks like:
 -/
 /-- `evalp O c_div_flip ⟪d, n⟫ = n/d`. -/
 def c_div_flip_aux :=
-  let dividend := succ.comp $ left.comp right
+  let dividend := succ.comp <| left.comp right
   let divisor := left
   let list_of_prev_values := right.comp right
 
   c_cov_rec
 
-  (c_const 0) $ -- base case: if dividend is 0, return 0
+  (c_const 0) <| -- base case: if dividend is 0, return 0
 
-  c_ifz.comp₂ divisor $ -- in general, test if the divisor is zero
-  pair (c_const 0) $ -- if so, return 0
-  c_if_lt_te.comp₄ dividend divisor (c_const 0) $ -- if dividend < divisor, return 0
+  c_ifz.comp₂ divisor <| -- in general, test if the divisor is zero
+  pair (c_const 0) <| -- if so, return 0
+  c_if_lt_te.comp₄ dividend divisor (c_const 0) <| -- if dividend < divisor, return 0
   (succ.comp (c_list_getI.comp₂ list_of_prev_values (c_sub.comp₂ dividend divisor))) -- else return (dividend-divisor)/divisor+1
 def c_div_flip := c_list_getLastI.comp c_div_flip_aux
 def c_div := c_div_flip.comp (c_flip)
@@ -394,28 +394,28 @@ def c_replace_oracle_aux :=
   let input_to_decode := succ.comp (left.comp right)
   let comp_hist       := right.comp right
   let n               := c_sub.comp₂ input_to_decode (c_const 5)
-  let m               := c_div2.comp $ c_div2.comp n
+  let m               := c_div2.comp <| c_div2.comp n
   let lookup (c')     := c_list_getI.comp₂ comp_hist c'
   let ml              := lookup (left.comp m)
   let mr              := lookup (right.comp m)
   let mp              := lookup m
   let nMod4           := c_mod.comp₂ n (c_const 4)
-  let pair_code       := c_add.comp₂ (            c_mul2.comp $             c_mul2.comp (pair ml mr)) (c_const 5)
-  let comp_code       := c_add.comp₂ (succ.comp $ c_mul2.comp $             c_mul2.comp (pair ml mr)) (c_const 5)
-  let prec_code       := c_add.comp₂ (            c_mul2.comp $ succ.comp $ c_mul2.comp (pair ml mr)) (c_const 5)
-  let rfind'_code     := c_add.comp₂ (succ.comp $ c_mul2.comp $ succ.comp $ c_mul2.comp mp          ) (c_const 5)
+  let pair_code       := c_add.comp₂ (            c_mul2.comp <|             c_mul2.comp (pair ml mr)) (c_const 5)
+  let comp_code       := c_add.comp₂ (succ.comp <| c_mul2.comp <|             c_mul2.comp (pair ml mr)) (c_const 5)
+  let prec_code       := c_add.comp₂ (            c_mul2.comp <| succ.comp <| c_mul2.comp (pair ml mr)) (c_const 5)
+  let rfind'_code     := c_add.comp₂ (succ.comp <| c_mul2.comp <| succ.comp <| c_mul2.comp mp          ) (c_const 5)
 
   c_cov_rec
 
-  (c_const 0) $ -- base case, when code = 0.
+  (c_const 0) <| -- base case, when code = 0.
 
-  c_if_eq_te.comp₄ input_to_decode (c_const 1) (c_const 1) $
-  c_if_eq_te.comp₄ input_to_decode (c_const 2) (c_const 2) $
-  c_if_eq_te.comp₄ input_to_decode (c_const 3) (c_const 3) $
-  c_if_eq_te.comp₄ input_to_decode (c_const 4) o           $
-  c_if_eq_te.comp₄ nMod4           (c_const 0) pair_code   $
-  c_if_eq_te.comp₄ nMod4           (c_const 1) comp_code   $
-  c_if_eq_te.comp₄ nMod4           (c_const 2) prec_code   $
+  c_if_eq_te.comp₄ input_to_decode (c_const 1) (c_const 1) <|
+  c_if_eq_te.comp₄ input_to_decode (c_const 2) (c_const 2) <|
+  c_if_eq_te.comp₄ input_to_decode (c_const 3) (c_const 3) <|
+  c_if_eq_te.comp₄ input_to_decode (c_const 4) o           <|
+  c_if_eq_te.comp₄ nMod4           (c_const 0) pair_code   <|
+  c_if_eq_te.comp₄ nMod4           (c_const 1) comp_code   <|
+  c_if_eq_te.comp₄ nMod4           (c_const 2) prec_code   <|
                                                rfind'_code
 
 def c_replace_oracle := c_list_getLastI.comp c_replace_oracle_aux
@@ -475,7 +475,7 @@ The let bindings in the theorem statement are named the same as their correspond
 
 For example we have
 `let m  := n.div2.div2` in the theorem statement, and
-`let m := c_div2.comp $ c_div2.comp n` in the definition of `c_replace_oracle_aux`.
+`let m := c_div2.comp <| c_div2.comp n` in the definition of `c_replace_oracle_aux`.
 
 In the process of lifting, the names bindings from the code are attached with the suffix "_1".
 

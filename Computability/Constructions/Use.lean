@@ -39,7 +39,7 @@ def c_usen_aux :=
   let sM1       := c_pred.comp s
   let comp_hist := right.comp right
   let n         := c_sub.comp₂ code (c_const 5)
-  let m         := c_div2.comp $ c_div2.comp n
+  let m         := c_div2.comp <| c_div2.comp n
   let ml        := left.comp m
   let mr        := right.comp m
   let nMod4     := c_mod.comp₂ n (c_const 4)
@@ -48,8 +48,8 @@ def c_usen_aux :=
   let ele := left
 -- the opt_* functions will be used with c_list_map'.
 -- so, it will take inputs of the form (number in list, covrec_input).
-  let opt_zero   := c_if_gt_te.comp₄ ele (sM1.comp right) (c_const 0) $ succ.comp (zero.comp   ele)
-  let opt_oracle := c_if_gt_te.comp₄ ele (sM1.comp right) (c_const 0) $ succ.comp (succ.comp   ele)
+  let opt_zero   := c_if_gt_te.comp₄ ele (sM1.comp right) (c_const 0) <| succ.comp (zero.comp   ele)
+  let opt_oracle := c_if_gt_te.comp₄ ele (sM1.comp right) (c_const 0) <| succ.comp (succ.comp   ele)
 
   let zero_mapped := (c_list_map' opt_zero).comp₂ (c_list_range.comp s) c_id
   let oracle_mapped := (c_list_map' opt_oracle).comp₂ (c_list_range.comp s) c_id
@@ -62,18 +62,18 @@ def c_usen_aux :=
   let pc_m_s  c'  := lookup c' (m.comp  right)   (s.comp right)   -- `[mr]ₛ(x)`
   let pc_c_sM1 c' := lookup c' (code.comp right) (sM1.comp right) -- `[code]_{s-1}(x)`
 
-  let opt_pair := c_if_gt_te.comp₄ ele (sM1.comp right) c_opt_none $
-    c_ifz.comp₃ (pc_ml_s ele) c_opt_none $
-    c_ifz.comp₃ (pc_mr_s ele) c_opt_none $
+  let opt_pair := c_if_gt_te.comp₄ ele (sM1.comp right) c_opt_none <|
+    c_ifz.comp₃ (pc_ml_s ele) c_opt_none <|
+    c_ifz.comp₃ (pc_mr_s ele) c_opt_none <|
     succ.comp (c_max.comp₂ (c_opt_iget.comp (pc_ml_s ele)) (c_opt_iget.comp (pc_mr_s ele)))
 
   let comp_usen_cg := pc_mr_s ele
   let comp_evaln_cg := c_evaln.comp₃ ele (mr.comp right) (s.comp right)
-  let comp_usen_cf := pc_ml_s $ c_pred.comp comp_evaln_cg
-  let opt_comp := c_if_gt_te.comp₄ ele (sM1.comp right) c_opt_none $
-    c_ifz.comp₃ comp_usen_cg  c_opt_none $
-    c_ifz.comp₃ comp_evaln_cg c_opt_none $
-    c_ifz.comp₃ comp_usen_cf  c_opt_none $
+  let comp_usen_cf := pc_ml_s <| c_pred.comp comp_evaln_cg
+  let opt_comp := c_if_gt_te.comp₄ ele (sM1.comp right) c_opt_none <|
+    c_ifz.comp₃ comp_usen_cg  c_opt_none <|
+    c_ifz.comp₃ comp_evaln_cg c_opt_none <|
+    c_ifz.comp₃ comp_usen_cf  c_opt_none <|
     c_max.comp₂ comp_usen_cf comp_usen_cg
 
   let prec_x          := left.comp ele
@@ -84,22 +84,22 @@ def c_usen_aux :=
   let prec_evaln_prev := c_evaln.comp₃ (pair prec_x (prec_iM1)) (code.comp right) (sM1.comp right)
   let prec_usen_indt  := pc_mr_s (pair prec_x (pair prec_iM1 (c_pred.comp prec_evaln_prev)))
 
-  let opt_prec := c_if_gt_te.comp₄ ele (sM1.comp right) c_opt_none $
-    c_ifz.comp₃ prec_i          prec_usen_base $
-    c_ifz.comp₃ prec_usen_prev  c_opt_none $
-    c_ifz.comp₃ prec_evaln_prev c_opt_none $
-    c_ifz.comp₃ prec_usen_indt  c_opt_none $
-    succ.comp $ c_max.comp₂ (c_opt_iget.comp prec_usen_prev) (c_opt_iget.comp prec_usen_indt)
+  let opt_prec := c_if_gt_te.comp₄ ele (sM1.comp right) c_opt_none <|
+    c_ifz.comp₃ prec_i          prec_usen_base <|
+    c_ifz.comp₃ prec_usen_prev  c_opt_none <|
+    c_ifz.comp₃ prec_evaln_prev c_opt_none <|
+    c_ifz.comp₃ prec_usen_indt  c_opt_none <|
+    succ.comp <| c_max.comp₂ (c_opt_iget.comp prec_usen_prev) (c_opt_iget.comp prec_usen_indt)
 
   let rfind'_usen_base := pc_m_s ele
   let rfind'_evaln_base := c_evaln.comp₃ ele (m.comp right) (s.comp right)
   let rfind'_usen_indt := pc_c_sM1 (pair (left.comp ele) (succ.comp (right.comp ele)))
-  let opt_rfind' := c_if_gt_te.comp₄ ele (sM1.comp right) c_opt_none $
-    c_ifz.comp₃ rfind'_usen_base c_opt_none $
-    c_ifz.comp₃ rfind'_evaln_base c_opt_none $
-    c_ifz.comp₃ (c_opt_iget.comp rfind'_evaln_base) rfind'_usen_base $
-    c_ifz.comp₃ rfind'_usen_indt c_opt_none $
-    succ.comp $ c_max.comp₂ (c_opt_iget.comp rfind'_usen_base) (c_opt_iget.comp rfind'_usen_indt)
+  let opt_rfind' := c_if_gt_te.comp₄ ele (sM1.comp right) c_opt_none <|
+    c_ifz.comp₃ rfind'_usen_base c_opt_none <|
+    c_ifz.comp₃ rfind'_evaln_base c_opt_none <|
+    c_ifz.comp₃ (c_opt_iget.comp rfind'_evaln_base) rfind'_usen_base <|
+    c_ifz.comp₃ rfind'_usen_indt c_opt_none <|
+    succ.comp <| c_max.comp₂ (c_opt_iget.comp rfind'_usen_base) (c_opt_iget.comp rfind'_usen_indt)
 
   let comp_mapped   := (c_list_map' opt_comp).comp₂   (c_list_range.comp s) c_id
   let pair_mapped   := (c_list_map' opt_pair).comp₂   (c_list_range.comp s) c_id
@@ -108,24 +108,24 @@ def c_usen_aux :=
 
   c_cov_rec
 
-  (c_list_singleton zero) $
+  (c_list_singleton zero) <|
 
-  c_if_eq_te.comp₄ s     (c_const 0) (c_list_singleton zero) $ -- if s=0, then diverge
+  c_if_eq_te.comp₄ s     (c_const 0) (c_list_singleton zero) <| -- if s=0, then diverge
 
-  c_if_eq_te.comp₄ code  (c_const 0) zero_mapped   $
-  c_if_eq_te.comp₄ code  (c_const 1) zero_mapped   $
-  c_if_eq_te.comp₄ code  (c_const 2) zero_mapped   $
-  c_if_eq_te.comp₄ code  (c_const 3) zero_mapped  $
-  c_if_eq_te.comp₄ code  (c_const 4) oracle_mapped $
+  c_if_eq_te.comp₄ code  (c_const 0) zero_mapped   <|
+  c_if_eq_te.comp₄ code  (c_const 1) zero_mapped   <|
+  c_if_eq_te.comp₄ code  (c_const 2) zero_mapped   <|
+  c_if_eq_te.comp₄ code  (c_const 3) zero_mapped  <|
+  c_if_eq_te.comp₄ code  (c_const 4) oracle_mapped <|
 
-  c_if_eq_te.comp₄ nMod4 (c_const 0) pair_mapped   $
-  c_if_eq_te.comp₄ nMod4 (c_const 1) comp_mapped   $
-  c_if_eq_te.comp₄ nMod4 (c_const 2) prec_mapped   $
+  c_if_eq_te.comp₄ nMod4 (c_const 0) pair_mapped   <|
+  c_if_eq_te.comp₄ nMod4 (c_const 1) comp_mapped   <|
+  c_if_eq_te.comp₄ nMod4 (c_const 2) prec_mapped   <|
                                      rfind'_mapped
 
 /-- api: `Nat.pair x (Nat.pair code s)` -/
 def c_usen :=
-  c_list_getI.comp₂ (c_list_getLastI.comp $ c_usen_aux.comp (pair (c_const 17) right)) left
+  c_list_getI.comp₂ (c_list_getLastI.comp <| c_usen_aux.comp (pair (c_const 17) right)) left
 
 theorem c_usen_evp_aux_x_0_0 {O x} : evalp O c_usen ⟪x, 0, 0⟫ = o2n (usen O 0 0 x) := by
   unfold c_usen; unfold c_usen_aux
@@ -270,17 +270,17 @@ theorem c_usen_evp_aux_nMod4 {O x n s} :
     (n2o (pc_ml_s left xl))
     fun iM1 =>
     do
-      let usen_prev  ← n2o $ pc_c_sM1 left (Nat.pair xl iM1)
+      let usen_prev  ← n2o <| pc_c_sM1 left (Nat.pair xl iM1)
       let evaln_prev ← evaln O s (n2c (n+4+1)) (Nat.pair xl iM1)
-      let usen_indt  ← n2o $ pc_mr_s left (Nat.pair xl (Nat.pair iM1 evaln_prev))
+      let usen_indt  ← n2o <| pc_mr_s left (Nat.pair xl (Nat.pair iM1 evaln_prev))
       return Nat.max usen_prev usen_indt)
 
   let opt_rfind' x := (o2n do
     guard (x≤s);
-    let usen_base  ← n2o $ pc_m_s left x
+    let usen_base  ← n2o <| pc_m_s left x
     let evaln_base ← evaln O (s+1) m.n2c x
     if evaln_base=0 then usen_base else
-    let usen_indt  ← n2o $ pc_c_sM1 left (Nat.pair x.l (x.r+1))
+    let usen_indt  ← n2o <| pc_c_sM1 left (Nat.pair x.l (x.r+1))
     return Nat.max usen_base usen_indt)
 
        if n%4=0 then opt_pair x
@@ -497,7 +497,7 @@ theorem c_usen_evp_aux_nMod4 {O x n s} :
           | inl hh => simp [hh]
           | inr hh =>
             simp [hnat_1 hh]
-            simp [isSome.bind $ isSome_iff_not_none.mp hh]
+            simp [isSome.bind <| isSome_iff_not_none.mp hh]
             simp [hprec_usen_indt elem (isSome_iff_not_none.mp hh )]
             cases Classical.em ((pc_mr_s left (Nat.pair elem.l (Nat.pair (elem.r - 1) ((evaln O s (n2c (n + 4 + 1)) (Nat.pair elem.l (elem.r - 1))).get (isSome_iff_not_none.mp hh ))))) = o2n Option.none ) with
             | inl hhh => simp [hhh]
@@ -534,8 +534,8 @@ theorem c_usen_evp_aux_nMod4 {O x n s} :
           | inl hhh => simp [hhh]
           | inr hhh =>
             simp [hnat_1 hhh]
-            simp [isSome.bind $ isSome_iff_not_none.mp hhh]
-            simp [getD_eq_get $ isSome_iff_not_none.mp hhh]
+            simp [isSome.bind <| isSome_iff_not_none.mp hhh]
+            simp [getD_eq_get <| isSome_iff_not_none.mp hhh]
             cases (evaln O (s + 1) (n2c m) elem).get (isSome_iff_not_none.mp hhh) with
             | zero => simp; exact ge_0_rw (not_none_imp_not_zero hh)
             | succ _ =>

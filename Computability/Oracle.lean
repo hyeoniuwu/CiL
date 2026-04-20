@@ -161,7 +161,7 @@ inductive RecursiveIn (O : ℕ → ℕ) : (ℕ →. ℕ) → Prop
           h (Nat.pair a (Nat.pair y i))
   | rfind {f : ℕ →. ℕ} (hf : RecursiveIn O f) :
       RecursiveIn O
-        $ Nat.unpaired fun a m =>
+        <| Nat.unpaired fun a m =>
           (Nat.rfind fun n => (fun x => x = 0) <$> f (Nat.pair a (n + m))).map (· + m)
 
 /-- The primitive recursive functions, but with the oracle `O` as an additional initial function. -/

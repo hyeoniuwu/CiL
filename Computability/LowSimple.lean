@@ -94,7 +94,7 @@ lemma range_3_way_split_2 {i r : ℕ} (hi : i ≤ r) : (range (r+1)) = range i +
   have : r + 1 = i + (r - i + 1) := by
     omega
   rw [←this]
-def fmax (f : ℕ → ℕ) (r : ℕ) := List.foldl Nat.max (0) (List.map f $ List.range (r+1))
+def fmax (f : ℕ → ℕ) (r : ℕ) := List.foldl Nat.max (0) (List.map f <| List.range (r+1))
 theorem foldl_max_base : b ≤ foldl Nat.max b l := by
   induction l generalizing b with
   | nil => simp
@@ -341,7 +341,7 @@ theorem P (i:ℕ) : (W ∅ i).Infinite → (W ∅ i ∩ A).Nonempty := by
   intro h
   rcases P_aux i h with ⟨s, _, hs1⟩
   unfold A
-  exact Set.inter_nonempty.mpr $ hs1.elim (λ x hx ↦ ⟨x,hx.1,by simp; use s; exact hx.2⟩)
+  exact Set.inter_nonempty.mpr <| hs1.elim (λ x hx ↦ ⟨x,hx.1,by simp; use s; exact hx.2⟩)
 end positive_requirement
 
 section negative_requirement
