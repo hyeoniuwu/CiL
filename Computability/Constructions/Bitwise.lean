@@ -10,9 +10,11 @@ import Computability.Constructions.CovRec
 
 This file constructs primitive recursive codes for bitwise operations.
 
-The main construction is `c_bitwise`, which allows bitwise operation of an arbitrary code/function. The code constructed mirrors the Lean definition of `Nat.bitwise`, using course-of-values recursion.
+The main construction is `c_bitwise`, which allows bitwise operation of an arbitrary code/function.
+The code constructed mirrors the Lean definition of `Nat.bitwise`, using course-of-values recursion.
 
-For more documentation on theorems related to codes using course-of-values is proven, see `Constructions\CovRec.lean`.
+For more documentation on theorems related to codes using course-of-values is proven, see
+`Constructions\CovRec.lean`.
 
 ## Main declarations
 
@@ -30,10 +32,8 @@ c.f. the definition of `bitwise` in Init\Data\Nat\Bitwise\Basic.lean.
 -/
 def c_bitwise_aux (c : Code) :=
   let iP1 := succ.comp (left.comp right)
-
   let comp_hist         := right.comp right
   let lookup (n'' m'')  := c_list_getI.comp₂ comp_hist (pair n'' m'')
-
   let n := left.comp iP1
   let m := right.comp iP1
   let n' := c_div.comp₂ n (c_const 2)
@@ -41,7 +41,6 @@ def c_bitwise_aux (c : Code) :=
   let b₁ := c_mod.comp₂ n (c_const 2)
   let b₂ := c_mod.comp₂ m (c_const 2)
   let r := lookup n' m'
-
   c_cov_rec
     (c_const 0) <|
     c_ifz.comp₃ n
@@ -67,19 +66,23 @@ def c_bitwise (c : Code) := c_list_getLastI.comp ((c_bitwise_aux c).comp₂ (c_c
   have cpb₂ : code_prim b₂ := by apply_cp
   have cpr : code_prim r := by apply_cp
   apply_cp 50
-lemma lt_pair_of_lt_lt {a c b d} (ha : a<c) (hb : b<d) : ⟪a,b⟫ < ⟪c,d⟫ := by
+lemma lt_pair_of_lt_lt {a c b d} (ha : a < c) (hb : b < d) : ⟪a,b⟫ < ⟪c,d⟫ := by
   have a0 : ⟪a,b⟫ < ⟪c,b⟫ := by exact Nat.pair_lt_pair_left b ha
   have a1 : ⟪c,b⟫ < ⟪c,d⟫ := by exact Nat.pair_lt_pair_right c hb
   exact Nat.lt_trans a0 a1
 lemma c_bitwise_evp_rec_bounds {n m : ℕ} : ⟪(n + 1) / 2,(m + 1) / 2⟫ < ⟪n + 1,m + 1⟫ := by
   exact lt_pair_of_lt_lt (Nat.div_lt_self' n 0) (Nat.div_lt_self' m 0)
-theorem c_bitwise_evp_0_0 {O c} : evalp O (c_bitwise c) ⟪0, 0⟫ = Nat.bitwise (fun a b => n2b <| evalp O c ⟪b2n a, b2n b⟫) 0 0 := by
+theorem c_bitwise_evp_0_0 {O c} :
+    evalp O (c_bitwise c) ⟪0, 0⟫ =
+    Nat.bitwise (fun a b => n2b <| evalp O c ⟪b2n a, b2n b⟫) 0 0 := by
   unfold c_bitwise; unfold c_bitwise_aux;
   lift_lets; extract_lets; expose_names
   rw [show Nat.pair 0 0 = 0 from rfl]
   simp [Nat.bitwise]
   
-theorem c_bitwise_evp_0_m {O c m} : evalp O (c_bitwise c) ⟪0, m+1⟫ = Nat.bitwise (fun a b => n2b <| evalp O c ⟪b2n a, b2n b⟫) 0 (m+1) := by
+theorem c_bitwise_evp_0_m {O c m} :
+    evalp O (c_bitwise c) ⟪0, m+1⟫ =
+    Nat.bitwise (fun a b => n2b <| evalp O c ⟪b2n a, b2n b⟫) 0 (m+1) := by
   unfold c_bitwise; unfold c_bitwise_aux;
   lift_lets; extract_lets; expose_names
   let k := ⟪0, m+1⟫ - 1
@@ -96,7 +99,9 @@ theorem c_bitwise_evp_0_m {O c m} : evalp O (c_bitwise c) ⟪0, m+1⟫ = Nat.bit
   have hm : evalp O m_1 cri = m+1 := by simp [m_1, hiP1]
   -- terminal simp
   simp [hn, hm, b2n, Nat.bitwise]
-theorem c_bitwise_evp_n_0 {O c n} : evalp O (c_bitwise c) ⟪n+1, 0⟫ = Nat.bitwise (fun a b => n2b <| evalp O c ⟪b2n a, b2n b⟫) (n+1) 0 := by
+theorem c_bitwise_evp_n_0 {O c n} :
+    evalp O (c_bitwise c) ⟪n+1, 0⟫ =
+    Nat.bitwise (fun a b => n2b <| evalp O c ⟪b2n a, b2n b⟫) (n+1) 0 := by
   unfold c_bitwise; unfold c_bitwise_aux;
   lift_lets; extract_lets; expose_names
   let k := ⟪n+1, 0⟫ - 1
@@ -128,12 +133,12 @@ theorem c_bitwise_evp_n_m {O c n m} : evalp O (c_bitwise c) ⟪n+1,m+1⟫ = (
   have hkP1: k+1 = ⟪n+1, m+1⟫ := by
     exact Nat.sub_add_cancel kP1_gt_0
   rw [←hkP1]
-
+  -- we will simplify terms in the goal with inp and cri (short for coverec input)
   let (eq := hinp) inp := evalp O (c_bitwise_aux c) ⟪17, k⟫
   let (eq := hcri) cri := ⟪17, k, inp⟫
   unfold c_bitwise_aux at hinp; lift_lets at hinp
   simp [← hinp, ← hcri]
-
+  -- show that the code let-bindings correspond to our let-bindings
   have hiP1 : evalp O iP1 cri = ⟪n+1,m+1⟫ := by simp [iP1, cri, hkP1]
   have hn : evalp O n_1 cri = n+1 := by simp [n_1, hiP1]
   have hm : evalp O m_1 cri = m+1 := by simp [m_1, hiP1]
@@ -152,9 +157,10 @@ theorem c_bitwise_evp_n_m {O c n m} : evalp O (c_bitwise c) ⟪n+1,m+1⟫ = (
       simp [Nat.sub_add_cancel pair_nonzero_right_pos]
       exact c_bitwise_evp_rec_bounds
     simp [this]
-
   simp [hn, hm, hb₁, hb₂, hr]
-@[simp] theorem c_bitwise_evp {O c}: evalp O (c_bitwise c) = Nat.unpaired2 (Nat.bitwise (fun a b => n2b <| evalp O c ⟪b2n a, b2n b⟫)) := by
+@[simp] theorem c_bitwise_evp {O c} :
+    evalp O (c_bitwise c) =
+    Nat.unpaired2 (Nat.bitwise (fun a b => n2b <| evalp O c ⟪b2n a, b2n b⟫)) := by
   funext nm
   induction' nm using Nat.strong_induction_on with nm ih
   let n := nm.l; let m := nm.r
@@ -232,7 +238,7 @@ section or
 namespace Oracle.Single.Code
 def c_or := c_bitwise (c_lor)
 @[cp] theorem c_or_prim : code_prim c_or := by unfold c_or; apply_cp
-@[simp] theorem c_or_evp {O x y}: evalp O c_or ⟪x,y⟫ = (x ||| y) := by simp [c_or]; rfl
+@[simp] theorem c_or_evp {O x y} : evalp O c_or ⟪x,y⟫ = (x ||| y) := by simp [c_or]; rfl
 end Oracle.Single.Code
 end or
 
@@ -240,7 +246,7 @@ section and
 namespace Oracle.Single.Code
 def c_and := c_bitwise (c_land)
 @[cp] theorem c_and_prim : code_prim c_and := by unfold c_and; apply_cp
-@[simp] theorem c_and_evp {O x y}: evalp O c_and ⟪x,y⟫ = x &&& y := by simp [c_and]; rfl
+@[simp] theorem c_and_evp {O x y} : evalp O c_and ⟪x,y⟫ = x &&& y := by simp [c_and]; rfl
 end Oracle.Single.Code
 end and
 
@@ -248,6 +254,6 @@ section xor
 namespace Oracle.Single.Code
 def c_xor := c_bitwise (c_lxor)
 @[cp] theorem c_xor_prim : code_prim c_xor := by unfold c_xor; apply_cp
-@[simp] theorem c_xor_evp {O x y}: evalp O c_xor ⟪x,y⟫ = x ^^^ y := by simp [c_xor]; rfl
+@[simp] theorem c_xor_evp {O x y} : evalp O c_xor ⟪x,y⟫ = x ^^^ y := by simp [c_xor]; rfl
 end Oracle.Single.Code
 end xor
