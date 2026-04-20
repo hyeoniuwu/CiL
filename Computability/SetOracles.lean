@@ -14,17 +14,20 @@ import Mathlib.Order.Basic
 /-!
 # SetOracles.lean
 
-We setup sets for use as oracles, (e.g. evaluation with sets as oracles, reduction between sets), and many basic definitions in degree theory, along with some basic results.
+We setup sets for use as oracles, (e.g. evaluation with sets as oracles, reduction between sets),
+and many basic definitions in degree theory, along with some basic results.
 
 ## Structure of file
 ### basic_definitions:
-  With use of the characteristic function operator `χ`, we are able to talk of sets of naturals as oracles.
+  With use of the characteristic function operator `χ`, we are able to talk of sets of naturals as
+  oracles.
 
-  We define `TuringDegree` to be the equivalence classes of sets of naturals under Turing equivalence i.e. `SetTuringEquivalent`.
+  We define `TuringDegree` to be the equivalence classes of sets of naturals under Turing
+  equivalence i.e. `SetTuringEquivalent`.
 
 ### SetJumpTheorems
-  Basic reducibility results involving the jump operator on set oracles, and the jump operator on total
-  functions, defined in Computability/Jump.lean.
+  Basic reducibility results involving the jump operator on set oracles, and the jump operator on
+  total functions, defined in Computability/Jump.lean.
 
 ### computably_enumerable
   definitions for computably enumerable sets as domains of recursive functions,
@@ -43,7 +46,8 @@ We setup sets for use as oracles, (e.g. evaluation with sets as oracles, reducti
   - `join_upper`: that the join is an upper bound
   - `join_least`: that the join is a least upper bound
 
-  We then lift this to Turing degrees in section `TuringDegree.join`, which allows us to show that the Turing degrees are an upper semilattice.
+  We then lift this to Turing degrees in section `TuringDegree.join`, which allows us to show that
+  the Turing degrees are an upper semilattice.
 -/
 
 open Nat
@@ -56,16 +60,18 @@ namespace Oracle.Single
 section basic_definitions
 /-- χ O is the characteristic function of the set O.  -/
 noncomputable def χ (O : Set ℕ) : ℕ → ℕ := fun x ↦ if x ∈ O then 1 else 0
-theorem χsimp {O} : χ O = fun x ↦ if x ∈ O then 1 else 0 := by exact rfl
+theorem χsimp {O} : χ O = fun x ↦ if x ∈ O then 1 else 0 := rfl
 @[simp] abbrev SetRecursiveIn (O : Set ℕ) (f : ℕ →. ℕ) : Prop := RecursiveIn (χ O) f
 @[simp] abbrev SetTuringReducible (A O : Set ℕ) : Prop := RecursiveIn (χ O) (χ A)
-@[simp] abbrev SetTuringReducibleStrict (A O : Set ℕ) : Prop := RecursiveIn (χ O) (χ A) ∧ ¬ RecursiveIn (χ A) (χ O)
+@[simp] abbrev SetTuringReducibleStrict (A O : Set ℕ) : Prop :=
+  RecursiveIn (χ O) (χ A) ∧ ¬ RecursiveIn (χ A) (χ O)
 @[simp] abbrev SetTuringEquivalent (O A : Set ℕ) : Prop := AntisymmRel SetTuringReducible O A
-noncomputable def evalSet (O : Set ℕ) : Code → ℕ →. ℕ := eval (χ O)
+@[ev_simps] noncomputable def evalSet (O : Set ℕ) : Code → ℕ →. ℕ := eval (χ O)
 noncomputable def evalnSet (O : Set ℕ) := evaln (χ O)
 @[simp] noncomputable def evalSet₁ (O : Set ℕ) : ℕ →. ℕ := eval₁ (χ O)
 @[simp] noncomputable def evalnSet₁ (O : Set ℕ) : ℕ → ℕ := evaln₁ (χ O)
-theorem prim_evalnSet₁ {O} : Nat.PrimrecIn (χ O) (evalnSet₁ O) := by simp only [evalnSet₁]; exact prim_evaln₁
+theorem prim_evalnSet₁ {O} : Nat.PrimrecIn (χ O) (evalnSet₁ O) := by
+  simp only [evalnSet₁]; exact prim_evaln₁
 def SetK0 (A : Set ℕ) := {ex : ℕ | (evalSet A ex.l ex.r).Dom}
 def SetK (A : Set ℕ) := {x : ℕ | (evalSet A x x).Dom}
 abbrev SetJump := SetK
@@ -73,21 +79,32 @@ def jumpn : ℕ → Set ℕ → Set ℕ
 | 0 => id
 | i+1 => SetJump ∘ jumpn i
 
--- Order between sets is written in the way below, to be able to make use of automation with ordering thms.
--- that is why we don't write: scoped[Computability] infix : 50 "≤ᵀ" => SetTuringReducible
-protected theorem SetTuringReducible.refl (A : Set ℕ) : SetTuringReducible A A := by exact RecursiveIn.oracle
-protected theorem SetTuringReducible.rfl (A : Set ℕ) : SetTuringReducible A A := SetTuringReducible.refl _
+/-
+Order between sets is written in the way below, to be able to make use of automation with
+ordering thms. that is why we don't write:
+`scoped[Computability] infix : 50 "≤ᵀ" => SetTuringReducible`
+-/
+protected theorem SetTuringReducible.refl (A : Set ℕ) : SetTuringReducible A A := RecursiveIn.oracle
+protected theorem SetTuringReducible.rfl (A : Set ℕ) : SetTuringReducible A A :=
+  SetTuringReducible.refl _
 instance : IsRefl (Set ℕ) SetTuringReducible where refl _ := by (expose_names; exact SetTuringReducible.refl x)
-theorem SetTuringReducible.trans {A B C : Set ℕ} (hg : SetTuringReducible A B) (hh : SetTuringReducible B C) : SetTuringReducible A C := by
+theorem SetTuringReducible.trans {A B C : Set ℕ}
+    (hg : SetTuringReducible A B) (hh : SetTuringReducible B C) : SetTuringReducible A C := by
   simp only [SetTuringReducible] at *
   exact TuringReducible.trans hg hh
 instance : IsTrans (Set ℕ) SetTuringReducible := ⟨@SetTuringReducible.trans⟩
 instance : IsPreorder (Set ℕ) SetTuringReducible where refl := .refl
-theorem SetTuringEquivalent.equivalence : Equivalence SetTuringEquivalent := (AntisymmRel.setoid _ _).iseqv
-@[refl] protected theorem SetTuringEquivalent.refl (f : Set ℕ) : SetTuringEquivalent f f := Equivalence.refl equivalence f
-@[symm] theorem SetTuringEquivalent.symm {f g : Set ℕ} (h : SetTuringEquivalent f g) : SetTuringEquivalent g f := Equivalence.symm equivalence h
-@[trans] theorem SetTuringEquivalent.trans (f g h : Set ℕ) (h₁ : SetTuringEquivalent f g) (h₂ : SetTuringEquivalent g h) : SetTuringEquivalent f h := Equivalence.trans equivalence h₁ h₂
-instance : IsPreorder (Set ℕ) SetTuringReducible where refl := SetTuringReducible.refl ; trans := @SetTuringReducible.trans
+theorem SetTuringEquivalent.equivalence :
+  Equivalence SetTuringEquivalent := (AntisymmRel.setoid _ _).iseqv
+@[refl] protected theorem SetTuringEquivalent.refl (f : Set ℕ) : SetTuringEquivalent f f :=
+  Equivalence.refl equivalence f
+@[symm] theorem SetTuringEquivalent.symm {f g : Set ℕ} (h : SetTuringEquivalent f g) :
+  SetTuringEquivalent g f := Equivalence.symm equivalence h
+@[trans] theorem SetTuringEquivalent.trans (f g h : Set ℕ)
+    (h₁ : SetTuringEquivalent f g) (h₂ : SetTuringEquivalent g h) : SetTuringEquivalent f h :=
+  Equivalence.trans equivalence h₁ h₂
+instance : IsPreorder (Set ℕ) SetTuringReducible where refl := SetTuringReducible.refl ; trans :=
+  @SetTuringReducible.trans
 -- Turing degrees are the equivalence classes of sets of naturals under Turing equivalence.
 abbrev TuringDegree := Antisymmetrization (Set ℕ) SetTuringReducible
 private instance : Preorder (Set ℕ) where
@@ -101,7 +118,8 @@ def SetTuringDegreeLE (A B : Set ℕ) : Prop := TuringDegree.PO.le ⟦A⟧ ⟦B�
 def SetTuringDegreeNLE (A B : Set ℕ) : Prop := ¬ TuringDegree.PO.le ⟦A⟧ ⟦B⟧
 def SetTuringDegreeLT (A B : Set ℕ) : Prop := TuringDegree.PO.lt ⟦A⟧ ⟦B⟧
 def SetTuringDegreeEQ (A B : Set ℕ) : Prop := AntisymmRel TuringDegree.PO.le ⟦A⟧ ⟦B⟧
-def SetTuringDegreeIN (A B : Set ℕ) : Prop := (¬TuringDegree.PO.le ⟦A⟧ ⟦B⟧)∧(¬TuringDegree.PO.le ⟦B⟧ ⟦A⟧)
+def SetTuringDegreeIN (A B : Set ℕ) : Prop :=
+  (¬TuringDegree.PO.le ⟦A⟧ ⟦B⟧)∧(¬TuringDegree.PO.le ⟦B⟧ ⟦A⟧)
 scoped[Computability] infix : 50 "≤ᵀ" => SetTuringDegreeLE
 scoped[Computability] infix : 50 "≰ᵀ" => SetTuringDegreeNLE
 scoped[Computability] infix : 50 "<ᵀ" => SetTuringDegreeLT
@@ -115,7 +133,8 @@ end basic_definitions
 
 -- lemmas
 lemma χ_eq_0or1 {O x} : (χ O x = 0) ∨ (χ O x = 1) := by by_cases h : x ∈ O <;> simp [h, χsimp]
-lemma some_comp_simp (a : Part ℕ) {f : ℕ → ℕ} {h : a.Dom}: Part.some (f (a.get h)) = a >>= (f : ℕ →. ℕ) := by
+lemma some_comp_simp (a : Part ℕ) {f : ℕ → ℕ} {h : a.Dom} :
+    Part.some (f (a.get h)) = a >>= (f : ℕ →. ℕ) := by
   simp only [bind]
   rw [Part.bind]
   exact Eq.symm (Part.assert_pos h)
@@ -158,8 +177,9 @@ theorem χ_le_χSetK0 {O : Set ℕ} : O ≤ᵀ (SetK0 O) := by
       cases χ_eq_0or1 with
       | inl h2 => exact False.elim (h h2)
       | inr h2 => exact h2
-  have f'_recIn_k : Rin k f' := by
-    exact Rin.someTotal k (fun x ↦ k ⟪cg, x⟫) <| Rin.totalComp' Rin.oracle (Rin.of_primrecIn PrimrecIn.pair_proj)
+  have f'_recIn_k : Rin k f' :=
+    Rin.someTotal k (fun x ↦ k ⟪cg, x⟫) <|
+    Rin.totalComp' Rin.oracle (Rin.of_primrecIn PrimrecIn.pair_proj)
   refine TR_Set_iff_Fn'.mpr ?_
   rw [f_eq_f']
   exact f'_recIn_k
@@ -167,7 +187,7 @@ theorem χ_le_χSetK0 {O : Set ℕ} : O ≤ᵀ (SetK0 O) := by
 theorem χSetK0_leq_K0χ {O : Set ℕ} : Rin (K0 (χ O)) (χ (SetK0 O)) := by
   -- We simply note that `χ (SetK0 O) = Nat.sg ∘ K0 (χ O)`.
   let k : ℕ → ℕ := fun ex ↦ if (eval (χ O) ex.l ex.r).Dom then 1 else 0
-  have h0 : χ (SetK0 O) = k := by exact rfl
+  have h0 : χ (SetK0 O) = k := rfl
   let f := sg ∘ K0 (χ O)
   have k_eq_f : k = f := by
     funext xs
@@ -193,11 +213,13 @@ theorem K0χ_le_χSetK0 {O : Set ℕ} : Rin (χ (SetK0 O)) (K0 (χ O)) := by
   let k : ℕ → ℕ := fun ex ↦ if (eval (χ O) ex.l ex.r).Dom then 1 else 0
   have h1 (ex : ℕ) : k ex = 0 ↔ ¬(eval (χ O) ex.l ex.r).Dom := by simp [k]
   have h2 (ex : ℕ) : k ex ≠ 0 ↔ (eval (χ O) ex.l ex.r).Dom := by simp [k]
-
-  let f := fun ex => if (k ex = 0) then Part.some 0 else (eval (χ O) ex.l ex.r) >>= (Nat.succ : ℕ →. ℕ)
+  -- we now define f.
+  let f := fun ex =>
+    if (k ex = 0)
+      then Part.some 0
+      else (eval (χ O) ex.l ex.r) >>= (Nat.succ : ℕ →. ℕ)
   have rin_f : Rin k f := Rin.ite Rin.oracle Rin.zero <|
     Rin.comp Rin.succ (TuringReducible.trans' Rin.eval χ_le_χSetK0)
-
   have h3 : (K0 (χ O) : ℕ →. ℕ) = f := by
     funext xs
     cases Classical.em (k xs = 0) with
@@ -205,8 +227,7 @@ theorem K0χ_le_χSetK0 {O : Set ℕ} : Rin (χ (SetK0 O)) (K0 (χ O)) := by
     | inr h =>
       simp only [f, PFun.coe_val, K0, (h2 xs).mp h, ↓reduceDIte, h, ↓reduceIte, Part.bind_eq_bind]
       apply some_comp_simp
-
-  rw [h3]
+  rewrite [h3]
   exact rin_f
 theorem K0χ_eq_χSetK0 (O : Set ℕ) : (K0 (χ O)) ≡ᵀᶠ (χ (SetK0 O)) := ⟨K0χ_le_χSetK0, χSetK0_leq_K0χ⟩
 theorem χSetK0_eq_K0χ (O : Set ℕ) : (χ (SetK0 O)) ≡ᵀᶠ (K0 (χ O)) := (K0χ_eq_χSetK0 O).symm
@@ -248,7 +269,7 @@ theorem χ_le_χSetK (O : Set ℕ) : O ≤ᵀ (SetK O) := by
   exact f'_recIn_χK
 theorem Kχ_le_χSetK (O : Set ℕ) : Nat.RecursiveIn (χ (SetK O)) (K (χ O)) := by
   let k : ℕ → ℕ := fun x ↦ if (eval (χ O) (n2c x) x).Dom then 1 else 0
-  have h0 : χ (SetK O) = k := by exact rfl
+  have h0 : χ (SetK O) = k := rfl
   have h1 (x : ℕ) : k x = 0 ↔ ¬(eval (χ O) (n2c x) x).Dom := by simp [k]
   have h2 (x : ℕ) : k x ≠ 0 ↔ (eval (χ O) (n2c x) x).Dom := by simp [k]
 
@@ -305,9 +326,10 @@ abbrev Wn (O : Set ℕ) (e : Code) (s : ℕ) := { x | (evalnSet O s e x).isSome 
 /-- `WRn O e s` := range of e^th oracle program ran for s steps -/
 abbrev WRn (O : Set ℕ) (e : Code) (s : ℕ) := { y | ∃ x, y ∈ evalnSet O s e x }
 
-theorem Wn_mono {O} : ∀ {k₁ k₂ c x}, k₁ ≤ k₂ → x ∈ Wn O c k₁ → x ∈ Wn O c k₂ := fun a b ↦ evaln_mono_dom a b
+theorem Wn_mono {O} : ∀ {k₁ k₂ c x}, k₁ ≤ k₂ → x ∈ Wn O c k₁ → x ∈ Wn O c k₂ :=
+  fun a b ↦ evaln_mono_dom a b
 theorem Wn_sound {O} : ∀ {k c x}, x ∈ Wn O c k → x ∈ W O c := by
-  simp [evalnSet, evalSet]
+  simp only [Set.mem_setOf_eq, evalnSet, PFun.mem_dom, evalSet]
   intro _ _ _ h
   rw [evaln_sound' h]
   exact Part.dom_iff_mem.mp trivial
@@ -320,15 +342,15 @@ theorem evaln_complete_dom {O c x} : (eval (χ O) c x).Dom ↔ ∃ k, (evaln (χ
   · rintro ⟨y, hy⟩
     exact en2e hy
 theorem Wn_complete {O} {c x} : x ∈ W O c ↔ ∃ k, x ∈ Wn O c k := by
-  simp [evalnSet, evalSet]
+  simp only [PFun.mem_dom, evalSet, Set.mem_setOf_eq, evalnSet]
   exact Iff.trans (Iff.symm Part.dom_iff_mem) (@evaln_complete_dom O c x)
 theorem W_le_SetK0 {O} : ∀ c, W O c ≤ᵀ SetK0 O := by
   intro c
   apply reducible_iff_code.mpr
   use oracle.comp <| pair (c_const c) c_id
   funext x
-  simp [evalSet, eval, Seq.seq, SetK0, χ]
-  exact if_ctx_congr Part.dom_iff_mem (congrFun rfl) (congrFun rfl)
+  simp only [ev_simps]
+  simpa [Seq.seq, SetK0, χ] using if_ctx_congr Part.dom_iff_mem (congrFun rfl) (congrFun rfl)
 
 theorem W_le_Jump {O} : ∀ c, W O c ≤ᵀ O⌜ :=
   fun c ↦ LE.le.trans_antisymmRel (@W_le_SetK0 O c) (SetK0_eq_Jump O)
@@ -349,20 +371,20 @@ def [f(e)](y):
 def dom_to_ran (e : Code) := c_ifdom (c_eval.comp₂ (c_const e) c_id) c_id
 theorem dom_to_ran_prop {O e} : W O e = WR O (dom_to_ran e) := by
   ext xs
-  simp [dom_to_ran]
+  simp only [PFun.mem_dom, dom_to_ran]
   constructor
   · intro h
-    simp [evalSet] at h
+    simp only [evalSet] at h
     rcases h with ⟨y,hy⟩
     use xs
     simp [evalSet, Seq.seq, Part.mem_imp_dom hy]
-
   · intro h
-    simp [PFun.ran] at h
+    simp only [PFun.ran, Set.mem_setOf_eq] at h
     rcases h with ⟨h0,h1⟩
-    simp [evalSet] at h1
-    simp [Seq.seq] at h1
-
+    simp only [ev_simps] at h1
+    simp? [Seq.seq]  at h1 says
+      simp only [Seq.seq, Part.coe_some, Part.map_eq_map, Part.map_some, Part.bind_some,
+        Part.bind_eq_bind, pair_l, n2c_c2n, pair_r] at h1
     have : xs=h0 := by
       contrapose h1
       split
@@ -373,9 +395,12 @@ theorem dom_to_ran_prop {O e} : W O e = WR O (dom_to_ran e) := by
     next h => exact Part.dom_iff_mem.mp h
     · simp_all only [Part.notMem_none]
 
-def c_dom_to_ran := c_c_ifdom.comp₂ (c_comp₂.comp₃ (c_const c_eval) (c_c_const) (c_const c_id)) (c_const c_id)
+def c_dom_to_ran := c_c_ifdom.comp₂
+  (c_comp₂.comp₃ (c_const c_eval) (c_c_const) (c_const c_id))
+  (c_const c_id)
 @[cp] theorem c_dom_to_ran_prim : code_prim c_dom_to_ran := by unfold c_dom_to_ran; apply_cp
-@[simp, evp_simps] theorem c_dom_to_ran_evp {O} : evalp O c_dom_to_ran = fun (x : ℕ) ↦ c2n (dom_to_ran x) := by
+@[simp, evp_simps] theorem c_dom_to_ran_evp {O} :
+    evalp O c_dom_to_ran = fun (x : ℕ) ↦ c2n (dom_to_ran x) := by
   simp [c_dom_to_ran, dom_to_ran]
 theorem Nat.PrimrecIn.dom_to_ran {O} : Nat.PrimrecIn O (fun (x : ℕ) ↦ (dom_to_ran x).c2n) := by
   rw [← c_dom_to_ran_evp]; exact code_prim_prop
@@ -394,16 +419,19 @@ def [f(e)](x):
   dovetail [e] to see if x is in its range.
   return anything.
 -/
-noncomputable def ran_to_dom := fun c : Code ↦ dovetail (c_if_eq'.comp₂ left ((c_eval₁).comp₂ (c_const c) right))
+noncomputable def ran_to_dom :=
+  fun c : Code ↦ dovetail (c_if_eq'.comp₂ left ((c_eval₁).comp₂ (c_const c) right))
 theorem ran_to_dom_ev {O c y} : (eval O (ran_to_dom c) y).Dom ↔ ∃ x, y ∈ eval O c x := by
   constructor
   · intro h
     have := dovetail_ev_0 h
-    let dvt := ((eval O (c_if_eq'.comp₂ left ((c_eval₁).comp₂ (c_const c) right)).dovetail y).get h)
-    rw [show ((eval O (c_if_eq'.comp₂ left ((c_eval₁).comp₂ (c_const c) right)).dovetail y).get h) = dvt from rfl] at this
-    simp at this
-    simp [eval] at this
-    simp [Seq.seq] at this
+    let (eq:=hdvt) dvt :=
+      (eval O (c_if_eq'.comp₂ left ((c_eval₁).comp₂ (c_const c) right)).dovetail y).get h
+    rw [← hdvt] at this
+    simp only [ev_simps] at this
+    -- simp [eval] at this
+    simp only [Seq.seq, unpair_pair, Part.coe_some, Part.map_eq_map, Part.map_some, Part.bind_some,
+      Part.bind_eq_bind, Part.bind_map, pair_l, pair_r] at this
     have s1 : ((eval₁ O (Nat.pair c dvt))).Dom := by
       contrapose this
       simp [Part.eq_none_iff'.mpr this]
@@ -560,7 +588,7 @@ theorem Cin_iff_CEin_CEin' {A B} : A≤ᵀB ↔ (CEin B A ∧ CEin B Aᶜ) := by
   funext x
 
   -- aux0, aux1: trivial helpers needed as arguments later for c_if_eq_te'_ev
-  have aux0 : code_total (χ B) (right) := by exact fun x ↦ trivial
+  have aux0 : code_total (χ B) (right) := fun x ↦ trivial
   have aux1 : code_total (χ B) (c_const 1) := by simp [code_total]
 
   by_cases hx : x∈A
