@@ -30,7 +30,7 @@ def c_diverge := rfind' (c_const 1)
   simp [c_diverge,eval]
   apply Part.eq_none_iff.mpr
   simp
-theorem c_diverge_ev' {O} : eval O c_diverge = λ _ ↦ Part.none := by funext; simp
+theorem c_diverge_ev' {O} : eval O c_diverge = fun _ ↦ Part.none := by funext; simp
 end diverge
 
 section ifz1

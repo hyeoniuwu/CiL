@@ -54,7 +54,7 @@ theorem Part.eq_some_imp_dom {x} {p:Part ℕ} : p=Part.some x → p.Dom := by
   intro a
   subst a
   exact trivial
-theorem Part.mem_imp_dom {x} {p:Part ℕ} : x∈p → p.Dom := λ h ↦ Part.eq_some_imp_dom (Part.eq_some_iff.mpr h)
+theorem Part.mem_imp_dom {x} {p:Part ℕ} : x∈p → p.Dom := fun h ↦ Part.eq_some_imp_dom (Part.eq_some_iff.mpr h)
 theorem Part.dom_imp_some {x:Part ℕ} (h:x.Dom) : x=Part.some (x.get h) := by
   exact Part.get_eq_iff_eq_some.mp rfl
 theorem Option.dom_imp_some {x:Option ℕ} (h:x.isSome) : x=some (x.get h) := by

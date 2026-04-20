@@ -28,10 +28,10 @@ open Computability
 open Classical
 open Oracle.Single
 
-@[simp] noncomputable def K0 (O : ℕ → ℕ) : ℕ → ℕ := λ n =>
+@[simp] noncomputable def K0 (O : ℕ → ℕ) : ℕ → ℕ := fun n =>
   let part := eval O n.l n.r
   if h : part.Dom then (part.get h) + 1 else 0
-@[simp] noncomputable def K (O : ℕ → ℕ) : ℕ → ℕ := λ n =>
+@[simp] noncomputable def K (O : ℕ → ℕ) : ℕ → ℕ := fun n =>
   let part := eval O n n
   if h : part.Dom then (part.get h) + 1 else 0
 noncomputable abbrev jump (O : ℕ → ℕ) : ℕ → ℕ := K0 O

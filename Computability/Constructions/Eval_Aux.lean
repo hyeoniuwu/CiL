@@ -27,9 +27,9 @@ theorem rfind'_eqv_rfind {O c x} : ((Nat.unpaired fun a m => (Nat.rfind fun n =>
 
 section rfind
 /--`[code_rfind c](x)=smallest n s.t. [c](x,n)=0.`-/
-def c_rfind : Oracle.Single.Code→Oracle.Single.Code := λ c ↦ (rfind' c).comp (pair c_id zero)
+def c_rfind : Oracle.Single.Code→Oracle.Single.Code := fun c ↦ (rfind' c).comp (pair c_id zero)
 /-- Given a code `c` -/
-abbrev rfind (O:ℕ→ℕ) : Code → ℕ →. ℕ := λ c ↦ λ a ↦ Nat.rfind λ n ↦ (λ m ↦ m = 0) <$> eval O c (Nat.pair a n)
+abbrev rfind (O:ℕ→ℕ) : Code → ℕ →. ℕ := fun c ↦ fun a ↦ Nat.rfind fun n ↦ (fun m ↦ m = 0) <$> eval O c (Nat.pair a n)
 theorem c_rfind_ev {O c a} : eval O (c_rfind c) a = rfind O c a := by
   unfold c_rfind
   unfold rfind

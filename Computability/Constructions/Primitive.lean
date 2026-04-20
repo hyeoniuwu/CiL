@@ -51,9 +51,9 @@ end comp₂
 
 section comp₄
 namespace Oracle.Single.Code
-def comp₄ := λ c1 c2 c3 c4 c5 : Code => c1.comp₂ (pair c2 c3) (pair c4 c5)
+def comp₄ := fun c1 c2 c3 c4 c5 : Code => c1.comp₂ (pair c2 c3) (pair c4 c5)
 @[cp] theorem comp₄_prim {c1 c2 c3 c4 c5} (hc1 : code_prim c1) (hc2 : code_prim c2) (hc3 : code_prim c3) (hc4 : code_prim c4) (hc5 : code_prim c5) : code_prim (comp₄ c1 c2 c3 c4 c5) := by unfold comp₄; apply_cp
-@[simp] theorem comp₄_evp {O c1 c2 c3 c4 c5} : evalp O (comp₄ c1 c2 c3 c4 c5) = λ x ↦
+@[simp] theorem comp₄_evp {O c1 c2 c3 c4 c5} : evalp O (comp₄ c1 c2 c3 c4 c5) = fun x ↦
   evalp O c1 ⟪evalp O c2 x, evalp O c3 x, evalp O c4 x, evalp O c5 x⟫ := by
   simp [comp₄,evalp, comp₂];
 @[simp] theorem comp₄_ev {O c1 c2 c3 c4 c5} : eval O (comp₄ c1 c2 c3 c4 c5) =
@@ -67,10 +67,10 @@ section comp₃
 namespace Oracle.Single.Code
 def comp₃ := fun c1 c2 c3 c4 : Code => c1.comp₂ c2 (pair c3 c4)
 @[cp] theorem comp₃_prim {c1 c2 c3 c4} (hc1 : code_prim c1) (hc2 : code_prim c2) (hc3 : code_prim c3) (hc4 : code_prim c4) : code_prim (comp₃ c1 c2 c3 c4) := by unfold comp₃; apply_cp
-@[simp] theorem comp₃_evp {c1 c2 c3 c4} {O : ℕ → ℕ} : evalp O (comp₃ c1 c2 c3 c4) = λ x ↦
+@[simp] theorem comp₃_evp {c1 c2 c3 c4} {O : ℕ → ℕ} : evalp O (comp₃ c1 c2 c3 c4) = fun x ↦
   evalp O c1 ⟪evalp O c2 x, evalp O c3 x, evalp O c4 x⟫ := by
   simp [comp₃,evalp]
-@[simp] theorem comp₃_ev {c1 c2 c3 c4} {O : ℕ → ℕ} : eval O (comp₃ c1 c2 c3 c4) = λ x ↦
+@[simp] theorem comp₃_ev {c1 c2 c3 c4} {O : ℕ → ℕ} : eval O (comp₃ c1 c2 c3 c4) = fun x ↦
   ⟪eval O c2 x, eval O c3 x, eval O c4 x⟫ >>= (eval O c1)
   := by
     simp [comp₃, eval, comp₂, Seq.seq]
@@ -272,7 +272,7 @@ def c_dist := c_add.comp (pair c_sub (c_sub.comp (pair right left)))
 @[simp] theorem c_dist_ev {O : ℕ → ℕ} : eval O c_dist = unpaired2 Nat.dist := by rw [← evalp_eq_eval c_dist_prim]; simp only [c_dist_evp]
 end Oracle.Single.Code
 end dist
-@[simp] theorem eq_zero_iff_dist_zero {a b:ℕ} : a.dist b = 0 ↔ a=b := ⟨λ x ↦ Nat.eq_of_dist_eq_zero x, λ x ↦ Nat.dist_eq_zero x⟩
+@[simp] theorem eq_zero_iff_dist_zero {a b:ℕ} : a.dist b = 0 ↔ a=b := ⟨fun x ↦ Nat.eq_of_dist_eq_zero x, fun x ↦ Nat.dist_eq_zero x⟩
 theorem sgdist_eq_ifeq {a b:ℕ} : (if a.dist b = 0 then 0 else 1) = (if a=b then 0 else 1) := by
   simp only [eq_zero_iff_dist_zero]
 

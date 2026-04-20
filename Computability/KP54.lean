@@ -98,7 +98,7 @@ theorem c_kp54_aux_evp {O : ℕ → ℕ} {i n x : ℕ} :
 
 If no such `x` exists, returns `Part.none`.
 -/
-def finite_ext (S i n : ℕ) := eval (λ_↦0) (dovetail (c_kp54_aux i n)) S
+def finite_ext (S i n : ℕ) := eval (fun_↦0) (dovetail (c_kp54_aux i n)) S
 theorem finite_ext_prop {S i n : ℕ} (halts : (finite_ext S i n).Dom) :
   have dvt := (finite_ext S i n).get halts
   (evals ((n2l S) ++ (n2l (dvt+1))) i n).Dom := by
@@ -127,7 +127,7 @@ Output: (string `αₛ`, string `βₛ`)
 
 Each string `αₛ` and `βₛ` increase in length by at least 1 every stage.
 -/
-noncomputable def KP54 : ℕ → ℕ := λ s ↦
+noncomputable def KP54 : ℕ → ℕ := fun s ↦
 match s with
 | 0 => ⟪0, 0⟫
 | s+1 =>

@@ -64,9 +64,9 @@ complements admits no infinite computable enumerable subset.
 theorem simpleInReq : ((W O a)ᶜ.Infinite ∧ ∀ c, (W O c).Infinite → (W O c ∩ W O a ≠ ∅)) ↔ simpleIn O (W O a) := by
   constructor
   · intro ⟨h1,h2⟩
-    exact ⟨CEin_trivial, h1, λ c h3 ↦ (nonempt_int_iff_not_subset_compl (W O c) (W O a)).mp (h2 c h3)⟩
+    exact ⟨CEin_trivial, h1, fun c h3 ↦ (nonempt_int_iff_not_subset_compl (W O c) (W O a)).mp (h2 c h3)⟩
   rintro ⟨_, h3, h4⟩;
-  exact ⟨h3, λ c h5 ↦ (nonempt_int_iff_not_subset_compl (W O c) (W O a)).mpr (h4 c h5)⟩
+  exact ⟨h3, fun c h5 ↦ (nonempt_int_iff_not_subset_compl (W O c) (W O a)).mpr (h4 c h5)⟩
 
 section Oracle.Single.Simple
 namespace Simple
@@ -115,11 +115,11 @@ theorem fmax_max : ∀ i ≤ r, f i ≤ fmax f r := by
   exact Nat.le_max_right ?_ ?_
   -- have := foldl_max_base
 
-noncomputable def step (s:ℕ) := λ i prev ↦
+noncomputable def step (s:ℕ) := fun i prev ↦
   let Aₚ := prev.l
   let Rₚ := prev.r
   if ¬ fs_in Rₚ i then
-    let r := fmax (λ s => o2n (usen (χ ∅) i s i)) i
+    let r := fmax (fun s => o2n (usen (χ ∅) i s i)) i
     if found : ∃ x ∈ Wn ∅ i s, x > (Nat.max (2*i) r) then
       let x := Nat.find found
       ⟪fs_add Aₚ x, fs_add Rₚ i⟫
@@ -133,7 +133,7 @@ Output:
   A = natural representing the simple set A built so far
   R = natural representing set of requirements satisfied so far
 -/
-noncomputable def C : ℕ → ℕ := λ s ↦
+noncomputable def C : ℕ → ℕ := fun s ↦
 match s with
 | 0 => ⟪0, 0⟫
 | s+1 => foldr (step s) (C s) (range s).reverse
@@ -253,7 +253,7 @@ lemma RiA_step (X s : ℕ) : RiA X s → ∀ k, RiA (step s k X) s := by
     next h_1 =>
       simp_all only [↓reduceDIte, pair_r, Nat.testBit_or, Bool.or_eq_true, pair_l]
       cases a with
-      | inl h_3 => exact (h0 j h_3).elim λ x hx ↦ ⟨x, @evaln_mono_dom (χ ∅) s s j x (le_refl s) hx.1, Or.inl hx.2⟩
+      | inl h_3 => exact (h0 j h_3).elim fun x hx ↦ ⟨x, @evaln_mono_dom (χ ∅) s s j x (le_refl s) hx.1, Or.inl hx.2⟩
       | inr h_2 =>
         have kj : k=j := by contrapose h_2; simp [h_2]
         let x := Nat.find h_1
@@ -328,20 +328,20 @@ lemma P_aux (i:ℕ) : (W ∅ i).Infinite → (∃ s, fs_in (C s).r i ∧ ∃ y �
     constructor
     exact a0
     have := @RiA_foldr (C (s + i + 2)) (s+i+2) (RiA_C (s + i + 2)) (s+i+2)
-    exact (this i a0).elim (λ w ⟨hw0,hw1⟩ ↦ ⟨w, Wn_sound hw0, hw1⟩)
+    exact (this i a0).elim (fun w ⟨hw0,hw1⟩ ↦ ⟨w, Wn_sound hw0, hw1⟩)
   · -- 5B
     have a0 := @R_foldr _ _ _ h1 ex0 si2
     constructor
     exact a0
     have := @RiA_foldr (C (s + i + 2)) (s+i+2) (RiA_C (s + i + 2)) (s+i+2)
-    exact (this i a0).elim (λ w ⟨hw0,hw1⟩ ↦ ⟨w, Wn_sound hw0, hw1⟩)
+    exact (this i a0).elim (fun w ⟨hw0,hw1⟩ ↦ ⟨w, Wn_sound hw0, hw1⟩)
 
 /-- `P i` asserts the `i`th positive requirement. -/
 theorem P (i:ℕ) : (W ∅ i).Infinite → (W ∅ i ∩ A).Nonempty := by
   intro h
   rcases P_aux i h with ⟨s, _, hs1⟩
   unfold A
-  exact Set.inter_nonempty.mpr <| hs1.elim (λ x hx ↦ ⟨x,hx.1,by simp; use s; exact hx.2⟩)
+  exact Set.inter_nonempty.mpr <| hs1.elim (fun x hx ↦ ⟨x,hx.1,by simp; use s; exact hx.2⟩)
 end positive_requirement
 
 section negative_requirement
@@ -452,7 +452,7 @@ theorem mem_A_iff_enumerated {x} : x ∈ A ↔ ∃ i s:ℕ, ( ¬fs_in (C s).r i 
         have a11 := Nat.find_spec hn
         constructor
         · exact a11.1
-        · exact λ t ht ↦ λ a ↦ ht t (le_refl t) a
+        · exact fun t ht ↦ fun a ↦ ht t (le_refl t) a
       next hn =>
         contrapose hn
         simp at hn ⊢
@@ -513,7 +513,7 @@ theorem mem_A_iff_enumerated {x} : x ∈ A ↔ ∃ i s:ℕ, ( ¬fs_in (C s).r i 
         simp [h_iM1] at h_i
         exact fs_in_singleton.mp h_i
       rw [←a17] at a18 a19
-      exact ⟨a18, λ t ht ↦ a19 ht⟩
+      exact ⟨a18, fun t ht ↦ a19 ht⟩
     next hh => simp [h_iM1] at h_i
 
   -- the reverse direction.
@@ -651,7 +651,7 @@ theorem N (i:ℕ) :  Set.ncard (A ∩ {x | x ≤ 2*i}) ≤ i+1 := by
 
   let s : Set {x // x ∈ A ∧ x ≤ 2*i} := (@setOf { x // x ∈ A ∧ x ≤ 2 * i } fun x ↦ ↑x ∈ A ∧ ↑x ≤ 2 * i)
   let t : Set ℕ := A ∩ {x | x ≤ 2*i}
-  let f : (a : {x // x ∈ A ∧ x ≤ 2*i}) → a ∈ s → ℕ := λ  a _ => a
+  let f : (a : {x // x ∈ A ∧ x ≤ 2*i}) → a ∈ s → ℕ := fun  a _ => a
 
   have : s.ncard = t.ncard := Set.ncard_congr f ?_ ?_ ?_
   rotate_left

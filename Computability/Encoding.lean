@@ -121,7 +121,7 @@ abbrev ofNatCode := n2c
 @[simp] theorem n2c_c2n : ∀ c, n2c (c2n c) = c := fun c => by
   induction c <;> (simp [c2n, n2c, Nat.div2_val, *])
 @[simp] theorem c2n_n2c : ∀ c, c2n (n2c c) = c :=
-λ c => match c with
+fun c => match c with
   | 0 => by simp only [n2c, c2n]
   | 1 => by simp only [n2c, c2n]
   | 2 => by simp only [n2c, c2n]
@@ -142,10 +142,10 @@ abbrev ofNatCode := n2c
     cases n.bodd <;> cases n.div2.bodd <;> simp [m, c2n, IH, IH1, IH2, Nat.bit_val]
 instance instDenumerable : Denumerable Code := mk' ⟨c2n, n2c, n2c_c2n, c2n_n2c⟩
 
-theorem n2c_bij : Function.Bijective n2c := Function.bijective_iff_has_inverse.mpr ⟨c2n, ⟨λ x ↦ c2n_n2c x, λ x ↦ n2c_c2n x⟩⟩
+theorem n2c_bij : Function.Bijective n2c := Function.bijective_iff_has_inverse.mpr ⟨c2n, ⟨fun x ↦ c2n_n2c x, fun x ↦ n2c_c2n x⟩⟩
 theorem n2c_inj : Function.Injective n2c  := Function.Bijective.injective n2c_bij
 theorem n2c_sur : Function.Surjective n2c := Function.Bijective.surjective n2c_bij
-theorem encodeCode_bij : Function.Bijective c2n := Function.bijective_iff_has_inverse.mpr ⟨n2c, ⟨λ x ↦ n2c_c2n x, λ x ↦ c2n_n2c x⟩⟩
+theorem encodeCode_bij : Function.Bijective c2n := Function.bijective_iff_has_inverse.mpr ⟨n2c, ⟨fun x ↦ n2c_c2n x, fun x ↦ c2n_n2c x⟩⟩
 theorem encodeCode_inj : Function.Injective c2n  := Function.Bijective.injective encodeCode_bij
 theorem encodeCode_sur : Function.Surjective c2n := Function.Bijective.surjective encodeCode_bij
 
@@ -200,13 +200,13 @@ open Code
   for `b < a`
 -/
 def eval (O : ℕ → ℕ) : Code → ℕ →. ℕ
-| .zero => λ _ ↦ some 0
-| .succ => λ n ↦ some (n + 1)
-| .left => λ n ↦ some (Nat.unpair n).1
-| .right => λ n ↦ some (Nat.unpair n).2
+| .zero => fun _ ↦ some 0
+| .succ => fun n ↦ some (n + 1)
+| .left => fun n ↦ some (Nat.unpair n).1
+| .right => fun n ↦ some (Nat.unpair n).2
 | .oracle => O
-| .pair cf cg => λ n ↦ Nat.pair <$> eval O cf n <*> eval O cg n
-| .comp cf cg => λ n ↦ eval O cg n >>= eval O cf
+| .pair cf cg => fun n ↦ Nat.pair <$> eval O cf n <*> eval O cg n
+| .comp cf cg => fun n ↦ eval O cg n >>= eval O cf
 | .prec cf cg =>
     Nat.unpaired fun a n =>
       n.rec (eval O cf a) fun y IH => do
@@ -214,7 +214,7 @@ def eval (O : ℕ → ℕ) : Code → ℕ →. ℕ
         eval O cg (Nat.pair a (Nat.pair y i))
 | .rfind' cf =>
     Nat.unpaired fun a m =>
-      (Nat.rfind λ n ↦ (fun x => x = 0) <$> eval O cf (Nat.pair a (n + m))).map (· + m)
+      (Nat.rfind fun n ↦ (fun x => x = 0) <$> eval O cf (Nat.pair a (n + m))).map (· + m)
 
 /-- Helper lemma for the evaluation of `prec` in the base case. -/
 @[simp]

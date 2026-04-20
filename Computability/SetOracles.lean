@@ -55,8 +55,8 @@ namespace Oracle.Single
 
 section basic_definitions
 /-- χ O is the characteristic function of the set O.  -/
-noncomputable def χ (O : Set ℕ) : ℕ→ℕ := λ x ↦ if x ∈ O then 1 else 0
-theorem χsimp {O} : χ O = λ x ↦ if x ∈ O then 1 else 0 := by exact rfl
+noncomputable def χ (O : Set ℕ) : ℕ→ℕ := fun x ↦ if x ∈ O then 1 else 0
+theorem χsimp {O} : χ O = fun x ↦ if x ∈ O then 1 else 0 := by exact rfl
 @[simp] abbrev SetRecursiveIn (O : Set ℕ) (f:ℕ→.ℕ) : Prop := RecursiveIn (χ O) f
 @[simp] abbrev SetTuringReducible (A O : Set ℕ) : Prop := RecursiveIn (χ O) (χ A)
 @[simp] abbrev SetTuringReducibleStrict (A O : Set ℕ) : Prop := RecursiveIn (χ O) (χ A) ∧ ¬ RecursiveIn (χ A) (χ O)
@@ -134,17 +134,17 @@ theorem reducible_iff_code {A B : Set ℕ} : A≤ᵀB ↔ ∃ c, eval (χ B) c =
 theorem χ_le_χSetK0 {O : Set ℕ} : O ≤ᵀ (SetK0 O)  := by
   /-
   We wish to show that `χ O` can be constructed with knowledge of
-    χ (SetK0 O) = k = λ ⟪e,x⟫ ↦ [e:O](x)↓ then 1 else 0.
+    χ (SetK0 O) = k = fun ⟪e,x⟫ ↦ [e:O](x)↓ then 1 else 0.
 
   Let [c_g:A](x) = if A(x)=0 then ↑ else 0.
 
-  Then, note that `χ O` = `λ x ↦ k(c_g, x)`.
+  Then, note that `χ O` = `fun x ↦ k(c_g, x)`.
   -/
-  let k : ℕ→ℕ := λ ex ↦ if (eval (χ O) ex.l ex.r).Dom then 1 else 0
-  let g := λ x ↦ if (χ O) x = 0 then Part.none else Part.some 0
+  let k : ℕ→ℕ := fun ex ↦ if (eval (χ O) ex.l ex.r).Dom then 1 else 0
+  let g := fun x ↦ if (χ O) x = 0 then Part.none else Part.some 0
   have hg : Rin (χ O) g := Rin.ite Rin.oracle Rin.none Rin.zero
   rcases exists_code_nat.mp hg with ⟨cg, hcg⟩
-  let f':ℕ→.ℕ := λ x ↦ k ⟪cg, x⟫
+  let f':ℕ→.ℕ := fun x ↦ k ⟪cg, x⟫
   have f_eq_f': (χ O) = f' := by
     funext xs
     simp only [f', k]
@@ -159,14 +159,14 @@ theorem χ_le_χSetK0 {O : Set ℕ} : O ≤ᵀ (SetK0 O)  := by
       | inl h2 => exact False.elim (h h2)
       | inr h2 => exact h2
   have f'_recIn_k : Rin k f' := by
-    exact Rin.someTotal k (λ x ↦ k ⟪cg, x⟫) <| Rin.totalComp' Rin.oracle (Rin.of_primrecIn PrimrecIn.pair_proj)
+    exact Rin.someTotal k (fun x ↦ k ⟪cg, x⟫) <| Rin.totalComp' Rin.oracle (Rin.of_primrecIn PrimrecIn.pair_proj)
   refine TR_Set_iff_Fn'.mpr ?_
   rw [f_eq_f']
   exact f'_recIn_k
 
 theorem χSetK0_leq_K0χ {O : Set ℕ} : Rin (K0 (χ O)) (χ (SetK0 O)) := by
   -- We simply note that `χ (SetK0 O) = Nat.sg ∘ K0 (χ O)`.
-  let k : ℕ→ℕ := λ ex ↦ if (eval (χ O) ex.l ex.r).Dom then 1 else 0
+  let k : ℕ→ℕ := fun ex ↦ if (eval (χ O) ex.l ex.r).Dom then 1 else 0
   have h0 : χ (SetK0 O) = k := by exact rfl
   let f := sg ∘ K0 (χ O)
   have k_eq_f : k = f := by
@@ -190,7 +190,7 @@ theorem K0χ_le_χSetK0 {O : Set ℕ} : Rin (χ (SetK0 O)) (K0 (χ O)) := by
       else return [e:O](x) + 1
   -/
   -- k = χ (SetK0 O).
-  let k : ℕ→ℕ := λ ex ↦ if (eval (χ O) ex.l ex.r).Dom then 1 else 0
+  let k : ℕ→ℕ := fun ex ↦ if (eval (χ O) ex.l ex.r).Dom then 1 else 0
   have h1 (ex:ℕ) : k ex = 0 ↔ ¬(eval (χ O) ex.l ex.r).Dom := by simp [k]
   have h2 (ex:ℕ) : k ex ≠ 0 ↔ (eval (χ O) ex.l ex.r).Dom := by simp [k]
 
@@ -305,7 +305,7 @@ abbrev Wn (O : Set ℕ) (e : Code) (s : ℕ) := { x | (evalnSet O s e x).isSome 
 /-- `WRn O e s` := range of e^th oracle program ran for s steps -/
 abbrev WRn (O : Set ℕ) (e : Code) (s : ℕ) := { y | ∃ x, y ∈ evalnSet O s e x }
 
-theorem Wn_mono {O} : ∀ {k₁ k₂ c x}, k₁ ≤ k₂ → x ∈ Wn O c k₁ → x ∈ Wn O c k₂ := λ a b ↦ evaln_mono_dom a b
+theorem Wn_mono {O} : ∀ {k₁ k₂ c x}, k₁ ≤ k₂ → x ∈ Wn O c k₁ → x ∈ Wn O c k₂ := fun a b ↦ evaln_mono_dom a b
 theorem Wn_sound {O} : ∀ {k c x}, x ∈ Wn O c k → x ∈ W O c := by
   simp [evalnSet, evalSet]
   intro _ _ _ h
@@ -331,7 +331,7 @@ theorem W_le_SetK0 {O} : ∀ c, W O c ≤ᵀ SetK0 O := by
   exact if_ctx_congr Part.dom_iff_mem (congrFun rfl) (congrFun rfl)
 
 theorem W_le_Jump {O} : ∀ c, W O c ≤ᵀ O⌜ :=
-  λ c ↦ LE.le.trans_antisymmRel (@W_le_SetK0 O c) (SetK0_eq_Jump O)
+  fun c ↦ LE.le.trans_antisymmRel (@W_le_SetK0 O c) (SetK0_eq_Jump O)
 
 section dom_to_ran
 /-
@@ -375,9 +375,9 @@ theorem dom_to_ran_prop {O e} : W O e = WR O (dom_to_ran e) := by
 
 def c_dom_to_ran := c_c_ifdom.comp₂ (c_comp₂.comp₃ (c_const c_eval) (c_c_const) (c_const c_id)) (c_const c_id)
 @[cp] theorem c_dom_to_ran_prim : code_prim c_dom_to_ran := by unfold c_dom_to_ran; apply_cp
-@[simp] theorem c_dom_to_ran_evp {O} : evalp O c_dom_to_ran = λ (x:ℕ) ↦ c2n (dom_to_ran x) := by
+@[simp] theorem c_dom_to_ran_evp {O} : evalp O c_dom_to_ran = fun (x:ℕ) ↦ c2n (dom_to_ran x) := by
   simp [c_dom_to_ran, dom_to_ran]
-theorem Nat.PrimrecIn.dom_to_ran {O} : Nat.PrimrecIn O (λ (x:ℕ) ↦ (dom_to_ran x).c2n) := by
+theorem Nat.PrimrecIn.dom_to_ran {O} : Nat.PrimrecIn O (fun (x:ℕ) ↦ (dom_to_ran x).c2n) := by
   rw [← c_dom_to_ran_evp]; exact code_prim_prop
 end dom_to_ran
 
@@ -394,7 +394,7 @@ def [f(e)](x):
   dovetail [e] to see if x is in its range.
   return anything.
 -/
-noncomputable def ran_to_dom := λ c:Code ↦ dovetail (c_if_eq'.comp₂ left ((c_eval₁).comp₂ (c_const c) right))
+noncomputable def ran_to_dom := fun c:Code ↦ dovetail (c_if_eq'.comp₂ left ((c_eval₁).comp₂ (c_const c) right))
 theorem ran_to_dom_ev {O c y} : (eval O (ran_to_dom c) y).Dom ↔ ∃ x, y ∈ eval O c x := by
   constructor
   · intro h
@@ -431,9 +431,9 @@ def c_ran_to_dom := c_dovetail.comp <|
   c_comp₂.comp₃ (c_const c_if_eq') c_left <|
   c_comp₂.comp₃ (c_const c_eval₁) c_c_const c_right
 @[cp] theorem c_ran_to_dom_prim : code_prim c_ran_to_dom := by unfold c_ran_to_dom; apply_cp
-@[simp] theorem c_ran_to_dom_evp {O} : evalp O c_ran_to_dom = λ (x:ℕ) ↦ c2n (ran_to_dom x) := by
+@[simp] theorem c_ran_to_dom_evp {O} : evalp O c_ran_to_dom = fun (x:ℕ) ↦ c2n (ran_to_dom x) := by
   simp [c_ran_to_dom, ran_to_dom]
-theorem Nat.PrimrecIn.ran_to_dom {O} : Nat.PrimrecIn O (λ (x:ℕ) ↦ (ran_to_dom x).c2n) := by
+theorem Nat.PrimrecIn.ran_to_dom {O} : Nat.PrimrecIn O (fun (x:ℕ) ↦ (ran_to_dom x).c2n) := by
   rw [← c_ran_to_dom_evp]; exact code_prim_prop
 end ran_to_dom
 
@@ -475,7 +475,7 @@ Proof sketch:
 Let A≤ᵀB via `c`.
 
 Then, the function:
-λ x ↦ 0 if (c B x)↓ else ↑ has domain A.
+fun x ↦ 0 if (c B x)↓ else ↑ has domain A.
 -/
 theorem reducible_imp_W {A B} : A≤ᵀB → ∃ c, W B c = A := by
   intro h
@@ -603,7 +603,7 @@ theorem Cin_iff_CEin_CEin' {A B} : A≤ᵀB ↔ (CEin B A ∧ CEin B Aᶜ) := by
     rotate_left
     · apply dovetail_ev_2.mpr
       simp [d, c_if_eq_te'_ev aux0 aux1, eval, Part.Dom.bind <| tc1]
-      exact ⟨0, λ a ↦ False.elim (a rfl)⟩
+      exact ⟨0, fun a ↦ False.elim (a rfl)⟩
     · simp [χ, hx]
       simp [d, c_if_eq_te'_ev aux0 aux1, eval, Part.Dom.bind <| tc1, tc2] at dvtthm
       have : dvt = 0 := by contrapose dvtthm; simp [dvtthm]
@@ -680,14 +680,14 @@ lemma join_preserves_eq {A A' B B' : Set ℕ}
       (.trans hA.2 (join_upper A B).1)
       (.trans hB.2 (join_upper A B).2)
 def TuringDegree.join : TuringDegree → TuringDegree → TuringDegree := Quotient.lift₂
-    (λ X Y => Quot.mk _ (Code.join X Y))
-    (λ _ _ _ _ hx hy => Quotient.sound (join_preserves_eq hx hy))
+    (fun X Y => Quot.mk _ (Code.join X Y))
+    (fun _ _ _ _ hx hy => Quotient.sound (join_preserves_eq hx hy))
 theorem TuringDegree.le_sup_left (X Y : TuringDegree) : X ≤ TuringDegree.join X Y :=
-  Quot.induction_on₂ X Y λ _ _ ↦ (Code.join_upper _ _).1
+  Quot.induction_on₂ X Y fun _ _ ↦ (Code.join_upper _ _).1
 theorem TuringDegree.le_sup_right (X Y : TuringDegree) : Y ≤ TuringDegree.join X Y :=
-  Quot.induction_on₂ X Y λ _ _ ↦ (Code.join_upper _ _).2
+  Quot.induction_on₂ X Y fun _ _ ↦ (Code.join_upper _ _).2
 theorem TuringDegree.join_least (X Y Z: TuringDegree) : X ≤ Z → Y ≤ Z → TuringDegree.join X Y ≤ Z :=
-  Quotient.inductionOn₃ X Y Z λ X Y Z hx hy ↦ Code.join_least X Y Z hx hy
+  Quotient.inductionOn₃ X Y Z fun X Y Z hx hy ↦ Code.join_least X Y Z hx hy
 instance : SemilatticeSup TuringDegree where
   sup := TuringDegree.join
   le_sup_left := TuringDegree.le_sup_left

@@ -110,7 +110,7 @@ fs_in 0b0010 3 = false
 -/
 
 /-- `fs_add a x` gives the natural representing the set with `x` added to `a` interpreted as a finite set. -/
-abbrev fs_add : ℕ→ℕ→ℕ := λ a x ↦ a ||| (2^x)
+abbrev fs_add : ℕ→ℕ→ℕ := fun a x ↦ a ||| (2^x)
 
 /-- `fs_add a` gives the the size of `a` interepreted as a finite set. -/
 def fs_size := List.length.comp Nat.bitIndices
@@ -155,11 +155,11 @@ namespace Oracle.Single.Code
 @[cp] theorem comp_prim {a b} (ha:code_prim a) (hb:code_prim b) : code_prim (comp a b) := code_prim.comp ha hb
 @[cp] theorem prec_prim {a b} (ha:code_prim a) (hb:code_prim b) : code_prim (prec a b) := code_prim.prec ha hb
 def code_total (O) (c:Code) := ∀x, (eval O c x).Dom
-@[simp] theorem zero_total {O} : code_total O zero := λ _ ↦ trivial
-@[simp] theorem left_total {O} : code_total O left := λ _ ↦ trivial
-@[simp] theorem right_total {O} : code_total O right := λ _ ↦ trivial
-@[simp] theorem succ_total {O} : code_total O succ := λ _ ↦ trivial
-@[simp] theorem oracle_total {O} : code_total O oracle := λ _ ↦ trivial
+@[simp] theorem zero_total {O} : code_total O zero := fun _ ↦ trivial
+@[simp] theorem left_total {O} : code_total O left := fun _ ↦ trivial
+@[simp] theorem right_total {O} : code_total O right := fun _ ↦ trivial
+@[simp] theorem succ_total {O} : code_total O succ := fun _ ↦ trivial
+@[simp] theorem oracle_total {O} : code_total O oracle := fun _ ↦ trivial
 theorem prim_total {O} {c} (h:code_prim c): code_total O c := by
   unfold code_total
   induction h with
@@ -182,15 +182,15 @@ theorem prim_total {O} {c} (h:code_prim c): code_total O c := by
     | zero => exact ha_ih x.l
     | succ y' IH' => use IH'; apply hb_ih
 @[simp] def evalp (O:ℕ→ℕ):Code→ℕ→ℕ
-| zero       => λ _ ↦ 0
+| zero       => fun _ ↦ 0
 | succ       => Nat.succ
 | left       => Nat.l
 | right      => Nat.r
 | oracle     => O
-| pair cf cg => λ x ↦ Nat.pair (evalp O cf x) (evalp O cg x)
-| comp cf cg => λ x ↦ evalp O cf (evalp O cg x)
+| pair cf cg => fun x ↦ Nat.pair (evalp O cf x) (evalp O cg x)
+| comp cf cg => fun x ↦ evalp O cf (evalp O cg x)
 | prec cf cg => unpaired fun z n => n.rec (evalp O cf z) fun y IH => (evalp O cg) (z.pair (y.pair IH))
-| rfind' _   => λ _ ↦ 0
+| rfind' _   => fun _ ↦ 0
 theorem evalp_eq_eval {O} {c} (h : code_prim c):evalp O c = eval O c := by
   induction h with
   | zero => exact rfl
@@ -280,12 +280,12 @@ end primrec
 
 section total
 namespace Oracle.Single.Code
-def evalt (O:ℕ→ℕ) (c:Code) (h:code_total O c) : ℕ→ℕ := λ x ↦ (eval O c x).get (h x)
+def evalt (O:ℕ→ℕ) (c:Code) (h:code_total O c) : ℕ→ℕ := fun x ↦ (eval O c x).get (h x)
 theorem total_pair_iff {O cf cg} : (code_total O cf) ∧ (code_total O cg) ↔ (code_total O (pair cf cg)) :=
   ⟨
-    λ h x ↦ ⟨h.left x, h.right x⟩
+    fun h x ↦ ⟨h.left x, h.right x⟩
   ,
-    λ h ↦ ⟨λ x ↦ Part.left_dom_of_sub_dom (h x) , λ x ↦ Part.right_dom_of_div_dom (h x)⟩
+    fun h ↦ ⟨fun x ↦ Part.left_dom_of_sub_dom (h x) , fun x ↦ Part.right_dom_of_div_dom (h x)⟩
   ⟩
 @[simp] theorem total_pair_of {O cf cg} (hcf : code_total O cf) (hcg : code_total O cg) : (code_total O (pair cf cg)) := total_pair_iff.mp ⟨hcf,hcg⟩
 theorem total_comp_of {O cf cg} (hcf : code_total O cf) (hcg : code_total O cg) : (code_total O (comp cf cg)) := by

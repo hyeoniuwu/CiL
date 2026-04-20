@@ -15,7 +15,7 @@ This file constructs `evalc` and `evals` from Computability/EvalString.lean from
 
 To be able to define `evals`, where the oracle of a computation is changed, we define the code `c_evalo`, with the following behaviour (where `o` is the code of a total function):
 
-`eval O c_evalo ⟪o, c, x⟫ = eval (λ t ↦ (eval O o t).get (ho t)) c x`.
+`eval O c_evalo ⟪o, c, x⟫ = eval (fun t ↦ (eval O o t).get (ho t)) c x`.
 
 ## Main declarations
 - `c_evalc`: code for `evalc`.
@@ -110,7 +110,7 @@ section c_evals_oracle
 def c_evals_oracle (o:Code):= c_sg.comp <| c_list_getD.comp₃ (c_const o) c_id (c_const whatever)
 @[cp] theorem c_evals_oracle_prim {o} : code_prim (c_evals_oracle o) := by unfold c_evals_oracle; apply_cp
 theorem c_evals_oracle_evp {O o} : evalp O (c_evals_oracle o) =
-λ x:ℕ ↦ b2n <| n2b <| (n2l o).getD x whatever := by
+fun x:ℕ ↦ b2n <| n2b <| (n2l o).getD x whatever := by
   simp [c_evals_oracle]
   funext x
   split
@@ -120,7 +120,7 @@ theorem c_evals_oracle_evp {O o} : evalp O (c_evals_oracle o) =
     simp [n2b]
     exact rfl
 theorem c_evals_oracle_ev {O o} : eval O (c_evals_oracle o) =
-λ x:ℕ ↦ b2n <| n2b <| (n2l o).getD x whatever
+fun x:ℕ ↦ b2n <| n2b <| (n2l o).getD x whatever
 := by
   simp [← evalp_eq_eval c_evals_oracle_prim]
   simp [c_evals_oracle_evp]

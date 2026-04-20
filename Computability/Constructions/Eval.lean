@@ -868,7 +868,7 @@ def c_eval := (c_rfindOpt (c_evaln.comp₃ (right.comp left) (left.comp left) ri
   simp [c_rfindOpt_ev this]
   rw [eval_eq_rfindOpt]
   simp [eval,Seq.seq]
-@[simp] theorem c_eval_ev' {O}: eval O c_eval = λ x => eval O (n2c x.l) x.r := by
+@[simp] theorem c_eval_ev' {O}: eval O c_eval = fun x => eval O (n2c x.l) x.r := by
   funext x
   rw (config:={occs:=.pos [1]}) [show x = ⟪x.l, x.r⟫ from by simp]
   exact c_eval_ev

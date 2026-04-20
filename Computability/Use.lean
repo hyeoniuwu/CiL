@@ -622,26 +622,26 @@ match c with
 /-- `usen; the use of [c:O]ₛ(x)` -/
 def usen (O:ℕ→ℕ) (c:Code) (s:ℕ) : ℕ → Option ℕ :=
 match c,s with
-| _, 0            => λ _ ↦ Option.none
-| zero      , s+1 => λ x ↦ do guard (x≤s); return 0
-| succ      , s+1 => λ x ↦ do guard (x≤s); return 0
-| left      , s+1 => λ x ↦ do guard (x≤s); return 0
-| right     , s+1 => λ x ↦ do guard (x≤s); return 0
-| oracle    , s+1 => λ x ↦ do guard (x≤s); return x+1
-| pair cf cg, s+1 => λ x ↦
+| _, 0            => fun _ ↦ Option.none
+| zero      , s+1 => fun x ↦ do guard (x≤s); return 0
+| succ      , s+1 => fun x ↦ do guard (x≤s); return 0
+| left      , s+1 => fun x ↦ do guard (x≤s); return 0
+| right     , s+1 => fun x ↦ do guard (x≤s); return 0
+| oracle    , s+1 => fun x ↦ do guard (x≤s); return x+1
+| pair cf cg, s+1 => fun x ↦
   do
     guard (x≤s);
     let usen_cf ← usen O cf (s+1) x
     let usen_cg ← usen O cg (s+1) x
     return Nat.max usen_cf usen_cg
-| comp cf cg, s+1  => λ x ↦
+| comp cf cg, s+1  => fun x ↦
   do
     guard (x≤s);
     let usen_cg  ← usen O cg (s+1) x
     let evaln_cg ← evaln O (s+1) cg x
     let usen_cf  ← usen O cf (s+1) evaln_cg
     return Nat.max usen_cf usen_cg
-| prec cf cg, s+1 => λ x ↦ do
+| prec cf cg, s+1 => fun x ↦ do
   guard (x≤s);
   let (xl, i) := Nat.unpair x
   (i.casesOn
@@ -652,7 +652,7 @@ match c,s with
     let evaln_prev ← evaln O s (prec cf cg) ⟪xl, iM1⟫
     let usen_indt  ← usen  O cg (s+1) (Nat.pair xl (Nat.pair iM1 evaln_prev))
     return Nat.max usen_prev usen_indt)
-| rfind' cf, s+1 => λ x ↦
+| rfind' cf, s+1 => fun x ↦
   do
     guard (x≤s);
     let usen_base  ← usen O cf (s+1) x
@@ -720,7 +720,7 @@ theorem usen_mono {O} : ∀ {k₁ k₂ c n x}, k₁ ≤ k₂ → x ∈ usen O c 
     revert h
     simp only [bind]
     induction n.unpair.2 <;> simp [Option.bind_eq_some_iff]
-    · exact λ g h ↦ ⟨Nat.le_trans g hl', hf n.l x h⟩
+    · exact fun g h ↦ ⟨Nat.le_trans g hl', hf n.l x h⟩
     ·
       exact fun g x1 hx1 x2 hx2 x3 hx3 hmax =>
       ⟨
@@ -843,7 +843,7 @@ theorem usen_none_iff_evaln_none {O c s x} : (usen O c s x) = Option.none ↔ (e
       simp only [Option.ne_none_iff_exists'] at this
       obtain ⟨a2,ha2⟩ := this.mpr ⟨a,ha⟩
       exact hcf.mp (Option.eq_none_iff_forall_ne_some.mpr (hh a2 ha2 a ha))
-    · exact λ hh a ha a3 ha3 ↦ Option.eq_none_iff_forall_ne_some.mp (hcf.mpr (hh a3 ha3))
+    · exact fun hh a ha a3 ha3 ↦ Option.eq_none_iff_forall_ne_some.mp (hcf.mpr (hh a3 ha3))
   | case9 s cf cg hcf hcg ih =>
     simp [usen,evaln]
     cases Classical.em (x≤s) with
@@ -863,7 +863,7 @@ theorem usen_none_iff_evaln_none {O c s x} : (usen O c s x) = Option.none ↔ (e
       obtain ⟨a2,ha2⟩ := this.mpr ⟨a,ha⟩
       have := hh a2 ha2 a ha
       exact hcg.mp (Option.eq_none_iff_forall_ne_some.mpr this)
-    · exact λ hh a ha a3 ha3 ↦ Option.eq_none_iff_forall_ne_some.mp (hcg.mpr (hh a3 ha3))
+    · exact fun hh a ha a3 ha3 ↦ Option.eq_none_iff_forall_ne_some.mp (hcg.mpr (hh a3 ha3))
   | case10 s cf hcf ih =>
     simp [usen,evaln]
     cases Classical.em (x≤s) with
@@ -1259,7 +1259,7 @@ lemma lemlemlem2 {O k cf x roM1 asddom}
     have iihh1 := @iihh
       urom2
       (a.max ((usen O cf (k - roM2) (Nat.pair x.l (roM2 + 1 + (x.r + 1)))).get urom))
-      (λ j hj ↦ (nrop2 j (le_add_right_of_le hj)))
+      (fun j hj ↦ (nrop2 j (le_add_right_of_le hj)))
     simp at iihh1
     clear iihh
 
@@ -2964,10 +2964,10 @@ theorem usen_principle {O₁ O₂} {s c x}
 
     have ih_cf := hcf ?_ ?_; rotate_left
     · exact (evaln_pair_dom hh).left
-    · exact λ x h ↦ hO x (le_trans h (usen_mono_pair (en2un hh)).left)
+    · exact fun x h ↦ hO x (le_trans h (usen_mono_pair (en2un hh)).left)
     have ih_cg := hcg ?_ ?_; rotate_left
     · exact (evaln_pair_dom hh).right
-    · exact λ x h ↦ hO x (le_trans h (usen_mono_pair (en2un hh)).right)
+    · exact fun x h ↦ hO x (le_trans h (usen_mono_pair (en2un hh)).right)
 
     simp [
       ih_cf.left,
@@ -2986,7 +2986,7 @@ theorem usen_principle {O₁ O₂} {s c x}
 
     have ih_cg := hcg
       (evaln_comp_dom hh).left
-      λ x h ↦ hO x (le_trans h (usen_mono_comp (en2un hh)).left)
+      fun x h ↦ hO x (le_trans h (usen_mono_comp (en2un hh)).left)
 
     have aux0 : (evaln O₂ (s-1+1) cg x).isSome := by
       have := evaln_comp_dom_aux hh
@@ -2999,7 +2999,7 @@ theorem usen_principle {O₁ O₂} {s c x}
 
     have ih_cf := hcf ((evaln O₂ (s-1+1) cg x).get aux0) ?_ ?_; rotate_left
     · exact aux2
-    · have aux := λ x h ↦ hO x (le_trans h (usen_mono_comp (en2un hh)).right)
+    · have aux := fun x h ↦ hO x (le_trans h (usen_mono_comp (en2un hh)).right)
       rwa [aux4] at aux
 
     rw [ih_cg.left]
@@ -3028,7 +3028,7 @@ theorem usen_principle {O₁ O₂} {s c x}
 
       have ih_cf := hcf x.l ?_ ?_; rotate_left
       · exact evaln_prec_dom' hh
-      · exact λ x h ↦ hO x (le_trans h (usen_mono_prec' (en2un hh)))
+      · exact fun x h ↦ hO x (le_trans h (usen_mono_prec' (en2un hh)))
 
       simp [ih_cf]
     | succ xrM1 =>
@@ -3039,7 +3039,7 @@ theorem usen_principle {O₁ O₂} {s c x}
 
       -- we want to show that the subexpression involving evaln and usen are equivalent, using the inductive hypothesis.
       have aux00 := evaln_prec_dom_aux hh
-      have aux02 := λ x h ↦ hO x (le_trans h (usen_mono_prec_1 (en2un hh)))
+      have aux02 := fun x h ↦ hO x (le_trans h (usen_mono_prec_1 (en2un hh)))
       have : s-1-1+1=s-1 := by exact Eq.symm (evaln_sG1 aux00)
       simp (config:={singlePass:=true}) [← this] at aux00 aux02
 
@@ -3057,7 +3057,7 @@ theorem usen_principle {O₁ O₂} {s c x}
       have ih_cg := hcg
         ⟪x.l, xrM1, (evaln O₁ (s-1) (cf.prec cg) ⟪x.l, xrM1⟫).get aux00⟫
         (evaln_prec_dom hh).right
-        λ x h ↦ hO x (le_trans h (usen_mono_prec (en2un hh)).right)
+        fun x h ↦ hO x (le_trans h (usen_mono_prec (en2un hh)).right)
 
       rw [← ih_c.left]
       rw [← ih_c.right]
@@ -3084,7 +3084,7 @@ theorem usen_principle {O₁ O₂} {s c x}
 
       apply hcf ⟪x.l, j+x.r⟫ ((s-1+1-j)) aux1 ?_
       simp [sG1j]
-      exact λ x h ↦ hO x <| le_trans h (usen_mono_rfind' (en2un hh) (show j≤nrfind'_obtain hh from hjro))
+      exact fun x h ↦ hO x <| le_trans h (usen_mono_rfind' (en2un hh) (show j≤nrfind'_obtain hh from hjro))
 
     have aux0 : (evaln O₂ (s-1+1) cf.rfind' x).isSome := by
       apply evaln_rfind_as_eval_rfind_reverse
@@ -3159,7 +3159,7 @@ theorem usen_principle {O₁ O₂} {s c x}
     rw [← main1]
     simp [isSome.bind hh]
 
-    have a2 := λ j hj ↦ (ihAll j hj).right
+    have a2 := fun j hj ↦ (ihAll j hj).right
     have a0 : (evaln O₁ (s - 1 + 1) cf.rfind' x).get hh - x.r = nro := by exact hnro
     rw [a0]
     clear hnro nrop3 nrop1 aux0 hO a0 main1 hcf ihAll
@@ -3184,8 +3184,8 @@ theorem usen_principle {O₁ O₂} {s c x}
       simp [isSome.bind this]
       exact @ih
         ((b.max ((usen O₁ cf (s - 1 - nron) (Nat.pair x.l (nron + 1 + x.r))).get this)))
-        (λ j hj ↦ a2 j (le_add_right_of_le hj))
-        (λ j hj ↦ nrop2 j (le_add_right_of_le hj))
+        (fun j hj ↦ a2 j (le_add_right_of_le hj))
+        (fun j hj ↦ nrop2 j (le_add_right_of_le hj))
 
 lemma usen_sing'' {O c s1 x h1 h2} : (usen O c s1 x).get h1 = (use O c x).get h2 := by
   rcases usen_complete.mp (Part.get_mem h2) with ⟨h3,h4⟩

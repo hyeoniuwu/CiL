@@ -43,7 +43,7 @@ A specialised code used as an auxiliary for `c_cov_rec`.
 Given an input of the form ``⟪x, i, list⟫``, the code (c_efl_prec c) computes list.append (eval c input).
 (The form above is what you would expect in the inductive case in primitive recursion.)
 -/
-def c_efl_prec := λ c ↦ c_list_concat.comp (pair (c_id.comp (right.comp right)) c)
+def c_efl_prec := fun c ↦ c_list_concat.comp (pair (c_id.comp (right.comp right)) c)
 @[cp] theorem c_efl_prec_prim {c} (h:code_prim c):code_prim <| c_efl_prec c := by unfold c_efl_prec; apply_cp
 @[simp] theorem c_efl_prec_evp {O c x} : evalp O (c_efl_prec c) x = l2n ((n2l x.r.r).concat (evalp O c x)) := by
   simp [c_efl_prec]
@@ -341,8 +341,8 @@ section mod2
 namespace Oracle.Single.Code
 def c_mod2 := c_mod.comp₂ c_id (c_const 2)
 @[cp] theorem c_mod2_prim:code_prim c_mod2 := by unfold c_mod2; apply_cp
-@[simp] theorem c_mod2_evp {O} : evalp O c_mod2 = λ x ↦ x%2 := by simp [c_mod2];
-@[simp] theorem c_mod2_ev {O} : eval O c_mod2 = (λ x:ℕ ↦ x%2) := by simp [← evalp_eq_eval c_mod2_prim]
+@[simp] theorem c_mod2_evp {O} : evalp O c_mod2 = fun x ↦ x%2 := by simp [c_mod2];
+@[simp] theorem c_mod2_ev {O} : eval O c_mod2 = (fun x:ℕ ↦ x%2) := by simp [← evalp_eq_eval c_mod2_prim]
 end Oracle.Single.Code
 end mod2
 
@@ -587,7 +587,7 @@ theorem nMod4_eq_1 {n} (hno:n.bodd=true ) (hn2o:n.div2.bodd=false) : n%4=1 := by
 theorem nMod4_eq_2 {n} (hno:n.bodd=false) (hn2o:n.div2.bodd=true ) : n%4=2 := by rw [←codes_aux_2 hno hn2o]; omega
 theorem nMod4_eq_3 {n} (hno:n.bodd=true ) (hn2o:n.div2.bodd=true ) : n%4=3 := by rw [←codes_aux_3 hno hn2o]; omega
 
-@[simp] theorem c_replace_oracle_evp {O}: evalp O (c_replace_oracle) = λ x ↦c2n (replace_oracle (n2c x.l) (n2c x.r)) := by
+@[simp] theorem c_replace_oracle_evp {O}: evalp O (c_replace_oracle) = fun x ↦c2n (replace_oracle (n2c x.l) (n2c x.r)) := by
   funext oc
   let o:=oc.l
   let c:=oc.r
@@ -651,13 +651,13 @@ theorem nMod4_eq_3 {n} (hno:n.bodd=true ) (hn2o:n.div2.bodd=true ) : n%4=3 := by
           simp [h0]
           rw [ih m hm];
 
-@[simp] theorem c_replace_oracle_ev {O} : eval O (c_replace_oracle) = λ x:ℕ ↦ c2n (replace_oracle (n2c x.l) (n2c x.r)) := by rw [← evalp_eq_eval c_replace_oracle_prim]; simp only [c_replace_oracle_evp];
+@[simp] theorem c_replace_oracle_ev {O} : eval O (c_replace_oracle) = fun x:ℕ ↦ c2n (replace_oracle (n2c x.l) (n2c x.r)) := by rw [← evalp_eq_eval c_replace_oracle_prim]; simp only [c_replace_oracle_evp];
 
 @[simp] theorem plift_eq {O o} (ho:code_total O o) : (@PFun.lift ℕ ℕ fun x ↦ (eval O o x).get (ho x) )= eval O o := by
   ext a b : 1
   simp_all only [PFun.coe_val, Part.some_get]
 
-theorem eval_replace_oracle_prop {O o c} (ho:code_total O o) : eval O (replace_oracle o c) = eval (λ x ↦ (eval O o x).get (ho x)) c := by
+theorem eval_replace_oracle_prop {O o c} (ho:code_total O o) : eval O (replace_oracle o c) = eval (fun x ↦ (eval O o x).get (ho x)) c := by
   unfold replace_oracle
   induction c <;> (simp [eval]; try (unfold replace_oracle; simp_all))
 end Oracle.Single.Code

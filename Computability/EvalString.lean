@@ -21,10 +21,10 @@ For the construction of these functions via codes, see Computability/Constructio
 namespace Oracle.Single.Code
 
 -- stands for "evaln clamped"
-noncomputable def evalnc (O:ℕ→ℕ) (u:ℕ) : ℕ → Code → ℕ → Option ℕ := λ s c x ↦ do
+noncomputable def evalnc (O:ℕ→ℕ) (u:ℕ) : ℕ → Code → ℕ → Option ℕ := fun s c x ↦ do
   let use ← usen O c s x
   if use ≤ u  then evaln O s c x else Option.none
-noncomputable def evalc (O:ℕ→ℕ) (u:ℕ) : Code → ℕ → Part ℕ := λ c x ↦ do
+noncomputable def evalc (O:ℕ→ℕ) (u:ℕ) : Code → ℕ → Part ℕ := fun c x ↦ do
   let use ← use O c x
   if use ≤ u  then eval O c x else Part.none
 theorem evalnc_imp_usen {O u s c x} (h:(evalnc O u s c x).isSome) : (usen O c s x).isSome := by
@@ -57,13 +57,13 @@ theorem evalc_prop_3 {O u c x} (h:(eval O c x).Dom) (h0:(use O c x).get (e2u h)�
   simp [h0]
 theorem evalc_prop_4 {O u c x h}: (use O c x).get h≤u ↔ (evalc O u c x).Dom :=
   ⟨
-    λ h0 ↦ Part.eq_some_imp_dom <| evalc_prop_3 (u2e h) h0,
-    λ h0 ↦ evalc_prop_1 h0
+    fun h0 ↦ Part.eq_some_imp_dom <| evalc_prop_3 (u2e h) h0,
+    fun h0 ↦ evalc_prop_1 h0
   ⟩
 
 -- the b2n <| n2b is to simplify later proofs where evals will be compared against _.
 def whatever := 0
-noncomputable def evals (σ:List ℕ) (c:Code) (x:ℕ) := evalc (λ e ↦ b2n <| n2b <| σ.getD e whatever) σ.length c x
+noncomputable def evals (σ:List ℕ) (c:Code) (x:ℕ) := evalc (fun e ↦ b2n <| n2b <| σ.getD e whatever) σ.length c x
 /-
 the `whatever` *should* be unnecessary, because the evaluation is clamped by
 `σ.length`, so out-of-bound values are never passed to the function.
