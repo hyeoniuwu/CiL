@@ -15,7 +15,7 @@ import Mathlib.Data.Nat.BitIndices
 In this file we define helper functions which will be used in later computability arguments.
 -/
 
-open Nat Classical Oracle.Single.Code
+open Nat Oracle.Single.Code
 
 -- general helper functions
 section pair
@@ -24,7 +24,8 @@ notation "⟪" x "," y "⟫" => Nat.pair <$> x <*> y
 notation "⟪" x "," y "," z "⟫" => Nat.pair x (Nat.pair y z)
 notation "⟪" x "," y "," z "⟫" => Nat.pair <$> x <*> (Nat.pair <$> y <*> z)
 notation "⟪" x "," y "," z "," w "⟫" => Nat.pair (Nat.pair x y) (Nat.pair z w)
-notation "⟪" x "," y "," z "," w "⟫" => Nat.pair <$> (Nat.pair <$> x <*> y) <*> (Nat.pair <$> z <*> w)
+notation "⟪" x "," y "," z "," w "⟫" =>
+  Nat.pair <$> (Nat.pair <$> x <*> y) <*> (Nat.pair <$> z <*> w)
 def Nat.l (n : ℕ) := n.unpair.1
 def Nat.r (n : ℕ) := n.unpair.2
 @[simp] theorem pair_l {x y} : (Nat.pair x y).l = x := by simp [Nat.l]
@@ -109,7 +110,8 @@ fs_in 0b0010 2 = false
 fs_in 0b0010 3 = false
 -/
 
-/-- `fs_add a x` gives the natural representing the set with `x` added to `a` interpreted as a finite set. -/
+/-- `fs_add a x` gives the natural representing the set with `x` added to `a` interpreted as a
+finite set. -/
 abbrev fs_add : ℕ → ℕ → ℕ := fun a x ↦ a ||| (2^x)
 
 /-- `fs_add a` gives the the size of `a` interepreted as a finite set. -/
@@ -121,17 +123,17 @@ fs_size 0b111 = 3
 fs_size 0b011000111 = 5
 -/
 
-theorem fs_in_singleton {x y}: fs_in (2^y) x ↔ x=y := by grind
-theorem fs_in_singleton' {x y}: Nat.testBit (2^y) x = false ↔ y ≠ x := by grind
+theorem fs_in_singleton {x y} : fs_in (2^y) x ↔ x=y := by grind
+theorem fs_in_singleton' {x y} : Nat.testBit (2^y) x = false ↔ y ≠ x := by grind
 end fs
 
 namespace Oracle.Single.Code.nc_to_nn
-@[coe] protected def lift (f : ℕ→Code) : ℕ → ℕ := fun x => c2n (f x)
-instance : Coe (ℕ→Code) (ℕ → ℕ) := ⟨Oracle.Single.Code.nc_to_nn.lift⟩
+@[coe] protected def lift (f : ℕ → Code) : ℕ → ℕ := fun x => c2n (f x)
+instance : Coe (ℕ → Code) (ℕ → ℕ) := ⟨Oracle.Single.Code.nc_to_nn.lift⟩
 end Oracle.Single.Code.nc_to_nn
 namespace Oracle.Single.Code.cc_to_nn
-@[coe] protected def lift (f : Code→Code) : ℕ → ℕ := c2n ∘ f ∘ n2c
-instance : Coe (Code→Code) (ℕ → ℕ) := ⟨Oracle.Single.Code.cc_to_nn.lift⟩
+@[coe] protected def lift (f : Code → Code) : ℕ → ℕ := c2n ∘ f ∘ n2c
+instance : Coe (Code → Code) (ℕ → ℕ) := ⟨Oracle.Single.Code.cc_to_nn.lift⟩
 end Oracle.Single.Code.cc_to_nn
 
 section primrec
@@ -151,16 +153,19 @@ namespace Oracle.Single.Code
 @[cp] theorem left_prim : code_prim left := code_prim.left
 @[cp] theorem right_prim : code_prim right := code_prim.right
 @[cp] theorem oracle_prim : code_prim oracle := code_prim.oracle
-@[cp] theorem pair_prim {a b} (ha : code_prim a) (hb : code_prim b) : code_prim (pair a b) := code_prim.pair ha hb
-@[cp] theorem comp_prim {a b} (ha : code_prim a) (hb : code_prim b) : code_prim (comp a b) := code_prim.comp ha hb
-@[cp] theorem prec_prim {a b} (ha : code_prim a) (hb : code_prim b) : code_prim (prec a b) := code_prim.prec ha hb
+@[cp] theorem pair_prim {a b} (ha : code_prim a) (hb : code_prim b) : code_prim (pair a b) :=
+  code_prim.pair ha hb
+@[cp] theorem comp_prim {a b} (ha : code_prim a) (hb : code_prim b) : code_prim (comp a b) :=
+  code_prim.comp ha hb
+@[cp] theorem prec_prim {a b} (ha : code_prim a) (hb : code_prim b) : code_prim (prec a b) :=
+  code_prim.prec ha hb
 def code_total (O) (c : Code) := ∀x, (eval O c x).Dom
 @[simp] theorem zero_total {O} : code_total O zero := fun _ ↦ trivial
 @[simp] theorem left_total {O} : code_total O left := fun _ ↦ trivial
 @[simp] theorem right_total {O} : code_total O right := fun _ ↦ trivial
 @[simp] theorem succ_total {O} : code_total O succ := fun _ ↦ trivial
 @[simp] theorem oracle_total {O} : code_total O oracle := fun _ ↦ trivial
-theorem prim_total {O} {c} (h : code_prim c): code_total O c := by
+theorem prim_total {O} {c} (h : code_prim c) : code_total O c := by
   unfold code_total
   induction h with
   | zero                   => simp [eval];
@@ -168,15 +173,15 @@ theorem prim_total {O} {c} (h : code_prim c): code_total O c := by
   | left                   => simp [eval];
   | right                  => simp [eval];
   | oracle                 => simp [eval];
-  | pair ha hb ha_ih hb_ih => simp [eval, Seq.seq]; exact fun x ↦ ⟨ha_ih x, hb_ih x⟩
+  | pair ha hb ha_ih hb_ih => simpa [eval, Seq.seq] using fun x ↦ ⟨ha_ih x, hb_ih x⟩
   | comp ha hb ha_ih hb_ih =>
-    simp [eval]
+    simp only [eval, Part.bind_eq_bind, Part.bind_dom]
     intro x
     use hb_ih x
     (expose_names; exact ha_ih ((eval O b x).get (hb_ih x)))
   | prec ha hb ha_ih hb_ih =>
     expose_names
-    simp [eval]
+    simp only [eval, unpaired, unpair1_to_l, Part.bind_eq_bind, unpair2_to_r]
     intro x
     induction x.r with
     | zero => exact ha_ih x.l
@@ -189,7 +194,8 @@ theorem prim_total {O} {c} (h : code_prim c): code_total O c := by
 | oracle     => O
 | pair cf cg => fun x ↦ Nat.pair (evalp O cf x) (evalp O cg x)
 | comp cf cg => fun x ↦ evalp O cf (evalp O cg x)
-| prec cf cg => unpaired fun z n => n.rec (evalp O cf z) fun y IH => (evalp O cg) (z.pair (y.pair IH))
+| prec cf cg => unpaired fun z n =>
+  n.rec (evalp O cf z) fun y IH => (evalp O cg) (z.pair (y.pair IH))
 | rfind' _   => fun _ ↦ 0
 theorem evalp_eq_eval {O} {c} (h : code_prim c) : evalp O c = eval O c := by
   induction h with
@@ -200,42 +206,56 @@ theorem evalp_eq_eval {O} {c} (h : code_prim c) : evalp O c = eval O c := by
   | oracle => exact rfl
   | pair ha hb ha_ih hb_ih =>
     unfold evalp
-    simp [eval]
+    simp only [eval, Part.map_eq_map]
     funext xs
-    simp [Seq.seq]
+    simp only [PFun.coe_val, Seq.seq, Part.bind_map]
     expose_names
-    simp only [show eval O a xs = Part.some (evalp O a xs) from by exact congrFun (_root_.id (Eq.symm ha_ih)) xs]
-    simp only [show eval O b xs = Part.some (evalp O b xs) from by exact congrFun (_root_.id (Eq.symm hb_ih)) xs]
-    simp
+    have a0 : eval O a xs = Part.some (evalp O a xs) := congrFun (_root_.id (Eq.symm ha_ih)) xs
+    have a1 : eval O b xs = Part.some (evalp O b xs) := congrFun (_root_.id (Eq.symm hb_ih)) xs
+    simp [a0, a1]
   | comp ha hb ha_ih hb_ih =>
     unfold evalp
-    simp [eval]
+    simp only [eval, Part.bind_eq_bind]
     funext xs
-    simp
     expose_names
-    simp only [show eval O b xs = Part.some (evalp O b xs) from by exact congrFun (_root_.id (Eq.symm hb_ih)) xs]
-    simp
-    simp only [show eval O a (evalp O b xs) = Part.some (evalp O a (evalp O b xs)) from by exact congrFun (_root_.id (Eq.symm ha_ih)) (evalp O b xs)]
+    have a0 : eval O b xs = Part.some (evalp O b xs) := congrFun (_root_.id (Eq.symm hb_ih)) xs
+    have a1 : eval O a (evalp O b xs) = Part.some (evalp O a (evalp O b xs)) :=
+      congrFun (_root_.id (Eq.symm ha_ih)) (evalp O b xs)
+    simp [a0, a1]
   | prec ha hb ha_ih hb_ih =>
     unfold evalp
-    simp [eval]
+    simp only [eval, Part.bind_eq_bind]
     funext xs
-    simp
+    simp only [PFun.coe_val, unpaired, unpair1_to_l, unpair2_to_r]
     expose_names
     induction xs.r with
     | zero =>
-      simp
-      simp only [show eval O a xs.l = Part.some (evalp O a xs.l) from by exact congrFun (_root_.id (Eq.symm ha_ih)) xs.l]
+      have a0 : eval O a xs.l = Part.some (evalp O a xs.l) :=
+        congrFun (_root_.id (Eq.symm ha_ih)) xs.l
+      simp [a0]
     | succ y' IH' =>
-      have h0 : @Nat.rec (fun x ↦ Part ℕ) (eval O a xs.l) (fun y IH ↦ IH.bind fun i ↦ eval O b (Nat.pair xs.l (Nat.pair y i))) (y'+1) = ((@Nat.rec (fun x ↦ Part ℕ) (eval O a xs.l)
-  (fun y IH ↦ IH.bind fun i ↦ eval O b (Nat.pair xs.l (Nat.pair y i))) y').bind fun i ↦ eval O b (Nat.pair xs.l (Nat.pair y' i))) := by
-        exact rfl
-      rw [h0]
-      rw [←IH']
-      rw [Part.bind_some]
-      simp
-      rw [show eval O b ((Nat.pair xs.l (Nat.pair y' (Nat.rec (evalp O a xs.l) (fun y IH ↦ evalp O b (Nat.pair xs.l (Nat.pair y IH))) y')))) = Part.some (evalp O b ((Nat.pair xs.l (Nat.pair y' (Nat.rec (evalp O a xs.l) (fun y IH ↦ evalp O b (Nat.pair xs.l (Nat.pair y IH))) y'))))) from by exact congrFun (_root_.id (Eq.symm hb_ih)) ((Nat.pair xs.l (Nat.pair y' (Nat.rec (evalp O a xs.l) (fun y IH ↦ evalp O b (Nat.pair xs.l (Nat.pair y IH))) y'))))]
-theorem evalp_eq_eval_ext {O c x} (h : code_prim c): eval O c x = evalp O c x := congrFun (_root_.id (Eq.symm (@evalp_eq_eval O c h))) x
+      have h0 : @Nat.rec
+        (fun x ↦ Part ℕ)
+        (eval O a xs.l)
+        (fun y IH ↦ IH.bind fun i ↦ eval O b (Nat.pair xs.l (Nat.pair y i)))
+        (y'+1) = ((@Nat.rec (fun x ↦ Part ℕ) (eval O a xs.l)
+        (fun y IH ↦ IH.bind fun i ↦ eval O b (Nat.pair xs.l (Nat.pair y i))) y').bind
+        fun i ↦ eval O b (Nat.pair xs.l (Nat.pair y' i))) := rfl
+      rewrite [h0]
+      rewrite [←IH']
+      rewrite [Part.bind_some]
+      simp only
+      let prev_input :=
+        Nat.pair xs.l <|
+        Nat.pair y'
+        (Nat.rec (evalp O a xs.l) (fun y IH ↦ evalp O b (Nat.pair xs.l (Nat.pair y IH))) y')
+      have a0 :
+        eval O b
+        prev_input =
+        Part.some (evalp O b prev_input) := congrFun (_root_.id (Eq.symm hb_ih)) prev_input
+      rw [a0]
+theorem evalp_eq_eval_ext {O c x} (h : code_prim c) : eval O c x = evalp O c x :=
+  congrFun (_root_.id (Eq.symm (@evalp_eq_eval O c h))) x
 @[simp 1000] theorem code_prim_prop {O} {c} : Nat.PrimrecIn O (evalp O c) := by
   induction c with
   | zero => exact Nat.PrimrecIn.zero
@@ -281,16 +301,18 @@ end primrec
 section total
 namespace Oracle.Single.Code
 def evalt (O : ℕ → ℕ) (c : Code) (h : code_total O c) : ℕ → ℕ := fun x ↦ (eval O c x).get (h x)
-theorem total_pair_iff {O cf cg} : (code_total O cf) ∧ (code_total O cg) ↔ (code_total O (pair cf cg)) :=
+theorem total_pair_iff {O cf cg} :
+    (code_total O cf) ∧ (code_total O cg) ↔ (code_total O (pair cf cg)) :=
   ⟨
-    fun h x ↦ ⟨h.left x, h.right x⟩
-  ,
+    fun h x ↦ ⟨h.left x, h.right x⟩,
     fun h ↦ ⟨fun x ↦ Part.left_dom_of_sub_dom (h x) , fun x ↦ Part.right_dom_of_div_dom (h x)⟩
   ⟩
-@[simp] theorem total_pair_of {O cf cg} (hcf : code_total O cf) (hcg : code_total O cg) : (code_total O (pair cf cg)) := total_pair_iff.mp ⟨hcf,hcg⟩
-theorem total_comp_of {O cf cg} (hcf : code_total O cf) (hcg : code_total O cg) : (code_total O (comp cf cg)) := by
+@[simp] theorem total_pair_of {O cf cg} (hcf : code_total O cf) (hcg : code_total O cg) :
+  (code_total O (pair cf cg)) := total_pair_iff.mp ⟨hcf,hcg⟩
+theorem total_comp_of {O cf cg} (hcf : code_total O cf) (hcg : code_total O cg) :
+    (code_total O (comp cf cg)) := by
   intro x
-  simp [eval]
+  simp only [eval, Part.bind_eq_bind, Part.bind_dom]
   use hcg x
   exact hcf ((eval O cg x).get (hcg x))
 @[simp] theorem total_of_pair_left {O cf cg} (h : code_total O (pair cf cg)) : code_total O cf :=
@@ -300,20 +322,22 @@ theorem total_comp_of {O cf cg} (hcf : code_total O cf) (hcg : code_total O cg) 
 @[simp] theorem total_of_comp_left {O cf cg} (h : code_total O (comp cf cg)) : code_total O cg := by
   intro h2
   exact Part.Dom.of_bind (h h2)
-@[simp] theorem total_of_comp_right {O cf cg} (h : code_total O (comp cf cg)) : ∀x, (eval O cf ((eval O cg x).get (Part.Dom.of_bind (h x)))).Dom := by
+@[simp] theorem total_of_comp_right {O cf cg} (h : code_total O (comp cf cg)) :
+    ∀ x, (eval O cf ((eval O cg x).get (Part.Dom.of_bind (h x)))).Dom := by
   exact fun x ↦ Part.right_dom_of_div_dom (h x)
 @[simp] theorem total_of_prec_left {O cf cg} (h : code_total O (prec cf cg)) : code_total O cf := by
   intro x
   unfold code_total at h
-  simp [eval] at h
+  simp only [eval, unpaired, unpair1_to_l, Part.bind_eq_bind, unpair2_to_r] at h
   have hx := h (Nat.pair x 0)
-  simp at hx
+  simp only [pair_l, pair_r, rec_zero] at hx
   exact hx
 theorem eval_total_comp {O cf cg x} (h : code_total O (comp cf cg)) :
-  eval O (comp cf cg) x = Part.some ((eval O cf ((eval O cg x).get (Part.Dom.of_bind (h x)))).get (total_of_comp_right h x)) := by
-    simp
-    simp [eval]
-    exact Part.Dom.bind (Part.Dom.of_bind (h x)) (eval O cf)
+    eval O (comp cf cg) x =
+    Part.some
+    ((eval O cf ((eval O cg x).get (Part.Dom.of_bind (h x)))).get (total_of_comp_right h x)) := by
+  simp only [eval, Part.bind_eq_bind, Part.some_get]
+  exact Part.Dom.bind (Part.Dom.of_bind (h x)) (eval O cf)
 end Oracle.Single.Code
 end total
 
