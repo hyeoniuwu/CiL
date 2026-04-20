@@ -537,16 +537,13 @@ theorem c_replace_oracle_evp_aux_nMod4 {O o n} :
     simp [hcs'']
   have hml : evalp O ml_1 ⟪o, n+4, inp⟫ = ml := by
     have := @hlookup (left.comp m_1) (by simp [hm, m, div2_val, c_replace_oracle_evp_aux_nMod4_bounds1])
-    simp [ml_1, this, hm]
-    rfl
+    simpa [ml_1, this, hm] using by rfl
   have hmr : evalp O mr_1 ⟪o, n+4, inp⟫ = mr := by
     have := @hlookup (right.comp m_1) (by simp [hm, m, div2_val, c_replace_oracle_evp_aux_nMod4_bounds2])
-    simp [mr_1, this, hm]
-    rfl
+    simpa [mr_1, this, hm] using by rfl
   have hmp : evalp O mp_1 ⟪o, n+4, inp⟫ = mp := by
     have := @hlookup m_1 (by simp [hm, m, div2_val, c_replace_oracle_evp_aux_nMod4_bounds3])
-    simp [mp_1, this, hm]
-    rfl
+    simpa [mp_1, this, hm] using by rfl
   have hpair_code : evalp O pair_code ⟪o, n+4, inp⟫ = 2 * (2 * ⟪ml, mr⟫) + 5 := by simp [pair_code, hml, hmr, mul_comm]
   have hcomp_code : evalp O comp_code ⟪o, n+4, inp⟫ = 2*(2*⟪ml, mr⟫  ) +1  + 5 := by simp [comp_code, hml, hmr, mul_comm]
   have hprec_code : evalp O prec_code ⟪o, n+4, inp⟫ = 2*(2*⟪ml, mr⟫ +1 )   + 5 := by simp [prec_code, hml, hmr, mul_comm]

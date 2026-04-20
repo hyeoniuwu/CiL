@@ -449,8 +449,7 @@ def c_C := c_prec1 0 <|
   induction x with
   | zero =>
     unfold Simple.C
-    simp [c_C]
-    rfl
+    simpa [c_C] using by rfl
   | succ s ih =>
     unfold Simple.C
     rw [←ih]
