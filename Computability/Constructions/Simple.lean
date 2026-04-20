@@ -13,8 +13,8 @@ import Computability.Simple
 
 This file constructs the function `Simple.C` from Simple.lean as a code.
 
-The overall structure of the proof is written to facilitate adapation to proving the construction of a
-low simple set, which will be done in Constructions/Post.lean.
+The overall structure of the proof is written to facilitate adapation to proving the construction of
+a low simple set, which will be done in Constructions/Post.lean.
 
 ## Structure
 The difficult part of the construction is in implementing the search procedure of a `x` s.t.
@@ -23,8 +23,8 @@ The difficult part of the construction is in implementing the search procedure o
 This is done using `c_bdd_search`, which searches for a `x` that halts on code `c` for `s`
 steps, from a specified lower bound to an upper bound. `c` and `s` are specified from the input.
 
-Once the search procedure can be defined, `Simple.step`, and in turn `Simple.C`, can be constructed as codes
-(`c_step` and `c_C` respectively) easily.
+Once the search procedure can be defined, `Simple.step`, and in turn `Simple.C`, can be constructed
+as codes (`c_step` and `c_C` respectively) easily.
 
 Then, we can define `c_simple` such that its domain is exactly `Simple.A`;
 we let `c_simple` search (by dovetailing) for a step `s` such that its input is in `(C s).l`.
@@ -70,7 +70,6 @@ def c_bdd_search (c : Code) := prec
     let k := right.comp <| right.comp left
     let aPi := c_add.comp₂ a <| iP1
     let computation := c_evaln.comp₃ (aPi) (c.comp₃ s a k) s -- = [e]ₛ(a+i+1)
-
     c_ifz.comp₃ prev_comp
     (
       c_ifz.comp₃ computation
@@ -102,36 +101,42 @@ theorem c_bdd_search_evp_0 {O c s a k l} :
   | succ n ih =>
     unfold c_bdd_search
     lift_lets; extract_lets; expose_names
-    simp [evalp]
+    simp only [evp_simps]
+    simp only [Nat.unpaired, Nat.unpair_pair, Nat.pred_eq_sub_one, Nat.succ_eq_add_one, pair_l,
+      pair_r]
+    -- we will simplify terms in the goal with inp
     let (eq := hinp) inp := ⟪⟪s,a,k⟫, ⟪n,evalp O (c_bdd_search c) ⟪⟪s,a,k⟫, n⟫⟫⟫
-    unfold c_bdd_search at hinp; lift_lets at hinp; simp at hinp
+    unfold c_bdd_search at hinp; lift_lets at hinp;
+    simp only [evp_simps] at hinp
+    simp only [Nat.unpaired, Nat.unpair_pair, Nat.pred_eq_sub_one, Nat.succ_eq_add_one, pair_l,
+      pair_r] at hinp
     rw [← hinp]
     have hprev_comp : evalp O prev_comp inp = evalp O (c_bdd_search c) ⟪⟪s,a,k⟫, n⟫ := by
       unfold c_bdd_search
       lift_lets;
       simp [prev_comp, hinp]
-
+    -- show that the code let-bindings correspond to our let-bindings
     have hs_1 : evalp O s_1 inp = s := by simp [s_1, inp]
     have ha_1 : evalp O a_1 inp = a := by simp [a_1, inp]
     have hk_1 : evalp O k_1 inp = k := by simp [k_1, inp]
     have hiP1 : evalp O iP1 inp = n+1 := by simp [iP1, inp]
     have haPi : evalp O aPi inp = a+(n+1) := by simp [aPi, ha_1, hiP1]
-    simp [hprev_comp]
-    have hcomputation : evalp O computation inp = o2n (evaln O s (evalp O c ⟪s,a,k⟫) (a+(n+1))) := by
+    simp only [hprev_comp]
+    have hcomputation :
+        evalp O computation inp = o2n (evaln O s (evalp O c ⟪s,a,k⟫) (a+(n+1))) := by
       simp [computation, hs_1, haPi, ha_1, hk_1]
-    simp [hcomputation, hiP1]
+    simp only [hcomputation, hiP1]
     split at ⊢
     next h2 =>
       have ih1 := ih.mp h2
       split at ⊢
       next h3 =>
-        simp
+        simp only [true_iff]
         intro i hi
         cases hi : Nat.le_or_eq_of_le_succ hi with
         | inl h => exact ih1 i h
         | inr h =>
-          simp [h]
-          exact o2n_a0.mp h3
+          simpa [h] using o2n_a0.mp h3
       next h3 =>
         constructor
         · intro h
@@ -149,13 +154,18 @@ theorem c_bdd_search_evp_0 {O c s a k l} :
 theorem c_bdd_aux {x} (h : x ≠ 0) : ∃ y z, ⟪y, z⟫ ∈ n2o x := by
   use (x-1).l; use (x-1).r
   simp [hnat_to_opt_2 h]
-theorem c_bdd_search_evp_1 {O c s a k l i r}:
-  ⟪i, r⟫ ∈ (n2o (evalp O (c_bdd_search c) ⟪⟪s,a,k⟫, l⟫))
-  ↔
-  i ≤ l ∧ r ∈ ((evaln O s (evalp O c ⟪s,a,k⟫) (a+i))) ∧ ∀ j < i,(evaln O s (evalp O c ⟪s,a,k⟫) (a+j)) = none := by
+theorem c_bdd_search_evp_1 {O c s a k l i r} :
+    ⟪i, r⟫ ∈ (n2o (evalp O (c_bdd_search c) ⟪⟪s,a,k⟫, l⟫))
+    ↔
+    i ≤ l ∧
+    r ∈ ((evaln O s (evalp O c ⟪s,a,k⟫) (a+i))) ∧
+    ∀ j < i,(evaln O s (evalp O c ⟪s,a,k⟫) (a+j)) = none := by
   induction l generalizing i r with
   | zero =>
-    simp [c_bdd_search]
+    simp only [c_bdd_search, evp_simps]
+    simp only [Nat.unpaired, Nat.unpair_pair, pair_l, Nat.n2c, pair_r, Nat.pred_eq_sub_one,
+      Nat.succ_eq_add_one, Nat.unpaired2, Nat.add_eq, Nat.rec_zero, Option.mem_def,
+      nonpos_iff_eq_zero]
     apply Iff.intro
     · intro a_1
       apply And.intro
@@ -190,9 +200,14 @@ theorem c_bdd_search_evp_1 {O c s a k l i r}:
   | succ n ih =>
     unfold c_bdd_search
     lift_lets; extract_lets; expose_names
-    simp [evalp]
+    simp only [evp_simps]
+    simp only [Nat.unpaired, Nat.unpair_pair, Nat.pred_eq_sub_one, Nat.succ_eq_add_one, pair_l,
+      pair_r, Option.mem_def]
     let (eq := hinp) inp := ⟪⟪s,⟪a,k⟫⟫, ⟪n,evalp O (c_bdd_search c) ⟪⟪s,a,k⟫, n⟫⟫⟫
-    unfold c_bdd_search at hinp; lift_lets at hinp; simp at hinp
+    unfold c_bdd_search at hinp; lift_lets at hinp;
+    simp only [evp_simps] at hinp
+    simp only [Nat.unpaired, Nat.unpair_pair, Nat.pred_eq_sub_one, Nat.succ_eq_add_one, pair_l,
+      pair_r] at hinp
     rw [← hinp]
     have hprev_comp : evalp O prev_comp inp = evalp O (c_bdd_search c) ⟪⟪s,a,k⟫, n⟫ := by
       unfold c_bdd_search
@@ -203,38 +218,36 @@ theorem c_bdd_search_evp_1 {O c s a k l i r}:
     have hk_1 : evalp O k_1 inp = k := by simp [k_1, inp]
     have hiP1 : evalp O iP1 inp = n+1 := by simp [iP1, inp]
     have haPi : evalp O aPi inp = a+(n+1) := by simp [aPi, ha_1, hiP1]
-    have hcomputation : evalp O computation inp = o2n (evaln O s (evalp O c ⟪s,a,k⟫) (a+(n+1))) := by
+    have hcomputation :
+        evalp O computation inp = o2n (evaln O s (evalp O c ⟪s,a,k⟫) (a+(n+1))) := by
       simp [computation, hs_1, haPi, ha_1, hk_1]
-    simp [hprev_comp, hcomputation, hiP1]
+    simp only [hprev_comp, hcomputation, hiP1]
     split
     next h =>
       split
       next h2 =>
-        simp
+        simp only [hnat_to_opt_0, reduceCtorEq, false_iff, not_and, not_forall]
         intro hi h3
         cases Nat.eq_or_lt_of_le hi with
         | inl h4 =>
-          simp [←h4] at h2
+          simp [← h4] at h2
           simp [h3] at h2
         | inr h4 => simp [c_bdd_search_evp_0.mp h i (Nat.le_of_lt_succ h4)] at h3
-
       next h2 =>
         simp only [hnat_to_opt_0', Option.some.injEq, Nat.pair_eq_pair]
         constructor
-        rintro ⟨h3,h4⟩
-        rw [h3] at h2 h4 ⊢
-        constructor
-        · exact le_refl i
-        constructor
-        · simp [hnat_2 (hnat_10 h2)] at h4
-          rw [←h4]
-          simp
-
-        intro j hj
-        rw [←h3] at hj
-        exact c_bdd_search_evp_0.mp h j (Nat.le_of_lt_succ hj)
-
-        simp
+        · rintro ⟨h3,h4⟩
+          rw [h3] at h2 h4 ⊢
+          constructor
+          · exact le_refl i
+          constructor
+          · simp only [hnat_2 (hnat_10 h2)] at h4
+            rw [← h4]
+            simp
+          intro j hj
+          rw [← h3] at hj
+          exact c_bdd_search_evp_0.mp h j (Nat.le_of_lt_succ hj)
+        simp only [and_imp]
         intro hi h3 h4
         have : n + 1 = i := by
           have : i = n+1 ∨ i< n+1 := Nat.eq_or_lt_of_le hi
@@ -245,20 +258,17 @@ theorem c_bdd_search_evp_1 {O c s a k l i r}:
             simp [this] at h3
         simp [this]
         simp [h3]
-
-
     next h =>
       constructor
       · intro h2
         rcases ih.mp h2 with ⟨h3, h4, h5⟩
         exact ⟨Nat.le_succ_of_le h3, h4, h5⟩
-      simp
+      simp only [and_imp]
       intro hi h2 h3
       apply ih.mpr
-      simp
+      simp only [Option.mem_def]
       constructor
-      ·
-        cases Nat.eq_or_lt_of_le hi with
+      · cases Nat.eq_or_lt_of_le hi with
         | inl h5 =>
           clear hi
           simp [h5]
@@ -275,7 +285,7 @@ def c_fs_in := c_mod.comp₂
   (c_div.comp₂ left (c_pow.comp₂ (c_const 2) right))
   (c_const 2)
 @[cp] theorem c_fs_in_prim : code_prim c_fs_in := by unfold c_fs_in; apply_cp
-@[simp, evp_simps] theorem c_fs_in_evp {O x y}: evalp O c_fs_in ⟪x,y⟫ = (b2n <| fs_in x y) := by
+@[simp, evp_simps] theorem c_fs_in_evp {O x y} : evalp O c_fs_in ⟪x,y⟫ = (b2n <| fs_in x y) := by
   simp [c_fs_in,evalp];
   simp [fs_in, b2n]
   grind
@@ -286,15 +296,14 @@ section fs_add
 namespace Oracle.Single.Code
 def c_fs_add := c_or.comp₂ left <| c_pow.comp₂ (c_const 2) right
 @[cp] theorem c_fs_add_prim : code_prim c_fs_add := by unfold c_fs_add; apply_cp
-@[simp, evp_simps] theorem c_fs_add_evp {O x y}: evalp O c_fs_add ⟪x,y⟫ = (fs_add x y) := by
+@[simp, evp_simps] theorem c_fs_add_evp {O x y} : evalp O c_fs_add ⟪x,y⟫ = (fs_add x y) := by
   simp [c_fs_add,evalp];
 end Oracle.Single.Code
 end fs_add
 
 theorem evaln_dom_imp_x_le_s {O s c x} (h : (evaln O s c x).isSome) : x ≤ s := by
   contrapose h
-  simp at h
-  simp
+  simp only [not_le, Bool.not_eq_true, Option.isSome_eq_false_iff, Option.isNone_iff_eq_none] at h ⊢
   cases s with
   | zero => simp [evaln]
   | succ n => cases c <;> simp [evaln, not_le.mpr (Nat.lt_of_succ_lt h)];
@@ -316,13 +325,11 @@ We want to search, from y=2*i+1 to s, a value s.t. [i]_s(y) halts.
 
 `search` is 0 if `found` is false, otherwise is the minimal `a+1` s.t.
 `[i]_s(2*i+1+a)↓`.
-
 -/
 def c_step :=
   let s := left
   let i := left.comp right
   let prev := right.comp right
-
   let Aₚ := left.comp prev
   let Rₚ := right.comp prev
   let i2P1 := succ.comp <| c_mul.comp₂ (c_const 2) <| left.comp right
@@ -347,62 +354,63 @@ def c_step :=
   have hsearch : code_prim search := by apply_cp
   have hx : code_prim x := by apply_cp
   apply_cp 60
-@[simp, evp_simps] theorem c_step_evp {s i prev} : evalp (χ ∅) c_step ⟪s, i, prev⟫ = Simple.step s i prev := by
-  -- funext x
+@[simp, evp_simps] theorem c_step_evp {s i prev} :
+    evalp (χ ∅) c_step ⟪s, i, prev⟫ = Simple.step s i prev := by
   unfold Simple.step
   unfold c_step
   lift_lets; extract_lets; expose_names
-  simp
-
+  simp only [evp_simps]
+  simp only [Nat.sg', pair_l, pair_r, ite_eq_right_iff, one_ne_zero, imp_false, ite_not,
+    Bool.not_eq_true, Set.mem_setOf_eq, gt_iff_lt]
   let (eq := hinp) inp := ⟪s, i, prev⟫
-  rw [←hinp]
-
+  rw [← hinp]
+    -- show that the code let-bindings correspond to our let-bindings
   have hprev : (evalp (χ ∅) prev_1 inp) = prev := by simp [prev_1, inp]
   have hRp_1 : (evalp (χ ∅) Rₚ inp) = Rₚ_1 := by simp [Rₚ, hprev, Rₚ_1]
   have hAₚ_1 : (evalp (χ ∅) Aₚ inp) = Aₚ_1 := by simp [Aₚ, hprev, Aₚ_1]
   have hi :    (evalp (χ ∅) i_1 inp) = i := by simp [i_1, inp]
   have hs :    (evalp (χ ∅) s_1 inp) = s := by simp [s_1, inp]
   have hi2P1 : (evalp (χ ∅) i2P1 inp) = 2*i+1 := by simp [i2P1, inp]
-
-  simp [hprev, hRp_1, hi, hAₚ_1]
+  simp only [hRp_1, hi, hprev, hAₚ_1, gt_iff_lt]
   split; rotate_left
   next h0 =>
     simp [b2n] at h0
     simp [h0]
   next h0 =>
-    simp [b2n] at h0
-    simp [h0]
+    simp only [b2n, ite_eq_right_iff, one_ne_zero, imp_false, Bool.not_eq_true] at h0
+    simp only [h0, ↓reduceIte, gt_iff_lt]
     clear h0
     split; rotate_left
     next h0 =>
       unfold search at h0
-      simp [hs] at h0
+      simp only [hs, evp_simps] at h0
       rcases c_bdd_aux h0 with ⟨z,r, hzr⟩
-      simp [hi, hi2P1] at hzr
+      simp only [hi2P1, hi, Option.mem_def] at hzr
       rcases c_bdd_search_evp_1.mp hzr with ⟨hzr1, hzr2, hzr3⟩
-      simp at hzr1 hzr2 hzr3
+      simp only [evalp, pair_r, Option.mem_def] at hzr1 hzr2 hzr3
       have found_aux : (evalnSet ∅ s (n2c i) (2*i+1+z)).isSome = true ∧ (2*i+1+z) > 2 * i := by
         constructor
-        simp [evalnSet]
-        rw [hzr2]
-        rfl
+        · simp only [evalnSet]
+          rw [hzr2]
+          rfl
         omega
       have found : ∃ x_1, (evalnSet ∅ s (n2c i) x_1).isSome = true ∧ x_1 > 2 * i := by
         use 2*i+1+z
-      simp [found]
+      simp only [gt_iff_lt, found, ↓reduceDIte, Nat.pair_eq_pair, and_true]
       apply congrArg
-      simp [x, search, hs,hi, hi2P1]
-      simp [hnat_12 hzr]
+      simp? [x, search, hs, hi, hi2P1] says
+        simp only [evp_simps, hi2P1, hs, hi, Nat.pred_eq_sub_one,
+          Nat.unpaired2, pair_l, pair_r, Nat.add_eq, x, search]
+      simp only [hnat_12 hzr, pair_l]
       let (eq := hnf) nf := Nat.find found
       have nf0 := @Nat.find_min _ _ found
       have nf1 := @Nat.find_spec _ _ found
-      rw [←hnf] at nf0 nf1 ⊢
-
+      rw [← hnf] at nf0 nf1 ⊢
       have tri := lt_trichotomy (2 * i + 1 + z) nf
       cases tri with
       | inl h =>
         have := @nf0 (2 * i + 1 + z) h
-        simp at this
+        simp only [gt_iff_lt, not_and, not_lt] at this
         have := this found_aux.1
         omega
       | inr h =>
@@ -416,17 +424,17 @@ def c_step :=
         simp [evalnSet] at nf1
         simp [a3] at nf1
     next h0 =>
-      simp [search, hi2P1, hi, hs] at h0
+      simp only [evp_simps, search, hi2P1, hi, hs] at h0
       have := c_bdd_search_evp_0.mp h0
       split; rotate_left
       next h1 => simp
       next h1 =>
         rcases h1 with ⟨h2,h3,h4⟩
-        simp [evalnSet] at h3
+        simp only [evalnSet, evp_simps] at h3
         have a0 : h2 ≤ s := by exact evaln_dom_imp_x_le_s h3
         have a2 : h2-2*i-1 ≤ s := by omega
         have a1 := this (h2-2*i-1) a2
-        simp at a1
+        simp only at a1
         have a3 : (2 * i + 1 + (h2 - 2 * i - 1)) = h2 := by omega
         simp [a3] at a1
         simp [a1] at h3
@@ -456,23 +464,23 @@ def c_simple := dovetail <|
   c_sg'.comp <| c_fs_in.comp₂ (left.comp <| c_C.comp s) x
 
 theorem W_eq_iff_mem {O c A} : W O c = A ↔ (∀ x, x∈A ↔ (evalSet O c x).Dom) := by
-  simp [W]
+  simp only [W]
   constructor
-  intro h
-  rw [←h]
-  intro x
-  simp only [PFun.mem_dom]
-  exact Iff.symm Part.dom_iff_mem
+  · intro h
+    rw [← h]
+    intro x
+    simp only [PFun.mem_dom]
+    exact Iff.symm Part.dom_iff_mem
   intro h
   refine Set.ext ?_
   exact fun x ↦ (fun {a b} ↦ iff_comm.mp) (h x)
 
 theorem c_simple_ev : W ∅ c_simple = Simple.A := by
   apply W_eq_iff_mem.mpr
-  simp [c_simple, Simple.A]
+  simp only [Simple.A, Set.mem_setOf_eq, c_simple]
   intro x
   have : code_prim (c_sg'.comp (c_fs_in.comp₂ (left.comp (c_C.comp right)) left)) := by apply_cp
-  simp [evalSet]
+  simp only [evalSet]
   constructor
   · intro h
     rcases h with ⟨s,hs⟩
@@ -482,10 +490,10 @@ theorem c_simple_ev : W ∅ c_simple = Simple.A := by
     simp [hs, b2n]
   · intro h
     rcases dovetail_ev_2.mp h with ⟨s,hs⟩
-    simp [←evalp_eq_eval this] at hs
-    simp [b2n] at hs
+    simp only [← evalp_eq_eval this, evp_simps] at hs
+    simp only [Nat.sg', b2n, ite_eq_right_iff, one_ne_zero, imp_false, Bool.not_eq_true,
+      PFun.coe_val, pair_r, pair_l, Part.some_inj, Bool.not_eq_false] at hs
     exact Exists.intro s hs
-
 
 theorem exists_simple_set : ∃ A : Set ℕ, simpleIn ∅ A := by
   use Simple.A
@@ -496,7 +504,7 @@ theorem exists_simple_set : ∃ A : Set ℕ, simpleIn ∅ A := by
     exact Simple.A_CoInfinite
   intro c inf
   have a0 := Simple.P c
-  simp at a0
+  simp only [n2c_c2n] at a0
   have := a0 inf
   rw [c_simple_ev]
   exact Set.nonempty_iff_ne_empty.mp (a0 inf)

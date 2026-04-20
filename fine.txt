@@ -1,3 +1,6 @@
 Computability/Constructions/KP54.lean
 Computability/Constructions/Basic.lean
 Computability/Constructions/Bitwise.lean
+Computability/Constructions/Meta.lean
+Computability/Constructions/Option.lean
+Computability/Constructions/Primitive.lean
