@@ -197,21 +197,21 @@ theorem Bs_Mono_3 {k i j} (hi:k<(Bs i).length) (hh:k<(Bs j).length) : (Bs i)[k] 
     simp at h
     have := (AsBs_Mono_2 (Nat.le_of_succ_le h)).right
     exact Eq.symm (List.IsPrefix.getElem this hh)
-theorem As_Mono_4 (hii : ii < (As j).length) (asz : ii < (As k).length) :
+theorem As_Mono_4 {ii j k smth} (hii : ii < (As j).length) (asz : ii < (As k).length) :
 ((As j)[ii]?.getD smth) = (As k)[ii] := by
   have : (As j)[ii]?.getD smth = (As k)[ii] := by
     have : (As j)[ii]?.getD smth = (As j)[ii] := by simp only [getElem?_pos, Option.getD_some,hii]
     rw [this]
     exact As_Mono_3 hii asz
   rw [this]
-theorem Bs_Mono_4 (hii : ii < (Bs j).length) (asz : ii < (Bs k).length) :
+theorem Bs_Mono_4 {ii j k smth} (hii : ii < (Bs j).length) (asz : ii < (Bs k).length) :
 ((Bs j)[ii]?.getD smth) = (Bs k)[ii] := by
   have : (Bs j)[ii]?.getD smth = (Bs k)[ii] := by
     have : (Bs j)[ii]?.getD smth = (Bs j)[ii] := by simp only [getElem?_pos, Option.getD_some,hii]
     rw [this]
     exact Bs_Mono_3 hii asz
   rw [this]
-@[simp] private lemma AsBsSize_aux_0 : (2 * i + 1 + 1) % 2 = 0 := by omega
+@[simp] private lemma AsBsSize_aux_0 {i} : (2 * i + 1 + 1) % 2 = 0 := by omega
 theorem AsSize_o2e {i : ℕ} : (As (2*i+1)).length = (As (2*i)).length + 1 := by
   rw [As, KP54]
   simp (config := {zeta:=false})
@@ -258,7 +258,7 @@ theorem AsSize_mono {i j : ℕ} (hij:i<j) : (As i).length < (As j).length := by
   have a0 := @AsSize_mono' i
   have a1 := (@AsBs_Mono_2 (i+1) j (hij)).left
   exact Nat.lt_of_lt_of_le a0 (List.IsPrefix.length_le a1)
-theorem append_len_geq (A B : List α) (h1 : A.length < B.length) (h2 : A ++ lst = B) : lst.length > 0 := by
+theorem append_len_geq {α lst} (A B : List α) (h1 : A.length < B.length) (h2 : A ++ lst = B) : lst.length > 0 := by
   grind
 theorem nonempt_l2n (A : List ℕ) (h1 : A.length > 0) : l2n A ≠ 0 := by
   contrapose h1
@@ -355,7 +355,7 @@ We split the proof into two cases, `As_Uninjured_0` and `As_Uninjured_1`, depend
 
 /-- R_wt i is the natural that witnesses the requirement `R i`. -/
 private noncomputable def R_wt (i:ℕ) := (Bs (2*(i+1)-1)).length
-@[simp] theorem BsSize_o2e_Rwt : R_wt i < (Bs (2 * (i + 1))).length := by
+@[simp] theorem BsSize_o2e_Rwt {i} : R_wt i < (Bs (2 * (i + 1))).length := by
   rw [show R_wt i = (Bs (2*(i+1)-1)).length from rfl]
   have : 2 * (i + 1) - 1 = 2*i+1 := by exact rfl
   rw [this]
@@ -404,7 +404,7 @@ private theorem R_aux_0 (i:ℕ) (h:(evals (As (2*i+1+1)) i (R_wt i)).Dom):
   simp [show (evals (αₛ) i (R_wt i)).get (finite_ext_prop halts) = A_result from rfl]
   cases A_result <;> simp [n2b,b2n]
 
-theorem R_aux_χ: χ B (R_wt i) = b2n (n2b ((Bs (2 * (i + 1)))[(R_wt i)]'(@BsSize_o2e_Rwt i))) := by
+theorem R_aux_χ {i}: χ B (R_wt i) = b2n (n2b ((Bs (2 * (i + 1)))[(R_wt i)]'(@BsSize_o2e_Rwt i))) := by
   simp [B, χ, Bs_Mono_3 (@BsSize (R_wt i)) (@BsSize_o2e_Rwt i)]
   exact rfl
 
@@ -414,7 +414,7 @@ If `[i:As](k)` halts, then its value will be unchanged in all subsequent steps.
 The proof follows from an invocation of the use principle. The monotonicity of As proves that the oracles are in-
 deed equivalent up to the use.
 -/
-theorem As_Uninjured_0 (hh:(evals (As (2*(i+1))) i k).Dom): evals (As (2*(i+1))) i k = evalSet A i k := by
+theorem As_Uninjured_0 {i k} (hh:(evals (As (2*(i+1))) i k).Dom): evals (As (2*(i+1))) i k = evalSet A i k := by
   simp [A,evalSet]; unfold χ; simp [evals] -- unfold defns
 
   have h1 := evalc_prop_0 hh
@@ -428,7 +428,7 @@ theorem As_Uninjured_0 (hh:(evals (As (2*(i+1))) i k).Dom): evals (As (2*(i+1)))
   split <;> next h => simp [b2n,h]
 
 /- contrapositive of As_Uninjured_0. -/
-theorem As_Uninjured_0' {i:ℕ} : ¬ (evalSet A i k).Dom → ¬ (evals (As (2*(i+1))) i k).Dom := by
+theorem As_Uninjured_0' {k} {i:ℕ} : ¬ (evalSet A i k).Dom → ¬ (evals (As (2*(i+1))) i k).Dom := by
   contrapose
   intro h
   rwa [← As_Uninjured_0 h]
@@ -445,7 +445,7 @@ To show \mono{(evals (As (2*(i+1))) i (R\_wt i)).Dom}, it suffices to show that 
 But we know a finite extension must exist, as the use of the computation is finite.
 
 -/
-lemma As_Uninjured_1 : ¬(evals (As (2*i+1+1)) i (R_wt i)).Dom → ¬(evalSet A i (R_wt i)).Dom := by
+lemma As_Uninjured_1 {i} : ¬(evals (As (2*i+1+1)) i (R_wt i)).Dom → ¬(evalSet A i (R_wt i)).Dom := by
   unfold As
   unfold KP54
   simp (config := {zeta:=false})
@@ -574,7 +574,7 @@ section S
 This section is essentially identical to section R, so we remove any comments.
 -/
 private noncomputable def S_wt (i:ℕ) := (As (2*i)).length
-@[simp] theorem AsSize_o2e_wt : S_wt i < (As (2*i+1)).length := by
+@[simp] theorem AsSize_o2e_wt {i} : S_wt i < (As (2*i+1)).length := by
   rw [show S_wt i = (As (2*i)).length from rfl]
   exact AsSize_mono'
 private theorem S_aux_0 (i:ℕ) (h:(evals (Bs (2*i+1)) i (S_wt i)).Dom):
@@ -604,11 +604,11 @@ private theorem S_aux_0 (i:ℕ) (h:(evals (Bs (2*i+1)) i (S_wt i)).Dom):
   simp [lbrw]; simp only [← lbrw]
   simp [show (evals (βₛ) i (S_wt i)).get (finite_ext_prop halts) = B_result from rfl]
   cases B_result <;> simp [n2b,b2n]
-theorem S_aux_χ: χ A (S_wt i) = b2n (n2b ((As (2*i+1))[(S_wt i)]'(@AsSize_o2e_wt i))) := by
+theorem S_aux_χ {i}: χ A (S_wt i) = b2n (n2b ((As (2*i+1))[(S_wt i)]'(@AsSize_o2e_wt i))) := by
   simp [A, χ]
   simp [As_Mono_3 (@AsSize (S_wt i)) (@AsSize_o2e_wt i)]
   exact rfl
-theorem Bs_Uninjured_0 (hh:(evals (Bs (2*i+1)) i k).Dom): evals (Bs (2*i+1)) i k = evalSet B i k := by
+theorem Bs_Uninjured_0 {i k} (hh:(evals (Bs (2*i+1)) i k).Dom): evals (Bs (2*i+1)) i k = evalSet B i k := by
   simp [B, evalSet]; unfold χ; simp [evals]
   have h1 := evalc_prop_0 hh
   simp at h1
@@ -619,11 +619,11 @@ theorem Bs_Uninjured_0 (hh:(evals (Bs (2*i+1)) i k).Dom): evals (Bs (2*i+1)) i k
   intro ii hii
   rw [Bs_Mono_4 (Nat.lt_of_lt_of_le hii (evalc_prop_1 hh)) BsSize]
   split <;> next h => simp [b2n,h]
-theorem Bs_Uninjured_0' {i:ℕ} : ¬ (evalSet B i k).Dom → ¬ (evals (Bs (2*i+1)) i k).Dom := by
+theorem Bs_Uninjured_0' {k} {i:ℕ} : ¬ (evalSet B i k).Dom → ¬ (evals (Bs (2*i+1)) i k).Dom := by
   contrapose
   intro h
   rwa [← Bs_Uninjured_0 h]
-lemma Bs_Uninjured_1 : ¬(evals (Bs (2*i+1)) i (S_wt i)).Dom → ¬(evalSet B i (S_wt i)).Dom := by
+lemma Bs_Uninjured_1 {i} : ¬(evals (Bs (2*i+1)) i (S_wt i)).Dom → ¬(evalSet B i (S_wt i)).Dom := by
   unfold Bs
   unfold KP54
   simp (config := {zeta:=false})

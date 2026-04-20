@@ -32,7 +32,7 @@ theorem inf_imp_inhabited {A:Set ℕ} (h:A.Infinite) : ∃ y, y ∈ A := by
 theorem setrange_card (i : ℕ) : {x | x ≤ i}.ncard = i + 1 := by
   have h_interval : {x | x ≤ i} = Set.Iio (i + 1) := by
     ext x
-    simp [Nat.lt_succ_iff]
+    simp
   rw [h_interval]
   rw [← Finset.coe_range (i + 1)]
   rw [Set.ncard_coe_finset]

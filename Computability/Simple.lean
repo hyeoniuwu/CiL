@@ -36,19 +36,19 @@ open List
 
 /-- immuneIn O A := A is immune in O -/
 def immuneIn (O:Set ℕ) (A:Set ℕ) : Prop := (A.Infinite) ∧ (∀c, (W O c).Infinite → ¬(W O c ⊆ A))
-theorem immuneIn_not_CEIn : immuneIn O A → ¬ CEin O A := by
+theorem immuneIn_not_CEIn {O A} : immuneIn O A → ¬ CEin O A := by
   intro h
   unfold CEin
   unfold immuneIn at h
   aesop
-theorem immuneIn_not_CEIn_contrapositive :  CEin O A → ¬ immuneIn O A  := by
+theorem immuneIn_not_CEIn_contrapositive {O A} :  CEin O A → ¬ immuneIn O A  := by
   contrapose
   exact fun a ↦ immuneIn_not_CEIn a
 
 /-- simpleIn O A := A is simple in O -/
 def simpleIn (O:Set ℕ) (A:Set ℕ) : Prop := (CEin O A) ∧ immuneIn O Aᶜ
 abbrev simple := simpleIn ∅
-theorem simpleIn_not_reducible (h:simpleIn O A): A ≰ᵀ O := by
+theorem simpleIn_not_reducible {O A} (h:simpleIn O A): A ≰ᵀ O := by
   contrapose h
   simp only [NotSetTuringDegreeNLE_SetTuringDegreeLE] at h
   unfold simpleIn
@@ -56,12 +56,12 @@ theorem simpleIn_not_reducible (h:simpleIn O A): A ≰ᵀ O := by
   intro _
   rcases Cin_iff_CEin_CEin'.mp h with ⟨h1,h2⟩
   exact immuneIn_not_CEIn_contrapositive h2
-theorem simple_above_empty (h:simple A): ∅<ᵀA := ⟨empty_le A, simpleIn_not_reducible h⟩
+theorem simple_above_empty {A} (h:simple A): ∅<ᵀA := ⟨empty_le A, simpleIn_not_reducible h⟩
 /-
 Alternative characterisation of simplicity of a set; a set is simple iff if it is co-infinite, computable enumerable, and is such that its
 complements admits no infinite computable enumerable subset.
 -/
-theorem simpleInReq : ((W O a)ᶜ.Infinite ∧ ∀ c, (W O c).Infinite → (W O c ∩ W O a ≠ ∅)) ↔ simpleIn O (W O a) := by
+theorem simpleInReq {O a} : ((W O a)ᶜ.Infinite ∧ ∀ c, (W O c).Infinite → (W O c ∩ W O a ≠ ∅)) ↔ simpleIn O (W O a) := by
   constructor
   · intro ⟨h1,h2⟩
     exact ⟨CEin_trivial, h1, λ c h3 ↦ (nonempt_int_iff_not_subset_compl (W O c) (W O a)).mp (h2 c h3)⟩
@@ -184,7 +184,7 @@ lemma split_lower {j k s X} (h : ¬ fs_in X.r j) (hk : k ≤ j):
     have kk2 : k< j := hk
     have := @step_preserves_R_not_mem _ k s _ (ih kk) kk2
     simpa using this
-lemma split_middle (h:¬fs_in X.r j) (h2: ∃ x ∈ Wn ∅ j s, x > 2*j) :
+lemma split_middle {j s X} (h:¬fs_in X.r j) (h2: ∃ x ∈ Wn ∅ j s, x > 2*j) :
 fs_in ((step s) j X).r j := by
   simp at h2; simp [step, h, h2]
 /--
@@ -209,7 +209,7 @@ lemma range_3_way_split {s j} (hs:j+1≤ s) : (range s).reverse = (range' (j+1) 
 /--
 `R_foldr` states that when conditions are met, `j` will be added to `R` when executing the main foldr loop.
 -/
-lemma R_foldr (h:¬fs_in X.r j) (h2: ∃ x ∈ Wn ∅ j s, x > 2*j) (hs:j+1≤s):
+lemma R_foldr {j s X} (h:¬fs_in X.r j) (h2: ∃ x ∈ Wn ∅ j s, x > 2*j) (hs:j+1≤s):
 fs_in (foldr (step s) X (range s).reverse).r j := by
   rw [range_3_way_split hs]
   simp [-foldr_reverse]
@@ -351,6 +351,7 @@ lemma A_step_middle {j s x} {X : ℕ}
     use Nat.find found
     exact ⟨Nat.gt_of_not_le h3, Nat.find_spec found⟩
   exact Nat.le_antisymm a1 a0
+
 /--
 mem_A_iff_enumerated gives the exact conditions under which `x` is enumerated into `A`.
 
@@ -518,7 +519,7 @@ theorem mem_A_iff_enumerated {x} : x ∈ A ↔ ∃ i s:ℕ, ( ¬fs_in (C s).r i 
 `N_aux_0` asserts that if `x∈A`, the requirement that enumerated `x` into `A` is `≤ x/2`.
 This is only used as a helper lemma for `N_aux_1`.
 -/
-lemma N_aux_0 (hx:x∈A) : (mem_A_iff_enumerated.mp hx).choose ≤ x/2 := by
+lemma N_aux_0 {x} (hx:x∈A) : (mem_A_iff_enumerated.mp hx).choose ≤ x/2 := by
   have := (mem_A_iff_enumerated.mp hx).choose_spec.choose_spec.2.2.1.2
   omega
 /-- `N_aux_2` states that under the specified conditions, `ywit` will be enumerated into `R`. -/
@@ -538,7 +539,7 @@ lemma N_aux_2 {ywit s x}
   have := @fold_preserves_R_mem _ s (step s ywit prev) (range' (ywit + 1) (s - 1 - ywit)).reverse a3
   simp at this; simpa
 /-- We show that `f` is injective. -/
-lemma hf_injective_aux (hx:x∈A) (hy:y∈A) (hxy:x≠y) : choose (mem_A_iff_enumerated.mp hx) ≠ choose (mem_A_iff_enumerated.mp hy) := by
+lemma hf_injective_aux {x y} (hx:x∈A) (hy:y∈A) (hxy:x≠y) : choose (mem_A_iff_enumerated.mp hx) ≠ choose (mem_A_iff_enumerated.mp hy) := by
 
   have hxs := choose_spec (mem_A_iff_enumerated.mp hx)
   have hys := choose_spec (mem_A_iff_enumerated.mp hy)
@@ -613,7 +614,7 @@ by
     obtain ⟨left, right⟩ := property
     obtain ⟨left_1, right_1⟩ := property_1
     simp_all only [Subtype.mk.injEq, not_false_eq_true, forall_const]
-theorem hf_le : ∀ x, @f i x ≤ i :=
+theorem hf_le {i} : ∀ x, @f i x ≤ i :=
 by
   intro x
   have a0 := N_aux_0 x.property.left
@@ -622,7 +623,7 @@ by
   simp at a0 ⊢
   have : ↑x/2 ≤  i := by omega
   linarith
-theorem hf_SetInj : Set.InjOn (@f i) ({x | ↑x∈A ∧ x ≤ 2*i}) := Function.Injective.injOn (hf_injective i)
+theorem hf_SetInj {i} : Set.InjOn (@f i) ({x | ↑x∈A ∧ x ≤ 2*i}) := Function.Injective.injOn (hf_injective i)
 
 
 /--

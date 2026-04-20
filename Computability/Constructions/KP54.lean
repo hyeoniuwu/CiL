@@ -54,7 +54,7 @@ def c_finite_ext :=
   )
   c_zero
 @[cp] theorem c_finite_ext_prim : code_prim c_finite_ext := by unfold c_finite_ext; apply_cp
-@[simp] theorem c_finite_ext_evp : evalp O c_finite_ext = λ x:ℕ ↦ c2n (dovetail (KP54.c_kp54_aux x.l x.r)) := by
+@[simp] theorem c_finite_ext_evp {O} : evalp O c_finite_ext = λ x:ℕ ↦ c2n (dovetail (KP54.c_kp54_aux x.l x.r)) := by
   simp [c_finite_ext, KP54.c_kp54_aux]
 end c_finite_ext
 
@@ -127,7 +127,7 @@ def c_kp54 := c_prec1 0 c_kp54_indt
 -- set_option pp.raw true in
 -- set_option maxRecDepth 5006 in
 -- set_option trace.Meta.Tactic.simp true in
-@[simp] theorem c_kp54_evp : evalp (K0 (λ_↦0)) c_kp54 x = KP54.KP54 x := by
+@[simp] theorem c_kp54_evp {x} : evalp (K0 (λ_↦0)) c_kp54 x = KP54.KP54 x := by
   induction x with
   | zero => rfl
   | succ s_1 ih =>

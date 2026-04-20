@@ -26,16 +26,16 @@ namespace Computability.Code
 
 section diverge
 def c_diverge := rfind' (c_const 1)
-@[simp] theorem c_diverge_ev : eval O c_diverge x = Part.none := by
+@[simp] theorem c_diverge_ev {O x} : eval O c_diverge x = Part.none := by
   simp [c_diverge,eval]
   apply Part.eq_none_iff.mpr
   simp
-theorem c_diverge_ev' : eval O c_diverge = λ _ ↦ Part.none := by funext; simp
+theorem c_diverge_ev' {O} : eval O c_diverge = λ _ ↦ Part.none := by funext; simp
 end diverge
 
 section ifz1
 def c_ifz1 (c) (a b:ℕ) := c_add.comp₂ (c_mul.comp₂ (c_const b) (c_sg.comp c)) (c_mul.comp₂ (c_const a) (c_sg'.comp c))
-@[simp] theorem c_ifz1_ev (hc:code_total O c) : eval O (c_ifz1 c a b) x = if (eval O c x=Part.some 0) then Part.some a else Part.some b := by
+@[simp] theorem c_ifz1_ev {O c a b x} (hc:code_total O c) : eval O (c_ifz1 c a b) x = if (eval O c x=Part.some 0) then Part.some a else Part.some b := by
   simp [c_ifz1]
   simp [eval]
   simp [Seq.seq]
@@ -44,7 +44,7 @@ def c_ifz1 (c) (a b:ℕ) := c_add.comp₂ (c_mul.comp₂ (c_const b) (c_sg.comp 
   split
   next h => simp [Part.get_eq_iff_eq_some.mp h]
   next h => simp [Part.ne_of_get_ne' h]
-theorem c_ifz1_total (hc:code_total O c) : code_total O (c_ifz1 c a b) := by
+theorem c_ifz1_total {O c a b} (hc:code_total O c) : code_total O (c_ifz1 c a b) := by
   intro x
   simp [c_ifz1_ev hc]
   split
@@ -54,7 +54,7 @@ end ifz1
 
 section ite
 def c_ite (c a b:Computability.Code) := c_eval.comp₂ (c_ifz1 c a.c2n b.c2n) (c_id)
-@[simp] theorem c_ite_ev (hc:code_total O c) : eval O (c_ite c a b) x = if (eval O c x=Part.some 0) then (eval O a x) else (eval O b x) := by
+@[simp] theorem c_ite_ev {O c a b x} (hc:code_total O c) : eval O (c_ite c a b) x = if (eval O c x=Part.some 0) then (eval O a x) else (eval O b x) := by
   simp [c_ite]
   simp [Seq.seq]
   have d := @c_ifz1_total O c a.c2n b.c2n hc x
@@ -84,7 +84,7 @@ end ite
 section if_le_te'
 -- like c_if_le_te, but allows either branch to diverge
 def c_if_le_te' (c1 c2 c3 c4:Code) := c_ite (c_sub.comp₂ c1 c2) c3 c4
-@[simp] theorem c_if_le_te'_ev (hc1:code_total O c1) (hc2:code_total O c2) : eval O (c_if_le_te' c1 c2 c3 c4) x = if (eval O c1 x).get (hc1 x) ≤ (eval O c2 x).get (hc2 x) then (eval O c3 x) else (eval O c4 x) := by
+@[simp] theorem c_if_le_te'_ev {O c1 c2 c3 c4 x} (hc1:code_total O c1) (hc2:code_total O c2) : eval O (c_if_le_te' c1 c2 c3 c4) x = if (eval O c1 x).get (hc1 x) ≤ (eval O c2 x).get (hc2 x) then (eval O c3 x) else (eval O c4 x) := by
   simp [c_if_le_te']
   have : code_total O (c_sub.comp₂ c1 c2) := by
     apply total_comp_of $ prim_total c_sub_prim
@@ -100,7 +100,7 @@ end if_le_te'
 section if_eq_te'
 -- like c_if_eq_te, but allows either branch to diverge
 def c_if_eq_te' (c1 c2 c3 c4:Code) := c_ite (c_dist.comp₂ c1 c2) c3 c4
-@[simp] theorem c_if_eq_te'_ev (hc1:code_total O c1) (hc2:code_total O c2) : eval O (c_if_eq_te' c1 c2 c3 c4) x = if (eval O c1 x).get (hc1 x) = (eval O c2 x).get (hc2 x) then (eval O c3 x) else (eval O c4 x) := by
+@[simp] theorem c_if_eq_te'_ev {O c1 c2 c3 c4 x} (hc1:code_total O c1) (hc2:code_total O c2) : eval O (c_if_eq_te' c1 c2 c3 c4) x = if (eval O c1 x).get (hc1 x) = (eval O c2 x).get (hc2 x) then (eval O c3 x) else (eval O c4 x) := by
   simp [c_if_eq_te']
   have : code_total O (c_dist.comp₂ c1 c2) := by
     apply total_comp_of $ prim_total c_dist_prim
@@ -113,7 +113,7 @@ end if_eq_te'
 
 section ifdom
 def c_ifdom (c a:Computability.Code) := c_add.comp₂ (zero.comp c) a
-@[simp] theorem c_ifdom_ev  : eval O (c_ifdom c a) x = if (eval O c x).Dom then (eval O a x) else Part.none := by
+@[simp] theorem c_ifdom_ev {O c a x}  : eval O (c_ifdom c a) x = if (eval O c x).Dom then (eval O a x) else Part.none := by
   simp [c_ifdom]
   simp [eval]
   simp [Seq.seq]
@@ -127,21 +127,21 @@ end ifdom
 section evaln₁
 def c_evaln₁ := c_evaln.comp₃ (left.comp right) (left) (right.comp right)
 def evaln₁ (O:ℕ→ℕ):ℕ→ℕ := fun abc => Encodable.encode (evaln O abc.r.r abc.l.n2c abc.r.l)
-theorem c_evaln₁_evp : evalp O c_evaln₁ = evaln₁ O := by
+theorem c_evaln₁_evp {O} : evalp O c_evaln₁ = evaln₁ O := by
   simp [c_evaln₁]
   exact rfl
-theorem prim_evaln₁ : Nat.PrimrecIn O (evaln₁ O) := by
+theorem prim_evaln₁ {O} : Nat.PrimrecIn O (evaln₁ O) := by
   simp [← c_evaln₁_evp]
 end evaln₁
 
 section eval₁
 def eval₁ (O:ℕ→ℕ):ℕ→.ℕ := fun ex => eval O ex.l.n2c ex.r
 def c_eval₁ := c_eval
-@[simp] theorem c_eval₁_ev : eval O c_eval₁ = eval₁ O := by
+@[simp] theorem c_eval₁_ev {O} : eval O c_eval₁ = eval₁ O := by
   simp [c_eval₁]
   exact rfl
 
-theorem rec_eval₁ : Nat.RecursiveIn O (eval₁ O) := Nat.RecursiveIn.Rin.eval
+theorem rec_eval₁ {O} : Nat.RecursiveIn O (eval₁ O) := Nat.RecursiveIn.Rin.eval
 end eval₁
 
 end Computability.Code
@@ -162,6 +162,6 @@ theorem Rin.evalRecInO' {O} {f:ℕ→.ℕ} (h:Nat.RecursiveIn O f):Nat.Recursive
   simp only [Part.bind_eq_bind]
   refine Nat.RecursiveIn.comp ?_ h
   apply rec_eval₁
-theorem Rin.none : Nat.RecursiveIn O fun _ => Part.none := by
+theorem Rin.none {O} : Nat.RecursiveIn O fun _ => Part.none := by
   rw [← c_diverge_ev']
   exact RecursiveIn_of_eval

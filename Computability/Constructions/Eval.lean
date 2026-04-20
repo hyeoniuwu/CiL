@@ -170,13 +170,13 @@ def c_evaln_aux :=
 /-- api: `Nat.pair x (Nat.pair code s)` -/
 def c_evaln :=
   c_list_getI.comp₂ (c_list_getLastI.comp $ c_evaln_aux.comp (pair (c_const 17) right)) left
-theorem c_evaln_evp_aux_x_0_0 : evalp O (c_evaln) (Nat.pair x (Nat.pair 0 0)) = o2n (evaln O 0 0 x) := by
+theorem c_evaln_evp_aux_x_0_0 {O x} : evalp O (c_evaln) (Nat.pair x (Nat.pair 0 0)) = o2n (evaln O 0 0 x) := by
   unfold c_evaln; unfold c_evaln_aux
   lift_lets; extract_lets; expose_names
   rw [show Nat.pair 0 0 = 0 from rfl]
   simp [getI, evaln]
 
-theorem c_evaln_evp_aux_0_np1 : evalp O (c_evaln) (Nat.pair x (Nat.pair (n+1) 0)) = o2n (evaln O 0 (n+1).n2c x) := by
+theorem c_evaln_evp_aux_0_np1 {O x n} : evalp O (c_evaln) (Nat.pair x (Nat.pair (n+1) 0)) = o2n (evaln O 0 (n+1).n2c x) := by
   unfold c_evaln; unfold c_evaln_aux
   lift_lets; extract_lets; expose_names
 
@@ -196,7 +196,7 @@ theorem c_evaln_evp_aux_0_np1 : evalp O (c_evaln) (Nat.pair x (Nat.pair (n+1) 0)
   have hs : evalp O s covrec_inp = 0 := by simp [s,code_s,covrec_inp,hkP1]
   simp [hs, getI, evaln]
 
-theorem c_evaln_evp_aux (hcode_val:code≤4) :
+theorem c_evaln_evp_aux {O code x s} (hcode_val:code≤4) :
   evalp O (c_evaln) (Nat.pair x (Nat.pair code (s+1)))
     =
   o2n (evaln O (s+1) code.n2c x)
@@ -304,26 +304,26 @@ theorem c_evaln_evp_aux (hcode_val:code≤4) :
   | n+5 => simp at hcode_val
 
 theorem unpair_right_le' (n:ℕ) : n.r ≤ n := by unfold r; exact unpair_right_le n
-lemma c_evaln_bounds_0 : n.div2.div2 < n+5 := by
+lemma c_evaln_bounds_0 {n} : n.div2.div2 < n+5 := by
   simp only [Nat.div2_val]
   exact lt_of_le_of_lt (le_trans (Nat.div_le_self _ _) (Nat.div_le_self _ _)) (Nat.succ_le_succ (Nat.le_add_right _ _))
-lemma c_evaln_bounds_aux : Nat.pair (n + 4 + 1) (s+1) ≥ 1 := by exact pair_nonzero_right_pos
-lemma c_evaln_bounds_left : Nat.pair n.div2.div2.l (s + 1) ≤ Nat.pair (n + 4 + 1) (s + 1) - 1 := by
+lemma c_evaln_bounds_aux {n s} : Nat.pair (n + 4 + 1) (s+1) ≥ 1 := by exact pair_nonzero_right_pos
+lemma c_evaln_bounds_left {n s} : Nat.pair n.div2.div2.l (s + 1) ≤ Nat.pair (n + 4 + 1) (s + 1) - 1 := by
   apply le_of_lt_succ
   simp [Nat.sub_add_cancel c_evaln_bounds_aux]
   apply pair_lt_pair_left _ (lt_of_le_of_lt (n.div2.div2).unpair_left_le c_evaln_bounds_0)
-lemma c_evaln_bounds_right : Nat.pair n.div2.div2.r (s + 1) ≤ Nat.pair (n + 4 + 1) (s + 1) - 1 := by
+lemma c_evaln_bounds_right {n s} : Nat.pair n.div2.div2.r (s + 1) ≤ Nat.pair (n + 4 + 1) (s + 1) - 1 := by
   apply le_of_lt_succ
   simp [Nat.sub_add_cancel c_evaln_bounds_aux]
   apply pair_lt_pair_left _ (lt_of_le_of_lt (n.div2.div2).unpair_right_le c_evaln_bounds_0)
-lemma c_evaln_bounds_3 : Nat.pair n.div2.div2 (s + 1) ≤ Nat.pair (n + 4 + 1) (s + 1) - 1 := by
+lemma c_evaln_bounds_3 {n s} : Nat.pair n.div2.div2 (s + 1) ≤ Nat.pair (n + 4 + 1) (s + 1) - 1 := by
   apply le_of_lt_succ
   simp [Nat.sub_add_cancel c_evaln_bounds_aux]
   apply pair_lt_pair_left
   apply lt_add_one_of_le
   simp [div2_val]
   exact c_replace_oracle_evp_aux_nMod4_bounds3
-lemma c_evaln_bounds_4 : Nat.pair (n + 4 + 1) s ≤ Nat.pair (n + 4 + 1) (s + 1) - 1 := by
+lemma c_evaln_bounds_4 {n s} : Nat.pair (n + 4 + 1) s ≤ Nat.pair (n + 4 + 1) (s + 1) - 1 := by
   apply le_of_lt_succ
   simp [Nat.sub_add_cancel c_evaln_bounds_aux]
   apply pair_lt_pair_right
@@ -334,7 +334,7 @@ The overall structure of the proof is the same as in `c_replace_oracle_evp_aux_n
 Computability/Constructions/CovRec.lean, but some equivalence proofs are more involved, requiring
 unravelling through if statements case by case.
 -/
-theorem c_evaln_evp_aux_nMod4 :
+theorem c_evaln_evp_aux_nMod4 {O x n s} :
   evalp O (c_evaln) ⟪x, (n+4)+1, s+1⟫
     =
   let m  := n.div2.div2
@@ -643,7 +643,7 @@ theorem c_evaln_evp_aux_nMod4 :
     rw [show x.succ.succ.succ.succ=x+4 from rfl] at contrad
     simp at contrad
 
-@[simp] theorem c_evaln_evp: evalp O (c_evaln) (Nat.pair x (Nat.pair code s)) =
+@[simp] theorem c_evaln_evp {O x code s}: evalp O (c_evaln) (Nat.pair x (Nat.pair code s)) =
   o2n (evaln O s code.n2c x) := by
 
   let code_s:=Nat.pair code s
@@ -847,11 +847,11 @@ theorem c_evaln_evp_aux_nMod4 :
 
 @[cp] theorem c_evaln_prim : code_prim (c_evaln) := by unfold c_evaln; apply_cp
 
-@[simp] theorem c_evaln_ev: eval O c_evaln (Nat.pair x (Nat.pair code s)) = o2n (evaln O s code.n2c x) := by
+@[simp] theorem c_evaln_ev {O x code s}: eval O c_evaln (Nat.pair x (Nat.pair code s)) = o2n (evaln O s code.n2c x) := by
   rw [← evalp_eq_eval c_evaln_prim];
   simp only [PFun.coe_val, c_evaln_evp, Part.coe_some]
 
-@[simp] theorem c_evaln_evp': evalp O (c_evaln) = fun x => o2n $ evaln O x.r.r x.r.l.n2c x.l := by
+@[simp] theorem c_evaln_evp' {O}: evalp O (c_evaln) = fun x => o2n $ evaln O x.r.r x.r.l.n2c x.l := by
   funext x
   have : x = (Nat.pair x.l (Nat.pair x.r.l x.r.r)) := by simp
   rw (config:={occs:=.pos [1]}) [this]
@@ -862,17 +862,17 @@ end evaln
 section eval
 namespace Computability.Code
 def c_eval := (c_rfindOpt (c_evaln.comp₃ (right.comp left) (left.comp left) right))
-@[simp] theorem c_eval_ev: eval O c_eval (Nat.pair c x) = eval O c.n2c x := by
+@[simp] theorem c_eval_ev {O c x}: eval O c_eval (Nat.pair c x) = eval O c.n2c x := by
   simp only [c_eval, comp₃, comp₂]
   have : code_total O ((c_evaln.comp ((right.comp left).pair ((left.comp left).pair right)))) := by apply prim_total; apply_cp
   simp [c_rfindOpt_ev this]
   rw [eval_eq_rfindOpt]
   simp [eval,Seq.seq]
-@[simp] theorem c_eval_ev': eval O c_eval = λ x => eval O (n2c x.l) x.r := by
+@[simp] theorem c_eval_ev' {O}: eval O c_eval = λ x => eval O (n2c x.l) x.r := by
   funext x
   rw (config:={occs:=.pos [1]}) [show x = ⟪x.l, x.r⟫ from by simp]
   exact c_eval_ev
-theorem _root_.Nat.RecursiveIn.Rin.eval:Nat.RecursiveIn O (fun ex => eval O ex.l.n2c ex.r) := by
+theorem _root_.Nat.RecursiveIn.Rin.eval {O} : Nat.RecursiveIn O (fun ex => eval O ex.l.n2c ex.r) := by
   apply exists_code.mpr
   use c_eval
   funext x

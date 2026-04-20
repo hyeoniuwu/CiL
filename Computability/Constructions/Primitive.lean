@@ -66,11 +66,11 @@ end comp₄
 section comp₃
 namespace Computability.Code
 def comp₃ := fun c1 c2 c3 c4 : Code => c1.comp₂ c2 (pair c3 c4)
-@[cp] theorem comp₃_prim (hc1 : code_prim c1) (hc2 : code_prim c2) (hc3 : code_prim c3) (hc4 : code_prim c4) : code_prim (comp₃ c1 c2 c3 c4) := by unfold comp₃; apply_cp
-@[simp] theorem comp₃_evp {O : ℕ → ℕ} : evalp O (comp₃ c1 c2 c3 c4) = λ x ↦
+@[cp] theorem comp₃_prim {c1 c2 c3 c4} (hc1 : code_prim c1) (hc2 : code_prim c2) (hc3 : code_prim c3) (hc4 : code_prim c4) : code_prim (comp₃ c1 c2 c3 c4) := by unfold comp₃; apply_cp
+@[simp] theorem comp₃_evp {c1 c2 c3 c4} {O : ℕ → ℕ} : evalp O (comp₃ c1 c2 c3 c4) = λ x ↦
   evalp O c1 ⟪evalp O c2 x, evalp O c3 x, evalp O c4 x⟫ := by
   simp [comp₃,evalp]
-@[simp] theorem comp₃_ev {O : ℕ → ℕ} : eval O (comp₃ c1 c2 c3 c4) = λ x ↦
+@[simp] theorem comp₃_ev {c1 c2 c3 c4} {O : ℕ → ℕ} : eval O (comp₃ c1 c2 c3 c4) = λ x ↦
   ⟪eval O c2 x, eval O c3 x, eval O c4 x⟫ >>= (eval O c1)
   := by
     simp [comp₃, eval, comp₂, Seq.seq]
@@ -82,9 +82,9 @@ section id
 namespace Computability.Code
 def c_id := left.pair right
 @[cp] theorem c_id_prim : code_prim c_id := by unfold c_id; apply_cp
-@[simp] theorem c_id_evp {O : ℕ → ℕ} : evalp O c_id n = n := by simp [c_id,evalp]
+@[simp] theorem c_id_evp {O : ℕ → ℕ} {n} : evalp O c_id n = n := by simp [c_id,evalp]
 theorem c_id_evp' {O : ℕ → ℕ} : evalp O c_id = id := by funext x; simp
-@[simp] theorem c_id_ev {O : ℕ → ℕ} : eval O c_id n = n := by simp [c_id,eval,Seq.seq]
+@[simp] theorem c_id_ev {O : ℕ → ℕ} {n} : eval O c_id n = n := by simp [c_id,eval,Seq.seq]
 end Computability.Code
 theorem Nat.PrimrecIn.id {O : ℕ → ℕ} : Nat.PrimrecIn O id := by rw [← c_id_evp']; exact code_prim_prop
 end id
@@ -94,7 +94,7 @@ namespace Computability.Code
 def c_const : ℕ → Code
 | 0 => zero
 | n+1 => comp succ (c_const n)
-@[cp] theorem c_const_prim : code_prim (c_const n) := by
+@[cp] theorem c_const_prim {n} : code_prim (c_const n) := by
   induction n
   · unfold c_const; exact code_prim.zero
   · unfold c_const
@@ -108,6 +108,7 @@ def c_const : ℕ → Code
 | n+1, m => by simp! [c_const_ev n m]
 end Computability.Code
 end const
+
 
 section curry
 namespace Computability.Code
@@ -130,8 +131,8 @@ theorem _curry_eq_c_curry : c_curry = curry := by
   rw [_id_eq_c_id]
   rw [_const_eq_c_const]
 -- @[simp] theorem c_curry_prim : code_prim (c_curry c n) := by
-@[simp] theorem c_curry_evp {O : ℕ → ℕ} : evalp O (c_curry c n) x = evalp O c ⟪n, x⟫ := by simp [c_curry,evalp]
-@[simp] theorem c_curry_ev {O : ℕ → ℕ}: eval O (c_curry c n) x = eval O c ⟪n, x⟫ := by rw [_curry_eq_c_curry]; exact eval_curry c n x
+@[simp] theorem c_curry_evp {O : ℕ → ℕ} {c n x} : evalp O (c_curry c n) x = evalp O c ⟪n, x⟫ := by simp [c_curry,evalp]
+@[simp] theorem c_curry_ev {O : ℕ → ℕ} {c n x}: eval O (c_curry c n) x = eval O c ⟪n, x⟫ := by rw [_curry_eq_c_curry]; exact eval_curry c n x
 end Computability.Code
 end curry
 
@@ -224,16 +225,16 @@ end pow
 section prec1
 namespace Computability.Code
 def c_prec1 (m) (cf:Code) := ((prec (c_const m) (cf.comp right)).comp (zero.pair c_id))
-@[cp] theorem c_prec1_prim (hcf : code_prim cf) : code_prim (@c_prec1 m cf) := by unfold c_prec1; apply_cp
-@[simp] theorem c_prec1_evp {O : ℕ → ℕ} : evalp O (c_prec1 m cf) = (fun n => n.rec m fun y IH => evalp O cf <| Nat.pair y IH) := by simp [c_prec1,evalp]
+@[cp] theorem c_prec1_prim {cf m} (hcf : code_prim cf) : code_prim (@c_prec1 m cf) := by unfold c_prec1; apply_cp
+@[simp] theorem c_prec1_evp {cf m} {O : ℕ → ℕ} : evalp O (c_prec1 m cf) = (fun n => n.rec m fun y IH => evalp O cf <| Nat.pair y IH) := by simp [c_prec1,evalp]
 end Computability.Code
-theorem Nat.PrimrecIn.prec1 {O : ℕ → ℕ} : Nat.PrimrecIn O (fun n => n.rec m fun y IH => evalp O cf <| Nat.pair y IH) := by rw [← c_prec1_evp]; exact code_prim_prop
+theorem Nat.PrimrecIn.prec1 {cf m} {O : ℕ → ℕ} : Nat.PrimrecIn O (fun n => n.rec m fun y IH => evalp O cf <| Nat.pair y IH) := by rw [← c_prec1_evp]; exact code_prim_prop
 end prec1
 section casesOn1
 namespace Computability.Code
 def c_casesOn1 (m) (cf:Code) := @c_prec1 m (cf.comp left)
-@[cp] theorem c_casesOn1_prim (hcf : code_prim cf): code_prim (c_casesOn1 m cf) := by unfold c_casesOn1; apply_cp
-@[simp] theorem c_casesOn1_evp {O : ℕ → ℕ} : evalp O (@c_casesOn1 m cf) = (Nat.casesOn · m (evalp O cf)) := by simp [c_casesOn1,evalp]
+@[cp] theorem c_casesOn1_prim {cf m} (hcf : code_prim cf): code_prim (c_casesOn1 m cf) := by unfold c_casesOn1; apply_cp
+@[simp] theorem c_casesOn1_evp {cf m} {O : ℕ → ℕ} : evalp O (@c_casesOn1 m cf) = (Nat.casesOn · m (evalp O cf)) := by simp [c_casesOn1,evalp]
 end Computability.Code
 end casesOn1
 
@@ -300,12 +301,12 @@ def c_if_eq_te :=
   have cp_eq : code_prim eq := by apply_cp;
   apply_cp
 
-@[simp] theorem c_if_eq_te_evp {O : ℕ → ℕ} : evalp O c_if_eq_te ⟪a,b,c,d⟫ = if a=b then c else d := by
+@[simp] theorem c_if_eq_te_evp {O : ℕ → ℕ} {a b c d} : evalp O c_if_eq_te ⟪a,b,c,d⟫ = if a=b then c else d := by
   simp [c_if_eq_te,evalp];
   cases Classical.em (a=b) with
   | inl h => simp [h]
   | inr h => simp [h]
-@[simp] theorem c_if_eq_te_ev {O : ℕ → ℕ} : eval O c_if_eq_te ⟪a,b,c,d⟫ = if a=b then c else d := by
+@[simp] theorem c_if_eq_te_ev {O : ℕ → ℕ} {a b c d} : eval O c_if_eq_te ⟪a,b,c,d⟫ = if a=b then c else d := by
   rw [← evalp_eq_eval c_if_eq_te_prim];
   simp
 theorem c_if_eq_te_evp' {O : ℕ → ℕ} : evalp O c_if_eq_te = fun x => if x.l.l=x.l.r then x.r.l else x.r.r := by
@@ -333,7 +334,7 @@ def c_if_lt_te :=
   (c_mul.comp₂ (c_not.comp lt) (left.comp right))
 @[cp] theorem c_if_lt_te_prim : code_prim c_if_lt_te := by
   repeat (first|assumption|apply_rules using cp|simp|constructor)
-@[simp] theorem c_if_lt_te_evp {O : ℕ → ℕ} : evalp O c_if_lt_te ⟪a,b,c,d⟫ = if a<b then c else d := by
+@[simp] theorem c_if_lt_te_evp {O : ℕ → ℕ} {a b c d} : evalp O c_if_lt_te ⟪a,b,c,d⟫ = if a<b then c else d := by
   simp [c_if_lt_te,evalp];
   -- funext xs
   cases Classical.em (a<b) with
@@ -342,7 +343,7 @@ def c_if_lt_te :=
     have h1: a+1-b>0 := by exact tsub_pos_iff_not_le.mpr h
     have h0: ¬(a+1-b=0) := by exact Nat.ne_zero_of_lt h1
     simp [h, h0]
-@[simp] theorem c_if_lt_te_ev {O : ℕ → ℕ} : eval O c_if_lt_te ⟪a,b,c,d⟫ = if a<b then c else d := by
+@[simp] theorem c_if_lt_te_ev {O : ℕ → ℕ} {a b c d} : eval O c_if_lt_te ⟪a,b,c,d⟫ = if a<b then c else d := by
   rw [← evalp_eq_eval c_if_lt_te_prim]; simp
 end Computability.Code
 end if_lt_te
@@ -353,13 +354,13 @@ namespace Computability.Code
 /-- eval c_if_le_te (x,y) = [x≤y] -/
 def c_if_le_te := c_if_lt_te.comp (pair (pair (left.comp left) (succ.comp $ right.comp left)) right)
 @[cp] theorem c_if_le_te_prim : code_prim c_if_le_te := by unfold c_if_le_te; apply_cp
-@[simp] theorem c_if_le_te_evp {O : ℕ → ℕ} : evalp O c_if_le_te ⟪a,b,c,d⟫ = if a≤b then c else d := by
+@[simp] theorem c_if_le_te_evp {O : ℕ → ℕ} {a b c d} : evalp O c_if_le_te ⟪a,b,c,d⟫ = if a≤b then c else d := by
   simp [c_if_le_te,evalp];
   -- funext xs
   cases Classical.em (a<b+1) with
   | inl h => simp [h, Nat.lt_add_one_iff.mp h]
   | inr h => simp [h, Nat.lt_add_one_iff.not.mp h]
-@[simp] theorem c_if_le_te_ev {O : ℕ → ℕ} : eval O c_if_le_te ⟪a,b,c,d⟫ = if a≤b then c else d := by
+@[simp] theorem c_if_le_te_ev {O : ℕ → ℕ} {a b c d} : eval O c_if_le_te ⟪a,b,c,d⟫ = if a≤b then c else d := by
   rw [← evalp_eq_eval c_if_le_te_prim]; simp
 end Computability.Code
 end if_le_te
@@ -369,9 +370,9 @@ namespace Computability.Code
 /-- eval c_flip (x,y) = (y,x) -/
 def c_flip := pair right left
 @[cp] theorem c_flip_prim : code_prim c_flip := by unfold c_flip; apply_cp
-@[simp] theorem c_flip_evp {O : ℕ → ℕ} : evalp O c_flip ⟪a, b⟫ = ⟪b, a⟫ := by
+@[simp] theorem c_flip_evp {O : ℕ → ℕ} {a b} : evalp O c_flip ⟪a, b⟫ = ⟪b, a⟫ := by
   simp [c_flip,evalp];
-@[simp] theorem c_flip_ev {O : ℕ → ℕ} : eval O c_flip ⟪a, b⟫ = ⟪b, a⟫ := by
+@[simp] theorem c_flip_ev {O : ℕ → ℕ} {a b} : eval O c_flip ⟪a, b⟫ = ⟪b, a⟫ := by
   rw [← evalp_eq_eval c_flip_prim]; simp
 end Computability.Code
 end flip
@@ -382,8 +383,8 @@ namespace Computability.Code
 /-- eval c_if_gt_te (x,y) = [x>y] -/
 def c_if_gt_te := c_if_lt_te.comp (pair (c_flip.comp left) right)
 @[cp] theorem c_if_gt_te_prim : code_prim c_if_gt_te := by unfold c_if_gt_te; apply_cp
-@[simp] theorem c_if_gt_te_evp {O : ℕ → ℕ} : evalp O c_if_gt_te ⟪a,b,c,d⟫ = if a>b then c else d := by simp [c_if_gt_te,evalp];
-@[simp] theorem c_if_gt_te_ev {O : ℕ → ℕ} : eval O c_if_gt_te ⟪a,b,c,d⟫ = if a>b then c else d := by
+@[simp] theorem c_if_gt_te_evp {O : ℕ → ℕ} {a b c d} : evalp O c_if_gt_te ⟪a,b,c,d⟫ = if a>b then c else d := by simp [c_if_gt_te,evalp];
+@[simp] theorem c_if_gt_te_ev {O : ℕ → ℕ} {a b c d} : eval O c_if_gt_te ⟪a,b,c,d⟫ = if a>b then c else d := by
   rw [← evalp_eq_eval c_if_gt_te_prim]; simp
 end Computability.Code
 end if_gt_te
@@ -392,8 +393,8 @@ namespace Computability.Code
 /-- eval c_if_ge_te (x,y) = [x>y] -/
 def c_if_ge_te := c_if_le_te.comp (pair (c_flip.comp left) right)
 @[cp] theorem c_if_ge_te_prim : code_prim c_if_ge_te := by unfold c_if_ge_te; apply_cp
-@[simp] theorem c_if_ge_te_evp {O : ℕ → ℕ} : evalp O c_if_ge_te ⟪a,b,c,d⟫ = if a≥b then c else d := by simp [c_if_ge_te,evalp];
-@[simp] theorem c_if_ge_te_ev {O : ℕ → ℕ} : eval O c_if_ge_te ⟪a,b,c,d⟫ = if a≥b then c else d := by
+@[simp] theorem c_if_ge_te_evp {O : ℕ → ℕ} {a b c d} : evalp O c_if_ge_te ⟪a,b,c,d⟫ = if a≥b then c else d := by simp [c_if_ge_te,evalp];
+@[simp] theorem c_if_ge_te_ev {O : ℕ → ℕ} {a b c d} : eval O c_if_ge_te ⟪a,b,c,d⟫ = if a≥b then c else d := by
   rw [← evalp_eq_eval c_if_ge_te_prim]; simp
 end Computability.Code
 end if_ge_te
@@ -410,7 +411,7 @@ def c_ifz := c_add.comp $ pair (c_mul.comp $ pair (c_sg'.comp left) (left.comp r
   | inl h => simp [h]
   | inr h => simp [h]
 theorem c_ifz_ev' {O : ℕ → ℕ} : eval O c_ifz = fun (cab:ℕ) => if cab.l=0 then cab.r.l else cab.r.r := by rw [← evalp_eq_eval c_ifz_prim]; simp only [c_ifz_evp];
-@[simp] theorem c_ifz_ev {O : ℕ → ℕ} : eval O c_ifz cab = if cab.l=0 then cab.r.l else cab.r.r := by
+@[simp] theorem c_ifz_ev {O : ℕ → ℕ} {cab} : eval O c_ifz cab = if cab.l=0 then cab.r.l else cab.r.r := by
   simp [c_ifz_ev']
 end Computability.Code
 end ifz
@@ -427,7 +428,7 @@ def c_ift := c_ifz.comp₂ (c_sg'.comp $ left) right
   | inl h => simp [h, n2b]
   | inr h => simp [h, n2b]
 theorem c_ift_ev' {O : ℕ → ℕ} : eval O c_ift = fun (cab:ℕ) => if (n2b cab.l) then cab.r.l else cab.r.r := by rw [← evalp_eq_eval c_ift_prim]; simp only [c_ift_evp];
-@[simp] theorem c_ift_ev {O : ℕ → ℕ} : eval O c_ift cab = if (n2b cab.l) then cab.r.l else cab.r.r := by
+@[simp] theorem c_ift_ev {O : ℕ → ℕ} {cab} : eval O c_ift cab = if (n2b cab.l) then cab.r.l else cab.r.r := by
   simp [c_ift_ev']
 end Computability.Code
 end ift
@@ -439,8 +440,8 @@ def c_nat_iterate (cf:Code) :=
   c_id
   (cf.comp (right.comp right))
 
-@[cp] theorem c_nat_iterate_prim (hcf : code_prim cf) : code_prim (c_nat_iterate cf) := by unfold c_nat_iterate; apply_cp
-@[simp] theorem c_nat_iterate_evp {O : ℕ → ℕ} : evalp O (c_nat_iterate cf) ⟪input, i⟫ = (evalp O cf)^[i] (input) := by
+@[cp] theorem c_nat_iterate_prim {cf} (hcf : code_prim cf) : code_prim (c_nat_iterate cf) := by unfold c_nat_iterate; apply_cp
+@[simp] theorem c_nat_iterate_evp {O : ℕ → ℕ} {cf input i} : evalp O (c_nat_iterate cf) ⟪input, i⟫ = (evalp O cf)^[i] (input) := by
   simp [c_nat_iterate]
   induction i with
   | zero => simp

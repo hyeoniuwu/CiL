@@ -219,10 +219,10 @@ def c_land := c_ifz.comp₃ left
   zero
   (c_ifz.comp₃ right zero (c_const 1))
 @[cp] theorem c_land_prim : code_prim c_land := by unfold c_land; apply_cp
-theorem c_land_evp : evalp O c_land ⟪a, b⟫ = b2n (n2b a && n2b b) := by
+theorem c_land_evp {O a b} : evalp O c_land ⟪a, b⟫ = b2n (n2b a && n2b b) := by
   simp [c_land, n2b, b2n]
   split <;> simp_all
-@[simp] theorem c_land_evp' : (fun a b => n2b $ evalp O c_land ⟪b2n a, b2n b⟫) = Bool.and := by
+@[simp] theorem c_land_evp' {O} : (fun a b => n2b $ evalp O c_land ⟪b2n a, b2n b⟫) = Bool.and := by
   funext a b;
   simp [c_land, n2b, b2n]
 end Computability.Code
@@ -232,7 +232,7 @@ section or
 namespace Computability.Code
 def c_or := c_bitwise (c_lor)
 @[cp] theorem c_or_prim : code_prim c_or := by unfold c_or; apply_cp
-@[simp] theorem c_or_evp: evalp O c_or ⟪x,y⟫ = (x ||| y) := by simp [c_or]; rfl
+@[simp] theorem c_or_evp {O x y}: evalp O c_or ⟪x,y⟫ = (x ||| y) := by simp [c_or]; rfl
 end Computability.Code
 end or
 

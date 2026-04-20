@@ -4,6 +4,7 @@ open Lake DSL
 package «computability» where
   -- Settings applied to both builds and interactive editing
   leanOptions := #[
+    ⟨`autoImplicit, false⟩,
     ⟨`pp.unicode.fun, true⟩ -- pretty-prints `fun a ↦ b`
   ]
   -- add any additional package configuration options here

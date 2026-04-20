@@ -49,27 +49,27 @@ theorem pair_nonzero_left_pos_aux {x s : ℕ} : ¬ (⟪s+1, x⟫ = 0) := by
   contradiction
 @[simp] theorem pair_nonzero_left_pos {x s : ℕ} : ⟪s+1, x⟫ > 0 :=
   zero_lt_of_ne_zero pair_nonzero_left_pos_aux
-theorem pair_r_gt0 {x} : x>0→(Nat.pair y x)>0 := by
+theorem pair_r_gt0 {x y} : x>0→(Nat.pair y x)>0 := by
   contrapose
   simp only [gt_iff_lt, not_lt, nonpos_iff_eq_zero]
   intro h
   rw [show x=(Nat.pair y x).unpair.2 from by simp [unpair_pair]]
   rw [h]
   simp [unpair_zero]
-theorem pair_l_gt0 {x} : x>0→(Nat.pair x y)>0 := by
+theorem pair_l_gt0 {x y} : x>0→(Nat.pair x y)>0 := by
   contrapose
   simp only [gt_iff_lt, not_lt, nonpos_iff_eq_zero]
   intro h
   rw [show x=(Nat.pair x y).unpair.1 from by simp [unpair_pair]]
   rw [h]
   simp [unpair_zero]
-theorem pair_r_ne_0 {x} : x≠0→(Nat.pair y x)≠0 := by
+theorem pair_r_ne_0 {x y} : x≠0→(Nat.pair y x)≠0 := by
   contrapose
   intro h
   rw [show x=(Nat.pair y x).unpair.2 from by simp [unpair_pair]]
   rw [h]
   simp [unpair_zero]
-theorem pair_l_ne_0 {x} : x≠0→(Nat.pair x y)≠0 := by
+theorem pair_l_ne_0 {x y} : x≠0→(Nat.pair x y)≠0 := by
   contrapose
   intro h
   rw [show x=(Nat.pair x y).unpair.1 from by simp [unpair_pair]]
@@ -122,7 +122,7 @@ fs_size 0b011000111 = 5
 -/
 
 theorem fs_in_singleton {x y}: fs_in (2^y) x ↔ x=y := by grind
-theorem fs_in_singleton': Nat.testBit (2^y) x = false ↔ y≠x := by grind
+theorem fs_in_singleton' {x y}: Nat.testBit (2^y) x = false ↔ y≠x := by grind
 end fs
 
 namespace Computability.Code.nc_to_nn
@@ -151,16 +151,16 @@ namespace Computability.Code
 @[cp] theorem left_prim : code_prim left := code_prim.left
 @[cp] theorem right_prim : code_prim right := code_prim.right
 @[cp] theorem oracle_prim : code_prim oracle := code_prim.oracle
-@[cp] theorem pair_prim (ha:code_prim a) (hb:code_prim b) : code_prim (pair a b) := code_prim.pair ha hb
-@[cp] theorem comp_prim (ha:code_prim a) (hb:code_prim b) : code_prim (comp a b) := code_prim.comp ha hb
-@[cp] theorem prec_prim (ha:code_prim a) (hb:code_prim b) : code_prim (prec a b) := code_prim.prec ha hb
+@[cp] theorem pair_prim {a b} (ha:code_prim a) (hb:code_prim b) : code_prim (pair a b) := code_prim.pair ha hb
+@[cp] theorem comp_prim {a b} (ha:code_prim a) (hb:code_prim b) : code_prim (comp a b) := code_prim.comp ha hb
+@[cp] theorem prec_prim {a b} (ha:code_prim a) (hb:code_prim b) : code_prim (prec a b) := code_prim.prec ha hb
 def code_total (O) (c:Code) := ∀x, (eval O c x).Dom
 @[simp] theorem zero_total {O} : code_total O zero := λ _ ↦ trivial
 @[simp] theorem left_total {O} : code_total O left := λ _ ↦ trivial
 @[simp] theorem right_total {O} : code_total O right := λ _ ↦ trivial
 @[simp] theorem succ_total {O} : code_total O succ := λ _ ↦ trivial
 @[simp] theorem oracle_total {O} : code_total O oracle := λ _ ↦ trivial
-theorem prim_total (h:code_prim c): code_total O c := by
+theorem prim_total {O} {c} (h:code_prim c): code_total O c := by
   unfold code_total
   induction h with
   | zero                   => simp [eval];
@@ -191,7 +191,7 @@ theorem prim_total (h:code_prim c): code_total O c := by
 | comp cf cg => λ x ↦ evalp O cf (evalp O cg x)
 | prec cf cg => unpaired fun z n => n.rec (evalp O cf z) fun y IH => (evalp O cg) (z.pair (y.pair IH))
 | rfind' _   => λ _ ↦ 0
-theorem evalp_eq_eval (h:code_prim c):evalp O c = eval O c := by
+theorem evalp_eq_eval {O} {c} (h : code_prim c):evalp O c = eval O c := by
   induction h with
   | zero => exact rfl
   | succ => exact rfl
@@ -235,8 +235,8 @@ theorem evalp_eq_eval (h:code_prim c):evalp O c = eval O c := by
       rw [Part.bind_some]
       simp
       rw [show eval O b ((Nat.pair xs.l (Nat.pair y' (Nat.rec (evalp O a xs.l) (fun y IH ↦ evalp O b (Nat.pair xs.l (Nat.pair y IH))) y')))) = Part.some (evalp O b ((Nat.pair xs.l (Nat.pair y' (Nat.rec (evalp O a xs.l) (fun y IH ↦ evalp O b (Nat.pair xs.l (Nat.pair y IH))) y'))))) from by exact congrFun (_root_.id (Eq.symm hb_ih)) ((Nat.pair xs.l (Nat.pair y' (Nat.rec (evalp O a xs.l) (fun y IH ↦ evalp O b (Nat.pair xs.l (Nat.pair y IH))) y'))))]
-theorem evalp_eq_eval_ext (h:code_prim c): eval O c x = evalp O c x := congrFun (_root_.id (Eq.symm (@evalp_eq_eval c O h))) x
-@[simp 1000] theorem code_prim_prop : Nat.PrimrecIn O (evalp O c) := by
+theorem evalp_eq_eval_ext {O c x} (h:code_prim c): eval O c x = evalp O c x := congrFun (_root_.id (Eq.symm (@evalp_eq_eval O c h))) x
+@[simp 1000] theorem code_prim_prop {O} {c} : Nat.PrimrecIn O (evalp O c) := by
   induction c with
   | zero => exact Nat.PrimrecIn.zero
   | succ => exact Nat.PrimrecIn.succ
@@ -247,7 +247,7 @@ theorem evalp_eq_eval_ext (h:code_prim c): eval O c x = evalp O c x := congrFun 
   | comp ha hb ha_ih hb_ih => unfold evalp; exact Nat.PrimrecIn.comp (ha_ih) (hb_ih)
   | prec ha hb ha_ih hb_ih => unfold evalp; exact Nat.PrimrecIn.prec (ha_ih) (hb_ih)
   | rfind' ha ha_ih => exact Nat.PrimrecIn.zero
-theorem code_prim_of_primrecIn (h:Nat.PrimrecIn O f) : ∃ c, code_prim c ∧ f=evalp O c := by
+theorem code_prim_of_primrecIn {O f} (h:Nat.PrimrecIn O f) : ∃ c, code_prim c ∧ f=evalp O c := by
   induction h with
   | zero => use Code.zero; exact ⟨code_prim.zero,rfl⟩
   | succ => use Code.succ; exact ⟨code_prim.succ,rfl⟩
@@ -281,35 +281,35 @@ end primrec
 section total
 namespace Computability.Code
 def evalt (O:ℕ→ℕ) (c:Code) (h:code_total O c) : ℕ→ℕ := λ x ↦ (eval O c x).get (h x)
-theorem total_pair_iff : (code_total O cf) ∧ (code_total O cg) ↔ (code_total O (pair cf cg)) :=
+theorem total_pair_iff {O cf cg} : (code_total O cf) ∧ (code_total O cg) ↔ (code_total O (pair cf cg)) :=
   ⟨
     λ h x ↦ ⟨h.left x, h.right x⟩
   ,
     λ h ↦ ⟨λ x ↦ Part.left_dom_of_sub_dom (h x) , λ x ↦ Part.right_dom_of_div_dom (h x)⟩
   ⟩
-@[simp] theorem total_pair_of (hcf : code_total O cf) (hcg : code_total O cg) : (code_total O (pair cf cg)) := total_pair_iff.mp ⟨hcf,hcg⟩
-theorem total_comp_of (hcf : code_total O cf) (hcg : code_total O cg) : (code_total O (comp cf cg)) := by
+@[simp] theorem total_pair_of {O cf cg} (hcf : code_total O cf) (hcg : code_total O cg) : (code_total O (pair cf cg)) := total_pair_iff.mp ⟨hcf,hcg⟩
+theorem total_comp_of {O cf cg} (hcf : code_total O cf) (hcg : code_total O cg) : (code_total O (comp cf cg)) := by
   intro x
   simp [eval]
   use hcg x
   exact hcf ((eval O cg x).get (hcg x))
-@[simp] theorem total_of_pair_left {O} (h:code_total O (pair cf cg)) : code_total O cf :=
+@[simp] theorem total_of_pair_left {O cf cg} (h:code_total O (pair cf cg)) : code_total O cf :=
   (total_pair_iff.mpr h).left
-@[simp] theorem total_of_pair_right {O} (h:code_total O (pair cf cg)) : code_total O cg :=
+@[simp] theorem total_of_pair_right {O cf cg} (h:code_total O (pair cf cg)) : code_total O cg :=
   (total_pair_iff.mpr h).right
-@[simp] theorem total_of_comp_left {O} (h:code_total O (comp cf cg)) : code_total O cg := by
+@[simp] theorem total_of_comp_left {O cf cg} (h:code_total O (comp cf cg)) : code_total O cg := by
   intro h2
   exact Part.Dom.of_bind (h h2)
-@[simp] theorem total_of_comp_right {O} (h:code_total O (comp cf cg)) : ∀x, (eval O cf ((eval O cg x).get (Part.Dom.of_bind (h x)))).Dom := by
+@[simp] theorem total_of_comp_right {O cf cg} (h:code_total O (comp cf cg)) : ∀x, (eval O cf ((eval O cg x).get (Part.Dom.of_bind (h x)))).Dom := by
   exact fun x ↦ Part.right_dom_of_div_dom (h x)
-@[simp] theorem total_of_prec_left {O} (h:code_total O (prec cf cg)) : code_total O cf := by
+@[simp] theorem total_of_prec_left {O cf cg} (h:code_total O (prec cf cg)) : code_total O cf := by
   intro x
   unfold code_total at h
   simp [eval] at h
   have hx := h (Nat.pair x 0)
   simp at hx
   exact hx
-theorem eval_total_comp (h:code_total O (comp cf cg)) :
+theorem eval_total_comp {O cf cg x} (h:code_total O (comp cf cg)) :
   eval O (comp cf cg) x = Part.some ((eval O cf ((eval O cg x).get (Part.Dom.of_bind (h x)))).get (total_of_comp_right h x)) := by
     simp
     simp [eval]
@@ -318,7 +318,7 @@ end Computability.Code
 end total
 
 namespace Computability.Code
-@[simp 1000] theorem RecursiveIn_of_eval : Nat.RecursiveIn O (eval O c) := by
+@[simp 1000] theorem RecursiveIn_of_eval {O c} : Nat.RecursiveIn O (eval O c) := by
   induction c with
   | zero => exact Nat.RecursiveIn.zero
   | succ => exact Nat.RecursiveIn.succ

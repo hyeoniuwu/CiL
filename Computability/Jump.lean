@@ -41,7 +41,7 @@ notation:10000 f"⌜" => jump f
 namespace Computability.Code
 
 def c_jump_decode (c:Code) := c_ite c c_diverge (c_pred.comp c)
-@[simp] theorem c_jump_decode_ev (hc:code_total O c): eval O (c_jump_decode c) x = if eval O c x = Part.some 0 then Part.none else (Nat.pred <$> eval O c x) := by
+@[simp] theorem c_jump_decode_ev {O c x} (hc:code_total O c): eval O (c_jump_decode c) x = if eval O c x = Part.some 0 then Part.none else (Nat.pred <$> eval O c x) := by
   simp [c_jump_decode]
   simp [c_ite_ev hc]
   congr
@@ -51,7 +51,7 @@ def c_jump_decode (c:Code) := c_ite c c_diverge (c_pred.comp c)
     simp [-Part.some_get]
   else
     simp [Part.eq_none_iff'.mpr h]
-@[simp] theorem c_jump_decode_ev' (hc:code_total O c): eval O (c_jump_decode c) = fun x => if eval O c x = Part.some 0 then Part.none else (Nat.pred <$> eval O c x) := by
+@[simp] theorem c_jump_decode_ev' {O c} (hc:code_total O c): eval O (c_jump_decode c) = fun x => if eval O c x = Part.some 0 then Part.none else (Nat.pred <$> eval O c x) := by
   funext xs
   exact c_jump_decode_ev hc
 
@@ -85,7 +85,7 @@ theorem K_eq_K0 {O} : (K O)  ≡ᵀᶠ (K0 O) := ⟨K_leq_K0 O,K0_leq_K O⟩
 theorem K0_eq_K {O} : (K0 O) ≡ᵀᶠ (K O)  := K_eq_K0.symm
 theorem O_le_K (O:ℕ→ℕ) : O ≤ᵀᶠ (K O) := TuringReducible.trans (O_le_K0 O) (K0_leq_K O)
 
-theorem jump_not_le_id (O:ℕ→ℕ) : ¬(O⌜ ≤ᵀᶠ O) := by
+theorem jump_not_le_id (O : ℕ → ℕ) : ¬(O⌜ ≤ᵀᶠ O) := by
   intro h
   rcases exists_code.mp h with ⟨c_jO,hc_jO⟩
   let g := c_ite (c_jO.comp (pair c_id c_id)) zero c_diverge

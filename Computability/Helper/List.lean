@@ -6,11 +6,11 @@ theorem rr_indt (n): (range (n + 1)).reverse = n :: (range n).reverse := by
   simp only [reverse_eq_cons_iff, reverse_reverse]
   exact range_succ
 
-theorem rr_mem_bound {i} (h : i ∈ (range (ro + 1)).reverse) : i≤ro := by
+theorem rr_mem_bound {ro} {i} (h : i ∈ (range (ro + 1)).reverse) : i≤ro := by
   contrapose h
   simpa using h
 
-lemma listrevlem (h:∃ l'':List ℕ, l'' ++ l' = (range x).reverse) : ∃ y, l'=(range y).reverse∧y≤x := by
+lemma listrevlem {l' x} (h:∃ l'':List ℕ, l'' ++ l' = (range x).reverse) : ∃ y, l'=(range y).reverse∧y≤x := by
   rcases h with ⟨h1,h2⟩
   induction h1 generalizing x with
   | nil =>
@@ -27,18 +27,18 @@ lemma listrevlem (h:∃ l'':List ℕ, l'' ++ l' = (range x).reverse) : ∃ y, l'
     have := @ih (x-1) this
 
     grind
-lemma listrevlem2 (h:∃ l'':List ℕ, l'' ++ l' = (range x).reverse) (h2:a∈l') : a<x := by
+lemma listrevlem2 {l' x a} (h:∃ l'':List ℕ, l'' ++ l' = (range x).reverse) (h2:a∈l') : a<x := by
   have := listrevlem h
   grind
 
-theorem list_access_small {i} {l1 l2 : List α} (h:i<l1.length) : (l1 ++ l2)[i]? = (l1)[i]? := by
+theorem list_access_small {α} {i} {l1 l2 : List α} (h:i<l1.length) : (l1 ++ l2)[i]? = (l1)[i]? := by
     simp [getElem?_pos, List.getElem?_append, h]
 
-@[simp] theorem getI_eq_getElem {l:List ℕ} {h:i<l.length} : l.getI i = l[i] := by
+@[simp] theorem getI_eq_getElem {i} {l:List ℕ} {h:i<l.length} : l.getI i = l[i] := by
   unfold List.getI
   simp [h]
 
-@[simp] theorem map_getI :
+@[simp] theorem map_getI {f s x} :
     (List.map f (List.range (s + 1))).getI x = if x < s+1 then f x else 0 := by
   unfold List.getI
   cases Classical.em (x<s+1) with

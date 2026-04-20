@@ -26,8 +26,8 @@ section list_nil
 namespace Computability.Code
 def c_list_nil := zero
 @[cp] theorem c_list_nil_prim : code_prim c_list_nil := by unfold c_list_nil; apply_cp
-@[simp] theorem c_list_nil_evp {O : ℕ → ℕ} : evalp O c_list_nil x = l2n ([]) := by simp [c_list_nil]
-@[simp] theorem c_list_nil_ev {O : ℕ → ℕ} : eval O c_list_nil x = l2n ([]) := by simp [←evalp_eq_eval c_list_nil_prim]
+@[simp] theorem c_list_nil_evp {O : ℕ → ℕ} {x} : evalp O c_list_nil x = l2n ([]) := by simp [c_list_nil]
+@[simp] theorem c_list_nil_ev {O : ℕ → ℕ} {x} : eval O c_list_nil x = l2n ([]) := by simp [←evalp_eq_eval c_list_nil_prim]
 end Computability.Code
 end list_nil
 
@@ -35,8 +35,8 @@ section list_cons
 namespace Computability.Code
 def c_list_cons := succ
 @[cp] theorem c_list_cons_prim : code_prim c_list_cons := by unfold c_list_cons; apply_cp
-@[simp] theorem c_list_cons_evp {O : ℕ → ℕ} : evalp O c_list_cons ⟪a, lN⟫= l2n (cons a (n2l lN)) := by simp [c_list_cons]
-@[simp] theorem c_list_cons_ev {O : ℕ → ℕ} : eval O c_list_cons ⟪a, lN⟫= l2n (cons a (n2l lN)) := by simp [←evalp_eq_eval c_list_cons_prim]
+@[simp] theorem c_list_cons_evp {O : ℕ → ℕ} {a lN} : evalp O c_list_cons ⟪a, lN⟫= l2n (cons a (n2l lN)) := by simp [c_list_cons]
+@[simp] theorem c_list_cons_ev {O : ℕ → ℕ} {a lN} : eval O c_list_cons ⟪a, lN⟫= l2n (cons a (n2l lN)) := by simp [←evalp_eq_eval c_list_cons_prim]
 end Computability.Code
 end list_cons
 
@@ -81,12 +81,12 @@ end list_headI
 
 section list_casesOn
 namespace Computability.Code
-def c_list_casesOn (cl c cg:Code) :=
+def c_list_casesOn (cl c cg : Code) :=
   let x := left.comp (c_pred.comp cl)
   let xs := right.comp (c_pred.comp cl)
   c_if_eq_te.comp₄ cl (c_const 0) c (cg.comp₂ x xs)
-@[cp] theorem c_list_casesOn_prim (hcl:code_prim cl)  {c : Code} (hc : code_prim c) (hcg:code_prim cg) : code_prim (c_list_casesOn cl c cg) := by unfold c_list_casesOn; apply_cp
-@[simp] theorem c_list_casesOn_evp {O : ℕ → ℕ} : evalp O (c_list_casesOn cl c cg) input =
+@[cp] theorem c_list_casesOn_prim {cl cg} (hcl : code_prim cl)  {c : Code} (hc : code_prim c) (hcg:code_prim cg) : code_prim (c_list_casesOn cl c cg) := by unfold c_list_casesOn; apply_cp
+@[simp] theorem c_list_casesOn_evp {O : ℕ → ℕ} {cl c cg input} : evalp O (c_list_casesOn cl c cg) input =
   List.casesOn
   (n2l (evalp O cl input))
   (evalp O c input)
@@ -102,8 +102,8 @@ section list_casesOn'
 namespace Computability.Code
 def c_list_casesOn' (cl c cg:Code) :=
   c_if_eq_te.comp₄ cl (c_const 0) c cg
-@[cp] theorem c_list_casesOn'_prim (hcl:code_prim cl)  {c : Code} (hc : code_prim c) (hcg:code_prim cg):code_prim (c_list_casesOn' cl c cg) := by unfold c_list_casesOn'; apply_cp
-@[simp] theorem c_list_casesOn'_evp {O : ℕ → ℕ} : evalp O (c_list_casesOn' cl c cg) input =
+@[cp] theorem c_list_casesOn'_prim {cl cg} (hcl:code_prim cl)  {c : Code} (hc : code_prim c) (hcg:code_prim cg):code_prim (c_list_casesOn' cl c cg) := by unfold c_list_casesOn'; apply_cp
+@[simp] theorem c_list_casesOn'_evp {O : ℕ → ℕ} {cl c cg input} : evalp O (c_list_casesOn' cl c cg) input =
   List.casesOn
   (n2l (evalp O cl input))
   (evalp O c input)
@@ -125,7 +125,7 @@ def c_list_drop :=
     c_list_tail.comp (right.comp right)
   ).comp c_flip
 @[cp] theorem c_list_drop_prim : code_prim c_list_drop := by unfold c_list_drop; apply_cp
-@[simp] theorem c_list_drop_evp {O : ℕ → ℕ} {lN : ℕ} : evalp O c_list_drop (Nat.pair i lN) = l2n (drop i (n2l lN)) := by
+@[simp] theorem c_list_drop_evp {O : ℕ → ℕ} {lN i : ℕ} : evalp O c_list_drop (Nat.pair i lN) = l2n (drop i (n2l lN)) := by
   simp [c_list_drop]
   by_cases hl:lN=0
   · simp [hl]
@@ -136,7 +136,7 @@ def c_list_drop :=
     induction i with
     | zero => simp
     | succ n ih => simp [ih]
-@[simp] theorem c_list_drop_ev {O : ℕ → ℕ} {lN : ℕ} : eval O c_list_drop (Nat.pair i lN) = l2n (drop i (n2l lN)) := by simp [← evalp_eq_eval c_list_drop_prim]
+@[simp] theorem c_list_drop_ev {O : ℕ → ℕ} {lN i : ℕ} : eval O c_list_drop (Nat.pair i lN) = l2n (drop i (n2l lN)) := by simp [← evalp_eq_eval c_list_drop_prim]
 end Computability.Code
 end list_drop
 
@@ -144,8 +144,8 @@ section list_getElem?
 namespace Computability.Code
 def c_list_getElem? := c_list_head?.comp (c_list_drop.comp c_flip)
 @[cp] theorem c_list_getElem?_prim : code_prim c_list_getElem? := by unfold c_list_getElem?; apply_cp
-@[simp] theorem c_list_getElem?_evp {O : ℕ → ℕ} {lN : ℕ} : evalp O c_list_getElem? ⟪lN, i⟫ = o2n (n2l lN)[i]? := by simp [c_list_getElem?]
-@[simp] theorem c_list_getElem?_ev {O : ℕ → ℕ} {lN : ℕ} : eval O c_list_getElem? ⟪lN, i⟫ = o2n (n2l lN)[i]? := by simp [← evalp_eq_eval c_list_getElem?_prim]
+@[simp] theorem c_list_getElem?_evp {O : ℕ → ℕ} {lN i : ℕ} : evalp O c_list_getElem? ⟪lN, i⟫ = o2n (n2l lN)[i]? := by simp [c_list_getElem?]
+@[simp] theorem c_list_getElem?_ev {O : ℕ → ℕ} {lN i : ℕ} : eval O c_list_getElem? ⟪lN, i⟫ = o2n (n2l lN)[i]? := by simp [← evalp_eq_eval c_list_getElem?_prim]
 end Computability.Code
 end list_getElem?
 
@@ -153,8 +153,8 @@ section list_getD
 namespace Computability.Code
 def c_list_getD := c_opt_getD.comp₂ (c_list_getElem?.comp₂ left (left.comp right)) (right.comp right)
 @[cp] theorem c_list_getD_prim : code_prim c_list_getD := by unfold c_list_getD; apply_cp
-@[simp] theorem c_list_getD_evp {O : ℕ → ℕ} {lN : ℕ} : evalp O c_list_getD ⟪lN, i, d⟫ = (n2l lN).getD i d := by simp [c_list_getD]
-@[simp] theorem c_list_getD_ev {O : ℕ → ℕ} {lN : ℕ} : eval O c_list_getD ⟪lN, i, d⟫ = (n2l lN).getD i d := by simp [← evalp_eq_eval c_list_getD_prim]
+@[simp] theorem c_list_getD_evp {O : ℕ → ℕ} {lN i d : ℕ} : evalp O c_list_getD ⟪lN, i, d⟫ = (n2l lN).getD i d := by simp [c_list_getD]
+@[simp] theorem c_list_getD_ev {O : ℕ → ℕ} {lN i d : ℕ} : eval O c_list_getD ⟪lN, i, d⟫ = (n2l lN).getD i d := by simp [← evalp_eq_eval c_list_getD_prim]
 end Computability.Code
 end list_getD
 
@@ -162,10 +162,10 @@ section list_getI
 namespace Computability.Code
 def c_list_getI := c_pred.comp c_list_getElem?
 @[cp] theorem c_list_getI_prim : code_prim c_list_getI := by unfold c_list_getI; apply_cp
-@[simp] theorem c_list_getI_evp {O : ℕ → ℕ} {lN : ℕ} : evalp O c_list_getI ⟪lN, i⟫ = ((n2l lN).getI i) := by
+@[simp] theorem c_list_getI_evp {O : ℕ → ℕ} {lN i : ℕ} : evalp O c_list_getI ⟪lN, i⟫ = ((n2l lN).getI i) := by
   simp [c_list_getI]
   by_cases hl:i<(n2l lN).length <;> simp [hl, getI]
-@[simp] theorem c_list_getI_ev {O : ℕ → ℕ} {lN : ℕ} : eval O c_list_getI ⟪lN, i⟫ = ((n2l lN).getI i) := by simp [← evalp_eq_eval c_list_getI_prim]
+@[simp] theorem c_list_getI_ev {O : ℕ → ℕ} {lN i : ℕ} : eval O c_list_getI ⟪lN, i⟫ = ((n2l lN).getI i) := by simp [← evalp_eq_eval c_list_getI_prim]
 end Computability.Code
 end list_getI
 
@@ -173,13 +173,13 @@ section list_get
 namespace Computability.Code
 def c_list_get := c_list_getI
 @[cp] theorem c_list_get_prim : code_prim c_list_get := by unfold c_list_get; apply_cp
-@[simp] theorem c_list_get_evp {O : ℕ → ℕ} {lN : ℕ} (h:i<(n2l lN).length) : evalp O c_list_get ⟪lN, i⟫ = (n2l lN)[i] := by
+@[simp] theorem c_list_get_evp {O : ℕ → ℕ} {lN i : ℕ} (h:i<(n2l lN).length) : evalp O c_list_get ⟪lN, i⟫ = (n2l lN)[i] := by
   simp [c_list_get]
   simp [getI]
   by_cases hl:i<(n2l lN).length
   · simp [hl]
   · contradiction
-@[simp] theorem c_list_get_ev {O : ℕ → ℕ} {lN : ℕ} (h:i<(n2l lN).length) : eval O c_list_get ⟪lN, i⟫ = (n2l lN)[i] := by
+@[simp] theorem c_list_get_ev {O : ℕ → ℕ} {lN i : ℕ} (h:i<(n2l lN).length) : eval O c_list_get ⟪lN, i⟫ = (n2l lN)[i] := by
   simp [← evalp_eq_eval c_list_get_prim]
   simp [h]
 end Computability.Code
@@ -199,12 +199,12 @@ def c_list_foldl_aux (c:Code) :=
 def c_list_foldl_aux2 (c:Code) := (c_nat_iterate (c_list_foldl_aux c)).comp₂ c_id right
 def c_list_foldl (c:Code) := left.comp (c_list_foldl_aux2 c)
 @[cp] theorem c_list_foldl_prim  {c : Code} (hc : code_prim c) : code_prim (c_list_foldl c) := by rewrite [c_list_foldl, c_list_foldl_aux2, c_list_foldl_aux]; apply_cp
-@[simp] theorem c_list_foldl_aux_evp   : evalp O (c_list_foldl_aux c) ⟪init, lN⟫ = if (n2l lN) = [] then ⟪init, lN⟫ else Nat.pair (evalp O c (Nat.pair init (n2l lN).headI)) (l2n (tail (n2l lN))) := by
+@[simp] theorem c_list_foldl_aux_evp {O : ℕ → ℕ} {c : Code} {init lN : ℕ}: evalp O (c_list_foldl_aux c) ⟪init, lN⟫ = if (n2l lN) = [] then ⟪init, lN⟫ else Nat.pair (evalp O c (Nat.pair init (n2l lN).headI)) (l2n (tail (n2l lN))) := by
   simp [c_list_foldl_aux]
   by_cases hl:lN=0
   · simp [hl]
   · rw [←(exists_add_one_eq.mpr (one_le_iff_ne_zero.mpr hl)).choose_spec]; simp
-@[simp] theorem c_list_foldl_evp {O : ℕ → ℕ} {lN : ℕ} :
+@[simp] theorem c_list_foldl_evp {O : ℕ → ℕ} {c : Code} {init lN : ℕ} :
   evalp O (c_list_foldl c) ⟪init, lN⟫ =
   foldl
     (fun a b => evalp O c ⟪a,b⟫)
@@ -268,7 +268,7 @@ namespace Computability.Code
 -- Note that reverse = foldl (flip (:)) [].
 def c_list_reverse := (c_list_foldl (c_list_cons.comp c_flip)).comp₂ c_list_nil c_id
 @[cp] theorem c_list_reverse_prim : code_prim c_list_reverse := by unfold c_list_reverse; apply_cp
-@[simp] theorem c_list_reverse_evp {O : ℕ → ℕ} : evalp O c_list_reverse lN =  l2n (reverse (n2l lN)) := by
+@[simp] theorem c_list_reverse_evp {O : ℕ → ℕ} {lN} : evalp O c_list_reverse lN =  l2n (reverse (n2l lN)) := by
   simp only [c_list_reverse]
   simp [-encode_list_cons, -encode_list_nil]
   have aux : ∀ l r, foldl (fun (s : ℕ) (b : ℕ) => l2n (b :: (n2l s))) r l = l2n (reverseAux l (n2l r)) := fun l => by
@@ -277,7 +277,7 @@ def c_list_reverse := (c_list_foldl (c_list_cons.comp c_flip)).comp₂ c_list_ni
     | cons head tail ih => simp [*, reverseAux, -encode_list_cons]
   rw [aux (n2l lN) (l2n [])]
   simp
-@[simp] theorem c_list_reverse_ev {O : ℕ → ℕ} : eval O c_list_reverse lN =  l2n (reverse (n2l lN)) := by simp [← evalp_eq_eval c_list_reverse_prim]
+@[simp] theorem c_list_reverse_ev {O : ℕ → ℕ} {lN} : eval O c_list_reverse lN =  l2n (reverse (n2l lN)) := by simp [← evalp_eq_eval c_list_reverse_prim]
 end Computability.Code
 end list_reverse
 
@@ -290,7 +290,7 @@ section list_foldr
 namespace Computability.Code
 def c_list_foldr (c:Code) := (c_list_foldl (c.comp c_flip)).comp₂ left (c_list_reverse.comp right)
 @[cp] theorem c_list_foldr_prim {c : Code} (hc : code_prim c) : code_prim (c_list_foldr c) := by unfold c_list_foldr; apply_cp
-@[simp] theorem c_list_foldr_evp {O : ℕ → ℕ} :
+@[simp] theorem c_list_foldr_evp {O : ℕ → ℕ} {c : Code} {init lN : ℕ} :
   evalp O (c_list_foldr c) ⟪init, lN⟫ = foldr
     (fun a b => evalp O c ⟪a,b⟫)
     init
@@ -338,12 +338,12 @@ section list_append
 namespace Computability.Code
 def c_list_append := (c_list_foldr (c_list_cons)).comp c_flip
 @[cp] theorem c_list_append_prim : code_prim c_list_append := by unfold c_list_append; apply_cp
-@[simp] theorem c_list_append_evp {O : ℕ → ℕ} : evalp O c_list_append ⟪l1N, l2N⟫ = l2n ((n2l l1N) ++ (n2l l2N)) := by
+@[simp] theorem c_list_append_evp {O : ℕ → ℕ} {l1N l2N} : evalp O c_list_append ⟪l1N, l2N⟫ = l2n ((n2l l1N) ++ (n2l l2N)) := by
   simp [c_list_append, -encode_list_cons, -encode_list_nil]
   induction (n2l l1N) with
   | nil => simp
   | cons head tail ih => simp [ih, -encode_list_cons, -encode_list_nil]
-@[simp] theorem c_list_append_ev {O : ℕ → ℕ} : eval O c_list_append ⟪l1N, l2N⟫ = l2n ((n2l l1N) ++ (n2l l2N)) := by simp [← evalp_eq_eval c_list_append_prim]
+@[simp] theorem c_list_append_ev {O : ℕ → ℕ} {l1N l2N} : eval O c_list_append ⟪l1N, l2N⟫ = l2n ((n2l l1N) ++ (n2l l2N)) := by simp [← evalp_eq_eval c_list_append_prim]
 end Computability.Code
 end list_append
 
@@ -351,7 +351,7 @@ section list_singleton
 namespace Computability.Code
 def c_list_singleton (c:Code) := c_list_cons.comp₂ c c_list_nil
 @[cp] theorem c_list_singleton_prim  {c : Code} (hc : code_prim c) : code_prim (c_list_singleton c) := by unfold c_list_singleton; apply_cp
-@[simp] theorem c_list_singleton_evp {O : ℕ → ℕ} : evalp O (c_list_singleton c) x = l2n ([evalp O c x]) := by
+@[simp] theorem c_list_singleton_evp {O : ℕ → ℕ} {c x} : evalp O (c_list_singleton c) x = l2n ([evalp O c x]) := by
   simp [c_list_singleton]
 end Computability.Code
 end list_singleton
@@ -360,9 +360,9 @@ section list_concat
 namespace Computability.Code
 def c_list_concat := c_list_append.comp₂ left (c_list_singleton right)
 @[cp] theorem c_list_concat_prim : code_prim c_list_concat := by unfold c_list_concat; apply_cp
-@[simp] theorem c_list_concat_evp {O : ℕ → ℕ} {lN : ℕ} : evalp O c_list_concat ⟪lN, i⟫ = l2n ((n2l lN)++[i]) := by
+@[simp] theorem c_list_concat_evp {O : ℕ → ℕ} {lN i : ℕ} : evalp O c_list_concat ⟪lN, i⟫ = l2n ((n2l lN)++[i]) := by
   simp [c_list_concat, -encode_list_cons, -encode_list_nil]
-@[simp] theorem c_list_concat_ev {O : ℕ → ℕ} {lN : ℕ} : eval O c_list_concat ⟪lN, i⟫ = l2n ((n2l lN)++[i]) := by simp [← evalp_eq_eval c_list_concat_prim]
+@[simp] theorem c_list_concat_ev {O : ℕ → ℕ} {lN i : ℕ} : eval O c_list_concat ⟪lN, i⟫ = l2n ((n2l lN)++[i]) := by simp [← evalp_eq_eval c_list_concat_prim]
 end Computability.Code
 end list_concat
 
@@ -371,7 +371,7 @@ section list_map
 namespace Computability.Code
 def c_list_map (c:Code) := (c_list_foldr (c_list_cons.comp₂ (c.comp left) right)).comp₂ (c_list_nil) (c_id)
 @[cp] theorem c_list_map_prim  {c : Code} (hc : code_prim c) : code_prim (c_list_map c) := by unfold c_list_map; apply_cp
-@[simp] theorem c_list_map_evp {O : ℕ → ℕ} {lN : ℕ} : evalp O (c_list_map c) lN = l2n ((n2l lN).map (evalp O c)) := by
+@[simp] theorem c_list_map_evp {O : ℕ → ℕ} {c : Code} {lN : ℕ} : evalp O (c_list_map c) lN = l2n ((n2l lN).map (evalp O c)) := by
   simp [c_list_map, -encode_list_cons, -encode_list_nil]
   induction (n2l lN) with
   | nil => simp
@@ -406,7 +406,7 @@ def c_list_zipWith (c:Code) := c_list_reverse.comp $ left.comp (c_list_zipWith_a
 
 @[cp] theorem c_list_zipWith_aux_prim  {c : Code} (hc : code_prim c) : code_prim (c_list_zipWith_aux c) := by unfold c_list_zipWith_aux; apply_cp
 @[cp] theorem c_list_zipWith_prim  {c : Code} (hc : code_prim c) : code_prim (c_list_zipWith c) := by unfold c_list_zipWith; apply_cp
-theorem c_list_zipWith_evp_aux_2 {a b : List ℕ} {f:ℕ→ℕ→ℕ} (h:a.length≤b.length) : zipWith f (b++c) a = zipWith f b a := by
+theorem c_list_zipWith_evp_aux_2 {a b c : List ℕ} {f:ℕ→ℕ→ℕ} (h:a.length≤b.length) : zipWith f (b++c) a = zipWith f b a := by
   -- rw `b` => `take a.length b ++ drop a.length b`
   rewrite [(take_append_drop a.length b).symm]
   -- rw `take a.length b ++ drop a.length b ++ c` => `take a.length b ++ (drop a.length b ++ c)`
@@ -416,7 +416,7 @@ theorem c_list_zipWith_evp_aux_2 {a b : List ℕ} {f:ℕ→ℕ→ℕ} (h:a.lengt
   have aux8 := @zipWith_append ℕ ℕ ℕ f (take a.length b) (drop a.length b) a [] aux7
   simp at aux6 aux8
   simp [aux6, aux8]
-theorem zipWith_flip : zipWith f a b = zipWith (flip f) b a := by
+theorem zipWith_flip {α β γ : Type} {f : α → β → γ} {a : List α} {b : List β} : zipWith f a b = zipWith (flip f) b a := by
   induction a generalizing b with
   | nil => simp
   | cons _ _ xih =>
@@ -424,12 +424,12 @@ theorem zipWith_flip : zipWith f a b = zipWith (flip f) b a := by
     | nil => simp
     | cons _ _ yih => simp [xih, flip]
 
-theorem c_list_zipWith_evp_aux_1 {a b : List ℕ} {f:ℕ→ℕ→ℕ} (h:a.length≤b.length) : zipWith f a (b++c) = zipWith f a b := by
+theorem c_list_zipWith_evp_aux_1 {a b c : List ℕ} {f:ℕ→ℕ→ℕ} (h:a.length≤b.length) : zipWith f a (b++c) = zipWith f a b := by
   rw [zipWith_flip]
   rw (config:={occs:=.pos [2]}) [zipWith_flip]
   exact c_list_zipWith_evp_aux_2 h
 
-theorem c_list_zipWith_evp_aux_3 {f:ℕ→ℕ→ℕ} {head} {tail : List ℕ} (hh:tail.length < (n2l l2N).length) (hl2 : drop tail.length (n2l l2N) = head2 :: list2) : (f head (head2 :: list2).headI :: (zipWith f tail.reverse (n2l l2N)).reverse) = (zipWith f (tail.reverse ++ [head]) (n2l l2N)).reverse := by
+theorem c_list_zipWith_evp_aux_3 {f:ℕ→ℕ→ℕ} {head} {tail : List ℕ} {l2N head2 list2} (hh:tail.length < (n2l l2N).length) (hl2 : drop tail.length (n2l l2N) = head2 :: list2) : (f head (head2 :: list2).headI :: (zipWith f tail.reverse (n2l l2N)).reverse) = (zipWith f (tail.reverse ++ [head]) (n2l l2N)).reverse := by
   simp
   have aux5 : (n2l l2N) = (take tail.length (n2l l2N)) ++ [head2] ++ list2 := by
     -- rw `(n2l l2N)` => `(take tail.length (n2l l2N)) ++ drop tail.length (n2l l2N)`
@@ -460,7 +460,7 @@ theorem c_list_zipWith_evp_aux_3 {f:ℕ→ℕ→ℕ} {head} {tail : List ℕ} (h
   rw [append_assoc (take tail.length (n2l l2N)) [head2] list2]
   simp
   exact c_list_zipWith_evp_aux_1 aux9
-theorem c_list_zipWith_aux_evp :
+theorem c_list_zipWith_aux_evp {O c l1N l2N} :
   evalp O (c_list_zipWith_aux c) ⟪l1N, l2N⟫
     =
   Nat.pair ((zipWith (fun x y => evalp O c ⟪x,y⟫) l1N l2N).reverse) (drop (n2l l1N).length (n2l l2N)) := by
@@ -501,7 +501,7 @@ theorem c_list_zipWith_aux_evp :
       have main : (f head (head2 :: list2).headI :: (zipWith f tail.reverse (n2l l2N)).reverse) = (zipWith f (tail.reverse ++ [head]) (n2l l2N)).reverse := c_list_zipWith_evp_aux_3 hh hl2
       rw [main]
 
-@[simp] theorem c_list_zipWith_evp {O : ℕ → ℕ} :
+@[simp] theorem c_list_zipWith_evp {O : ℕ → ℕ} {c l1N l2N} :
   evalp O (c_list_zipWith c) ⟪l1N, l2N⟫
     =
   zipWith (fun x y => evalp O c ⟪x,y⟫) l1N l2N := by
@@ -518,14 +518,14 @@ def c_list_range :=
   (c_list_nil)
   (c_list_concat.comp₂ prev_list i)).comp₂ zero c_id
 @[cp] theorem c_list_range_prim : code_prim c_list_range := by unfold c_list_range; apply_cp
-@[simp] theorem c_list_range_evp {O : ℕ → ℕ} : evalp O c_list_range n = l2n (range n) := by
+@[simp] theorem c_list_range_evp {O : ℕ → ℕ} {n} : evalp O c_list_range n = l2n (range n) := by
   simp [c_list_range, -encode_list_cons, -encode_list_nil]
   induction n with
   | zero => simp
   | succ n ih =>
     simp [-encode_list_cons, -encode_list_nil, ih]
     exact Eq.symm range_succ
-@[simp] theorem c_list_range_ev {O : ℕ → ℕ} : eval O c_list_range n = l2n (range n) := by simp [← evalp_eq_eval c_list_range_prim]
+@[simp] theorem c_list_range_ev {O : ℕ → ℕ} {n} : eval O c_list_range n = l2n (range n) := by simp [← evalp_eq_eval c_list_range_prim]
 end Computability.Code
 end list_range
 
@@ -538,14 +538,14 @@ def c_list_replicate :=
   (c_list_nil)
   (c_list_concat.comp₂ prev_list x)).comp c_flip
 @[cp] theorem c_list_replicate_prim : code_prim c_list_replicate := by unfold c_list_replicate; apply_cp
-@[simp] theorem c_list_replicate_evp {O : ℕ → ℕ} : evalp O c_list_replicate ⟪n,x⟫ = l2n (replicate n x) := by
+@[simp] theorem c_list_replicate_evp {O : ℕ → ℕ} {n x} : evalp O c_list_replicate ⟪n,x⟫ = l2n (replicate n x) := by
   simp [c_list_replicate, -encode_list_cons, -encode_list_nil]
   induction n with
   | zero => simp
   | succ n ih =>
     simp [-encode_list_cons, -encode_list_nil, ih]
     exact Eq.symm replicate_succ'
-@[simp] theorem c_list_replicate_ev {O : ℕ → ℕ} : eval O c_list_replicate ⟪n,x⟫ = l2n (replicate n x) := by simp [← evalp_eq_eval c_list_replicate_prim]
+@[simp] theorem c_list_replicate_ev {O : ℕ → ℕ} {n x} : eval O c_list_replicate ⟪n,x⟫ = l2n (replicate n x) := by simp [← evalp_eq_eval c_list_replicate_prim]
 end Computability.Code
 end list_replicate
 
@@ -559,7 +559,7 @@ def c_list_map' (c:Code) :=
   let aux := right
   (c_list_map c).comp ((c_list_zipWith c_id).comp₂ lN (c_list_replicate.comp₂ (c_list_length.comp lN) aux))
 @[cp] theorem c_list_map'_prim  {c : Code} (hc : code_prim c) : code_prim (c_list_map' c) := by unfold c_list_map'; apply_cp
-@[simp] theorem c_list_map'_evp {O : ℕ → ℕ} :
+@[simp] theorem c_list_map'_evp {O : ℕ → ℕ} {c lN aux} :
   evalp O (c_list_map' c) ⟪lN, aux⟫
     =
   ((n2l lN).map (fun ele => evalp O c (Nat.pair ele aux))) := by
@@ -570,7 +570,7 @@ def c_list_map' (c:Code) :=
 end Computability.Code
 end list_map'
 
-@[simp] theorem getLastI_append {y:ℕ}: (x++[y]).getLastI = y := by
+@[simp] theorem getLastI_append {x} {y:ℕ}: (x++[y]).getLastI = y := by
   simp [getLastI_eq_getLast?_getD]
 
 /-
@@ -599,7 +599,7 @@ def c_list_foldr_param (c:Code) := right.comp (c_list_foldr_param_aux c)
 @[cp] theorem c_list_foldr_param_prim  {c : Code} (hc : code_prim c) : code_prim (c_list_foldr_param c) := by
   rewrite [c_list_foldr_param]
   apply_cp
-lemma c_list_foldr_param_aux_2 {f: ℕ→ℕ} :
+lemma c_list_foldr_param_aux_2 {f: ℕ→ℕ} {param init lst} :
     foldr
       (fun a b ↦ ⟪a.l, f ⟪a.l, a.r, b.r⟫⟫)
       ⟪param,init⟫
@@ -613,7 +613,7 @@ lemma c_list_foldr_param_aux_2 {f: ℕ→ℕ} :
       rfl
     rewrite [this]
     simp [ih]
-@[simp] theorem c_list_foldr_param_aux_evp {O : ℕ → ℕ} : evalp O (c_list_foldr_param_aux c) ⟪param, init, lN⟫ =
+@[simp] theorem c_list_foldr_param_aux_evp {O : ℕ → ℕ} {c param init lN} : evalp O (c_list_foldr_param_aux c) ⟪param, init, lN⟫ =
   Nat.pair param
   (
     foldr
@@ -624,7 +624,7 @@ lemma c_list_foldr_param_aux_2 {f: ℕ→ℕ} :
   := by
     simp [c_list_foldr_param_aux]
     exact c_list_foldr_param_aux_2
-@[simp] theorem c_list_foldr_param_evp {O : ℕ → ℕ} :
+@[simp] theorem c_list_foldr_param_evp {O : ℕ → ℕ} {c param init lN} :
   evalp O (c_list_foldr_param c) ⟪param, init, lN⟫ =
   foldr
     (fun a b => evalp O c ⟪param, a, b⟫)

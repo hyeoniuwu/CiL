@@ -111,7 +111,7 @@ def n2c : ℕ → Code
   | false, true  => prec (n2c m.unpair.1) (n2c m.unpair.2) -- n%4=2
   | true , true  => rfind' (n2c m)                         -- n%4=3
 
-instance : OfNat (Code) m where ofNat := n2c m
+instance {m} : OfNat (Code) m where ofNat := n2c m
 instance : Coe ℕ Code := ⟨n2c⟩
 instance : Coe Code ℕ := ⟨c2n⟩
 -- /-- Converts an `Code` into a `ℕ`. -/ @[coe] def ofCode : Code → ℕ := encodeCode

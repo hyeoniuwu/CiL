@@ -64,7 +64,7 @@ noncomputable def evalSet (O : Set ℕ) : Code → ℕ→.ℕ := eval (χ O)
 noncomputable def evalnSet (O : Set ℕ) := evaln (χ O)
 @[simp] noncomputable def evalSet₁ (O : Set ℕ) : ℕ→.ℕ := eval₁ (χ O)
 @[simp] noncomputable def evalnSet₁ (O : Set ℕ) : ℕ→ℕ := evaln₁ (χ O)
-theorem prim_evalnSet₁:Nat.PrimrecIn (χ O) (evalnSet₁ O) := by simp only [evalnSet₁]; exact prim_evaln₁
+theorem prim_evalnSet₁ {O} : Nat.PrimrecIn (χ O) (evalnSet₁ O) := by simp only [evalnSet₁]; exact prim_evaln₁
 def SetK0 (A:Set ℕ) := {ex:ℕ | (evalSet A ex.l ex.r).Dom}
 def SetK (A:Set ℕ) := {x:ℕ | (evalSet A x x).Dom}
 abbrev SetJump := SetK
@@ -106,14 +106,14 @@ scoped[Computability] infix:50 "≰ᵀ" => SetTuringDegreeNLE
 scoped[Computability] infix:50 "<ᵀ" => SetTuringDegreeLT
 scoped[Computability] infix:50 "≡ᵀ" => SetTuringDegreeEQ
 scoped[Computability] infix:50 "|ᵀ" => SetTuringDegreeIN
-@[simp] theorem NotSetTuringDegreeNLE_SetTuringDegreeLE : ¬ A ≰ᵀ B ↔ A ≤ᵀ B := by
+@[simp] theorem NotSetTuringDegreeNLE_SetTuringDegreeLE {A B} : ¬ A ≰ᵀ B ↔ A ≤ᵀ B := by
   unfold SetTuringDegreeNLE
   unfold SetTuringDegreeLE
   simp
 end basic_definitions
 
 -- lemmas
-lemma χ_eq_0or1 : (χ O x = 0) ∨ (χ O x = 1) := by by_cases h : x ∈ O <;> simp [h, χsimp]
+lemma χ_eq_0or1 {O x} : (χ O x = 0) ∨ (χ O x = 1) := by by_cases h : x ∈ O <;> simp [h, χsimp]
 lemma some_comp_simp (a:Part ℕ) {f:ℕ→ℕ} {h:a.Dom}: Part.some (f (a.get h)) = a >>= (f:ℕ→.ℕ) := by
   simp only [bind]
   rw [Part.bind]
@@ -310,7 +310,7 @@ theorem Wn_sound {O} : ∀ {k c x}, x ∈ Wn O c k → x ∈ W O c := by
   intro _ _ _ h
   rw [evaln_sound' h]
   exact Part.dom_iff_mem.mp trivial
-theorem evaln_complete_dom : (eval (χ O) c x).Dom ↔ ∃ k, (evaln (χ O) k c x).isSome := by
+theorem evaln_complete_dom {O c x} : (eval (χ O) c x).Dom ↔ ∃ k, (evaln (χ O) k c x).isSome := by
   constructor
   · intro h
     rcases Part.dom_iff_mem.mp h with ⟨y,hy⟩
@@ -321,7 +321,7 @@ theorem evaln_complete_dom : (eval (χ O) c x).Dom ↔ ∃ k, (evaln (χ O) k c 
 theorem Wn_complete {O} {c x} : x ∈ W O c ↔ ∃ k, x ∈ Wn O c k := by
   simp [evalnSet, evalSet]
   exact Iff.trans (Iff.symm Part.dom_iff_mem) (@evaln_complete_dom O c x)
-theorem W_le_SetK0 : ∀ c, W O c ≤ᵀ SetK0 O := by
+theorem W_le_SetK0 {O} : ∀ c, W O c ≤ᵀ SetK0 O := by
   intro c
   apply reducible_iff_code.mpr
   use oracle.comp $ pair (c_const c) c_id
@@ -329,7 +329,7 @@ theorem W_le_SetK0 : ∀ c, W O c ≤ᵀ SetK0 O := by
   simp [evalSet, eval, Seq.seq, SetK0, χ]
   exact if_ctx_congr Part.dom_iff_mem (congrFun rfl) (congrFun rfl)
 
-theorem W_le_Jump : ∀ c, W O c ≤ᵀ O⌜ :=
+theorem W_le_Jump {O} : ∀ c, W O c ≤ᵀ O⌜ :=
   λ c ↦ LE.le.trans_antisymmRel (@W_le_SetK0 O c) (SetK0_eq_Jump O)
 
 section dom_to_ran
@@ -346,7 +346,7 @@ def [f(e)](y):
   return y
 -/
 def dom_to_ran (e:Code) := c_ifdom (c_eval.comp₂ (c_const e) c_id) c_id
-theorem dom_to_ran_prop : W O e = WR O (dom_to_ran e) := by
+theorem dom_to_ran_prop {O e} : W O e = WR O (dom_to_ran e) := by
   ext xs
   simp [dom_to_ran]
   constructor
@@ -374,9 +374,9 @@ theorem dom_to_ran_prop : W O e = WR O (dom_to_ran e) := by
 
 def c_dom_to_ran := c_c_ifdom.comp₂ (c_comp₂.comp₃ (c_const c_eval) (c_c_const) (c_const c_id)) (c_const c_id)
 @[cp] theorem c_dom_to_ran_prim : code_prim c_dom_to_ran := by unfold c_dom_to_ran; apply_cp
-@[simp] theorem c_dom_to_ran_evp : evalp O c_dom_to_ran = λ (x:ℕ) ↦ c2n (dom_to_ran x) := by
+@[simp] theorem c_dom_to_ran_evp {O} : evalp O c_dom_to_ran = λ (x:ℕ) ↦ c2n (dom_to_ran x) := by
   simp [c_dom_to_ran, dom_to_ran]
-theorem Nat.PrimrecIn.dom_to_ran : Nat.PrimrecIn O (λ (x:ℕ) ↦ (dom_to_ran x).c2n) := by
+theorem Nat.PrimrecIn.dom_to_ran {O} : Nat.PrimrecIn O (λ (x:ℕ) ↦ (dom_to_ran x).c2n) := by
   rw [← c_dom_to_ran_evp]; exact code_prim_prop
 end dom_to_ran
 
@@ -394,7 +394,7 @@ def [f(e)](x):
   return anything.
 -/
 noncomputable def ran_to_dom := λ c:Code ↦ dovetail (c_if_eq'.comp₂ left ((c_eval₁).comp₂ (c_const c) right))
-theorem ran_to_dom_ev : (eval O (ran_to_dom c) y).Dom ↔ ∃ x, y ∈ eval O c x := by
+theorem ran_to_dom_ev {O c y} : (eval O (ran_to_dom c) y).Dom ↔ ∃ x, y ∈ eval O c x := by
   constructor
   · intro h
     have := dovetail_ev_0 h
@@ -415,7 +415,7 @@ theorem ran_to_dom_ev : (eval O (ran_to_dom c) y).Dom ↔ ∃ x, y ∈ eval O c 
     use h1
     simp [eval, Seq.seq, eval₁, Part.bind_of_mem h2]
 
-theorem ran_to_dom_prop : WR O e = W O (ran_to_dom e) := by
+theorem ran_to_dom_prop {O e} : WR O e = W O (ran_to_dom e) := by
   ext xs
   constructor
   · intro h
@@ -430,9 +430,9 @@ def c_ran_to_dom := c_dovetail.comp $
   c_comp₂.comp₃ (c_const c_if_eq') c_left $
   c_comp₂.comp₃ (c_const c_eval₁) c_c_const c_right
 @[cp] theorem c_ran_to_dom_prim : code_prim c_ran_to_dom := by unfold c_ran_to_dom; apply_cp
-@[simp] theorem c_ran_to_dom_evp : evalp O c_ran_to_dom = λ (x:ℕ) ↦ c2n (ran_to_dom x) := by
+@[simp] theorem c_ran_to_dom_evp {O} : evalp O c_ran_to_dom = λ (x:ℕ) ↦ c2n (ran_to_dom x) := by
   simp [c_ran_to_dom, ran_to_dom]
-theorem Nat.PrimrecIn.ran_to_dom : Nat.PrimrecIn O (λ (x:ℕ) ↦ (ran_to_dom x).c2n) := by
+theorem Nat.PrimrecIn.ran_to_dom {O} : Nat.PrimrecIn O (λ (x:ℕ) ↦ (ran_to_dom x).c2n) := by
   rw [← c_ran_to_dom_evp]; exact code_prim_prop
 end ran_to_dom
 
@@ -443,18 +443,18 @@ theorem empty_le : ∀ A : Set ℕ, ∅ ≤ᵀ A := by
   unfold χ; simp [eval]
   rfl
 
-theorem evalnSet_mono_dom : ∀ {k₁ k₂ : ℕ} {c n}, k₁ ≤ k₂ → (evalnSet O k₁ c n).isSome → (evalnSet O k₂ c n).isSome := by
+theorem evalnSet_mono_dom {O} : ∀ {k₁ k₂ : ℕ} {c n}, k₁ ≤ k₂ → (evalnSet O k₁ c n).isSome → (evalnSet O k₂ c n).isSome := by
   exact fun {k₁ k₂} {c} {n} a a_1 ↦ evaln_mono_dom a a_1
 
 /-- `CEin O A` means that `A` is c.e. in `O`. -/
 def CEin (O : Set ℕ) (A:Set ℕ) : Prop := ∃ c:Code, A = W O c
 @[simp] abbrev CE (A:Set ℕ) := CEin ∅ A
-@[simp] theorem CEin_trivial : CEin O (W O a) := exists_apply_eq_apply' (W O) a
-theorem CEIn_deg (h:CEin O A) : A ≤ᵀ O⌜ := by
+@[simp] theorem CEin_trivial {O a} : CEin O (W O a) := exists_apply_eq_apply' (W O) a
+theorem CEIn_deg {O A} (h:CEin O A) : A ≤ᵀ O⌜ := by
   rcases h with ⟨c,h⟩
   rw [h]
   exact W_le_Jump c
-theorem CEin_range : CEin O A ↔ ∃ c, A = WR O c := by
+theorem CEin_range {O A} : CEin O A ↔ ∃ c, A = WR O c := by
   simp only [CEin]
   constructor
   · intro h
@@ -476,7 +476,7 @@ Let A≤ᵀB via `c`.
 Then, the function:
 λ x ↦ 0 if (c B x)↓ else ↑ has domain A.
 -/
-theorem reducible_imp_W : A≤ᵀB → ∃ c, W B c = A := by
+theorem reducible_imp_W {A B} : A≤ᵀB → ∃ c, W B c = A := by
   intro h
   rcases reducible_iff_code.mp h with ⟨c,h⟩
   use c_ite c c_diverge zero
@@ -485,7 +485,7 @@ theorem reducible_imp_W : A≤ᵀB → ∃ c, W B c = A := by
   unfold χ
   aesop
 
-theorem Cin_iff_Cin' : A≤ᵀB ↔ Aᶜ≤ᵀB := by
+theorem Cin_iff_Cin' {A B} : A≤ᵀB ↔ Aᶜ≤ᵀB := by
   /-
   proof sketch; if A≤ᵀB via c, then Aᶜ≤ᵀB via Nat.sg' c.
   -/
@@ -504,7 +504,7 @@ theorem Cin_iff_Cin' : A≤ᵀB ↔ Aᶜ≤ᵀB := by
   simp only [compl_compl] at this
   exact this
 
-theorem Cin_iff_CEin_CEin' : A≤ᵀB ↔ (CEin B A ∧ CEin B Aᶜ) := by
+theorem Cin_iff_CEin_CEin' {A B} : A≤ᵀB ↔ (CEin B A ∧ CEin B Aᶜ) := by
   constructor
   -- first, the trivial direction.
   · intro h
@@ -618,8 +618,8 @@ section join
 def join (A B : Set ℕ) : Set ℕ := {2*x | x∈A} ∪ {2*x+1 | x∈B}
 scoped[Computability] infix:50 "∨" => join
 
-theorem even_odd_1 : (1 + y * 2 = x * 2) ↔ False := by grind
-theorem even_odd_2 : (y * 2 = 1 + x * 2) ↔ False := by grind
+theorem even_odd_1 {y x} : (1 + y * 2 = x * 2) ↔ False := by grind
+theorem even_odd_2 {y x} : (y * 2 = 1 + x * 2) ↔ False := by grind
 
 theorem join_upper (A B : Set ℕ) : A ≤ᵀ (A ∨ B) ∧ B ≤ᵀ (A ∨ B) := by
   constructor
@@ -637,10 +637,10 @@ theorem join_upper (A B : Set ℕ) : A ≤ᵀ (A ∨ B) ∧ B ≤ᵀ (A ∨ B) :
   simp [eval, join]
   ac_nf; simp [even_odd_2]
 
-theorem bodd_false_mod2 (h:n.bodd=false) : n%2=0 := by
+theorem bodd_false_mod2 {n} (h:n.bodd=false) : n%2=0 := by
   rw [← codes_aux_aux_0 h]
   exact mul_mod_right 2 n.div2
-theorem bodd_true_mod2 (h:n.bodd=true) : n%2=1 := by
+theorem bodd_true_mod2 {n} (h:n.bodd=true) : n%2=1 := by
   rw [← codes_aux_aux_1 h]
   omega
 theorem join_least (A B C : Set ℕ) : A ≤ᵀ C → B ≤ᵀ C → (A ∨ B) ≤ᵀ C := by

@@ -49,7 +49,7 @@ namespace Computability.Code
 
 section evaln_lemmas
 -- general lemmas for evaln
-lemma evaln_sing (h1:a∈(evaln O s1 c x)) (h2:b∈(evaln O s2 c x)): a=b := by
+lemma evaln_sing {O s1 c x a s2 b} (h1:a∈(evaln O s1 c x)) (h2:b∈(evaln O s2 c x)): a=b := by
   cases Classical.em (s1≤s2) with
   | inl h =>
     have := evaln_mono h h1
@@ -57,51 +57,51 @@ lemma evaln_sing (h1:a∈(evaln O s1 c x)) (h2:b∈(evaln O s2 c x)): a=b := by
   | inr h =>
     have := evaln_mono (Nat.le_of_not_ge h) h2
     simp_all only [Option.mem_def, Option.some.injEq]
-lemma evaln_sing' : (evaln O s1 c x).get h1 = (evaln O s2 c x).get h2 := evaln_sing (Option.get_mem h1) (Option.get_mem h2)
-lemma evaln_sing''
+lemma evaln_sing' {O s1 c x h1 s2 h2} : (evaln O s1 c x).get h1 = (evaln O s2 c x).get h2 := evaln_sing (Option.get_mem h1) (Option.get_mem h2)
+lemma evaln_sing'' {O s1 c x s2}
 (h1:(evaln O s1 c x).isSome)
 (h2:(evaln O s2 c x).isSome)
 : (evaln O s1 c x) = (evaln O s2 c x) := Option.get_inj.mp (@evaln_sing' O s1 c x h1 s2 h2)
-lemma evaln_mono'
+lemma evaln_mono' {O s1 c x s2}
 (h1:(evaln O s1 c x).isSome)
 (h2:s1≤s2)
 : (evaln O s2 c x) = (evaln O s1 c x) := by
   have := evaln_mono h2 (Option.get_mem h1)
   simp_all only [Option.mem_def, Option.some_get]
 
-theorem evaln_sG1 (h:(evaln O s c x).isSome) : s=s-1+1 := by
+theorem evaln_sG1 {O s c x} (h:(evaln O s c x).isSome) : s=s-1+1 := by
   have : s≠0 := by
     contrapose h
     simp [h,evaln]
   exact Eq.symm (succ_pred_eq_of_ne_zero this)
-theorem evaln_xles (h:(evaln O (s+1) c x).isSome) : x≤s :=le_of_lt_succ (evaln_bound (Option.get_mem h))
-theorem evaln_xles' (h:(evaln O s c x).isSome) : x≤s-1 := by
+theorem evaln_xles {O s c x} (h:(evaln O (s+1) c x).isSome) : x≤s :=le_of_lt_succ (evaln_bound (Option.get_mem h))
+theorem evaln_xles' {O s c x} (h:(evaln O s c x).isSome) : x≤s-1 := by
   rw [evaln_sG1 h] at h
   exact evaln_xles h
-abbrev en2e : (evaln O s c x).isSome → (eval O c x).Dom := by
+abbrev en2e {O s c x} : (evaln O s c x).isSome → (eval O c x).Dom := by
   intro h
   have : (evaln O s c x).get h ∈ evaln O s c x := by exact Option.get_mem h
   have := evaln_sound (Option.get_mem h)
   exact Part.dom_iff_mem.mpr (⟨(evaln O s c x).get h,this⟩)
 
-lemma rfind'_geq_xr (h:(eval O (rfind' cf) x).Dom) : (eval O cf.rfind' x).get h ≥ x.r := by simp [eval]
+lemma rfind'_geq_xr {O cf x} (h:(eval O (rfind' cf) x).Dom) : (eval O cf.rfind' x).get h ≥ x.r := by simp [eval]
 
-theorem evaln_eq_eval (h:(evaln O s c x).isSome) : (evaln O s c x).get h = (eval O c x).get (en2e h) :=
+theorem evaln_eq_eval {O s c x} (h:(evaln O s c x).isSome) : (evaln O s c x).get h = (eval O c x).get (en2e h) :=
   Eq.symm (Part.get_eq_of_mem (evaln_sound (Option.get_mem h)) (en2e h))
-lemma nrfind'_geq_xr (h:(evaln O (s) (rfind' cf) x).isSome) : (evaln O (s) (rfind' cf) x).get h ≥ x.r := by
+lemma nrfind'_geq_xr {O s cf x} (h:(evaln O (s) (rfind' cf) x).isSome) : (evaln O (s) (rfind' cf) x).get h ≥ x.r := by
   rw [evaln_eq_eval]
   exact rfind'_geq_xr (en2e h)
 end evaln_lemmas
 
 section rfind_obtain
-def rfind'_obtain (h:(eval O (rfind' cf) x).Dom) : ℕ := ((eval O (rfind' cf) x).get h)-x.r
-def nrfind'_obtain (h:(evaln O s (rfind' cf) x).isSome) : ℕ := ((evaln O s (rfind' cf) x).get h)-x.r
-theorem nrop_eq_rop (h:(evaln O s (rfind' cf) x).isSome) : nrfind'_obtain h = rfind'_obtain (en2e h) := by
+def rfind'_obtain {O cf x} (h:(eval O (rfind' cf) x).Dom) : ℕ := ((eval O (rfind' cf) x).get h)-x.r
+def nrfind'_obtain {O s cf x} (h:(evaln O s (rfind' cf) x).isSome) : ℕ := ((evaln O s (rfind' cf) x).get h)-x.r
+theorem nrop_eq_rop {O s cf x} (h:(evaln O s (rfind' cf) x).isSome) : nrfind'_obtain h = rfind'_obtain (en2e h) := by
   unfold nrfind'_obtain
   unfold rfind'_obtain
   rw [evaln_eq_eval h]
 
-theorem evaln_rfind_as_eval_rfind'
+theorem evaln_rfind_as_eval_rfind' {O s c x}
 (h:(evaln O s (rfind' c) x).isSome)
 :
 ((evaln O s (rfind' c) x).get h)
@@ -111,14 +111,14 @@ theorem evaln_rfind_as_eval_rfind'
   have := evaln_sound (Option.get_mem h)
   simp only [eval] at this
   exact this
-theorem evaln_rfind_base (h:(evaln O (s+1) (rfind' cf) x).isSome) : (evaln O (s+1) (cf) x).isSome := by
+theorem evaln_rfind_base {O s cf x} (h:(evaln O (s+1) (rfind' cf) x).isSome) : (evaln O (s+1) (cf) x).isSome := by
   contrapose h
   simp at h
   simp [evaln]
   intro h1 h2 h3
   rw [h] at h3
   contradiction
-theorem evaln_rfind_indt
+theorem evaln_rfind_indt {O s cf x}
 (h:(evaln O (s+1) (rfind' cf) x).isSome)
 (h2:(evaln O (s+1) (cf) x).isSome)
 (h3: (evaln O (s+1) (cf) x).get h2 ≠ 0)
@@ -128,7 +128,7 @@ theorem evaln_rfind_indt
   simp [evaln]
   intro h4 h5 h6
   simp_all only [Option.get_some, ne_eq, ↓reduceIte]
-theorem evaln_rfind_as_eval_rfind
+theorem evaln_rfind_as_eval_rfind {O s c x}
 (h:(evaln O (s+1) (rfind' c) x).isSome)
 :
 ((evaln O (s+1) (rfind' c) x).get h)
@@ -307,7 +307,7 @@ theorem evaln_rfind_as_eval_rfind
         aesop? says simp_all only [Option.some.injEq, exists_eq_left', not_false_eq_true]
   simp_all only
 
-theorem evaln_rfind_as_eval_rfind_reverse
+theorem evaln_rfind_as_eval_rfind_reverse {O s c x}
 (h:((Nat.unpaired fun a m => (Nat.rfind fun n => (fun x => x = 0) <$> evaln O ((s+1)-n) c (Nat.pair a (n + m))).map (· + m)) x).Dom)
 :
 ((evaln O (s+1) (rfind' c) x)).isSome
@@ -363,7 +363,7 @@ theorem evaln_rfind_as_eval_rfind_reverse
       simp [h4]
       rw [sss]
       exact ih1
-theorem evaln_rfind_as_eval_rfind_reverse'
+theorem evaln_rfind_as_eval_rfind_reverse' {O s c x}
 (h:((Nat.unpaired fun a m => (Nat.rfind fun n => (fun x => x = 0) <$> evaln O (s-n) c (Nat.pair a (n + m))).map (· + m)) x).Dom)
 :
 ((evaln O s (rfind' c) x)).isSome
@@ -376,7 +376,7 @@ theorem evaln_rfind_as_eval_rfind_reverse'
 
   rw [this] at h ⊢
   exact evaln_rfind_as_eval_rfind_reverse h
-theorem nrfind'_obtain_prop
+theorem nrfind'_obtain_prop {O s cf x}
 (h:(evaln O (s+1) (rfind' cf) x).isSome) :
 0∈(evaln O (s+1-(nrfind'_obtain h)) cf (Nat.pair x.l (nrfind'_obtain h+x.r)))
 ∧ (∀ j ≤ nrfind'_obtain h, (evaln O (s+1-j) cf  ⟪x.l, j+x.r⟫).isSome)
@@ -412,7 +412,7 @@ theorem nrfind'_obtain_prop
     intro j hja
     rcases rrr hja with ⟨witness,⟨hwitness_1,hwitness_2⟩⟩
     exact opt_ne_of_mem_imp_not_mem hwitness_1 hwitness_2
-theorem nrfind'_obtain_prop'
+theorem nrfind'_obtain_prop' {O s cf x}
 (h:(evaln O (s+1) (rfind' cf) x).isSome) :
 0∈(evaln O (s+1-(rfind'_obtain (en2e h))) cf (Nat.pair x.l (rfind'_obtain (en2e h)+x.r)))
 ∧ (∀ j ≤ rfind'_obtain (en2e h), (evaln O (s+1-j) cf  ⟪x.l, j+x.r⟫).isSome)
@@ -420,8 +420,8 @@ theorem nrfind'_obtain_prop'
 := by
   rw [← nrop_eq_rop h]
   exact nrfind'_obtain_prop h
-lemma mpp_leq {x:ℕ} (hjro:j ≤ ro): (ro - j + (j + x)) = ro + x := by simp only [hjro, ← add_assoc,Nat.sub_add_cancel]
-theorem nrfind'_obtain_prop_4 (h:(evaln O (s+1) (rfind' cf) x).isSome) :
+lemma mpp_leq {j ro} {x:ℕ} (hjro:j ≤ ro): (ro - j + (j + x)) = ro + x := by simp only [hjro, ← add_assoc,Nat.sub_add_cancel]
+theorem nrfind'_obtain_prop_4 {O s cf x} (h:(evaln O (s+1) (rfind' cf) x).isSome) :
 ∀ j ≤ nrfind'_obtain h, (evaln O (s+1-j) (rfind' cf) ⟪x.l, j+x.r⟫).isSome := by
   have rop := nrfind'_obtain_prop h
   let (eq:=hro) ro := nrfind'_obtain h
@@ -440,7 +440,7 @@ theorem nrfind'_obtain_prop_4 (h:(evaln O (s+1) (rfind' cf) x).isSome) :
   rw [← (Nat.add_assoc m j x.r)]
   have := rop2 (m+j) (le_of_succ_le (add_lt_of_lt_sub hm))
   rwa [Eq.symm (Simproc.sub_add_eq_comm (s + 1) m j)]
-private lemma mem_shambles {o:Option ℕ} {p:Part ℕ} (h0:x∉o) (h1:o.isSome) (h2:o.get h1∈p) : (x∉p) := by
+private lemma mem_shambles {x} {o:Option ℕ} {p:Part ℕ} (h0:x∉o) (h1:o.isSome) (h2:o.get h1∈p) : (x∉p) := by
   contrapose h2
   rw [Part.eq_some_iff.mpr h2] -- `p` => `Part.some x`
   simp
@@ -448,7 +448,7 @@ private lemma mem_shambles {o:Option ℕ} {p:Part ℕ} (h0:x∉o) (h1:o.isSome) 
   contrapose this
   rw [← this]
   exact Option.eq_some_of_isSome h1
-theorem nrfind'_prop
+theorem nrfind'_prop {O s cf x y}
 (h:(evaln O s (rfind' cf) x).isSome)
 :
 (y+x.r∈(evaln O s (rfind' cf) x))
@@ -476,7 +476,7 @@ theorem nrfind'_prop
   rcases h1 h2 with ⟨h4,h5,h6⟩
   use h4
   refine ⟨h5,forall_mem_option (h3 h4 (le_of_succ_le h5)) h6⟩
-theorem nrfind'_obtain_prop_6 (h:(evaln O (s+1) (rfind' cf) x).isSome) :
+theorem nrfind'_obtain_prop_6 {O s cf x} (h:(evaln O (s+1) (rfind' cf) x).isSome) :
 ∀ j ≤ nrfind'_obtain h,
 (nrfind'_obtain h)+x.r ∈ (evaln O (s+1-j) (rfind' cf) ⟪x.l, j+x.r⟫)  := by
   have rop := nrfind'_obtain_prop h
@@ -503,23 +503,23 @@ theorem nrfind'_obtain_prop_6 (h:(evaln O (s+1) (rfind' cf) x).isSome) :
     rw [← add_assoc]
     have rop3' := rop3 (j2+j) (add_lt_of_lt_sub hj2)
     rwa [Eq.symm (Simproc.sub_add_eq_comm (s + 1) j2 j)]
-theorem nrfind'_obtain_prop_4' (h:(evaln O (s+1) (rfind' cf) x).isSome) :
+theorem nrfind'_obtain_prop_4' {O s cf x} (h:(evaln O (s+1) (rfind' cf) x).isSome) :
 ∀ j ≤ rfind'_obtain (en2e h), (evaln O (s+1-j) (rfind' cf) ⟪x.l, j+x.r⟫).isSome := by
   rw [← nrop_eq_rop h]
   exact fun j a ↦ nrfind'_obtain_prop_4 h j a
-theorem nrfind'_obtain_prop_6' (h:(evaln O (s+1) (rfind' cf) x).isSome) :
+theorem nrfind'_obtain_prop_6' {O s cf x} (h:(evaln O (s+1) (rfind' cf) x).isSome) :
 ∀ j ≤ rfind'_obtain (en2e h),
 (rfind'_obtain (en2e h))+x.r ∈ (evaln O (s+1-j) (rfind' cf) ⟪x.l, j+x.r⟫)  := by
   rw [← nrop_eq_rop h]
   exact fun j a ↦ nrfind'_obtain_prop_6 h j a
 
-theorem evaln_complete' (h:(evaln O s c x).isSome) : (y∈eval O c x)→(y∈evaln O s c x) := by
+theorem evaln_complete' {O s c x y} (h:(evaln O s c x).isSome) : (y∈eval O c x)→(y∈evaln O s c x) := by
   intro hh
   rcases evaln_complete.mp hh with ⟨h1,h2⟩
   simp only [Option.mem_def] at ⊢ h2
   rw [← h2]
   exact evaln_sing'' h  (Option.isSome_of_eq_some h2)
-theorem evaln_complete'' {c n x} : x ∈ eval O c n ↔ ∃ k, x ∈ evaln O (k+1) c n := by
+theorem evaln_complete'' {O} {c n x} : x ∈ eval O c n ↔ ∃ k, x ∈ evaln O (k+1) c n := by
   constructor
   rotate_left
   intro h1
@@ -531,12 +531,12 @@ theorem evaln_complete'' {c n x} : x ∈ eval O c n ↔ ∃ k, x ∈ evaln O (k+
   simp (config:={singlePass:=true}) [evaln_sG1 this] at this
   use h2-1
   exact evaln_complete' this h1
-theorem evaln_sound''' (h:(evaln O s c x).isSome) : (y∉evaln O s c x)→(y∉eval O c x) := by
+theorem evaln_sound''' {O s c x y} (h:(evaln O s c x).isSome) : (y∉evaln O s c x)→(y∉eval O c x) := by
   contrapose
   simp
   exact fun h2 => evaln_complete' h h2
 
-theorem rfind'_obtain_prop
+theorem rfind'_obtain_prop {O cf x}
 (h:(eval O (rfind' cf) x).Dom) :
 0∈(eval O cf (Nat.pair x.l (rfind'_obtain h+x.r)))
 ∧ (∀ j ≤ rfind'_obtain h, (eval O cf ⟪x.l, j+x.r⟫).Dom)
@@ -550,10 +550,10 @@ theorem rfind'_obtain_prop
     fun j a ↦ en2e (nrop2 j a),
     fun j jj => evaln_sound''' (nrop2 j (le_of_succ_le jj)) (nrop3 j jj)
   ⟩
-theorem rfind'_obtain_prop_4 (h:(eval O (rfind' cf) x).Dom) : ∀ j ≤ rfind'_obtain h, (eval O (rfind' cf) ⟪x.l, j+x.r⟫).Dom :=
+theorem rfind'_obtain_prop_4 {O cf x} (h:(eval O (rfind' cf) x).Dom) : ∀ j ≤ rfind'_obtain h, (eval O (rfind' cf) ⟪x.l, j+x.r⟫).Dom :=
   fun j jj => en2e $ nrfind'_obtain_prop_4' (Option.isSome_of_eq_some (evaln_complete''.mp (Part.get_mem h)).choose_spec) j jj
 
-theorem rfind'_prop
+theorem rfind'_prop {O cf x y}
 (h:(eval O (rfind' cf) x).Dom)
 :
 (y+x.r∈eval O (rfind' cf) x)
@@ -582,7 +582,7 @@ theorem rfind'_prop
   rcases h1 h2 with ⟨h4,h5,h6⟩
   use h4
   refine ⟨h5,forall_mem_part (h3 h4 (le_of_succ_le h5)) h6⟩
-theorem rfind'_obtain_prop_6 (h:(eval O (rfind' cf) x).Dom) :
+theorem rfind'_obtain_prop_6 {O cf x} (h:(eval O (rfind' cf) x).Dom) :
 ∀ j ≤ rfind'_obtain h, (rfind'_obtain h)+x.r ∈ (eval O (rfind' cf) ⟪x.l, j+x.r⟫)  := by
   rcases evaln_complete''.mp (Part.get_mem h) with ⟨h1,h2⟩
   exact fun j jj =>
@@ -662,20 +662,20 @@ match c,s with
     Nat.max usen_base usen_indt
 
 section usen_mono
-theorem usen_bound : ∀ {k c n x}, x ∈ usen O c k n → n < k
+theorem usen_bound {O} : ∀ {k c n x}, x ∈ usen O c k n → n < k
   | 0, c, n, x, h => by simp [usen] at h
   | k + 1, c, n, x, h => by
     suffices ∀ {o : Option ℕ}, x ∈ do { guard (n ≤ k); o } → n < k + 1 by
       cases c <;> rw [usen] at h <;> exact this h
     simpa [Option.bind_eq_some_iff] using Nat.lt_succ_of_le
-private lemma guard_imp {k:ℕ} (h:k≤k₂) : guard (n ≤ k) = some a → (guard (n ≤ k₂):Option Unit) = some a := by
+private lemma guard_imp {k₂ n a} {k:ℕ} (h:k≤k₂) : guard (n ≤ k) = some a → (guard (n ≤ k₂):Option Unit) = some a := by
   intro h3
   have : n≤k := by
     contrapose h3
     simp only [h3, guard_false, reduceCtorEq, not_false_eq_true]
   have : n≤k₂ := by exact Nat.le_trans this h
   simp [this]
-theorem usen_mono : ∀ {k₁ k₂ c n x}, k₁ ≤ k₂ → x ∈ usen O c k₁ n → x ∈ usen O c k₂ n
+theorem usen_mono {O} : ∀ {k₁ k₂ c n x}, k₁ ≤ k₂ → x ∈ usen O c k₁ n → x ∈ usen O c k₂ n
 | 0, k₂, c, n, x, _, h => by simp [usen] at h
 | k + 1, k₂ + 1, c, n, x, hl, h => by
   have hl' := Nat.le_of_succ_le_succ hl
@@ -751,20 +751,20 @@ theorem usen_mono : ∀ {k₁ k₂ c n x}, k₁ ≤ k₂ → x ∈ usen O c k₁
       simp only [Option.bind_eq_some_iff] at h7 ⊢
       rcases h7 with ⟨h8,h9,h10⟩
       exact ⟨h8,usen_mono hl' h9, h10⟩
-theorem usen_mono_contra : ∀ {k₁ k₂ c n}, k₁ ≤ k₂ → usen O c k₂ n = Option.none → usen O c k₁ n = Option.none := by
+theorem usen_mono_contra {O} : ∀ {k₁ k₂ c n}, k₁ ≤ k₂ → usen O c k₂ n = Option.none → usen O c k₁ n = Option.none := by
   intro k₁ k₂ c n k1k2 opt
   contrapose opt
   have := usen_mono k1k2 (Option.get_mem (Option.isSome_iff_ne_none.mpr opt))
   refine Option.ne_none_iff_exists'.mpr ?_
   exact Exists.intro ((usen O c k₁ n).get (Option.isSome_iff_ne_none.mpr opt)) this
-theorem usen_mono_dom : ∀ {k₁ k₂ c n}, k₁ ≤ k₂ → (usen O c k₁ n).isSome → (usen O c k₂ n).isSome := by
+theorem usen_mono_dom {O} : ∀ {k₁ k₂ c n}, k₁ ≤ k₂ → (usen O c k₁ n).isSome → (usen O c k₂ n).isSome := by
   intro k1 k2 c n k1k2 h1
   exact Option.isSome_of_mem (usen_mono k1k2 (Option.get_mem h1))
-theorem evaln_mono_dom : ∀ {k₁ k₂ c n}, k₁ ≤ k₂ → (evaln O k₁ c n).isSome → (evaln O k₂ c n).isSome := by
+theorem evaln_mono_dom {O} : ∀ {k₁ k₂ c n}, k₁ ≤ k₂ → (evaln O k₁ c n).isSome → (evaln O k₂ c n).isSome := by
   intro k1 k2 c n k1k2 h1
   exact Option.isSome_of_mem (evaln_mono k1k2 (Option.get_mem h1))
 
-lemma usen_sing (h1:a∈(usen O c s1 x)) (h2:b∈(usen O c s2 x)): a=b := by
+lemma usen_sing {O c s1 x a s2 b} (h1:a∈(usen O c s1 x)) (h2:b∈(usen O c s2 x)): a=b := by
   cases Classical.em (s1≤s2) with
   | inl h =>
     have := usen_mono h h1
@@ -772,9 +772,9 @@ lemma usen_sing (h1:a∈(usen O c s1 x)) (h2:b∈(usen O c s2 x)): a=b := by
   | inr h =>
     have := usen_mono (Nat.le_of_not_ge h) h2
     simp_all only [Option.mem_def, Option.some.injEq]
-lemma usen_sing' : (usen O c s1 x).get h1 = (usen O c s2 x).get h2 := usen_sing (Option.get_mem h1) (Option.get_mem h2)
+lemma usen_sing' {O c s1 x h1 s2 h2} : (usen O c s1 x).get h1 = (usen O c s2 x).get h2 := usen_sing (Option.get_mem h1) (Option.get_mem h2)
 
-lemma usen_mono'
+lemma usen_mono' {O c s1 x s2}
 (h1:(usen O c s1 x).isSome)
 (h2:s1≤s2)
 : (usen O c s2 x) = (usen O c s1 x) := by
@@ -802,7 +802,7 @@ private def ind : ℕ → Code → ℕ
   ind (s+1) cf
   + ind s (rfind' cf)
 
-theorem usen_none_iff_evaln_none : (usen O c s x) = Option.none ↔ (evaln O s c x) = Option.none := by
+theorem usen_none_iff_evaln_none {O c s x} : (usen O c s x) = Option.none ↔ (evaln O s c x) = Option.none := by
 -- using evaln.induct doesnt work, the prec inductive hypothesis w cf.prec cg is s+1 instead of s for some reason
   induction s,c using ind.induct generalizing x with
   | case1 _ => simp [usen,evaln]
@@ -893,17 +893,17 @@ theorem usen_none_iff_evaln_none : (usen O c s x) = Option.none ↔ (evaln O s c
       simp at this ⊢
       apply Option.eq_none_iff_forall_ne_some.mp
       exact ih.mpr this
-theorem usen_dom_iff_evaln_dom : (∃a,a∈(usen O c s x)) ↔ (∃b,b∈(evaln O s c x)) := by
+theorem usen_dom_iff_evaln_dom {O c s x} : (∃a,a∈(usen O c s x)) ↔ (∃b,b∈(evaln O s c x)) := by
   have := (@usen_none_iff_evaln_none O c s x).not
   simp [Option.eq_none_iff_forall_ne_some] at this
   exact this
-theorem usen_dom_iff_evaln_dom' : ((usen O c s x).isSome) ↔ ((evaln O s c x).isSome) := by
+theorem usen_dom_iff_evaln_dom' {O c s x} : ((usen O c s x).isSome) ↔ ((evaln O s c x).isSome) := by
   have := (@usen_none_iff_evaln_none O c s x).not
   simp at this
   simp [isSome_iff_not_none] at this
   exact Bool.coe_iff_coe.mpr this
-abbrev en2un : (evaln O s c x).isSome → (usen O c s x).isSome := usen_dom_iff_evaln_dom'.mpr
-abbrev un2en : (usen O c s x).isSome → (evaln O s c x).isSome := usen_dom_iff_evaln_dom'.mp
+abbrev en2un {O s c x} : (evaln O s c x).isSome → (usen O c s x).isSome := usen_dom_iff_evaln_dom'.mpr
+abbrev un2en {O c s x} : (usen O c s x).isSome → (evaln O s c x).isSome := usen_dom_iff_evaln_dom'.mp
 end usen_dom_iff_evaln_dom
 
 section usen_sound
@@ -988,7 +988,7 @@ def CodeNatK.induction
         | inl h => rw [h]; exact hcf
         | inr h => exact ih x' h cf
 
-theorem usen_rfind_prop_aux'' {cf:Code} :
+theorem usen_rfind_prop_aux'' {O k n} {cf:Code} :
 (usen O cf.rfind' (k + 1) n).isSome
 →
 (evaln O (k + 1) cf.rfind' n).isSome
@@ -1014,12 +1014,12 @@ theorem usen_rfind_prop_aux'' {cf:Code} :
     have usen_indt_dom : ((usen O cf.rfind' k (Nat.pair n.l (n.r + 1)))).isSome := by contrapose h; simp at h; simp [h]
     clear h
     exact ih usen_indt_dom
-theorem usen_rfind_prop_aux' {cf:Code} :
+theorem usen_rfind_prop_aux' {O k n} {cf:Code} :
 (usen O cf.rfind' (k + 1) n).isSome
 →
 (eval O cf.rfind' n).Dom
 := fun h ↦en2e (usen_rfind_prop_aux'' h)
-theorem usen_rfind_prop_aux {cf:Code} :
+theorem usen_rfind_prop_aux {O k n x} {cf:Code} :
 (x ∈ usen O cf.rfind' (k + 1) n)
 →
 (eval O cf.rfind' n).Dom
@@ -1028,7 +1028,7 @@ theorem usen_rfind_prop_aux {cf:Code} :
   have : (usen O cf.rfind' (k + 1) n).isSome := by exact Option.isSome_of_mem h
   exact usen_rfind_prop_aux' this
 
-theorem usen_rfind_prop' (hu:(usen O (rfind' cf) (k + 1) n).isSome):
+theorem usen_rfind_prop' {O cf k n} (hu:(usen O (rfind' cf) (k + 1) n).isSome):
 ∀j≤rfind'_obtain (usen_rfind_prop_aux' hu),
   (usen O cf (k + 1 - j) (Nat.pair n.l (n.r+j))).isSome
   -- and also the maximum of these is equal to the usen.
@@ -1036,7 +1036,7 @@ theorem usen_rfind_prop' (hu:(usen O (rfind' cf) (k + 1) n).isSome):
   intro j hjro
   rw (config:={occs:=.pos [2]}) [add_comm]
   exact en2un ((nrfind'_obtain_prop' (un2en hu)).right.left j hjro)
-theorem usen_rfind_prop (h:x ∈ usen O cf.rfind' (k + 1) n):
+theorem usen_rfind_prop {O k n x cf} (h:x ∈ usen O cf.rfind' (k + 1) n):
 ∀j≤rfind'_obtain (usen_rfind_prop_aux h),
   ∃y,y∈ (usen O cf (k + 1 - j) (Nat.pair n.l (n.r+j)))
   -- and also the maximum of these is equal to the usen.
@@ -1044,7 +1044,7 @@ theorem usen_rfind_prop (h:x ∈ usen O cf.rfind' (k + 1) n):
   have := @usen_rfind_prop'
   simp [Option.isSome_iff_mem] at this
   exact fun j a ↦ this x h j a
-lemma nrf_aux (h:(usen O (rfind' cf) k x).isSome) :
+lemma nrf_aux {O cf k x} (h:(usen O (rfind' cf) k x).isSome) :
  k=k-1+1
 := by
   have : k≠0 := by
@@ -1052,7 +1052,7 @@ lemma nrf_aux (h:(usen O (rfind' cf) k x).isSome) :
     simp [usen]
   have keqkM1P1 : k=k-1+1 := by exact Eq.symm (succ_pred_eq_of_ne_zero this)
   exact keqkM1P1
-lemma nrf (h:(usen O (rfind' cf) k x).isSome) :
+lemma nrf {O cf k x} (h:(usen O (rfind' cf) k x).isSome) :
 x≤k-1
 ∧
 (usen O cf k x).isSome
@@ -1074,7 +1074,7 @@ x≤k-1
   simp [isSome.bind evaln_base_dom] at h ⊢
   simp [evaln_base_dom]
 
-lemma unrpeq2' :
+lemma unrpeq2' {O cf x evalnbasedom evaln_ver_dom} :
 ((eval O cf x).get evalnbasedom = 0)
 ↔
 ((eval O cf.rfind' x).get evaln_ver_dom - x.r=0) := by
@@ -1103,7 +1103,7 @@ lemma unrpeq2' :
     exact h
   simp [h3] at h2
   exact Eq.symm ((fun {α} {o} {a} h ↦ (Part.eq_get_iff_mem h).mpr) evalnbasedom h2)
-lemma unrpeq2 :
+lemma unrpeq2 {O k cf x evalnbasedom evaln_ver_dom} :
 ((evaln O (k + 1) cf x).get evalnbasedom = 0)
 ↔
 ((evaln O (k + 1) cf.rfind' x).get evaln_ver_dom - x.r=0) := by
@@ -1135,7 +1135,7 @@ lemma unrpeq2 :
     exact h
   simp [h3] at h2
   exact Option.get_of_eq_some evalnbasedom h2
-lemma unrpeq0 :
+lemma unrpeq0 {O cf k x y} :
 (y ∈ usen O (rfind' cf) (k + 1) x)
 ↔
 (
@@ -1176,7 +1176,7 @@ lemma unrpeq0 :
   simp [isSome.bind (h1)]
   simp_all [@unrpeq2 O k cf x h1 h2]
 
-lemma unrpeq1 : (y∈(do
+lemma unrpeq1 {x k O cf y} : (y∈(do
   guard (x≤k);
   let guard ← evaln O (k+1) (rfind' cf) x;
   let ro := guard - x.r
@@ -1211,7 +1211,7 @@ lemma unrpeq1 : (y∈(do
   simp [xlek]
   simp [isSome.bind h1]
   exact h2
-lemma lemlemlem2
+lemma lemlemlem2 {O k cf x roM1 asddom}
 (a:ℕ)
 (h1 : (evaln O (k + 1) cf x).isSome)
 (u0:(usen O cf (k + 1) x).isSome)
@@ -1272,7 +1272,7 @@ lemma lemlemlem2
       exact usen_sing'
     rw [this]
 
-theorem usen_rfind_prop2 :
+theorem usen_rfind_prop2 {O k x y cf} :
 (y ∈ usen O cf.rfind' (k + 1) x)
 ↔
 y∈(do
@@ -1586,7 +1586,7 @@ y∈(do
       exact rfl
       exact usen_sing'
       exact usen_sing'
-theorem usen_rfind_prop2'
+theorem usen_rfind_prop2' {O cf k x}
 (h:(usen O (rfind' cf) (k + 1) x).isSome)
 :
 (usen O cf.rfind' (k + 1) x).get h
@@ -1604,7 +1604,7 @@ theorem usen_rfind_prop2'
   exact
     Eq.symm
       (Option.get_of_eq_some (Option.isSome_of_mem (usen_rfind_prop2.mp (Option.get_mem h))) this)
-theorem usen_rfind_prop2'' :
+theorem usen_rfind_prop2'' {O k x cf} :
 (usen O cf.rfind' (k + 1) x)=(do
   guard (x≤k);
   let guard ← evaln O (k+1) (rfind' cf) x;
@@ -1618,8 +1618,8 @@ theorem usen_rfind_prop2'' :
     apply Option.eq_of_eq_some
     intro y
     exact usen_rfind_prop2
-theorem usen_xles (h:(usen O c (s+1) x).isSome) : x≤s := le_of_lt_succ (usen_bound (Option.get_mem h))
-theorem usen_sound : ∀ {c s n x}, x ∈ usen O c s n → x ∈ use O c n
+theorem usen_xles {O c s x} (h:(usen O c (s+1) x).isSome) : x≤s := le_of_lt_succ (usen_bound (Option.get_mem h))
+theorem usen_sound {O} : ∀ {c s n x}, x ∈ usen O c s n → x ∈ use O c n
 := by
   intro c k n x h
   induction k,c using CodeNatK.induction generalizing x n with
@@ -1753,12 +1753,12 @@ theorem usen_sound : ∀ {c s n x}, x ∈ usen O c s n → x ∈ use O c n
 end usen_sound
 
 section usen_complete
-theorem eval_dom_imp_evaln (h:(eval O c x).Dom) : ∃ s, (evaln O s c x).isSome := by
+theorem eval_dom_imp_evaln {O c x} (h:(eval O c x).Dom) : ∃ s, (evaln O s c x).isSome := by
   rcases evaln_complete.mp (Part.get_mem h) with ⟨k, hk⟩
   use k
   exact Option.isSome_of_mem hk
 
-theorem use_dom_iff_eval_dom : (use O c x).Dom ↔ (eval O c x).Dom := by
+theorem use_dom_iff_eval_dom {O c x} : (use O c x).Dom ↔ (eval O c x).Dom := by
   constructor
   · induction c generalizing x with
     | zero => exact id
@@ -1784,9 +1784,9 @@ theorem use_dom_iff_eval_dom : (use O c x).Dom ↔ (eval O c x).Dom := by
   exact Part.mem_imp_dom $ usen_sound $ Option.get_mem $ en2un hs
 
 
-abbrev e2u : (eval O c x).Dom → (use O c x).Dom := use_dom_iff_eval_dom.mpr
-abbrev u2e : (use O c x).Dom → (eval O c x).Dom := use_dom_iff_eval_dom.mp
-theorem use_rfind_prop (hu:(use O (rfind' cf) n).Dom):
+abbrev e2u {O c x} : (eval O c x).Dom → (use O c x).Dom := use_dom_iff_eval_dom.mpr
+abbrev u2e {O c x} : (use O c x).Dom → (eval O c x).Dom := use_dom_iff_eval_dom.mp
+theorem use_rfind_prop {O cf n} (hu:(use O (rfind' cf) n).Dom):
 ∀j≤rfind'_obtain (u2e hu),
   (use O cf (Nat.pair n.l (n.r+j))).Dom
   -- and also the maximum of these is equal to the usen.
@@ -1795,7 +1795,7 @@ theorem use_rfind_prop (hu:(use O (rfind' cf) n).Dom):
   rw [add_comm]
   exact e2u ((rfind'_obtain_prop (u2e hu)).right.left j hjro)
 
-lemma lemlemlem
+lemma lemlemlem {O cf nn h5 h57}
 {a n:ℕ}
 (h6:h5 ∈ use O cf (Nat.pair n.l (nn + 1 + n.r)))
 (rop3:∀ j ≤ nn + 1, (use O cf (Nat.pair n.l (n.r + j))).Dom)
@@ -1864,7 +1864,7 @@ lemma lemlemlem
       exact Part.get_eq_of_mem h6 _
     rw [this]
     rw (config:={occs:=.pos [2]}) [Nat.max_comm]
-lemma lemlemlem3
+lemma lemlemlem3 {O cf nn h5 h57 kk x}
 {a n use_steps:ℕ}
 (h6:h5 ∈ use O cf (Nat.pair n.l (nn + 1 + n.r)))
 (rop3:∀ j ≤ nn + 1, (use O cf (Nat.pair n.l (n.r + j))).Dom)
@@ -1966,13 +1966,13 @@ lemma lemlemlem3
         exact (Part.eq_get_iff_mem dom1).mpr (usen_sound g2)
       rw [this]
       exact iihh2
-lemma eval_rfind_prop5 :
+lemma eval_rfind_prop5 {O cf y x} :
 x∈eval O (rfind' cf) y→y.r≤x := by
   simp [eval]
   grind
 
 -- set_option maxHeartbeats 1000000 in
-theorem usen_complete {c n x} : x ∈ use O c n ↔ ∃ s, x ∈ usen O c s n := by
+theorem usen_complete {O} {c n x} : x ∈ use O c n ↔ ∃ s, x ∈ usen O c s n := by
   refine ⟨fun h => ?_, fun ⟨k, h⟩ => usen_sound h⟩
   rsuffices ⟨k, h⟩ : ∃ k, x ∈ usen O  c (k + 1) n
   · exact ⟨k + 1, h⟩
@@ -2285,12 +2285,12 @@ theorem usen_complete {c n x} : x ∈ use O c n ↔ ∃ s, x ∈ usen O c s n :=
 end usen_complete
 
 section use_principle
-theorem use_eq_rfindOpt (c n) : use O c n = Nat.rfindOpt fun k => usen O c k n :=
+theorem use_eq_rfindOpt {O} (c n) : use O c n = Nat.rfindOpt fun k => usen O c k n :=
   Part.ext fun x => by
     refine usen_complete.trans (Nat.rfindOpt_mono ?_).symm
     intro a m n hl; apply usen_mono hl
 
-theorem evaln_pair_dom (h:(evaln O (s+1) (pair cf cg) x).isSome) : (evaln O (s+1) cf x).isSome ∧ (evaln O (s+1) cg x).isSome := by
+theorem evaln_pair_dom {O s cf cg x} (h:(evaln O (s+1) (pair cf cg) x).isSome) : (evaln O (s+1) cf x).isSome ∧ (evaln O (s+1) cg x).isSome := by
   have := evaln_xles h
   contrapose h
   push_neg at h
@@ -2300,14 +2300,14 @@ theorem evaln_pair_dom (h:(evaln O (s+1) (pair cf cg) x).isSome) : (evaln O (s+1
     intro a a_1
     simp_all only [Option.isSome_some, ne_eq, Bool.not_eq_true, Option.isSome_eq_false_iff, Option.isNone_iff_eq_none,
       forall_const]
-theorem evaln_comp_dom_aux (h:(evaln O (s+1) (comp cf cg) x).isSome) : (evaln O (s+1) cg x).isSome := by
+theorem evaln_comp_dom_aux {O s cf cg x} (h:(evaln O (s+1) (comp cf cg) x).isSome) : (evaln O (s+1) cg x).isSome := by
   have h':= h
   simp [evaln] at h'
   simp [evaln_xles h] at h'
   contrapose h'
   simp at h'
   simp [h']
-theorem evaln_comp_dom
+theorem evaln_comp_dom {O s cf cg x}
 (h:(evaln O (s+1) (comp cf cg) x).isSome)
 :
 (evaln O (s+1) cg x).isSome
@@ -2323,7 +2323,7 @@ theorem evaln_comp_dom
     simp [evaln_xles h]
     intro h1 h2
     simp_all only [Option.get_some]
-theorem evaln_prec_dom_aux
+theorem evaln_prec_dom_aux {O s cf cg x i}
 (h:(evaln O (s+1) (prec cf cg) ⟪x, i+1⟫).isSome)
 :
 (evaln O s (prec cf cg) ⟪x, i⟫).isSome
@@ -2334,7 +2334,7 @@ theorem evaln_prec_dom_aux
   contrapose h'
   simp at h'
   simp [h']
-theorem evaln_prec_dom'
+theorem evaln_prec_dom' {O s cf cg x}
 (h:(evaln O (s+1) (prec cf cg) ⟪x,0⟫).isSome)
 :
 (evaln O (s+1) cf x).isSome
@@ -2343,7 +2343,7 @@ theorem evaln_prec_dom'
   simp [evaln] at h'
   simp [evaln_xles h] at h'
   exact h'
-theorem evaln_prec_dom
+theorem evaln_prec_dom {O s cf cg x i}
 (h:(evaln O (s+1) (prec cf cg) ⟪x, i+1⟫).isSome)
 :
 (evaln O (s-i) cf x).isSome ∧
@@ -2387,14 +2387,14 @@ let evaln_prev := (evaln O s (prec cf cg) ⟪x, i⟫).get (evaln_prec_dom_aux h)
       have aux0 := evaln_prec_dom_aux h
       simp [isSome.bind aux0] at h'
       exact h'
-theorem usen_pair_dom (h:(usen O (pair cf cg) (s+1) x).isSome) : (usen O cf (s+1) x).isSome ∧ (usen O cg (s+1) x).isSome := by
+theorem usen_pair_dom {O cf cg s x} (h:(usen O (pair cf cg) (s+1) x).isSome) : (usen O cf (s+1) x).isSome ∧ (usen O cg (s+1) x).isSome := by
   have := usen_xles h
   contrapose h
   push_neg at h
   simp [usen]
   simp [this]
   aesop
-theorem usen_comp_dom_aux (h:(usen O (comp cf cg) (s+1) x).isSome) : (evaln O (s+1) cg x).isSome := by
+theorem usen_comp_dom_aux {O cf cg s x} (h:(usen O (comp cf cg) (s+1) x).isSome) : (evaln O (s+1) cg x).isSome := by
   have hog := h
   simp [usen] at h
   simp [usen_xles hog] at h
@@ -2402,7 +2402,7 @@ theorem usen_comp_dom_aux (h:(usen O (comp cf cg) (s+1) x).isSome) : (evaln O (s
   contrapose h
   simp at h
   simp [h]
-theorem usen_comp_dom (h:(usen O (comp cf cg) (s+1) x).isSome) : (usen O cg (s+1) x).isSome ∧ (usen O cf (s+1) ((evaln O (s+1) cg x).get (usen_comp_dom_aux h))).isSome := by
+theorem usen_comp_dom {O cf cg s x} (h:(usen O (comp cf cg) (s+1) x).isSome) : (usen O cg (s+1) x).isSome ∧ (usen O cf (s+1) ((evaln O (s+1) cg x).get (usen_comp_dom_aux h))).isSome := by
   have hog := h
   simp [usen] at h
   simp [usen_xles hog] at h
@@ -2412,7 +2412,7 @@ theorem usen_comp_dom (h:(usen O (comp cf cg) (s+1) x).isSome) : (usen O cg (s+1
   simp
   intro a b c d e
   simp_all only [Option.isSome_some, Option.get_some, forall_const, reduceCtorEq, not_false_eq_true]
-theorem usen_prec_dom_aux
+theorem usen_prec_dom_aux {O cf cg s x i}
 (h:(usen O (prec cf cg) (s+1) ⟪x, i+1⟫).isSome)
 :
 (evaln O s (prec cf cg) ⟪x, i⟫).isSome
@@ -2423,7 +2423,7 @@ theorem usen_prec_dom_aux
   aesop? says
     intro a a_1 a_2 a_3 a_4 a_5
     simp_all only [Option.isSome_some, not_true_eq_false]
-theorem usen_prec_dom'
+theorem usen_prec_dom' {O cf cg s x}
 (h:(usen O (prec cf cg) (s+1) ⟪x,0⟫).isSome)
 :
 (usen O cf (s+1) x).isSome
@@ -2432,7 +2432,7 @@ theorem usen_prec_dom'
   simp [usen] at h'
   simp [usen_xles h] at h'
   exact h'
-theorem usen_prec_dom
+theorem usen_prec_dom {O cf cg s x i}
 (h:(usen O (prec cf cg) (s+1) ⟪x, i+1⟫).isSome)
 :
 (usen O cf (s-i) x).isSome
@@ -2499,13 +2499,13 @@ let eval_prev := (evaln O s (prec cf cg) ⟪x, i⟫).get (usen_prec_dom_aux h)
       simp [isSome.bind uprev] at h'
       simp [isSome.bind eprev] at h'
       contrapose h'; simp at h'; simp [h']
-theorem usen_rfind'_dom
+theorem usen_rfind'_dom {O cf s x}
 (h:(usen O (rfind' cf) (s+1) x).isSome) :
 ∀ j ≤ nrfind'_obtain (un2en h),
   (usen O cf (s+1-j) ⟪x.l, j+x.r⟫).isSome := by
   have aux0 := (nrfind'_obtain_prop (un2en h)).right.left
   exact fun j a ↦ en2un (aux0 j a)
-theorem usen_mono_pair (hh:(usen O (pair cf cg) (s+1) x).isSome):
+theorem usen_mono_pair {O cf cg s x} (hh:(usen O (pair cf cg) (s+1) x).isSome):
   ((usen O cf (s+1) x).get ((usen_pair_dom hh).left) ≤ (usen O (pair cf cg) (s+1) x).get hh)
   ∧
   ((usen O cg (s+1) x).get ((usen_pair_dom hh).right) ≤ (usen O (pair cf cg) (s+1) x).get hh)
@@ -2513,22 +2513,22 @@ theorem usen_mono_pair (hh:(usen O (pair cf cg) (s+1) x).isSome):
     simp only [usen]
     simp only [Option.pure_def, Option.bind_eq_bind, Option.get_bind, Option.get_some, le_sup_left,
       le_sup_right, and_self]
-theorem usen_mono_comp (hh:(usen O (comp cf cg) (s+1) x).isSome):
+theorem usen_mono_comp {O cf cg s x} (hh:(usen O (comp cf cg) (s+1) x).isSome):
   ((usen O cg (s+1) x).get ((usen_comp_dom hh).left) ≤ (usen O (comp cf cg) (s+1) x).get hh)
   ∧
   ((usen O cf (s+1) ((evaln O (s+1) cg x).get (usen_comp_dom_aux hh))).get ((usen_comp_dom hh).right) ≤ (usen O (comp cf cg) (s+1) x).get hh)
   := by
     simp [usen]
-theorem usen_mono_prec' (hh:(usen O (prec cf cg) (s+1) ⟪x,0⟫).isSome):
+theorem usen_mono_prec' {O cf cg s x} (hh:(usen O (prec cf cg) (s+1) ⟪x,0⟫).isSome):
 ((usen O cf (s+1) x).get (usen_prec_dom' hh) ≤ (usen O (prec cf cg) (s+1) ⟪x,0⟫).get hh)
 := by
   simp [usen]
-theorem usen_mono_prec_1 (hh:(usen O (prec cf cg) (s+1) ⟪x, i+1⟫).isSome):
+theorem usen_mono_prec_1 {O cf cg s x i} (hh:(usen O (prec cf cg) (s+1) ⟪x, i+1⟫).isSome):
 (usen O (prec cf cg) (s) ⟪x, i⟫).get (en2un $ usen_prec_dom_aux hh) ≤ (usen O (prec cf cg) (s+1) ⟪x, i+1⟫).get hh
   := by
     simp [usen.eq_9]
 -- todo: simplify below proof
-theorem usen_mono_prec (hh:(usen O (prec cf cg) (s+1) ⟪x, i+1⟫).isSome):
+theorem usen_mono_prec {O cf cg s x i} (hh:(usen O (prec cf cg) (s+1) ⟪x, i+1⟫).isSome):
 ((usen O cf (s-i) x).get ((usen_prec_dom hh).left) ≤ (usen O (prec cf cg) (s+1) ⟪x, i+1⟫).get hh)
 ∧
 let eval_prev := (evaln O s (prec cf cg) ⟪x, i⟫).get (usen_prec_dom_aux hh)
@@ -2571,7 +2571,7 @@ let eval_prev := (evaln O s (prec cf cg) ⟪x, i⟫).get (usen_prec_dom_aux hh)
     apply Or.inl ih1.left
 
 
-lemma cm_aux_0
+lemma cm_aux_0 {l'}
 {l}
 {head :ℕ}
 {tail : List ℕ}
@@ -2581,7 +2581,7 @@ lemma cm_aux_0
 ∃ l'':List ℕ, l'' ++ head :: tail = l
 := by
   grind
-lemma cm_aux_1
+lemma cm_aux_1 {l'}
 {l}
 {head :ℕ}
 {tail : List ℕ}
@@ -2700,7 +2700,7 @@ theorem clause_mono_2_opt
     exact ⟨ih1.left,le_of_max_le_left ih1.right⟩
 
 
-theorem le_of_le_sub {a b :ℕ}(h:a≤b-c): a≤b := by
+theorem le_of_le_sub {c} {a b :ℕ}(h:a≤b-c): a≤b := by
   grind
 
 
@@ -3187,18 +3187,18 @@ theorem usen_principle {O₁ O₂} {s c x}
         (λ j hj ↦ a2 j (le_add_right_of_le hj))
         (λ j hj ↦ nrop2 j (le_add_right_of_le hj))
 
-lemma usen_sing'' : (usen O c s1 x).get h1 = (use O c x).get h2 := by
+lemma usen_sing'' {O c s1 x h1 h2} : (usen O c s1 x).get h1 = (use O c x).get h2 := by
   rcases usen_complete.mp (Part.get_mem h2) with ⟨h3,h4⟩
   simp at h4
   have h5 : (usen O c h3 x).isSome := by exact Option.isSome_of_mem h4
   have : (use O c x).get h2 = (usen O c h3 x).get h5 := by exact Eq.symm (Option.get_of_eq_some h5 h4)
   rw [this]
   exact usen_sing'
-lemma evaln_sound' (h:(evaln O s c x).isSome) : eval O c x = Part.some ((evaln O s c x).get h)
+lemma evaln_sound' {O s c x} (h:(evaln O s c x).isSome) : eval O c x = Part.some ((evaln O s c x).get h)
 := by
   have := evaln_sound (Option.get_mem h)
   exact Part.eq_some_iff.mpr this
-lemma usen_sound' (h:(usen O c s x).isSome) : use O c x = Part.some ((usen O c s x).get h)
+lemma usen_sound' {O c s x} (h:(usen O c s x).isSome) : use O c x = Part.some ((usen O c s x).get h)
 := by
   have := usen_sound (Option.get_mem h)
   exact Part.eq_some_iff.mpr this

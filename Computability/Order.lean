@@ -20,11 +20,11 @@ import Mathlib.Order.Antisymmetrization
 open scoped Computability
 
 protected theorem TuringReducible.refl (f : ℕ → ℕ) : f ≤ᵀᶠ f := by exact Nat.RecursiveIn.oracle
-protected theorem TuringReducible.rfl : f ≤ᵀᶠ f := .refl _
+protected theorem TuringReducible.rfl {f} : f ≤ᵀᶠ f := .refl _
 
 instance : IsRefl (ℕ → ℕ) TuringReducible where refl _ := .rfl
 
-theorem TuringReducible.trans (hg : f ≤ᵀᶠ g) (hh : g ≤ᵀᶠ h) : f ≤ᵀᶠ h := by
+theorem TuringReducible.trans {f g h} (hg : f ≤ᵀᶠ g) (hh : g ≤ᵀᶠ h) : f ≤ᵀᶠ h := by
   generalize z : (↑f:ℕ→.ℕ)=x at hg
   simp only [TuringReducible,z] at *
   induction hg with
@@ -38,7 +38,7 @@ theorem TuringReducible.trans (hg : f ≤ᵀᶠ g) (hh : g ≤ᵀᶠ h) : f ≤�
   | prec hf hh hf_ih hh_ih => (expose_names; exact Nat.RecursiveIn.prec hf_ih hh_ih)
   | rfind hf ih => (expose_names; exact Nat.RecursiveIn.rfind ih)
 
-theorem TuringReducible.trans' (hg : Nat.RecursiveIn g f) (hh : g ≤ᵀᶠ h) : Nat.RecursiveIn h f := by
+theorem TuringReducible.trans' {f g h} (hg : Nat.RecursiveIn g f) (hh : g ≤ᵀᶠ h) : Nat.RecursiveIn h f := by
   generalize z : (↑f:ℕ→.ℕ)=x at hg
   simp only [TuringReducible,z] at *
   induction hg with

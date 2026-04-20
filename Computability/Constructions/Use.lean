@@ -127,13 +127,13 @@ def c_usen_aux :=
 def c_usen :=
   c_list_getI.comp₂ (c_list_getLastI.comp $ c_usen_aux.comp (pair (c_const 17) right)) left
 
-theorem c_usen_evp_aux_x_0_0 : evalp O c_usen ⟪x, 0, 0⟫ = o2n (usen O 0 0 x) := by
+theorem c_usen_evp_aux_x_0_0 {O x} : evalp O c_usen ⟪x, 0, 0⟫ = o2n (usen O 0 0 x) := by
   unfold c_usen; unfold c_usen_aux
   lift_lets; extract_lets; expose_names
   rw [show Nat.pair 0 0 = 0 from rfl]
   simp [getI, usen]
 
-theorem c_usen_evp_aux_0_np1 : evalp O c_usen ⟪x, n+1, 0⟫ = o2n (usen O (n+1).n2c 0 x) := by
+theorem c_usen_evp_aux_0_np1 {O x n} : evalp O c_usen ⟪x, n+1, 0⟫ = o2n (usen O (n+1).n2c 0 x) := by
   unfold c_usen; unfold c_usen_aux
   lift_lets; extract_lets; expose_names
   let k:=⟪n+1, 0⟫-1
@@ -153,7 +153,7 @@ theorem c_usen_evp_aux_0_np1 : evalp O c_usen ⟪x, n+1, 0⟫ = o2n (usen O (n+1
   have hs : evalp O s covrec_inp = 0 := by simp [s,code_s,covrec_inp,hkP1]
   simp [hs, getI, usen]
 
-theorem c_usen_evp_aux (hcode_val:code≤4) :
+theorem c_usen_evp_aux {O code x s} (hcode_val:code≤4) :
   evalp O c_usen (Nat.pair x (Nat.pair code (s+1)))
     =
   o2n (usen O code.n2c (s+1) x)
@@ -234,7 +234,7 @@ theorem c_usen_evp_aux (hcode_val:code≤4) :
   | n+5 => simp at hcode_val
 
 
-theorem c_usen_evp_aux_nMod4 :
+theorem c_usen_evp_aux_nMod4 {O x n s} :
   evalp O c_usen ⟪x, (n+4)+1, s+1⟫
     =
   let m  := n.div2.div2
@@ -576,7 +576,7 @@ theorem c_usen_evp_aux_nMod4 :
     rw [show x.succ.succ.succ.succ=x+4 from rfl] at contrad
     simp at contrad
 
-@[simp] theorem c_usen_evp: evalp O c_usen ⟪x, code, s⟫ =
+@[simp] theorem c_usen_evp {O x code s} : evalp O c_usen ⟪x, code, s⟫ =
   o2n (usen O code.n2c s x) := by
 
   let code_s := Nat.pair code s
@@ -718,7 +718,7 @@ theorem c_usen_evp_aux_nMod4 :
         rw [rw0]
       | inr h => simp [h]
 
-@[cp] theorem c_usen_prim:code_prim c_usen := by
+@[cp] theorem c_usen_prim : code_prim c_usen := by
   unfold c_usen
   unfold c_usen_aux
   extract_lets
@@ -768,7 +768,7 @@ theorem c_usen_evp_aux_nMod4 :
 
   apply_cp 60
 
-@[simp] theorem c_usen_ev: eval O c_usen ⟪x, code, s⟫ = o2n (usen O code.n2c s x) := by
+@[simp] theorem c_usen_ev {O x code s}: eval O c_usen ⟪x, code, s⟫ = o2n (usen O code.n2c s x) := by
   rw [← evalp_eq_eval c_usen_prim];
   simp only [PFun.coe_val, c_usen_evp, Part.coe_some]
 end Computability.Code
@@ -778,7 +778,7 @@ end usen
 section use
 namespace Computability.Code
 def c_use := (c_rfindOpt (c_usen.comp₃ (right.comp left) (left.comp left) right))
-@[simp] theorem c_use_ev: eval O c_use (Nat.pair c x) = use O c.n2c x := by
+@[simp] theorem c_use_ev {O c x} : eval O c_use (Nat.pair c x) = use O c.n2c x := by
   simp only [c_use, comp₃, comp₂]
   have : code_total O ((c_usen.comp ((right.comp left).pair ((left.comp left).pair right)))) := by
     apply prim_total
