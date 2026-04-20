@@ -51,13 +51,16 @@ section opt_getD
 namespace Oracle.Single.Code
 def c_opt_getD := c_ifz.comp₃ left right (c_opt_iget.comp left)
 @[cp] theorem c_opt_getD_prim : code_prim c_opt_getD := by unfold c_opt_getD; apply_cp
-@[simp] theorem c_opt_getD_evp {O : ℕ → ℕ} {o d} : evalp O c_opt_getD (Nat.pair o d) = (n2o o).getD d := by
+@[simp] theorem c_opt_getD_evp {O : ℕ → ℕ} {o d} :
+    evalp O c_opt_getD (Nat.pair o d) = (n2o o).getD d := by
   simp [c_opt_getD]
   by_cases ho : o=0
   · simp [ho];
   · rcases exists_add_one_eq.mpr (one_le_iff_ne_zero.mpr ho) with ⟨k,hk⟩
     simp [←hk]
-@[simp] theorem c_opt_getD_ev {O : ℕ → ℕ} {o d} : eval O c_opt_getD (Nat.pair o d) = (n2o o).getD d := by simp [← evalp_eq_eval c_opt_getD_prim]
+@[simp] theorem c_opt_getD_ev {O : ℕ → ℕ} {o d} :
+    eval O c_opt_getD (Nat.pair o d) = (n2o o).getD d := by
+  simp [← evalp_eq_eval c_opt_getD_prim]
 end Oracle.Single.Code
 end opt_getD
 
@@ -68,7 +71,8 @@ def c_opt_none := c_const 0
   unfold c_opt_none; apply_cp
 @[simp] theorem c_opt_none_evp {O : ℕ → ℕ} {o} : evalp O c_opt_none o = o2n Option.none := by
   simp [c_opt_none]
-@[simp] theorem c_opt_none_ev {O : ℕ → ℕ} {o} : n2o <$> (eval O c_opt_none o) = (Option.none : Option ℕ) := by
+@[simp] theorem c_opt_none_ev {O : ℕ → ℕ} {o} :
+    n2o <$> (eval O c_opt_none o) = (Option.none : Option ℕ) := by
   simp [← evalp_eq_eval c_opt_none_prim]
 end Oracle.Single.Code
 end opt_none
@@ -76,19 +80,21 @@ end opt_none
 section opt_bind
 namespace Oracle.Single.Code
 def c_opt_bind (cf cg : Code) :=  c_ifz.comp₃ cf zero (cg.comp₂ c_id (c_opt_iget.comp cf))
-@[cp] theorem c_opt_bind_prim {cf cg : Code} (hcf : code_prim cf) (hcg : code_prim cg) : code_prim (c_opt_bind cf cg) := by unfold c_opt_bind; apply_cp
+@[cp] theorem c_opt_bind_prim {cf cg : Code} (hcf : code_prim cf) (hcg : code_prim cg) :
+  code_prim (c_opt_bind cf cg) := by unfold c_opt_bind; apply_cp
 @[simp] theorem c_opt_bind_evp {O : ℕ → ℕ} {cf cg : Code} {x} : evalp O (c_opt_bind cf cg) x =
   o2n do
     let t ← n2o (evalp O cf x)
     let r ← n2o (evalp O cg (Nat.pair x t))
     return r
 := by
-  simp [c_opt_bind,evalp]
+  simp only [c_opt_bind, evp_simps]
   cases Classical.em (evalp O cf x = 0) with
   | inl h => simp [h]
   | inr h =>
-    simp [h]
-    simp [isSome.bind <| hnat_6 h]
+    simp only [c_opt_iget_evp, ne_eq, h, not_false_eq_true, iget_evp_2, pair_l, ↓reduceIte, pair_r,
+      Option.pure_def, Option.bind_eq_bind, Option.bind_fun_some]
+    simp only [isSome.bind <| hnat_6 h, encode_ofNat]
     congr
     exact Eq.symm hnat_7
 end Oracle.Single.Code
@@ -97,14 +103,15 @@ end opt_bind
 section opt_bind'
 namespace Oracle.Single.Code
 def c_opt_bind' (cf cg : Code) :=  c_ifz.comp₃ cf zero cg
-@[cp] theorem c_opt_bind'_prim {cf cg : Code}(hcf : code_prim cf) (hcg : code_prim cg) : code_prim (c_opt_bind' cf cg) := by unfold c_opt_bind'; apply_cp
+@[cp] theorem c_opt_bind'_prim {cf cg : Code} (hcf : code_prim cf) (hcg : code_prim cg) :
+  code_prim (c_opt_bind' cf cg) := by unfold c_opt_bind'; apply_cp
 @[simp] theorem c_opt_bind'_evp {O : ℕ → ℕ} {cf cg : Code} {x} : evalp O (c_opt_bind' cf cg) x =
   o2n do
     let _ ← n2o (evalp O cf x)
     let r ← n2o (evalp O cg x)
     return r
 := by
-  simp [c_opt_bind',evalp]
+  simp only [c_opt_bind', evp_simps]
   cases Classical.em (evalp O cf x = 0) with
   | inl h => simp [h]
   | inr h =>
