@@ -256,8 +256,7 @@ theorem c_bdd_search_evp_1 {O c s a k l i r} :
           | inr h5 =>
             have := c_bdd_search_evp_0.mp h i (Nat.le_of_lt_succ h5)
             simp [this] at h3
-        simp [this]
-        simp [h3]
+        simp [this, h3]
     next h =>
       constructor
       · intro h2
@@ -271,10 +270,9 @@ theorem c_bdd_search_evp_1 {O c s a k l i r} :
       · cases Nat.eq_or_lt_of_le hi with
         | inl h5 =>
           clear hi
+          rcases c_bdd_aux h with ⟨y, z, hyz⟩
+          rcases ih.mp hyz with ⟨_, h7, _⟩
           simp [h5]
-          have a0 := c_bdd_aux h
-          rcases a0 with ⟨y,z,hyz⟩
-          rcases ih.mp hyz with ⟨h6,h7,h8⟩
           simp [h3 y (by omega)] at h7
         | inr h => exact Nat.le_of_lt_succ h
       exact ⟨h2,h3⟩
@@ -431,7 +429,7 @@ def c_step :=
       next h1 =>
         rcases h1 with ⟨h2,h3,h4⟩
         simp only [evalnSet, evp_simps] at h3
-        have a0 : h2 ≤ s := by exact evaln_dom_imp_x_le_s h3
+        have a0 : h2 ≤ s := evaln_dom_imp_x_le_s h3
         have a2 : h2-2*i-1 ≤ s := by omega
         have a1 := this (h2-2*i-1) a2
         simp only at a1
