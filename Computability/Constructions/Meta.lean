@@ -88,7 +88,8 @@ def c_pair := c_add.comp₂ (c_mul2.comp <| c_mul2) (c_const 5)
 @[simp, evp_simps] theorem c_pair_evp' {O} :
     evalp O c_pair = fun ab : ℕ => c2n (pair (n2c ab.l) (n2c ab.r)) := by
   simp [c2n, c_pair, Nat.mul_comm]
-@[simp, ev_simps] theorem c_pair_ev {O a b} : eval O c_pair ⟪a, b⟫ = c2n (pair (n2c a) (n2c b)) := by
+@[simp, ev_simps] theorem c_pair_ev {O a b} :
+    eval O c_pair ⟪a, b⟫ = c2n (pair (n2c a) (n2c b)) := by
   rw [← evalp_eq_eval c_pair_prim]; simp
 @[simp] theorem Nat.PrimrecIn.c_pair {O} :
     Nat.PrimrecIn O (fun ab : ℕ => c2n (pair (n2c ab.l) (n2c ab.r))) := by
@@ -101,7 +102,8 @@ def c_comp := c_add.comp₂ (c_mul2.comp <| c_mul2) (c_const 6)
 @[simp, evp_simps] theorem c_comp_evp' {O} :
     evalp O c_comp = fun ab : ℕ => c2n (comp (n2c ab.l) (n2c ab.r)) := by
   simp [c2n, c_comp, Nat.mul_comm]
-@[simp, ev_simps] theorem c_comp_ev {O a b} : eval O c_comp ⟪a, b⟫ = c2n (comp (n2c a) (n2c b)) := by
+@[simp, ev_simps] theorem c_comp_ev {O a b} :
+    eval O c_comp ⟪a, b⟫ = c2n (comp (n2c a) (n2c b)) := by
   rw [← evalp_eq_eval c_comp_prim]; simp
 @[simp] theorem Nat.PrimrecIn.c_comp {O} :
     Nat.PrimrecIn O (fun ab : ℕ => c2n (comp (n2c ab.l) (n2c ab.r))) := by
@@ -122,7 +124,8 @@ def c_prec := c_add.comp₂ (c_mul2.comp <| c_mul2) (c_const 7)
 @[simp] theorem Nat.PrimrecIn.c_prec {O} :
     Nat.PrimrecIn O (fun ab : ℕ => c2n (prec (n2c ab.l) (n2c ab.r))) := by
   rw [←c_prec_evp']; exact code_prim_prop
-@[simp, ev_simps] theorem c_prec_ev {O a b} : eval O c_prec ⟪a, b⟫ = c2n (prec (n2c a) (n2c b)) := by
+@[simp, ev_simps] theorem c_prec_ev {O a b} :
+    eval O c_prec ⟪a, b⟫ = c2n (prec (n2c a) (n2c b)) := by
   rw [← evalp_eq_eval c_prec_prim]; simp
 
 def c_rfind' := c_add.comp₂ (c_mul2.comp <| c_mul2) (c_const 8)
@@ -195,7 +198,8 @@ def c_comp₃ :=
 @[simp, evp_simps] theorem c_comp₃_evp {O a b c d} :
     evalp O c_comp₃ ⟪⟪a,b⟫,⟪c,d⟫⟫ = c2n (comp₃ a b c d) := by
   simp [c_comp₃]; rfl
-@[simp, ev_simps] theorem c_comp₃_ev {O a b c d} : eval O c_comp₃ ⟪⟪a,b⟫,⟪c,d⟫⟫ = c2n (comp₃ a b c d) := by
+@[simp, ev_simps] theorem c_comp₃_ev {O a b c d} :
+    eval O c_comp₃ ⟪⟪a,b⟫,⟪c,d⟫⟫ = c2n (comp₃ a b c d) := by
   rw [← evalp_eq_eval c_comp₃_prim]; simp
 end c_comp₃
 
