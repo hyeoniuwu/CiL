@@ -146,7 +146,7 @@ theorem c_bdd_search_evp_0 {O c s a k l} :
       · intro h
         apply ih.mpr ?_
         exact fun i hi ↦ h i (Nat.le_add_right_of_le hi)
-theorem c_bdd_aux {x} (h : x≠0) : ∃ y z, ⟪y, z⟫ ∈ n2o x := by
+theorem c_bdd_aux {x} (h : x ≠ 0) : ∃ y z, ⟪y, z⟫ ∈ n2o x := by
   use (x-1).l; use (x-1).r
   simp [hnat_to_opt_2 h]
 theorem c_bdd_search_evp_1 {O c s a k l i r}:

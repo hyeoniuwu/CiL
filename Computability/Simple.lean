@@ -540,7 +540,7 @@ lemma N_aux_2 {ywit s x}
   have := @fold_preserves_R_mem _ s (step s ywit prev) (range' (ywit + 1) (s - 1 - ywit)).reverse a3
   simp at this; simpa
 /-- We show that `f` is injective. -/
-lemma hf_injective_aux {x y} (hx : x∈A) (hy : y∈A) (hxy : x≠y) : choose (mem_A_iff_enumerated.mp hx) ≠ choose (mem_A_iff_enumerated.mp hy) := by
+lemma hf_injective_aux {x y} (hx : x∈A) (hy : y∈A) (hxy : x ≠ y) : choose (mem_A_iff_enumerated.mp hx) ≠ choose (mem_A_iff_enumerated.mp hy) := by
 
   have hxs := choose_spec (mem_A_iff_enumerated.mp hx)
   have hys := choose_spec (mem_A_iff_enumerated.mp hy)

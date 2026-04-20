@@ -22,11 +22,11 @@ protected theorem isSome.bind {α β} {o : Option α} (h : o.isSome) (f : α →
   rw [this]
   simp only [Option.bind_some]
   exact h2
-theorem ne_of_mem_imp_not_mem {x z} {y : Part ℕ} (h : x∈y) (h2 : x≠z) : z∉y := by
+theorem ne_of_mem_imp_not_mem {x z} {y : Part ℕ} (h : x∈y) (h2 : x ≠ z) : z∉y := by
   have aux: y=Part.some x := by exact Part.eq_some_iff.mpr h
   rw [aux]
   aesop
-theorem opt_ne_of_mem_imp_not_mem {x z} {y : Option ℕ} (h : x∈y) (h2 : x≠z) : z∉y := by
+theorem opt_ne_of_mem_imp_not_mem {x z} {y : Option ℕ} (h : x∈y) (h2 : x ≠ z) : z∉y := by
   aesop
 lemma forall_mem_part {c} {y : Part ℕ} (h1 : y.Dom) (h2 : ∀ x ∈ y, x = c) : c∈y := by
   contrapose h2
@@ -89,8 +89,8 @@ lemma Part.not_none_iff_dom{α} {o : Part α} : (¬o=Part.none)↔(o.Dom) := by
     intro a_1
     subst a_1
     exact a
-lemma Part.ne_of_get_ne {p1 p2 : Part ℕ} {h1 : p1.Dom} {h2 : p2.Dom} (h : p1.get h1≠p2.get h2) : (p1≠p2) := by aesop
-lemma Part.ne_of_get_ne' {x} {p1 : Part ℕ} {h1 : p1.Dom} (h : p1.get h1≠x) : (p1≠Part.some x) := by aesop
+lemma Part.ne_of_get_ne {p1 p2 : Part ℕ} {h1 : p1.Dom} {h2 : p2.Dom} (h : p1.get h1 ≠ p2.get h2) : (p1 ≠ p2) := by aesop
+lemma Part.ne_of_get_ne' {x} {p1 : Part ℕ} {h1 : p1.Dom} (h : p1.get h1 ≠ x) : (p1 ≠ Part.some x) := by aesop
 lemma part_add {x y : ℕ}: Part.some x + Part.some y = Part.some (x+y) := by
   exact Part.some_add_some x y
 
@@ -119,13 +119,13 @@ theorem hnat_2 {o : Option ℕ} (ho: o.isSome) : (o2n o) - 1 = o.get ho := by
   simp (config := {singlePass := true}) [Option.dom_imp_some ho]
   exact rfl
 
-theorem hnat_5 {n a} (h : n≠0) : ((n-1).max (a-1))+1 = n.max a := by
+theorem hnat_5 {n a} (h : n ≠ 0) : ((n-1).max (a-1))+1 = n.max a := by
   grind only [= Nat.max_def, cases Or]
-theorem hnat_6 {i} (h : i≠0) : (n2o i).isSome := by
+theorem hnat_6 {i} (h : i ≠ 0) : (n2o i).isSome := by
   have : i=i-1+1 := by exact ge_0_rw h
   rw [this]
   rfl
-theorem hnat_8 {o} (h : (n2o o).isSome): o≠0 := by
+theorem hnat_8 {o} (h : (n2o o).isSome): o ≠ 0 := by
   contrapose h
   simp [h]
 theorem hnat_7 {o h} : (n2o o).get h = o-1 := by

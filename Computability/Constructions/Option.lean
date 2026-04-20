@@ -24,7 +24,8 @@ def c_isSome := c_sg'
 @[cp] theorem c_isSome_prim : code_prim c_isSome := by unfold c_isSome; apply_cp
 @[simp] theorem c_isSome_evp {O : ℕ → ℕ} : evalp O c_isSome = fun o => b'2n <| (n2o o).isSome := by
   funext x; cases x <;> simp [c_isSome, b'2n, n2o]
-@[simp] theorem c_isSome_ev {O} : eval O c_isSome = fun o => b'2n <| (n2o o).isSome := by rw [← evalp_eq_eval c_isSome_prim]; simp only [c_isSome_evp];
+@[simp] theorem c_isSome_ev {O} : eval O c_isSome = fun o => b'2n <| (n2o o).isSome := by
+  rw [← evalp_eq_eval c_isSome_prim]; simp only [c_isSome_evp];
 end Oracle.Single.Code
 end isSome
 
@@ -38,11 +39,12 @@ def c_opt_iget := c_pred
   · simp [ho];
   · rcases exists_add_one_eq.mpr (one_le_iff_ne_zero.mpr ho) with ⟨k,hk⟩
     simp [←hk]
-@[simp] theorem iget_evp_2 {o} (h : o≠0) : Option.getD (n2o o) 0 = o-1 :=  by
+@[simp] theorem iget_evp_2 {o} (h : o ≠ 0) : Option.getD (n2o o) 0 = o-1 :=  by
   rw [Eq.symm (succ_pred_eq_of_ne_zero h)]
   exact rfl
 
-@[simp] theorem c_opt_iget_ev {O o} : eval O c_opt_iget o = Option.getD (n2o o) 0 := by simp [← evalp_eq_eval c_opt_iget_prim]
+@[simp] theorem c_opt_iget_ev {O o} : eval O c_opt_iget o = Option.getD (n2o o) 0 := by
+  simp [← evalp_eq_eval c_opt_iget_prim]
 end Oracle.Single.Code
 end opt_iget
 section opt_getD

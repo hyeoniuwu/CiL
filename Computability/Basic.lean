@@ -63,13 +63,13 @@ theorem pair_l_gt0 {x y} : x>0→(Nat.pair x y)>0 := by
   rw [show x=(Nat.pair x y).unpair.1 from by simp [unpair_pair]]
   rw [h]
   simp [unpair_zero]
-theorem pair_r_ne_0 {x y} : x≠0→(Nat.pair y x)≠0 := by
+theorem pair_r_ne_0 {x y} : x ≠ 0→(Nat.pair y x) ≠ 0 := by
   contrapose
   intro h
   rw [show x=(Nat.pair y x).unpair.2 from by simp [unpair_pair]]
   rw [h]
   simp [unpair_zero]
-theorem pair_l_ne_0 {x y} : x≠0→(Nat.pair x y)≠0 := by
+theorem pair_l_ne_0 {x y} : x ≠ 0→(Nat.pair x y) ≠ 0 := by
   contrapose
   intro h
   rw [show x=(Nat.pair x y).unpair.1 from by simp [unpair_pair]]
@@ -122,7 +122,7 @@ fs_size 0b011000111 = 5
 -/
 
 theorem fs_in_singleton {x y}: fs_in (2^y) x ↔ x=y := by grind
-theorem fs_in_singleton' {x y}: Nat.testBit (2^y) x = false ↔ y≠x := by grind
+theorem fs_in_singleton' {x y}: Nat.testBit (2^y) x = false ↔ y ≠ x := by grind
 end fs
 
 namespace Oracle.Single.Code.nc_to_nn

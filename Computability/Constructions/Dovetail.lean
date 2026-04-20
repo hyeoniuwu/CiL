@@ -73,7 +73,7 @@ eval O c ⟪x, dvt.l⟫=Part.some 0 := by
   extract_lets at this
   exact Part.eq_some_iff.mpr (evaln_sound this)
 
-theorem dovetailn_ev_1' {O : ℕ → ℕ} {c: Code} {x : ℕ} : eval O (dovetailn c) x=Part.none ↔ ∀ s y, evaln O s c ⟪x, y⟫≠Option.some 0 := by
+theorem dovetailn_ev_1' {O : ℕ → ℕ} {c: Code} {x : ℕ} : eval O (dovetailn c) x=Part.none ↔ ∀ s y, evaln O s c ⟪x, y⟫ ≠ Option.some 0 := by
   constructor
   · contrapose
     simp? says
@@ -98,7 +98,7 @@ theorem dovetailn_ev_1' {O : ℕ → ℕ} {c: Code} {x : ℕ} : eval O (dovetail
       apply Exists.intro
       exact this
 
-theorem dovetailn_ev_1_aux {O : ℕ → ℕ} {c: Code} {x : ℕ} : (∀ s y, evaln O s c ⟪x, y⟫≠Option.some 0) ↔ ∀ y, eval O c ⟪x, y⟫≠Part.some 0 := by
+theorem dovetailn_ev_1_aux {O : ℕ → ℕ} {c: Code} {x : ℕ} : (∀ s y, evaln O s c ⟪x, y⟫ ≠ Option.some 0) ↔ ∀ y, eval O c ⟪x, y⟫ ≠ Part.some 0 := by
   constructor
   · contrapose
     simp only [ne_eq, not_forall, not_not, forall_exists_index]
@@ -111,7 +111,7 @@ theorem dovetailn_ev_1_aux {O : ℕ → ℕ} {c: Code} {x : ℕ} : (∀ s y, eva
     use y
     exact Part.eq_some_iff.mpr (evaln_sound h)
 
-theorem dovetailn_ev_1 {O : ℕ → ℕ} {c: Code} {x : ℕ} : eval O (dovetailn c) x=Part.none ↔ ∀ y, eval O c ⟪x, y⟫≠Part.some 0 :=
+theorem dovetailn_ev_1 {O : ℕ → ℕ} {c: Code} {x : ℕ} : eval O (dovetailn c) x=Part.none ↔ ∀ y, eval O c ⟪x, y⟫ ≠ Part.some 0 :=
   Iff.trans dovetailn_ev_1' dovetailn_ev_1_aux
 theorem dovetailn_ev_2 {O : ℕ → ℕ} {c: Code} {x : ℕ} : (eval O (dovetailn c) x).Dom ↔ ∃ y, eval O c ⟪x, y⟫=Part.some 0 := by
   have := (@dovetailn_ev_1 O c x).not
@@ -140,10 +140,10 @@ eval O c ⟪x, dvt⟫ = Part.some 0 := by
   rw [this]
   exact main
 
-theorem dovetail_ev_1' {O : ℕ → ℕ} {c: Code} {x : ℕ} : eval O (dovetail c) x=Part.none ↔ ∀ s y, evaln O s c ⟪x, y⟫≠Option.some 0 := by
+theorem dovetail_ev_1' {O : ℕ → ℕ} {c: Code} {x : ℕ} : eval O (dovetail c) x=Part.none ↔ ∀ s y, evaln O s c ⟪x, y⟫ ≠ Option.some 0 := by
   simp [dovetail_none_iff_dovetailn_none]
   exact dovetailn_ev_1'
-theorem dovetail_ev_1 {O : ℕ → ℕ} {c: Code} {x : ℕ} : eval O (dovetail c) x=Part.none ↔ ∀ y, eval O c ⟪x, y⟫≠Part.some 0 := by
+theorem dovetail_ev_1 {O : ℕ → ℕ} {c: Code} {x : ℕ} : eval O (dovetail c) x=Part.none ↔ ∀ y, eval O c ⟪x, y⟫ ≠ Part.some 0 := by
   exact Iff.trans dovetail_ev_1' dovetailn_ev_1_aux
 theorem dovetail_ev_2 {O : ℕ → ℕ} {c: Code} {x : ℕ} : (eval O (dovetail c) x).Dom ↔ ∃ y, eval O c ⟪x, y⟫=Part.some 0 := by
   have := (@dovetail_ev_1 O c x).not

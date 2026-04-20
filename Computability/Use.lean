@@ -70,7 +70,7 @@ lemma evaln_mono' {O s1 c x s2}
   simp_all only [Option.mem_def, Option.some_get]
 
 theorem evaln_sG1 {O s c x} (h : (evaln O s c x).isSome) : s=s-1+1 := by
-  have : s≠0 := by
+  have : s ≠ 0 := by
     contrapose h
     simp [h,evaln]
   exact Eq.symm (succ_pred_eq_of_ne_zero this)
@@ -159,7 +159,7 @@ theorem evaln_rfind_as_eval_rfind {O s c x}
 
       contrapose h4
       simp [rwasd]
-      have : asd≠0 := by
+      have : asd ≠ 0 := by
         contrapose h4;
         rw [h4] at rwasd
         rw [show 0=(Option.some 0).get (Option.isSome_some) from rfl] at rwasd
@@ -332,7 +332,7 @@ theorem evaln_rfind_as_eval_rfind_reverse {O s c x}
     have h30 := @h3 0 (zero_lt_succ n)
     simp at h30
     simp at h2
-    have : s≠0 := by
+    have : s ≠ 0 := by
       contrapose h2
       simp [h2,evaln]
     have sss : s=s-1+1 := by
@@ -368,7 +368,7 @@ theorem evaln_rfind_as_eval_rfind_reverse' {O s c x}
 :
 ((evaln O s (rfind' c) x)).isSome
 := by
-  have : s≠0 := by
+  have : s ≠ 0 := by
     contrapose h
     rw [h]
     simp [evaln]
@@ -1047,7 +1047,7 @@ theorem usen_rfind_prop {O k n x cf} (h : x ∈ usen O cf.rfind' (k + 1) n):
 lemma nrf_aux {O cf k x} (h : (usen O (rfind' cf) k x).isSome) :
  k=k-1+1
 := by
-  have : k≠0 := by
+  have : k ≠ 0 := by
     contrapose h; simp [h]
     simp [usen]
   have keqkM1P1 : k=k-1+1 := by exact Eq.symm (succ_pred_eq_of_ne_zero this)
