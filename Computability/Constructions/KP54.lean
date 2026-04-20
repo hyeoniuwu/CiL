@@ -13,15 +13,19 @@ import Computability.KP54
 
 This file constructs the function `KP54.KP54` from KP54.lean as a code.
 
-To properly implement `KP54`, the code requires `K0 (λ _ → 0)` as its oracle during execution, which is needed to implement the dovetail procedure which searches for a finite extension.
+To properly implement `KP54`, the code requires `K0 (λ _ → 0)` as its oracle during execution, which
+is needed to implement the dovetail procedure which searches for a finite extension.
 
 ## Structure
 
 To implement the search procedure, we make use of the oracle `K0 (λ _ → 0)`.
 
-We may query the oracle an index of a program and an input, to which it will return the result of the computation. (0 if it diverges, output+1 if it converges.)
+We may query the oracle an index of a program and an input, to which it will return the result of
+the computation. (0 if it diverges, output+1 if it converges.)
 
-The meta-code `c_finite_ext` calculates the code of the dovetail procedure. By asking the oracle whether the code produced by `c_finite_ext` along with some input halts, we are able to compute the search procedure.
+The meta-code `c_finite_ext` calculates the code of the dovetail procedure. By asking the oracle
+whether the code produced by `c_finite_ext` along with some input halts, we are able to compute
+the search procedure.
 
 
 ## Main declarations
