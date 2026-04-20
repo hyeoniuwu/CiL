@@ -270,7 +270,6 @@ theorem B_le_J1 : KP54.B ≤ᵀ ∅⌜ := by
   rw [fzero_eq_χempty]
   exact (K0χ_eq_χSetK ∅).1
 
-
 theorem ex_incomparable_sets_below_j1 : ∃ A B : Set ℕ, A≤ᵀ∅⌜ ∧ B≤ᵀ∅⌜ ∧ A|ᵀB := by
   use KP54.A
   use KP54.B

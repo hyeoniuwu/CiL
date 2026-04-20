@@ -19,7 +19,6 @@ This file defines codes for basic functions which are not primitive recursive.
 
 -/
 
-open Oracle.Single.Code
 namespace Oracle.Single.Code
 
 section diverge

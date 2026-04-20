@@ -162,7 +162,8 @@ theorem c_bitwise_evp_n_m {O c n m} : evalp O (c_bitwise c) ⟪n+1,m+1⟫ = (
     evalp O (c_bitwise c) =
     Nat.unpaired2 (Nat.bitwise (fun a b => n2b <| evalp O c ⟪b2n a, b2n b⟫)) := by
   funext nm
-  induction' nm using Nat.strong_induction_on with nm ih
+  induction nm using Nat.strong_induction_on with
+  | h nm ih =>
   let n := nm.l; let m := nm.r
   have nm_eq : nm = Nat.pair n m := by exact Eq.symm pair_lr
   rw [nm_eq]
