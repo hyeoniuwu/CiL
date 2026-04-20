@@ -25,12 +25,13 @@ involving the jump.
 -/
 
 open Computability
-open Classical
 open Oracle.Single
 
+open Classical in
 @[simp] noncomputable def K0 (O : ℕ → ℕ) : ℕ → ℕ := fun n =>
   let part := eval O n.l n.r
   if h : part.Dom then (part.get h) + 1 else 0
+open Classical in
 @[simp] noncomputable def K (O : ℕ → ℕ) : ℕ → ℕ := fun n =>
   let part := eval O n n
   if h : part.Dom then (part.get h) + 1 else 0
@@ -41,17 +42,23 @@ notation : 10000 f"⌜" => jump f
 namespace Oracle.Single.Code
 
 def c_jump_decode (c : Code) := c_ite c c_diverge (c_pred.comp c)
-@[simp, ev_simps] theorem c_jump_decode_ev {O c x} (hc : code_total O c): eval O (c_jump_decode c) x = if eval O c x = Part.some 0 then Part.none else (Nat.pred <$> eval O c x) := by
-  simp [c_jump_decode]
-  simp [c_ite_ev hc]
+open Classical in
+@[simp, ev_simps] theorem c_jump_decode_ev {O c x} (hc : code_total O c) :
+    eval O (c_jump_decode c) x =
+    if eval O c x = Part.some 0 then Part.none else (Nat.pred <$> eval O c x) := by
+  simp only [c_jump_decode, ev_simps, Part.map_eq_map]
+  simp only [c_ite_ev hc, c_diverge_ev]
   congr
-  simp [eval]
+  simp only [ev_simps, Part.bind_eq_bind]
   if h : (eval O c x).Dom then
     rw [Part.dom_imp_some h]
     simp [-Part.some_get]
   else
     simp [Part.eq_none_iff'.mpr h]
-@[simp, ev_simps] theorem c_jump_decode_ev' {O c} (hc : code_total O c): eval O (c_jump_decode c) = fun x => if eval O c x = Part.some 0 then Part.none else (Nat.pred <$> eval O c x) := by
+open Classical in
+@[simp, ev_simps] theorem c_jump_decode_ev' {O c} (hc : code_total O c) :
+    eval O (c_jump_decode c) =
+    fun x => if eval O c x = Part.some 0 then Part.none else (Nat.pred <$> eval O c x) := by
   funext xs
   exact c_jump_decode_ev hc
 
@@ -60,23 +67,29 @@ theorem O_le_K0 (O : ℕ → ℕ) :  O ≤ᵀᶠ (K0 O) := by
   let q := oracle.comp (pair (c_const oracle) c_id)
   use c_jump_decode q
   have compute_total : code_total (K0 O) q := by apply prim_total; apply_cp
-  simp [compute_total, q, eval, Seq.seq]
+  simp? [compute_total, q, ev_simps, Seq.seq] says
+    simp only [compute_total, c_jump_decode_ev', eval, Seq.seq, c_const_ev, Part.coe_some,
+      Part.map_eq_map, Part.map_some, c_id_ev, Part.bind_some, Part.bind_eq_bind, PFun.coe_val, K0,
+      pair_l, n2c_c2n, pair_r, eval.eq_5, Part.some_dom, ↓reduceDIte, Part.get_some, Part.some_inj,
+      Nat.add_eq_zero_iff, one_ne_zero, and_false, ↓reduceIte, Nat.pred_eq_sub_one,
+      add_tsub_cancel_right, q]
   exact rfl
 theorem O_le_J (O : ℕ → ℕ) : O ≤ᵀᶠ O⌜ :=  O_le_K0 O
 
+open Classical in
 theorem K_leq_K0 (O : ℕ → ℕ) : (K O) ≤ᵀᶠ (K0 O) := by
   apply exists_code.mpr
   use oracle.comp <| pair c_id c_id
-
-  simp [eval,Seq.seq]
+  simp only [ev_simps, Seq.seq]
+  simp only [Part.coe_some, Part.map_eq_map, Part.map_some, Part.bind_some, Part.bind_eq_bind,
+    PFun.coe_val, K0, pair_l, pair_r]
   exact rfl
+open Classical in
 theorem K0_leq_K (O : ℕ → ℕ) : (K0 O) ≤ᵀᶠ (K O) := by
   apply exists_code.mpr
   let compute := oracle.comp c_ev_const
   use compute
-
   have compute_total : code_total (K O) compute := by apply prim_total; apply_cp
-
   unfold compute
   funext x
   rw [eval_total_comp compute_total]
@@ -85,11 +98,16 @@ theorem K_eq_K0 {O} : (K O)  ≡ᵀᶠ (K0 O) := ⟨K_leq_K0 O,K0_leq_K O⟩
 theorem K0_eq_K {O} : (K0 O) ≡ᵀᶠ (K O) := K_eq_K0.symm
 theorem O_le_K (O : ℕ → ℕ) : O ≤ᵀᶠ (K O) := TuringReducible.trans (O_le_K0 O) (K0_leq_K O)
 
+open Classical in
 theorem jump_not_le_id (O : ℕ → ℕ) : ¬(O⌜ ≤ᵀᶠ O) := by
   intro h
   rcases exists_code.mp h with ⟨c_jO,hc_jO⟩
   let g := c_ite (c_jO.comp (pair c_id c_id)) zero c_diverge
-  have fg : eval O g = fun (x : ℕ) => if (O⌜) (Nat.pair x x) = 0 then Part.some 0 else Part.none := by
+  have fg :
+      eval O g =
+      fun (x : ℕ) => if (O⌜) (Nat.pair x x) = 0
+        then Part.some 0
+        else Part.none := by
     unfold g
     funext x
     have : code_total O (c_jO.comp (pair c_id c_id)) := by intro x; simp [eval,hc_jO,Seq.seq]
@@ -110,3 +128,5 @@ theorem K_nle_O (O : ℕ → ℕ) : ¬(K O ≤ᵀᶠ O) := by
   exact TuringReducible.trans (K0_leq_K O) h
 
 theorem O_lt_K0 {O : ℕ → ℕ} : O <ᵀᶠ (K0 O) := ⟨O_le_J O,jump_not_le_id O⟩
+
+end Oracle.Single.Code
