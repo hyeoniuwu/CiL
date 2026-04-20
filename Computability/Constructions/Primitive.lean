@@ -304,7 +304,7 @@ namespace Oracle.Single.Code
 def c_dist := c_add.comp (pair c_sub (c_sub.comp (pair right left)))
 @[cp] theorem c_dist_prim : code_prim c_dist := by unfold c_dist; apply_cp
 @[simp, evp_simps] theorem c_dist_evp {O : ℕ → ℕ} : evalp O c_dist = unpaired2 Nat.dist := by
-  simp only [c_dist, evp_simps]; simp only [unpaired2, sub_eq, pair_l, pair_r, add_eq]; exact rfl
+  simpa [c_dist, evp_simps] using by rfl
 @[simp, ev_simps] theorem c_dist_ev {O : ℕ → ℕ} : eval O c_dist = unpaired2 Nat.dist := by
   rw [← evalp_eq_eval c_dist_prim]; simp only [c_dist_evp]
 end Oracle.Single.Code
@@ -531,8 +531,7 @@ namespace Oracle.Single.Code
 def c_max := c_if_le_te.comp₄ left right right left
 @[cp] theorem c_max_prim : code_prim c_max := by unfold c_max; apply_cp
 @[simp, evp_simps] theorem c_max_evp {O : ℕ → ℕ} : evalp O c_max = unpaired2 Nat.max := by
-  simp only [c_max, evp_simps]
-  exact rfl
+  simpa only [c_max, evp_simps] using by rfl
 @[simp, ev_simps] theorem c_max_ev {O : ℕ → ℕ} : eval O c_max = unpaired2 Nat.max := by
   rw [← evalp_eq_eval c_max_prim]; simp only [c_max_evp]
 end Oracle.Single.Code

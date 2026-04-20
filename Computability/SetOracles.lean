@@ -52,14 +52,15 @@ and many basic definitions in degree theory, along with some basic results.
 
 open Nat
 open scoped Computability
-open Classical
 open Oracle.Single.Code
 open Oracle.Single
 namespace Oracle.Single
 
 section basic_definitions
-/-- χ O is the characteristic function of the set O.  -/
+open Classical in
+/-- χ O is the characteristic function of the set O. -/
 noncomputable def χ (O : Set ℕ) : ℕ → ℕ := fun x ↦ if x ∈ O then 1 else 0
+open Classical in
 theorem χsimp {O} : χ O = fun x ↦ if x ∈ O then 1 else 0 := rfl
 @[simp] abbrev SetRecursiveIn (O : Set ℕ) (f : ℕ →. ℕ) : Prop := RecursiveIn (χ O) f
 @[simp] abbrev SetTuringReducible (A O : Set ℕ) : Prop := RecursiveIn (χ O) (χ A)
@@ -149,7 +150,7 @@ theorem TR_Set_iff_Fn' {O₁ O₂} : O₁ ≤ᵀ O₂ ↔ Rin (χ O₂) (χ O₁
 theorem reducible_iff_code {A B : Set ℕ} : A≤ᵀB ↔ ∃ c, eval (χ B) c = χ A := by
   simp [TR_Set_iff_Fn, exists_code]
 
--- theorem χ_le_χSetK0 {O : Set ℕ} : Rin (χ (SetK0 O)) (χ O) := by
+open Classical in
 theorem χ_le_χSetK0 {O : Set ℕ} : O ≤ᵀ (SetK0 O) := by
   /-
   We wish to show that `χ O` can be constructed with knowledge of
@@ -168,15 +169,15 @@ theorem χ_le_χSetK0 {O : Set ℕ} : O ≤ᵀ (SetK0 O) := by
     funext xs
     simp only [f', k]
     simp only [PFun.coe_val, pair_l, pair_r, Part.coe_some, Part.some_inj]
-    rw [hcg]
+    rewrite [hcg]
     simp only [g]
     cases Classical.em (χ O xs = 0) with
     | inl h => simp [h]
     | inr h =>
-      simp only [h, ↓reduceIte, Part.some_dom]
+      simp only [h]
       cases χ_eq_0or1 with
       | inl h2 => exact False.elim (h h2)
-      | inr h2 => exact h2
+      | inr h2 => simpa using h2
   have f'_recIn_k : Rin k f' :=
     Rin.someTotal k (fun x ↦ k ⟪cg, x⟫) <|
     Rin.totalComp' Rin.oracle (Rin.of_primrecIn PrimrecIn.pair_proj)
@@ -184,6 +185,7 @@ theorem χ_le_χSetK0 {O : Set ℕ} : O ≤ᵀ (SetK0 O) := by
   rw [f_eq_f']
   exact f'_recIn_k
 
+open Classical in
 theorem χSetK0_leq_K0χ {O : Set ℕ} : Rin (K0 (χ O)) (χ (SetK0 O)) := by
   -- We simply note that `χ (SetK0 O) = Nat.sg ∘ K0 (χ O)`.
   let k : ℕ → ℕ := fun ex ↦ if (eval (χ O) ex.l ex.r).Dom then 1 else 0
@@ -198,6 +200,7 @@ theorem χSetK0_leq_K0χ {O : Set ℕ} : Rin (K0 (χ O)) (χ (SetK0 O)) := by
   rw [k_eq_f]
   exact rin_f
 
+open Classical in
 theorem K0χ_le_χSetK0 {O : Set ℕ} : Rin (χ (SetK0 O)) (K0 (χ O)) := by
   /-
   Let k(e,x) = if [e : O](x)↓ then 1 else 0.
@@ -224,14 +227,13 @@ theorem K0χ_le_χSetK0 {O : Set ℕ} : Rin (χ (SetK0 O)) (K0 (χ O)) := by
     funext xs
     cases Classical.em (k xs = 0) with
     | inl h => simp [h, (h1 xs).mp h, f]
-    | inr h =>
-      simp only [f, PFun.coe_val, K0, (h2 xs).mp h, ↓reduceDIte, h, ↓reduceIte, Part.bind_eq_bind]
-      apply some_comp_simp
+    | inr h => simpa [h, (h2 xs).mp h, f] using by apply some_comp_simp
   rewrite [h3]
   exact rin_f
 theorem K0χ_eq_χSetK0 (O : Set ℕ) : (K0 (χ O)) ≡ᵀᶠ (χ (SetK0 O)) := ⟨K0χ_le_χSetK0, χSetK0_leq_K0χ⟩
 theorem χSetK0_eq_K0χ (O : Set ℕ) : (χ (SetK0 O)) ≡ᵀᶠ (K0 (χ O)) := (K0χ_eq_χSetK0 O).symm
 -- the next two theorems are more or less equivalent to some of the above, with minor tweaks.
+open Classical in
 theorem χ_le_χSetK (O : Set ℕ) : O ≤ᵀ (SetK O) := by
   let χK : ℕ → ℕ := fun x ↦ if (eval (χ O) x x).Dom then 1 else 0
   let g := fun x => if (χ O) x = 0 then Part.none else Part.some 0
@@ -241,70 +243,65 @@ theorem χ_le_χSetK (O : Set ℕ) : O ≤ᵀ (SetK O) := by
   have f_eq_f': (χ O) = f' := by
     funext xs
     simp only [f']
-    simp [χK]
-    simp [eval]
-
+    simp only [PFun.coe_val, Nat.n2c, n2c_c2n, Part.coe_some, Part.some_inj, χK]
+    simp only [ev_simps]
     rw [hcg]
     simp only [g]
-
     cases Classical.em (χ O xs = 0) with
     | inl h => simp [h]
     | inr h =>
-      simp [h]
       cases χ_eq_0or1 with
-      | inl h2 => exact False.elim (h h2)
-      | inr h2 => exact h2
-
+      | inl h2 => simpa [h] using False.elim (h h2)
+      | inr h2 => simpa [h] using h2
   have f'_recIn_χK : Nat.RecursiveIn (χK) f' := by
     simp only [f']
     refine Rin.someTotal χK (fun x ↦ χK (cg.n2c.comp (c_const x)).c2n) ?_
     refine Rin.totalComp' Rin.oracle ?_
     · apply exists_code.mpr
       use (c_ev_const.comp₂ (c_const cg) c_id)
-      simp [Seq.seq]
-      exact rfl
-
+      simpa [Seq.seq] using (by rfl)
   refine TR_Set_iff_Fn'.mpr ?_
   rw [f_eq_f']
   exact f'_recIn_χK
+open Classical in
 theorem Kχ_le_χSetK (O : Set ℕ) : Nat.RecursiveIn (χ (SetK O)) (K (χ O)) := by
   let k : ℕ → ℕ := fun x ↦ if (eval (χ O) (n2c x) x).Dom then 1 else 0
   have h0 : χ (SetK O) = k := rfl
   have h1 (x : ℕ) : k x = 0 ↔ ¬(eval (χ O) (n2c x) x).Dom := by simp [k]
   have h2 (x : ℕ) : k x ≠ 0 ↔ (eval (χ O) (n2c x) x).Dom := by simp [k]
-
   let f := fun x => if (k x = 0) then 0 else (eval (χ O) x x) >>= (Nat.succ : ℕ →. ℕ)
-
   have h3 : (K (χ O) : ℕ →. ℕ) = f := by
     funext xs
     cases Classical.em (k xs = 0) with
-    | inl h =>
-      simp [f, h, (h1 xs).mp h, K]; rfl
-    | inr h =>
-      simp only [χsimp, PFun.coe_val, K, Part.bind_eq_bind, h, ↓reduceIte, f];
-      simp only [(h2 xs), χsimp] at h
-      simp only [h]
-      apply some_comp_simp
-
+    | inl h => simpa [f, h, (h1 xs).mp h, K] using by rfl
+    | inr h => simpa [f, h, (h2 xs).mp h, K] using by apply some_comp_simp
   have rin_f : Rin k f := by
     apply Rin.ite Rin.oracle Rin.zero <| Rin.comp Rin.succ ?_
     apply TuringReducible.trans' Nat.RecursiveIn.eval_K_computable (χ_le_χSetK O)
-
   rw [h0]
   rw [h3]
   exact rin_f
+open Classical in
 theorem χSetK_le_χSetK0 (O : Set ℕ) : Nat.RecursiveIn (χ (SetK0 O)) (χ (SetK O)) := by
   have main : (χ (SetK O)) = (χ (SetK0 O)) ∘ fun x => Nat.pair x x := by
     funext xs
     simp [χ, SetK, SetK0]
   rw [main]
   exact Rin.totalComp Rin.oracle (Rin.of_primrecIn (PrimrecIn.pair PrimrecIn.id PrimrecIn.id))
-theorem χSetK_eq_Kχ (O : Set ℕ) : (χ (SetK O)) ≡ᵀᶠ (K (χ O)) := ⟨trans (χSetK_le_χSetK0 O) <| trans (χSetK0_leq_K0χ) <| trans (K0_leq_K (χ O)) <| Rin.oracle , Kχ_le_χSetK O⟩
+theorem χSetK_eq_Kχ (O : Set ℕ) : (χ (SetK O)) ≡ᵀᶠ (K (χ O)) :=
+  ⟨trans (χSetK_le_χSetK0 O) <|
+    trans (χSetK0_leq_K0χ) <|
+    trans (K0_leq_K (χ O)) <| Rin.oracle,
+  Kχ_le_χSetK O⟩
 theorem Kχ_eq_χSetK (O : Set ℕ) : (K (χ O)) ≡ᵀᶠ (χ (SetK O)) := (χSetK_eq_Kχ O).symm
-theorem χSetK0_eq_χSetK (O : Set ℕ) : (χ (SetK0 O)) ≡ᵀᶠ (χ (SetK O)) := TuringEquivalent.trans (χSetK0_eq_K0χ O) <| .trans (@K0_eq_K (χ O)) (Kχ_eq_χSetK O)
-theorem SetK0_eq_SetK (O : Set ℕ) : (SetK0 O) ≡ᵀ (SetK O) := ⟨(χSetK0_eq_χSetK O).le, (χSetK0_eq_χSetK O).ge⟩
+theorem χSetK0_eq_χSetK (O : Set ℕ) : (χ (SetK0 O)) ≡ᵀᶠ (χ (SetK O)) :=
+  TuringEquivalent.trans (χSetK0_eq_K0χ O) <|
+    .trans (@K0_eq_K (χ O)) (Kχ_eq_χSetK O)
+theorem SetK0_eq_SetK (O : Set ℕ) : (SetK0 O) ≡ᵀ (SetK O) :=
+  ⟨(χSetK0_eq_χSetK O).le, (χSetK0_eq_χSetK O).ge⟩
 theorem Set_le_SetK (O : Set ℕ) : O ≤ᵀ (SetK O) := χ_le_χSetK O
-theorem χSetK_eq_K0χ (O : Set ℕ) : (χ (SetK O)) ≡ᵀᶠ (K0 (χ O)) := TuringEquivalent.trans (χSetK_eq_Kχ O) K_eq_K0
+theorem χSetK_eq_K0χ (O : Set ℕ) : (χ (SetK O)) ≡ᵀᶠ (K0 (χ O)) :=
+  TuringEquivalent.trans (χSetK_eq_Kχ O) K_eq_K0
 theorem K0χ_eq_χSetK (O : Set ℕ) : (K0 (χ O)) ≡ᵀᶠ (χ (SetK O)) := (χSetK_eq_K0χ O).symm
 theorem SetK0_eq_Jump (O : Set ℕ) : SetK0 O ≡ᵀ O⌜ := SetK0_eq_SetK O
 
@@ -344,13 +341,14 @@ theorem evaln_complete_dom {O c x} : (eval (χ O) c x).Dom ↔ ∃ k, (evaln (χ
 theorem Wn_complete {O} {c x} : x ∈ W O c ↔ ∃ k, x ∈ Wn O c k := by
   simp only [PFun.mem_dom, evalSet, Set.mem_setOf_eq, evalnSet]
   exact Iff.trans (Iff.symm Part.dom_iff_mem) (@evaln_complete_dom O c x)
+open Classical in
 theorem W_le_SetK0 {O} : ∀ c, W O c ≤ᵀ SetK0 O := by
   intro c
   apply reducible_iff_code.mpr
   use oracle.comp <| pair (c_const c) c_id
   funext x
-  simp only [ev_simps]
-  simpa [Seq.seq, SetK0, χ] using if_ctx_congr Part.dom_iff_mem (congrFun rfl) (congrFun rfl)
+  simpa [Seq.seq, SetK0, χ, ev_simps]
+    using if_ctx_congr Part.dom_iff_mem (congrFun rfl) (congrFun rfl)
 
 theorem W_le_Jump {O} : ∀ c, W O c ≤ᵀ O⌜ :=
   fun c ↦ LE.le.trans_antisymmRel (@W_le_SetK0 O c) (SetK0_eq_Jump O)
@@ -369,6 +367,7 @@ def [f(e)](y):
   return y
 -/
 def dom_to_ran (e : Code) := c_ifdom (c_eval.comp₂ (c_const e) c_id) c_id
+open Classical in
 theorem dom_to_ran_prop {O e} : W O e = WR O (dom_to_ran e) := by
   ext xs
   simp only [PFun.mem_dom, dom_to_ran]
@@ -436,7 +435,7 @@ theorem ran_to_dom_ev {O c y} : (eval O (ran_to_dom c) y).Dom ↔ ∃ x, y ∈ e
       contrapose this
       simp [Part.eq_none_iff'.mpr this]
     simp [Part.Dom.bind s1] at this
-    simp [eval₁] at this s1
+    simp only [eval₁, Nat.n2c, pair_l, n2c_c2n, pair_r] at this s1
     use dvt
     exact (@Part.get_eq_iff_mem ℕ (eval O c dvt) y s1).mp this.symm
   · rintro ⟨h1,h2⟩
@@ -451,7 +450,7 @@ theorem ran_to_dom_prop {O e} : WR O e = W O (ran_to_dom e) := by
     rcases h with ⟨y,hy⟩
     exact ran_to_dom_ev.mpr (Exists.intro y hy)
   · intro h
-    simp at h
+    simp only [PFun.mem_dom] at h
     rcases h with ⟨y,hy⟩
     exact ran_to_dom_ev.mp (Part.mem_imp_dom hy)
 
@@ -459,7 +458,8 @@ def c_ran_to_dom := c_dovetail.comp <|
   c_comp₂.comp₃ (c_const c_if_eq') c_left <|
   c_comp₂.comp₃ (c_const c_eval₁) c_c_const c_right
 @[cp] theorem c_ran_to_dom_prim : code_prim c_ran_to_dom := by unfold c_ran_to_dom; apply_cp
-@[simp, evp_simps] theorem c_ran_to_dom_evp {O} : evalp O c_ran_to_dom = fun (x : ℕ) ↦ c2n (ran_to_dom x) := by
+@[simp, evp_simps] theorem c_ran_to_dom_evp {O} :
+    evalp O c_ran_to_dom = fun (x : ℕ) ↦ c2n (ran_to_dom x) := by
   simp [c_ran_to_dom, ran_to_dom]
 theorem Nat.PrimrecIn.ran_to_dom {O} : Nat.PrimrecIn O (fun (x : ℕ) ↦ (ran_to_dom x).c2n) := by
   rw [← c_ran_to_dom_evp]; exact code_prim_prop
@@ -469,11 +469,15 @@ theorem empty_le : ∀ A : Set ℕ, ∅ ≤ᵀ A := by
   intro A
   apply reducible_iff_code.mpr
   use zero
-  unfold χ; simp [eval]
-  rfl
+  unfold χ
+  simpa [eval] using by rfl
 
-theorem evalnSet_mono_dom {O} : ∀ {k₁ k₂ : ℕ} {c n}, k₁ ≤ k₂ → (evalnSet O k₁ c n).isSome → (evalnSet O k₂ c n).isSome := by
-  exact fun {k₁ k₂} {c} {n} a a_1 ↦ evaln_mono_dom a a_1
+theorem evalnSet_mono_dom {O} :
+  ∀ {k₁ k₂ : ℕ} {c n},
+    k₁ ≤ k₂ →
+    (evalnSet O k₁ c n).isSome →
+    (evalnSet O k₂ c n).isSome :=
+  fun a a_1 ↦ evaln_mono_dom a a_1
 
 /-- `CEin O A` means that `A` is c.e. in `O`. -/
 def CEin (O : Set ℕ) (A : Set ℕ) : Prop := ∃ c : Code, A = W O c
@@ -489,13 +493,11 @@ theorem CEin_range {O A} : CEin O A ↔ ∃ c, A = WR O c := by
   · intro h
     rcases h with ⟨c,hc⟩
     use dom_to_ran c
-    rw [← dom_to_ran_prop]
-    exact hc
+    rwa [← dom_to_ran_prop]
   · intro h
     rcases h with ⟨c,hc⟩
     use ran_to_dom c
-    rw [← ran_to_dom_prop]
-    exact hc
+    rwa [← ran_to_dom_prop]
 
 /-
 Proof sketch:
@@ -510,9 +512,7 @@ theorem reducible_imp_W {A B} : A≤ᵀB → ∃ c, W B c = A := by
   rcases reducible_iff_code.mp h with ⟨c,h⟩
   use c_ite c c_diverge zero
   have c_total : code_total (χ B) c := by simp_all [code_total]
-  simp [W, evalSet, PFun.Dom, c_ite_ev c_total, h, eval]
-  unfold χ
-  aesop
+  simpa [W, PFun.Dom, c_ite_ev c_total, h, ev_simps] using (by unfold χ; aesop)
 
 theorem Cin_iff_Cin' {A B} : A≤ᵀB ↔ Aᶜ≤ᵀB := by
   /-
@@ -523,27 +523,19 @@ theorem Cin_iff_Cin' {A B} : A≤ᵀB ↔ Aᶜ≤ᵀB := by
     simp only [reducible_iff_code] at *
     rcases h with ⟨c,hc⟩
     use c_sg'.comp c
-    funext x
-    simp [eval, hc]; unfold χ
-    aesop
-
+    simpa [eval, hc] using by (unfold χ; aesop)
   constructor
-  exact fun a ↦ main A B a
-  have := fun a ↦ main Aᶜ B a
-  simp only [compl_compl] at this
-  exact this
+  · exact fun a ↦ main A B a
+  simpa only [compl_compl] using (fun a ↦ main Aᶜ B a)
 
 theorem Cin_iff_CEin_CEin' {A B} : A≤ᵀB ↔ (CEin B A ∧ CEin B Aᶜ) := by
   constructor
   -- first, the trivial direction.
   · intro h
-    simp [CEin]
-    have h1 := reducible_imp_W h
-    have h2 := reducible_imp_W <| Cin_iff_Cin'.mp h
-    rcases h1 with ⟨c1, hc1⟩
-    rcases h2 with ⟨c2, hc2⟩
+    simp only [CEin]
+    rcases reducible_imp_W h with ⟨c1, hc1⟩
+    rcases reducible_imp_W <| Cin_iff_Cin'.mp h with ⟨c2, hc2⟩
     exact ⟨⟨c1, hc1.symm⟩, ⟨c2, hc2.symm⟩⟩
-
   /-
   We wish to show that if both A and its complement is computably enumerable from B,
   then A is reducible to B.
@@ -566,77 +558,70 @@ theorem Cin_iff_CEin_CEin' {A B} : A≤ᵀB ↔ (CEin B A ∧ CEin B Aᶜ) := by
 
   Then, the behaviour of `dovetail d` on input `x` will be as follows:
 
-  · if `x∈A`, then `d(x,y)` only halts if `y=1`, and diverges for all other `y`. Thus, `dovetail d` will return `1`.
-  · if `x∉A`, then `d(x,y)` only halts if `y=0`, and diverges for all other `y`. Thus, `dovetail d` will return `0`.
+  · if `x∈A`, then `d(x,y)` only halts if `y=1`, and diverges for all other `y`.
+    Thus, `dovetail d` will return `1`.
+  · if `x∉A`, then `d(x,y)` only halts if `y=0`, and diverges for all other `y`.
+    Thus, `dovetail d` will return `0`.
 
   Note that dovetailing d will return 0 if x∉A and 1 if x∈A.
   -/
-
-  intro ⟨h1,h2⟩
+  intro ⟨⟨c1,hc1⟩, ⟨c2,hc2⟩⟩
   apply reducible_iff_code.mpr
-  rcases h1 with ⟨c1,hc1⟩
-  rcases h2 with ⟨c2,hc2⟩
-
-  let d := (
-    c_ite right
+  let d := c_ite right
     (zero.comp <| c2.comp left) <|
     c_if_eq_te' right (c_const 1)
     (zero.comp <| c1.comp left)
     c_diverge
-  )
   use dovetail d
   funext x
-
   -- aux0, aux1: trivial helpers needed as arguments later for c_if_eq_te'_ev
   have aux0 : code_total (χ B) (right) := fun x ↦ trivial
   have aux1 : code_total (χ B) (c_const 1) := by simp [code_total]
-
   by_cases hx : x∈A
-  ·
-    have dvtthm := @dovetail_ev_0 (χ B) d x ?_
-    extract_lets at dvtthm; expose_names
+  · have dvtthm := @dovetail_ev_0 (χ B) d x ?_
     all_goals
       have tc1 : (eval (χ B) c1 x).Dom := by
         simp [W, evalSet, PFun.Dom] at hc1
-        simp [hc1] at hx
-        exact hx
+        simpa [hc1] using hx
       have tc2 : (eval (χ B) c2 x) = Part.none := by
         have : ¬x∈Aᶜ := fun a ↦ a hx
         simp [W, evalSet, PFun.Dom] at hc2
-        simp [hc2] at this
+        simp only [hc2, Set.mem_setOf_eq] at this
         exact Part.eq_none_iff'.mpr this
-    rotate_left
-    · apply dovetail_ev_2.mpr
-      simp [d, c_if_eq_te'_ev aux0 aux1, eval, Part.Dom.bind <| tc1]
-      exact ⟨1, rfl⟩
-    · simp [χ, hx]
-      simp [d, c_if_eq_te'_ev aux0 aux1, eval, Part.Dom.bind <| tc1, tc2] at dvtthm
+    · extract_lets at dvtthm;
+      expose_names
+      simp? [d, c_if_eq_te'_ev aux0 aux1, ev_simps, Part.Dom.bind tc1, tc2]  at dvtthm says
+        simp only [right_total, c_ite_ev, eval, unpair_pair, Part.coe_some, Part.some_inj,
+          Part.bind_eq_bind, Part.bind_some, tc2, Part.bind_none, c_if_eq_te'_ev aux0 aux1,
+          Part.get_some, c_const_ev, Part.Dom.bind tc1, c_diverge_ev, d] at dvtthm
       have : dvt = 1 := by contrapose dvtthm; simp [dvtthm]
       simp [dvt] at this
-      exact Part.get_eq_iff_eq_some.mp this
-
+      simpa [χ, hx] using Part.get_eq_iff_eq_some.mp this
+    · apply dovetail_ev_2.mpr
+      simpa [d, c_if_eq_te'_ev aux0 aux1, eval, Part.Dom.bind <| tc1] using ⟨1, rfl⟩
   · -- essentialy the same as the x∈A case.
     have hx' : x∈Aᶜ := hx
     have dvtthm := @dovetail_ev_0 (χ B) d x ?_
-    extract_lets at dvtthm; expose_names
     all_goals
       have tc1 : (eval (χ B) c2 x).Dom := by
         simp [W, evalSet, PFun.Dom] at hc2
-        simp [hc2] at hx'
-        exact hx'
+        simpa [hc2] using hx'
       have tc2 : (eval (χ B) c1 x) = Part.none := by
         simp [W, evalSet, PFun.Dom] at hc1
-        simp [hc1] at hx
+        simp only [hc1, Set.mem_setOf_eq] at hx
         exact Part.eq_none_iff'.mpr hx
-    rotate_left
-    · apply dovetail_ev_2.mpr
-      simp [d, c_if_eq_te'_ev aux0 aux1, eval, Part.Dom.bind <| tc1]
-      exact ⟨0, fun a ↦ False.elim (a rfl)⟩
-    · simp [χ, hx]
-      simp [d, c_if_eq_te'_ev aux0 aux1, eval, Part.Dom.bind <| tc1, tc2] at dvtthm
+    · extract_lets at dvtthm; expose_names
+      simp? [d, c_if_eq_te'_ev aux0 aux1, eval, Part.Dom.bind <| tc1, tc2]  at dvtthm says
+        simp only [right_total, c_ite_ev, eval, unpair_pair, Part.coe_some, Part.some_inj,
+          Part.bind_eq_bind, Part.bind_some, Part.Dom.bind <| tc1, c_if_eq_te'_ev aux0 aux1,
+          Part.get_some, c_const_ev, tc2, Part.bind_none, c_diverge_ev, ite_self, ite_eq_left_iff,
+          Part.none_ne_some, imp_false, Decidable.not_not, d] at dvtthm
       have : dvt = 0 := by contrapose dvtthm; simp [dvtthm]
       simp [dvt] at this
-      exact Part.get_eq_iff_eq_some.mp this
+      simpa [χ, hx] using Part.get_eq_iff_eq_some.mp this
+    · apply dovetail_ev_2.mpr
+      simpa [d, c_if_eq_te'_ev aux0 aux1, eval, Part.Dom.bind <| tc1]
+        using ⟨0, fun a ↦ False.elim (a rfl)⟩
 
 end computably_enumerable
 
@@ -647,66 +632,62 @@ section join
 def join (A B : Set ℕ) : Set ℕ := {2*x | x∈A} ∪ {2*x+1 | x∈B}
 scoped[Computability] infix : 50 "∨" => join
 
-theorem even_odd_1 {y x} : (1 + y * 2 = x * 2) ↔ False := by grind
-theorem even_odd_2 {y x} : (y * 2 = 1 + x * 2) ↔ False := by grind
-
+open Classical in
 theorem join_upper (A B : Set ℕ) : A ≤ᵀ (A ∨ B) ∧ B ≤ᵀ (A ∨ B) := by
   constructor
-  apply reducible_iff_code.mpr
-  use oracle.comp c_mul2
-  unfold χ
-  funext x
-  simp [eval, join]
-  ac_nf; simp [even_odd_1]
+  · apply reducible_iff_code.mpr
+    use oracle.comp c_mul2
+    unfold χ
+    funext x
+    simp [eval, join]
+    grind
+  · apply reducible_iff_code.mpr
+    use oracle.comp (succ.comp c_mul2)
+    unfold χ
+    funext x
+    simp [eval, join]
+    grind
 
-  apply reducible_iff_code.mpr
-  use oracle.comp (succ.comp c_mul2)
-  unfold χ
-  funext x
-  simp [eval, join]
-  ac_nf; simp [even_odd_2]
-
-theorem bodd_false_mod2 {n} (h : n.bodd=false) : n%2=0 := by
+theorem bodd_false_mod2 {n} (h : n.bodd = false) : n % 2 = 0 := by
   rw [← codes_aux_aux_0 h]
   exact mul_mod_right 2 n.div2
-theorem bodd_true_mod2 {n} (h : n.bodd=true) : n%2=1 := by
+theorem bodd_true_mod2 {n} (h : n.bodd = true) : n % 2 = 1 := by
   rw [← codes_aux_aux_1 h]
   omega
+open Classical in
 theorem join_least (A B C : Set ℕ) : A ≤ᵀ C → B ≤ᵀ C → (A ∨ B) ≤ᵀ C := by
   intro h1 h2
   rcases reducible_iff_code.mp h1 with ⟨c1,hc1⟩
   rcases reducible_iff_code.mp h2 with ⟨c2,hc2⟩
   apply reducible_iff_code.mpr
-
   use c_ifz.comp₃ (c_mod.comp₂ c_id (c_const 2)) (c1.comp c_div2) (c2.comp c_div2)
-
-  simp [Seq.seq, eval, hc1, hc2]
-  unfold χ; simp [join]
-  funext x; simp
-
+  simp only [Seq.seq, ev_simps, hc1, hc2]
+  unfold χ;
+  funext x;
+  simp? [join] says
+    simp only [Part.coe_some, Part.map_eq_map, Part.map_some, Part.bind_some, Part.bind_eq_bind,
+      PFun.coe_val, unpaired2, pair_l, pair_r, c_ifz_ev, join, Set.mem_union, Set.mem_setOf_eq,
+      Part.some_inj]
   cases hx : x.bodd
-  · rw [← codes_aux_aux_0 hx]; simp
-    ac_nf
-    simp [even_odd_1]
-  · rw [← codes_aux_aux_1 hx]; simp
-    ac_nf
-    simp [even_odd_2]
+  · rw [← codes_aux_aux_0 hx]; grind
+  · rw [← codes_aux_aux_1 hx]; grind
 
 end join
 
 section TuringDegree.join
 lemma join_preserves_eq {A A' B B' : Set ℕ}
-  (hA : SetTuringReducible A A' ∧ SetTuringReducible A' A)
-  (hB : SetTuringReducible B B' ∧ SetTuringReducible B' B) :
-  SetTuringReducible (join A B) (join A' B') ∧
-  SetTuringReducible (join A' B') (join A B) := by
-    constructor
-    exact join_least A B (A'∨B')
+    (hA : SetTuringReducible A A' ∧ SetTuringReducible A' A)
+    (hB : SetTuringReducible B B' ∧ SetTuringReducible B' B) :
+    SetTuringReducible (join A B) (join A' B') ∧
+    SetTuringReducible (join A' B') (join A B) :=
+  ⟨
+    join_least A B (A' ∨ B')
       (.trans hA.1 (join_upper A' B').1)
-      (.trans hB.1 (join_upper A' B').2)
-    exact join_least A' B' (A∨B)
+      (.trans hB.1 (join_upper A' B').2),
+    join_least A' B' (A∨B)
       (.trans hA.2 (join_upper A B).1)
       (.trans hB.2 (join_upper A B).2)
+  ⟩
 def TuringDegree.join : TuringDegree → TuringDegree → TuringDegree := Quotient.lift₂
     (fun X Y => Quot.mk _ (Code.join X Y))
     (fun _ _ _ _ hx hy => Quotient.sound (join_preserves_eq hx hy))
@@ -714,7 +695,8 @@ theorem TuringDegree.le_sup_left (X Y : TuringDegree) : X ≤ TuringDegree.join 
   Quot.induction_on₂ X Y fun _ _ ↦ (Code.join_upper _ _).1
 theorem TuringDegree.le_sup_right (X Y : TuringDegree) : Y ≤ TuringDegree.join X Y :=
   Quot.induction_on₂ X Y fun _ _ ↦ (Code.join_upper _ _).2
-theorem TuringDegree.join_least (X Y Z: TuringDegree) : X ≤ Z → Y ≤ Z → TuringDegree.join X Y ≤ Z :=
+theorem TuringDegree.join_least (X Y Z : TuringDegree) :
+    X ≤ Z → Y ≤ Z → TuringDegree.join X Y ≤ Z :=
   Quotient.inductionOn₃ X Y Z fun X Y Z hx hy ↦ Code.join_least X Y Z hx hy
 instance : SemilatticeSup TuringDegree where
   sup := TuringDegree.join
@@ -722,3 +704,4 @@ instance : SemilatticeSup TuringDegree where
   le_sup_right := TuringDegree.le_sup_right
   sup_le X Y Z := TuringDegree.join_least X Y Z
 end TuringDegree.join
+end Oracle.Single.Code

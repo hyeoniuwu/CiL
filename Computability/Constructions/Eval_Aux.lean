@@ -26,8 +26,7 @@ theorem rfind'_eqv_rfind {O c x} :
       (Nat.rfind fun n => (fun m => m = 0) <$>
         eval O c (Nat.pair a (n + m))).map (· + m)) (Nat.pair x 0) =
     (Nat.rfind fun n => (fun m => m = 0) <$> eval O c ⟪x, n⟫) := by
-  simp only [Nat.unpaired, Nat.unpair_pair, add_zero, Part.map_eq_map]
-  exact rfl
+  simpa using by rfl
 
 section rfind
 /-- `[code_rfind c](x)=smallest n s.t. [c](x,n)=0.` -/
