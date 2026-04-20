@@ -246,10 +246,14 @@ def c_list_foldl (c:Code) := left.comp (c_list_foldl_aux2 c)
           have abc2 : length (drop n (n2l lN)) > 0 := by (expose_names; exact lt_length_drop lgt_1)
           have asdasdasd := @getElem_drop ℕ (n2l lN) n 0 abc2
           simp only [add_zero] at asdasdasd
-          rw [←asdasdasd]
+          -- rw [←asdasdasd]
           have asd := exists_cons_of_length_pos abc2
           rcases asd with ⟨k,t,hkt⟩
           simp [hkt]
+          simp_all only [encode_list_cons, encode_nat, succ_eq_add_one, not_le, take_append_getElem,
+            getElem_cons_zero]
+          subst asdasdasd
+          rfl
 
         have vasd : (take (n + 1) (n2l lN)) = (take n (n2l lN)) ++ [(drop n (n2l lN)).headI] := by
           rw [vasd2]
