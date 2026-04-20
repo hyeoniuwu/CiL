@@ -6,6 +6,7 @@ Authors: Mario Carneiro
 Modifications:
 Copyright (c) 2026 Edwin Park.
 -/
+import Computability.Label
 import Computability.Oracle
 import Mathlib.Data.Option.Basic
 import Mathlib.Logic.Encodable.Pi
@@ -199,7 +200,7 @@ open Code
   `rfind' f m` returns the least `a` such that `f a m = 0`, if one exists and `f b m` terminates
   for `b < a`
 -/
-def eval (O : ℕ → ℕ) : Code → ℕ →. ℕ
+@[ev_simps] def eval (O : ℕ → ℕ) : Code → ℕ →. ℕ
 | .zero => fun _ ↦ some 0
 | .succ => fun n ↦ some (n + 1)
 | .left => fun n ↦ some (Nat.unpair n).1

@@ -768,7 +768,7 @@ theorem c_usen_evp_aux_nMod4 {O x n s} :
 
   apply_cp 60
 
-@[simp] theorem c_usen_ev {O x code s}: eval O c_usen ⟪x, code, s⟫ = o2n (usen O code.n2c s x) := by
+@[simp, ev_simps] theorem c_usen_ev {O x code s}: eval O c_usen ⟪x, code, s⟫ = o2n (usen O code.n2c s x) := by
   rw [← evalp_eq_eval c_usen_prim];
   simp only [PFun.coe_val, c_usen_evp, Part.coe_some]
 end Oracle.Single.Code
@@ -778,7 +778,7 @@ end usen
 section use
 namespace Oracle.Single.Code
 def c_use := (c_rfindOpt (c_usen.comp₃ (right.comp left) (left.comp left) right))
-@[simp] theorem c_use_ev {O c x} : eval O c_use (Nat.pair c x) = use O c.n2c x := by
+@[simp, ev_simps] theorem c_use_ev {O c x} : eval O c_use (Nat.pair c x) = use O c.n2c x := by
   simp only [c_use, comp₃, comp₂]
   have : code_total O ((c_usen.comp ((right.comp left).pair ((left.comp left).pair right)))) := by
     apply prim_total

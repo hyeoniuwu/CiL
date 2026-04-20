@@ -28,7 +28,7 @@ def c_list_nil := zero
 @[cp] theorem c_list_nil_prim : code_prim c_list_nil := by unfold c_list_nil; apply_cp
 @[simp, evp_simps] theorem c_list_nil_evp {O : ℕ → ℕ} {x} : evalp O c_list_nil x = l2n ([]) := by
   simp [c_list_nil]
-@[simp] theorem c_list_nil_ev {O : ℕ → ℕ} {x} : eval O c_list_nil x = l2n ([]) := by
+@[simp, ev_simps] theorem c_list_nil_ev {O : ℕ → ℕ} {x} : eval O c_list_nil x = l2n ([]) := by
   simp [← evalp_eq_eval c_list_nil_prim]
 end Oracle.Single.Code
 end list_nil
@@ -40,7 +40,7 @@ def c_list_cons := succ
 @[simp, evp_simps] theorem c_list_cons_evp {O : ℕ → ℕ} {a lN} :
     evalp O c_list_cons ⟪a, lN⟫= l2n (cons a (n2l lN)) := by
   simp [c_list_cons]
-@[simp] theorem c_list_cons_ev {O : ℕ → ℕ} {a lN} :
+@[simp, ev_simps] theorem c_list_cons_ev {O : ℕ → ℕ} {a lN} :
     eval O c_list_cons ⟪a, lN⟫= l2n (cons a (n2l lN)) := by
   simp [←evalp_eq_eval c_list_cons_prim]
 end Oracle.Single.Code
@@ -56,7 +56,7 @@ def c_list_tail := right.comp c_pred
   by_cases hl : lN=0
   · simp [hl,r]
   · rw [←(exists_add_one_eq.mpr (one_le_iff_ne_zero.mpr hl)).choose_spec]; simp
-@[simp] theorem c_list_tail_ev {O : ℕ → ℕ} {lN : ℕ} :
+@[simp, ev_simps] theorem c_list_tail_ev {O : ℕ → ℕ} {lN : ℕ} :
     eval O c_list_tail lN = l2n (tail (n2l lN)) := by
   simp [← evalp_eq_eval c_list_tail_prim]
 end Oracle.Single.Code
@@ -72,7 +72,7 @@ def c_list_head? := c_ifz.comp₃ c_id zero <| succ.comp (left.comp c_pred)
   by_cases hl : lN=0
   · simp [hl]
   · rw [←(exists_add_one_eq.mpr (one_le_iff_ne_zero.mpr hl)).choose_spec]; simp
-@[simp] theorem c_list_head?_ev {O : ℕ → ℕ} {lN : ℕ} :
+@[simp, ev_simps] theorem c_list_head?_ev {O : ℕ → ℕ} {lN : ℕ} :
   eval O c_list_head? lN = o2n (head? (n2l lN)) := by simp [← evalp_eq_eval c_list_head?_prim]
 end Oracle.Single.Code
 end list_head?
@@ -87,7 +87,7 @@ def c_list_headI := c_ifz.comp₃ c_id zero (left.comp c_pred)
   by_cases hl : lN=0
   · simp [hl]
   · rw [←(exists_add_one_eq.mpr (one_le_iff_ne_zero.mpr hl)).choose_spec]; simp
-@[simp] theorem c_list_headI_ev {O : ℕ → ℕ} {lN : ℕ} : eval O c_list_headI lN = headI (n2l lN) := by
+@[simp, ev_simps] theorem c_list_headI_ev {O : ℕ → ℕ} {lN : ℕ} : eval O c_list_headI lN = headI (n2l lN) := by
   simp [← evalp_eq_eval c_list_headI_prim]
 end Oracle.Single.Code
 end list_headI
@@ -159,7 +159,7 @@ def c_list_drop :=
     induction i with
     | zero => simp
     | succ n ih => simp [ih]
-@[simp] theorem c_list_drop_ev {O : ℕ → ℕ} {lN i : ℕ} :
+@[simp, ev_simps] theorem c_list_drop_ev {O : ℕ → ℕ} {lN i : ℕ} :
     eval O c_list_drop (Nat.pair i lN) = l2n (drop i (n2l lN)) := by
   simp [← evalp_eq_eval c_list_drop_prim]
 end Oracle.Single.Code
@@ -172,7 +172,7 @@ def c_list_getElem? := c_list_head?.comp (c_list_drop.comp c_flip)
   unfold c_list_getElem?; apply_cp
 @[simp, evp_simps] theorem c_list_getElem?_evp {O : ℕ → ℕ} {lN i : ℕ} :
   evalp O c_list_getElem? ⟪lN, i⟫ = o2n (n2l lN)[i]? := by simp [c_list_getElem?]
-@[simp] theorem c_list_getElem?_ev {O : ℕ → ℕ} {lN i : ℕ} :
+@[simp, ev_simps] theorem c_list_getElem?_ev {O : ℕ → ℕ} {lN i : ℕ} :
     eval O c_list_getElem? ⟪lN, i⟫ = o2n (n2l lN)[i]? := by
   simp [← evalp_eq_eval c_list_getElem?_prim]
 end Oracle.Single.Code
@@ -185,7 +185,7 @@ def c_list_getD :=
 @[cp] theorem c_list_getD_prim : code_prim c_list_getD := by unfold c_list_getD; apply_cp
 @[simp, evp_simps] theorem c_list_getD_evp {O : ℕ → ℕ} {lN i d : ℕ} :
   evalp O c_list_getD ⟪lN, i, d⟫ = (n2l lN).getD i d := by simp [c_list_getD]
-@[simp] theorem c_list_getD_ev {O : ℕ → ℕ} {lN i d : ℕ} :
+@[simp, ev_simps] theorem c_list_getD_ev {O : ℕ → ℕ} {lN i d : ℕ} :
   eval O c_list_getD ⟪lN, i, d⟫ = (n2l lN).getD i d := by simp [← evalp_eq_eval c_list_getD_prim]
 end Oracle.Single.Code
 end list_getD
@@ -197,7 +197,7 @@ def c_list_getI := c_pred.comp c_list_getElem?
 @[simp, evp_simps] theorem c_list_getI_evp {O : ℕ → ℕ} {lN i : ℕ} : evalp O c_list_getI ⟪lN, i⟫ = ((n2l lN).getI i) := by
   simp [c_list_getI]
   by_cases hl : i < (n2l lN).length <;> simp [hl, getI]
-@[simp] theorem c_list_getI_ev {O : ℕ → ℕ} {lN i : ℕ} : eval O c_list_getI ⟪lN, i⟫ = ((n2l lN).getI i) := by simp [← evalp_eq_eval c_list_getI_prim]
+@[simp, ev_simps] theorem c_list_getI_ev {O : ℕ → ℕ} {lN i : ℕ} : eval O c_list_getI ⟪lN, i⟫ = ((n2l lN).getI i) := by simp [← evalp_eq_eval c_list_getI_prim]
 end Oracle.Single.Code
 end list_getI
 
@@ -212,7 +212,7 @@ def c_list_get := c_list_getI
   by_cases hl : i < (n2l lN).length
   · simp [hl]
   · contradiction
-@[simp] theorem c_list_get_ev {O : ℕ → ℕ} {lN i : ℕ} (h : i < (n2l lN).length) :
+@[simp, ev_simps] theorem c_list_get_ev {O : ℕ → ℕ} {lN i : ℕ} (h : i < (n2l lN).length) :
     eval O c_list_get ⟪lN, i⟫ = (n2l lN)[i] := by
   simp [← evalp_eq_eval c_list_get_prim]
   simp [h]
@@ -317,7 +317,7 @@ def c_list_reverse := (c_list_foldl (c_list_cons.comp c_flip)).comp₂ c_list_ni
     | cons head tail ih => simp [*, reverseAux, -encode_list_cons]
   rw [aux (n2l lN) (l2n [])]
   simp
-@[simp] theorem c_list_reverse_ev {O : ℕ → ℕ} {lN} : eval O c_list_reverse lN =  l2n (reverse (n2l lN)) := by simp [← evalp_eq_eval c_list_reverse_prim]
+@[simp, ev_simps] theorem c_list_reverse_ev {O : ℕ → ℕ} {lN} : eval O c_list_reverse lN =  l2n (reverse (n2l lN)) := by simp [← evalp_eq_eval c_list_reverse_prim]
 end Oracle.Single.Code
 end list_reverse
 
@@ -345,7 +345,7 @@ namespace Oracle.Single.Code
 def c_list_length := (c_list_foldl (succ.comp left)).comp₂ zero c_id
 @[cp] theorem c_list_length_prim : code_prim c_list_length := by unfold c_list_length; apply_cp
 @[simp, evp_simps] theorem c_list_length_evp {O : ℕ → ℕ} {lN : ℕ} : evalp O c_list_length lN = length (n2l lN) := by simp [c_list_length]
-@[simp] theorem c_list_length_ev {O : ℕ → ℕ} {lN : ℕ} : eval O c_list_length lN = length (n2l lN) := by simp [← evalp_eq_eval c_list_length_prim]
+@[simp, ev_simps] theorem c_list_length_ev {O : ℕ → ℕ} {lN : ℕ} : eval O c_list_length lN = length (n2l lN) := by simp [← evalp_eq_eval c_list_length_prim]
 end Oracle.Single.Code
 end list_length
 
@@ -356,7 +356,7 @@ def c_list_getLast? := c_list_getElem?.comp₂ c_id (c_pred.comp <| c_list_lengt
 @[simp, evp_simps] theorem c_list_getLast?_evp {O : ℕ → ℕ} {lN : ℕ} : evalp O c_list_getLast? lN = o2n (getLast? (n2l lN)) := by
   simp [c_list_getLast?]
   exact Eq.symm getLast?_eq_getElem?
-@[simp] theorem c_list_getLast?_ev {O : ℕ → ℕ} {lN : ℕ} : eval O c_list_getLast? lN = o2n (getLast? (n2l lN)) := by simp [← evalp_eq_eval c_list_getLast?_prim]
+@[simp, ev_simps] theorem c_list_getLast?_ev {O : ℕ → ℕ} {lN : ℕ} : eval O c_list_getLast? lN = o2n (getLast? (n2l lN)) := by simp [← evalp_eq_eval c_list_getLast?_prim]
 end Oracle.Single.Code
 end list_getLast?
 
@@ -366,7 +366,7 @@ def c_list_getLastI := c_opt_iget.comp c_list_getLast?
 @[cp] theorem c_list_getLastI_prim : code_prim c_list_getLastI := by unfold c_list_getLastI; apply_cp
 @[simp, evp_simps] theorem c_list_getLastI_evp {O : ℕ → ℕ} {lN : ℕ} : evalp O c_list_getLastI lN = getLastI (n2l lN) := by
   simp [c_list_getLastI, getLastI_eq_getLast?_getD]
-@[simp] theorem c_list_getLastI_ev {O : ℕ → ℕ} {lN : ℕ} : eval O c_list_getLastI lN = getLastI (n2l lN) := by simp [← evalp_eq_eval c_list_getLastI_prim]
+@[simp, ev_simps] theorem c_list_getLastI_ev {O : ℕ → ℕ} {lN : ℕ} : eval O c_list_getLastI lN = getLastI (n2l lN) := by simp [← evalp_eq_eval c_list_getLastI_prim]
 end Oracle.Single.Code
 end list_getLastI
 
@@ -383,7 +383,7 @@ def c_list_append := (c_list_foldr (c_list_cons)).comp c_flip
   induction (n2l l1N) with
   | nil => simp
   | cons head tail ih => simp [ih, -encode_list_cons, -encode_list_nil]
-@[simp] theorem c_list_append_ev {O : ℕ → ℕ} {l1N l2N} : eval O c_list_append ⟪l1N, l2N⟫ = l2n ((n2l l1N) ++ (n2l l2N)) := by simp [← evalp_eq_eval c_list_append_prim]
+@[simp, ev_simps] theorem c_list_append_ev {O : ℕ → ℕ} {l1N l2N} : eval O c_list_append ⟪l1N, l2N⟫ = l2n ((n2l l1N) ++ (n2l l2N)) := by simp [← evalp_eq_eval c_list_append_prim]
 end Oracle.Single.Code
 end list_append
 
@@ -402,7 +402,7 @@ def c_list_concat := c_list_append.comp₂ left (c_list_singleton right)
 @[cp] theorem c_list_concat_prim : code_prim c_list_concat := by unfold c_list_concat; apply_cp
 @[simp, evp_simps] theorem c_list_concat_evp {O : ℕ → ℕ} {lN i : ℕ} : evalp O c_list_concat ⟪lN, i⟫ = l2n ((n2l lN)++[i]) := by
   simp [c_list_concat, -encode_list_cons, -encode_list_nil]
-@[simp] theorem c_list_concat_ev {O : ℕ → ℕ} {lN i : ℕ} : eval O c_list_concat ⟪lN, i⟫ = l2n ((n2l lN)++[i]) := by simp [← evalp_eq_eval c_list_concat_prim]
+@[simp, ev_simps] theorem c_list_concat_ev {O : ℕ → ℕ} {lN i : ℕ} : eval O c_list_concat ⟪lN, i⟫ = l2n ((n2l lN)++[i]) := by simp [← evalp_eq_eval c_list_concat_prim]
 end Oracle.Single.Code
 end list_concat
 
@@ -565,7 +565,7 @@ def c_list_range :=
   | succ n ih =>
     simp [-encode_list_cons, -encode_list_nil, ih]
     exact Eq.symm range_succ
-@[simp] theorem c_list_range_ev {O : ℕ → ℕ} {n} : eval O c_list_range n = l2n (range n) := by simp [← evalp_eq_eval c_list_range_prim]
+@[simp, ev_simps] theorem c_list_range_ev {O : ℕ → ℕ} {n} : eval O c_list_range n = l2n (range n) := by simp [← evalp_eq_eval c_list_range_prim]
 end Oracle.Single.Code
 end list_range
 
@@ -585,7 +585,7 @@ def c_list_replicate :=
   | succ n ih =>
     simp [-encode_list_cons, -encode_list_nil, ih]
     exact Eq.symm replicate_succ'
-@[simp] theorem c_list_replicate_ev {O : ℕ → ℕ} {n x} : eval O c_list_replicate ⟪n,x⟫ = l2n (replicate n x) := by simp [← evalp_eq_eval c_list_replicate_prim]
+@[simp, ev_simps] theorem c_list_replicate_ev {O : ℕ → ℕ} {n x} : eval O c_list_replicate ⟪n,x⟫ = l2n (replicate n x) := by simp [← evalp_eq_eval c_list_replicate_prim]
 end Oracle.Single.Code
 end list_replicate
 

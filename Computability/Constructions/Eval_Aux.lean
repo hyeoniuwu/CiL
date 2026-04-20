@@ -43,7 +43,7 @@ theorem c_rfind_ev' {O c a} : eval O (c_rfind c) a = (Nat.rfind (fun x => n2b' <
 end rfind
 
 def c_ppred := c_rfind (c_if_eq'.comp₂ left (succ.comp right))
-@[simp] theorem c_ppred_ev {O y} : eval O c_ppred y = Nat.ppred y := by
+@[simp, ev_simps] theorem c_ppred_ev {O y} : eval O c_ppred y = Nat.ppred y := by
   unfold c_ppred
   simp [c_rfind_ev']
   simp [eval]
@@ -70,7 +70,7 @@ theorem c_ofOption_ev {O c x} (hc1 : code_total O c) : eval O (c_ofOption c) x =
   | succ n => simp;
 
 def c_rfindOpt (c : Code) := (c_ofOption c).comp₂ c_id (c_rfind (c_isSome.comp (c)))
-@[simp] theorem c_rfindOpt_ev {O c x} (hc1 : code_total O c) : eval O (c_rfindOpt c) x =  Nat.rfindOpt (fun y => n2o <| (eval O c (Nat.pair x y)).get (hc1 (Nat.pair x y))) := by
+@[simp, ev_simps] theorem c_rfindOpt_ev {O c x} (hc1 : code_total O c) : eval O (c_rfindOpt c) x =  Nat.rfindOpt (fun y => n2o <| (eval O c (Nat.pair x y)).get (hc1 (Nat.pair x y))) := by
   unfold c_rfindOpt
   simp [c_rfind_ev']
   unfold rfindOpt

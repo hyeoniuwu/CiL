@@ -847,7 +847,7 @@ theorem c_evaln_evp_aux_nMod4 {O x n s} :
 
 @[cp] theorem c_evaln_prim : code_prim (c_evaln) := by unfold c_evaln; apply_cp
 
-@[simp] theorem c_evaln_ev {O x code s}: eval O c_evaln (Nat.pair x (Nat.pair code s)) = o2n (evaln O s code.n2c x) := by
+@[simp, ev_simps] theorem c_evaln_ev {O x code s}: eval O c_evaln (Nat.pair x (Nat.pair code s)) = o2n (evaln O s code.n2c x) := by
   rw [← evalp_eq_eval c_evaln_prim];
   simp only [PFun.coe_val, c_evaln_evp, Part.coe_some]
 
@@ -862,13 +862,13 @@ end evaln
 section eval
 namespace Oracle.Single.Code
 def c_eval := (c_rfindOpt (c_evaln.comp₃ (right.comp left) (left.comp left) right))
-@[simp] theorem c_eval_ev {O c x}: eval O c_eval (Nat.pair c x) = eval O c.n2c x := by
+@[simp, ev_simps] theorem c_eval_ev {O c x}: eval O c_eval (Nat.pair c x) = eval O c.n2c x := by
   simp only [c_eval, comp₃, comp₂]
   have : code_total O ((c_evaln.comp ((right.comp left).pair ((left.comp left).pair right)))) := by apply prim_total; apply_cp
   simp [c_rfindOpt_ev this]
   rw [eval_eq_rfindOpt]
   simp [eval,Seq.seq]
-@[simp] theorem c_eval_ev' {O}: eval O c_eval = fun x => eval O (n2c x.l) x.r := by
+@[simp, ev_simps] theorem c_eval_ev' {O}: eval O c_eval = fun x => eval O (n2c x.l) x.r := by
   funext x
   rw (config := {occs := .pos [1]}) [show x = ⟪x.l, x.r⟫ from by simp]
   exact c_eval_ev

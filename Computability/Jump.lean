@@ -41,7 +41,7 @@ notation : 10000 f"⌜" => jump f
 namespace Oracle.Single.Code
 
 def c_jump_decode (c : Code) := c_ite c c_diverge (c_pred.comp c)
-@[simp] theorem c_jump_decode_ev {O c x} (hc : code_total O c): eval O (c_jump_decode c) x = if eval O c x = Part.some 0 then Part.none else (Nat.pred <$> eval O c x) := by
+@[simp, ev_simps] theorem c_jump_decode_ev {O c x} (hc : code_total O c): eval O (c_jump_decode c) x = if eval O c x = Part.some 0 then Part.none else (Nat.pred <$> eval O c x) := by
   simp [c_jump_decode]
   simp [c_ite_ev hc]
   congr
@@ -51,7 +51,7 @@ def c_jump_decode (c : Code) := c_ite c c_diverge (c_pred.comp c)
     simp [-Part.some_get]
   else
     simp [Part.eq_none_iff'.mpr h]
-@[simp] theorem c_jump_decode_ev' {O c} (hc : code_total O c): eval O (c_jump_decode c) = fun x => if eval O c x = Part.some 0 then Part.none else (Nat.pred <$> eval O c x) := by
+@[simp, ev_simps] theorem c_jump_decode_ev' {O c} (hc : code_total O c): eval O (c_jump_decode c) = fun x => if eval O c x = Part.some 0 then Part.none else (Nat.pred <$> eval O c x) := by
   funext xs
   exact c_jump_decode_ev hc
 

@@ -311,7 +311,7 @@ theorem c_div_flip_evp_aux {O} : evalp O c_div_flip = unpaired2 div_flip_aux := 
   unfold c_div_flip_aux;
   apply_cp 40
 
-@[simp] theorem c_div_ev {O a b} : eval O c_div ⟪a,b⟫ = a/b := by
+@[simp, ev_simps] theorem c_div_ev {O a b} : eval O c_div ⟪a,b⟫ = a/b := by
   rw [← evalp_eq_eval c_div_prim];
   simp only [PFun.coe_val, c_div_evp, Part.coe_some]
   exact Eq.symm (Part.some_div_some a b)
@@ -334,7 +334,7 @@ def c_mod := c_sub.comp₂ left (c_mul.comp₂ right c_div)
   apply Nat.sub_eq_of_eq_add
   simp [add_comm (m % n), Nat.div_add_mod]
 
-@[simp] theorem c_mod_ev {O} : eval O c_mod = unpaired2 ((· % ·) : ℕ → ℕ → ℕ) := by rw [← evalp_eq_eval c_mod_prim]; simp only [c_mod_evp]
+@[simp, ev_simps] theorem c_mod_ev {O} : eval O c_mod = unpaired2 ((· % ·) : ℕ → ℕ → ℕ) := by rw [← evalp_eq_eval c_mod_prim]; simp only [c_mod_evp]
 end Oracle.Single.Code
 end mod
 
@@ -343,7 +343,7 @@ namespace Oracle.Single.Code
 def c_div2 := c_div.comp₂ c_id (c_const 2)
 @[cp] theorem c_div2_prim : code_prim c_div2 := by unfold c_div2; apply_cp
 @[simp, evp_simps] theorem c_div2_evp {O} : evalp O c_div2 = div2 := by simp [c_div2]; funext x; exact Eq.symm (div2_val x)
-@[simp] theorem c_div2_ev {O} : eval O c_div2 = div2 := by simp [← evalp_eq_eval c_div2_prim]
+@[simp, ev_simps] theorem c_div2_ev {O} : eval O c_div2 = div2 := by simp [← evalp_eq_eval c_div2_prim]
 end Oracle.Single.Code
 end div2
 section mod2
@@ -351,7 +351,7 @@ namespace Oracle.Single.Code
 def c_mod2 := c_mod.comp₂ c_id (c_const 2)
 @[cp] theorem c_mod2_prim : code_prim c_mod2 := by unfold c_mod2; apply_cp
 @[simp, evp_simps] theorem c_mod2_evp {O} : evalp O c_mod2 = fun x ↦ x%2 := by simp [c_mod2];
-@[simp] theorem c_mod2_ev {O} : eval O c_mod2 = (fun x : ℕ ↦ x%2) := by simp [← evalp_eq_eval c_mod2_prim]
+@[simp, ev_simps] theorem c_mod2_ev {O} : eval O c_mod2 = (fun x : ℕ ↦ x%2) := by simp [← evalp_eq_eval c_mod2_prim]
 end Oracle.Single.Code
 end mod2
 
@@ -667,7 +667,7 @@ theorem nMod4_eq_3 {n} (hno : n.bodd = true) (hn2o : n.div2.bodd = true) : n%4=3
           simp [h0]
           rw [ih m hm];
 
-@[simp] theorem c_replace_oracle_ev {O} :
+@[simp, ev_simps] theorem c_replace_oracle_ev {O} :
     eval O (c_replace_oracle) = fun x : ℕ ↦ c2n (replace_oracle (n2c x.l) (n2c x.r)) := by
   rw [← evalp_eq_eval c_replace_oracle_prim]; simp only [c_replace_oracle_evp];
 

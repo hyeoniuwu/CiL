@@ -24,8 +24,8 @@ namespace Oracle.Single.Code
 
 section diverge
 def c_diverge := rfind' (c_const 1)
-@[simp] theorem c_diverge_ev {O x} : eval O c_diverge x = Part.none := by
-  simp [c_diverge,eval]
+@[simp, ev_simps] theorem c_diverge_ev {O x} : eval O c_diverge x = Part.none := by
+  simp only [c_diverge, ev_simps]
   apply Part.eq_none_iff.mpr
   simp
 theorem c_diverge_ev' {O} : eval O c_diverge = fun _ ↦ Part.none := by funext; simp
@@ -35,13 +35,15 @@ section ifz1
 def c_ifz1 (c) (a b : ℕ) :=
   c_add.comp₂ (c_mul.comp₂ (c_const b) (c_sg.comp c)) (c_mul.comp₂ (c_const a) (c_sg'.comp c))
 open Classical in
-@[simp] theorem c_ifz1_ev {O c a b x} (hc : code_total O c) :
+@[simp, ev_simps] theorem c_ifz1_ev {O c a b x} (hc : code_total O c) :
     eval O (c_ifz1 c a b) x = if (eval O c x=Part.some 0) then Part.some a else Part.some b := by
-  simp [c_ifz1]
-  simp [eval]
-  simp [Seq.seq]
-  have : (eval O c x).Dom := by exact hc x
-  simp [Part.Dom.bind (hc x)]
+  simp only [c_ifz1, ev_simps]
+  -- simp [eval]
+  simp only [Seq.seq, Part.coe_some, Part.map_eq_map, Part.map_some, Part.bind_eq_bind,
+    Part.map_bind, PFun.coe_val, Nat.sg, Part.bind_some, Nat.unpaired2, Nat.mul_eq, Nat.sg']
+  have : (eval O c x).Dom := hc x
+  simp only [Part.Dom.bind (hc x), Part.bind_some, pair_l, pair_r, mul_ite, mul_zero, mul_one,
+    PFun.coe_val, Nat.unpaired2, Nat.add_eq]
   split
   next h => simp [Part.get_eq_iff_eq_some.mp h]
   next h => simp [Part.ne_of_get_ne' h]
@@ -56,7 +58,7 @@ end ifz1
 section ite
 def c_ite (c a b : Oracle.Single.Code) := c_eval.comp₂ (c_ifz1 c a.c2n b.c2n) (c_id)
 open Classical in
-@[simp] theorem c_ite_ev {O c a b x} (hc : code_total O c) :
+@[simp, ev_simps] theorem c_ite_ev {O c a b x} (hc : code_total O c) :
     eval O (c_ite c a b) x = if (eval O c x=Part.some 0) then (eval O a x) else (eval O b x) := by
   simp [c_ite]
   simp [Seq.seq]
@@ -89,7 +91,7 @@ end ite
 section if_le_te'
 -- like c_if_le_te, but allows either branch to diverge
 def c_if_le_te' (c1 c2 c3 c4 : Code) := c_ite (c_sub.comp₂ c1 c2) c3 c4
-@[simp] theorem c_if_le_te'_ev {O c1 c2 c3 c4 x} (hc1 : code_total O c1) (hc2 : code_total O c2) :
+@[simp, ev_simps] theorem c_if_le_te'_ev {O c1 c2 c3 c4 x} (hc1 : code_total O c1) (hc2 : code_total O c2) :
     eval O (c_if_le_te' c1 c2 c3 c4) x =
     if (eval O c1 x).get (hc1 x) ≤ (eval O c2 x).get (hc2 x)
     then (eval O c3 x)
@@ -110,7 +112,7 @@ section if_eq_te'
 -- like c_if_eq_te, but allows either branch to diverge
 def c_if_eq_te' (c1 c2 c3 c4 : Code) := c_ite (c_dist.comp₂ c1 c2) c3 c4
 open Classical in
-@[simp] theorem c_if_eq_te'_ev {O c1 c2 c3 c4 x} (hc1 : code_total O c1) (hc2 : code_total O c2) :
+@[simp, ev_simps] theorem c_if_eq_te'_ev {O c1 c2 c3 c4 x} (hc1 : code_total O c1) (hc2 : code_total O c2) :
     eval O (c_if_eq_te' c1 c2 c3 c4) x =
     if (eval O c1 x).get (hc1 x) = (eval O c2 x).get (hc2 x)
     then (eval O c3 x)
@@ -128,7 +130,7 @@ end if_eq_te'
 section ifdom
 def c_ifdom (c a : Oracle.Single.Code) := c_add.comp₂ (zero.comp c) a
 open Classical in
-@[simp] theorem c_ifdom_ev {O c a x} :
+@[simp, ev_simps] theorem c_ifdom_ev {O c a x} :
     eval O (c_ifdom c a) x = if (eval O c x).Dom then (eval O a x) else Part.none := by
   split
   next h => simp [c_ifdom, eval, Seq.seq, Part.Dom.bind h]
@@ -149,7 +151,7 @@ end evaln₁
 section eval₁
 def eval₁ (O : ℕ → ℕ) : ℕ →. ℕ := fun ex => eval O ex.l.n2c ex.r
 def c_eval₁ := c_eval
-@[simp] theorem c_eval₁_ev {O} : eval O c_eval₁ = eval₁ O := by
+@[simp, ev_simps] theorem c_eval₁_ev {O} : eval O c_eval₁ = eval₁ O := by
   unfold eval₁
   simp [c_eval₁]
 

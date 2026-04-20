@@ -24,7 +24,7 @@ def c_isSome := c_sg'
 @[cp] theorem c_isSome_prim : code_prim c_isSome := by unfold c_isSome; apply_cp
 @[simp, evp_simps] theorem c_isSome_evp {O : ℕ → ℕ} : evalp O c_isSome = fun o => b'2n <| (n2o o).isSome := by
   funext x; cases x <;> simp [c_isSome, b'2n, n2o]
-@[simp] theorem c_isSome_ev {O} : eval O c_isSome = fun o => b'2n <| (n2o o).isSome := by
+@[simp, ev_simps] theorem c_isSome_ev {O} : eval O c_isSome = fun o => b'2n <| (n2o o).isSome := by
   rw [← evalp_eq_eval c_isSome_prim]; simp only [c_isSome_evp];
 end Oracle.Single.Code
 end isSome
@@ -43,7 +43,7 @@ def c_opt_iget := c_pred
   rw [Eq.symm (succ_pred_eq_of_ne_zero h)]
   exact rfl
 
-@[simp] theorem c_opt_iget_ev {O o} : eval O c_opt_iget o = Option.getD (n2o o) 0 := by
+@[simp, ev_simps] theorem c_opt_iget_ev {O o} : eval O c_opt_iget o = Option.getD (n2o o) 0 := by
   simp [← evalp_eq_eval c_opt_iget_prim]
 end Oracle.Single.Code
 end opt_iget
@@ -58,7 +58,7 @@ def c_opt_getD := c_ifz.comp₃ left right (c_opt_iget.comp left)
   · simp [ho];
   · rcases exists_add_one_eq.mpr (one_le_iff_ne_zero.mpr ho) with ⟨k,hk⟩
     simp [←hk]
-@[simp] theorem c_opt_getD_ev {O : ℕ → ℕ} {o d} :
+@[simp, ev_simps] theorem c_opt_getD_ev {O : ℕ → ℕ} {o d} :
     eval O c_opt_getD (Nat.pair o d) = (n2o o).getD d := by
   simp [← evalp_eq_eval c_opt_getD_prim]
 end Oracle.Single.Code
@@ -71,7 +71,7 @@ def c_opt_none := c_const 0
   unfold c_opt_none; apply_cp
 @[simp, evp_simps] theorem c_opt_none_evp {O : ℕ → ℕ} {o} : evalp O c_opt_none o = o2n Option.none := by
   simp [c_opt_none]
-@[simp] theorem c_opt_none_ev {O : ℕ → ℕ} {o} :
+@[simp, ev_simps] theorem c_opt_none_ev {O : ℕ → ℕ} {o} :
     n2o <$> (eval O c_opt_none o) = (Option.none : Option ℕ) := by
   simp [← evalp_eq_eval c_opt_none_prim]
 end Oracle.Single.Code
@@ -123,7 +123,7 @@ end opt_bind'
 section part_bind
 namespace Oracle.Single.Code
 def c_part_bind (cf cg : Code) := cg.comp₂ c_id cf
-@[simp] theorem c_part_bind_ev {O : ℕ → ℕ} {cf cg : Code} {x} : eval O (c_part_bind cf cg) x =
+@[simp, ev_simps] theorem c_part_bind_ev {O : ℕ → ℕ} {cf cg : Code} {x} : eval O (c_part_bind cf cg) x =
   do
     let t ← eval O cf x
     let r ← eval O cg (Nat.pair x t)

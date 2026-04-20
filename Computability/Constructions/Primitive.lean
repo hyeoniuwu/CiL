@@ -28,7 +28,7 @@ Suppose we want to construct a primitive recursive function `f : ℕ → ℕ`.
 `@[simp, evp_simps] theorem c_f_evp {O : ℕ → ℕ} : evalp O c_f = f := by ...`
   · theorem which asserts that the code `c_f` implements `f` upon evaluation with `evalp`.
 
-`@[simp] theorem c_f_ev {O : ℕ → ℕ} : eval O c_f = f := by`
+`@[simp, ev_simps] theorem c_f_ev {O : ℕ → ℕ} : eval O c_f = f := by`
   `rw [← evalp_eq_eval c_f_prim]; simp only [c_f_evp]`
   · theorem which asserts that the code `c_f` implements `f` upon evaluation with `eval`.
     This follows "for free" once you have `c_f_evp `.
@@ -50,7 +50,7 @@ def comp₂ := fun c1 c2 c3 : Code => c1.comp (pair c2 c3)
 @[simp, evp_simps] theorem comp₂_evp {O c1 c2 c3} :
     evalp O (comp₂ c1 c2 c3) = fun x => evalp O c1 ⟪evalp O c2 x, evalp O c3 x⟫ := by
   simp only [comp₂, evp_simps];
-@[simp] theorem comp₂_ev {O c1 c2 c3} :
+@[simp, ev_simps] theorem comp₂_ev {O c1 c2 c3} :
     eval O (comp₂ c1 c2 c3) = fun x => ⟪eval O c2 x, eval O c3 x⟫ >>= (eval O c1) := by
   simp [eval, comp₂, Seq.seq]
 end Oracle.Single.Code
@@ -66,7 +66,7 @@ def comp₄ := fun c1 c2 c3 c4 c5 : Code => c1.comp₂ (pair c2 c3) (pair c4 c5)
 @[simp, evp_simps] theorem comp₄_evp {O c1 c2 c3 c4 c5} : evalp O (comp₄ c1 c2 c3 c4 c5) = fun x ↦
   evalp O c1 ⟪evalp O c2 x, evalp O c3 x, evalp O c4 x, evalp O c5 x⟫ := by
   simp only [comp₄, evp_simps]
-@[simp] theorem comp₄_ev {O c1 c2 c3 c4 c5} : eval O (comp₄ c1 c2 c3 c4 c5) =
+@[simp, ev_simps] theorem comp₄_ev {O c1 c2 c3 c4 c5} : eval O (comp₄ c1 c2 c3 c4 c5) =
   fun x => ⟪eval O c2 x, eval O c3 x, eval O c4 x, eval O c5 x⟫
    >>= (eval O c1) := by
     simp [comp₄, eval, comp₂, Seq.seq]
@@ -83,7 +83,7 @@ def comp₃ := fun c1 c2 c3 c4 : Code => c1.comp₂ c2 (pair c3 c4)
     evalp O (comp₃ c1 c2 c3 c4) = fun x ↦
     evalp O c1 ⟪evalp O c2 x, evalp O c3 x, evalp O c4 x⟫ := by
   simp only [comp₃, evp_simps]
-@[simp] theorem comp₃_ev {c1 c2 c3 c4} {O : ℕ → ℕ} : eval O (comp₃ c1 c2 c3 c4) = fun x ↦
+@[simp, ev_simps] theorem comp₃_ev {c1 c2 c3 c4} {O : ℕ → ℕ} : eval O (comp₃ c1 c2 c3 c4) = fun x ↦
   ⟪eval O c2 x, eval O c3 x, eval O c4 x⟫ >>= (eval O c1) := by
     simp [comp₃, eval, comp₂, Seq.seq]
 end Oracle.Single.Code
@@ -95,7 +95,7 @@ def c_id := left.pair right
 @[cp] theorem c_id_prim : code_prim c_id := by unfold c_id; apply_cp
 @[simp, evp_simps] theorem c_id_evp {O : ℕ → ℕ} {n} : evalp O c_id n = n := by simp [c_id, evalp]
 theorem c_id_evp' {O : ℕ → ℕ} : evalp O c_id = id := by funext x; simp [evp_simps]
-@[simp] theorem c_id_ev {O : ℕ → ℕ} {n} : eval O c_id n = n := by simp [c_id,eval,Seq.seq]
+@[simp, ev_simps] theorem c_id_ev {O : ℕ → ℕ} {n} : eval O c_id n = n := by simp [c_id,eval,Seq.seq]
 end Oracle.Single.Code
 theorem Nat.PrimrecIn.id {O : ℕ → ℕ} : Nat.PrimrecIn O id := by
   rw [← c_id_evp']; exact code_prim_prop
@@ -115,7 +115,7 @@ def c_const : ℕ → Code
 @[simp, evp_simps] theorem c_const_evp {O : ℕ → ℕ} : ∀ n m, evalp O (c_const n) m = n
 | 0, _ => rfl
 | n+1, m => by simp! [c_const_evp n m]
-@[simp] theorem c_const_ev {O : ℕ → ℕ} : ∀ n m, eval O (c_const n) m = n
+@[simp, ev_simps] theorem c_const_ev {O : ℕ → ℕ} : ∀ n m, eval O (c_const n) m = n
 | 0, _ => rfl
 | n+1, m => by simp! [c_const_ev n m]
 end Oracle.Single.Code
@@ -145,7 +145,7 @@ theorem _curry_eq_c_curry : c_curry = curry := by
 -- @[simp] theorem c_curry_prim : code_prim (c_curry c n) := by
 @[simp, evp_simps] theorem c_curry_evp {O : ℕ → ℕ} {c n x} :
     evalp O (c_curry c n) x = evalp O c ⟪n, x⟫ := by simp [c_curry, evp_simps]
-@[simp] theorem c_curry_ev {O : ℕ → ℕ} {c n x} :
+@[simp, ev_simps] theorem c_curry_ev {O : ℕ → ℕ} {c n x} :
     eval O (c_curry c n) x = eval O c ⟪n, x⟫ := by
   rw [_curry_eq_c_curry]; exact eval_curry c n x
 end Oracle.Single.Code
@@ -165,7 +165,7 @@ def c_sg := comp (prec zero (((c_const 1).comp left).comp left)) (pair zero c_id
   funext n; induction n with
   | zero => exact rfl
   | succ n _ => simp
-@[simp, evp_simps] theorem c_sg_ev {O : ℕ → ℕ} : eval O c_sg = Nat.sg := by
+@[simp, ev_simps] theorem c_sg_ev {O : ℕ → ℕ} : eval O c_sg = Nat.sg := by
   rw [← evalp_eq_eval c_sg_prim]; simp only [c_sg_evp]
 def c_sg' := comp (prec (c_const 1) (((zero).comp left).comp left)) (pair zero c_id)
 @[cp] theorem c_sg'_prim : code_prim c_sg' := by unfold c_sg'; apply_cp
@@ -174,7 +174,7 @@ def c_sg' := comp (prec (c_const 1) (((zero).comp left).comp left)) (pair zero c
   funext n; induction n with
   | zero => exact rfl
   | succ n _ => simp
-@[simp, evp_simps] theorem c_sg'_ev {O : ℕ → ℕ} : eval O c_sg' = Nat.sg' := by
+@[simp, ev_simps] theorem c_sg'_ev {O : ℕ → ℕ} : eval O c_sg' = Nat.sg' := by
   rw [← evalp_eq_eval c_sg'_prim]; simp only [c_sg'_evp]
 end Oracle.Single.Code
 theorem Nat.PrimrecIn.sg {O : ℕ → ℕ} : Nat.PrimrecIn O Nat.sg := by
@@ -193,7 +193,7 @@ def c_n2b := c_sg
   simp only [c_n2b, evp_simps]
   unfold Nat.sg; unfold n2b
   aesop
-@[simp, evp_simps] theorem c_n2b_ev {O : ℕ → ℕ} :
+@[simp, ev_simps] theorem c_n2b_ev {O : ℕ → ℕ} :
     eval O c_n2b = fun x => if n2b x = true then 1 else 0 := by
   rw [← evalp_eq_eval c_n2b_prim]; simp only [c_n2b_evp]; funext x; aesop
 end Oracle.Single.Code
@@ -210,7 +210,7 @@ def c_add := (prec c_id ((succ.comp right).comp right))
   induction n.r with
   | zero => exact rfl
   | succ n h => exact Nat.add_left_inj.mpr h
-@[simp, evp_simps] theorem c_add_ev {O : ℕ → ℕ} : eval O c_add = unpaired2 Nat.add := by
+@[simp, ev_simps] theorem c_add_ev {O : ℕ → ℕ} : eval O c_add = unpaired2 Nat.add := by
   rw [← evalp_eq_eval c_add_prim]; simp only [c_add_evp]
 end Oracle.Single.Code
 end add
@@ -227,7 +227,7 @@ def c_mul := prec zero (c_add.comp (pair left (right.comp right)))
   | succ n h =>
     simp only [*, mul_succ];
     (expose_names; exact Nat.add_comm (unpair n_1).1 ((unpair n_1).1 * n))
-@[simp, evp_simps] theorem c_mul_ev {O : ℕ → ℕ} : eval O c_mul = unpaired2 Nat.mul := by
+@[simp, ev_simps] theorem c_mul_ev {O : ℕ → ℕ} : eval O c_mul = unpaired2 Nat.mul := by
   rw [← evalp_eq_eval c_mul_prim]; simp only [c_mul_evp]
 end Oracle.Single.Code
 end mul
@@ -242,7 +242,7 @@ def c_pow := prec (c_const 1) (c_mul.comp (pair (right.comp right) left))
   induction n.r with
   | zero => exact rfl
   | succ n h => simp [*, pow_succ];
-@[simp, evp_simps] theorem c_pow_ev {O : ℕ → ℕ} : eval O c_pow = unpaired2 Nat.pow := by
+@[simp, ev_simps] theorem c_pow_ev {O : ℕ → ℕ} : eval O c_pow = unpaired2 Nat.pow := by
   rw [← evalp_eq_eval c_pow_prim]; simp only [c_pow_evp]
 end Oracle.Single.Code
 end pow
@@ -278,7 +278,7 @@ def c_pred := (c_casesOn1 0 c_id)
   simp only [c_pred]
   funext n;
   cases n <;> simp [*, evp_simps]
-@[simp, evp_simps] theorem c_pred_ev {O : ℕ → ℕ} : eval O c_pred = Nat.pred := by
+@[simp, ev_simps] theorem c_pred_ev {O : ℕ → ℕ} : eval O c_pred = Nat.pred := by
   rw [← evalp_eq_eval c_pred_prim]; simp only [c_pred_evp]
 end Oracle.Single.Code
 end pred
@@ -295,7 +295,7 @@ def c_sub := prec c_id ((c_pred.comp right).comp right)
   | zero => exact rfl
   | succ n h =>
     simp [*, Nat.sub_add_eq];
-@[simp, evp_simps] theorem c_sub_ev {O : ℕ → ℕ} : eval O c_sub = unpaired2 Nat.sub := by
+@[simp, ev_simps] theorem c_sub_ev {O : ℕ → ℕ} : eval O c_sub = unpaired2 Nat.sub := by
   rw [← evalp_eq_eval c_sub_prim]; simp only [c_sub_evp]
 end Oracle.Single.Code
 end sub
@@ -305,7 +305,7 @@ def c_dist := c_add.comp (pair c_sub (c_sub.comp (pair right left)))
 @[cp] theorem c_dist_prim : code_prim c_dist := by unfold c_dist; apply_cp
 @[simp, evp_simps] theorem c_dist_evp {O : ℕ → ℕ} : evalp O c_dist = unpaired2 Nat.dist := by
   simp only [c_dist, evp_simps]; simp only [unpaired2, sub_eq, pair_l, pair_r, add_eq]; exact rfl
-@[simp, evp_simps] theorem c_dist_ev {O : ℕ → ℕ} : eval O c_dist = unpaired2 Nat.dist := by
+@[simp, ev_simps] theorem c_dist_ev {O : ℕ → ℕ} : eval O c_dist = unpaired2 Nat.dist := by
   rw [← evalp_eq_eval c_dist_prim]; simp only [c_dist_evp]
 end Oracle.Single.Code
 end dist
@@ -322,7 +322,7 @@ def c_if_eq' := c_sg.comp c_dist
 @[simp, evp_simps] theorem c_if_eq'_evp {O : ℕ → ℕ} :
     evalp O c_if_eq' = fun ab => if ab.l=ab.r then 0 else 1 := by
   simp [c_if_eq', evp_simps];
-@[simp] theorem c_if_eq'_ev {O : ℕ → ℕ} :
+@[simp, ev_simps] theorem c_if_eq'_ev {O : ℕ → ℕ} :
     eval O c_if_eq' = fun ab => if ab.l=ab.r then Part.some 0 else Part.some 1 := by
   rw [← evalp_eq_eval c_if_eq'_prim]; simp only [c_if_eq'_evp]; funext xs;
   exact apply_ite Part.some (xs.l = xs.r) 0 1
@@ -349,7 +349,7 @@ def c_if_eq_te :=
   cases Classical.em (a=b) with
   | inl h => simp [h, evp_simps]
   | inr h => simp [h, evp_simps]
-@[simp] theorem c_if_eq_te_ev {O : ℕ → ℕ} {a b c d} :
+@[simp, ev_simps] theorem c_if_eq_te_ev {O : ℕ → ℕ} {a b c d} :
     eval O c_if_eq_te ⟪a,b,c,d⟫ = if a=b then c else d := by
   rw [← evalp_eq_eval c_if_eq_te_prim];
   simp [evp_simps]
@@ -388,7 +388,7 @@ def c_if_lt_te :=
     have h1: a+1-b>0 := by exact tsub_pos_iff_not_le.mpr h
     have h0: ¬(a+1-b=0) := by exact Nat.ne_zero_of_lt h1
     simp [h, h0]
-@[simp] theorem c_if_lt_te_ev {O : ℕ → ℕ} {a b c d} :
+@[simp, ev_simps] theorem c_if_lt_te_ev {O : ℕ → ℕ} {a b c d} :
     eval O c_if_lt_te ⟪a,b,c,d⟫ = if a<b then c else d := by
   rw [← evalp_eq_eval c_if_lt_te_prim]; simp [evp_simps]
 end Oracle.Single.Code
@@ -407,7 +407,7 @@ def c_if_le_te :=
   cases Classical.em (a<b+1) with
   | inl h => simp [h, Nat.lt_add_one_iff.mp h, evp_simps]
   | inr h => simp [h, Nat.lt_add_one_iff.not.mp h, evp_simps]
-@[simp] theorem c_if_le_te_ev {O : ℕ → ℕ} {a b c d} :
+@[simp, ev_simps] theorem c_if_le_te_ev {O : ℕ → ℕ} {a b c d} :
     eval O c_if_le_te ⟪a,b,c,d⟫ = if a ≤ b then c else d := by
   rw [← evalp_eq_eval c_if_le_te_prim]; simp [evp_simps]
 end Oracle.Single.Code
@@ -420,7 +420,7 @@ def c_flip := pair right left
 @[cp] theorem c_flip_prim : code_prim c_flip := by unfold c_flip; apply_cp
 @[simp, evp_simps] theorem c_flip_evp {O : ℕ → ℕ} {a b} : evalp O c_flip ⟪a, b⟫ = ⟪b, a⟫ := by
   simp [c_flip, evp_simps];
-@[simp] theorem c_flip_ev {O : ℕ → ℕ} {a b} : eval O c_flip ⟪a, b⟫ = ⟪b, a⟫ := by
+@[simp, ev_simps] theorem c_flip_ev {O : ℕ → ℕ} {a b} : eval O c_flip ⟪a, b⟫ = ⟪b, a⟫ := by
   rw [← evalp_eq_eval c_flip_prim]; simp [evp_simps]
 end Oracle.Single.Code
 end flip
@@ -432,7 +432,7 @@ def c_if_gt_te := c_if_lt_te.comp (pair (c_flip.comp left) right)
 @[cp] theorem c_if_gt_te_prim : code_prim c_if_gt_te := by unfold c_if_gt_te; apply_cp
 @[simp, evp_simps] theorem c_if_gt_te_evp {O : ℕ → ℕ} {a b c d} :
     evalp O c_if_gt_te ⟪a,b,c,d⟫ = if a>b then c else d := by simp [c_if_gt_te, evp_simps];
-@[simp] theorem c_if_gt_te_ev {O : ℕ → ℕ} {a b c d} :
+@[simp, ev_simps] theorem c_if_gt_te_ev {O : ℕ → ℕ} {a b c d} :
     eval O c_if_gt_te ⟪a,b,c,d⟫ = if a>b then c else d := by
   rw [← evalp_eq_eval c_if_gt_te_prim]; simp [evp_simps]
 end Oracle.Single.Code
@@ -444,7 +444,7 @@ def c_if_ge_te := c_if_le_te.comp (pair (c_flip.comp left) right)
 @[cp] theorem c_if_ge_te_prim : code_prim c_if_ge_te := by unfold c_if_ge_te; apply_cp
 @[simp, evp_simps] theorem c_if_ge_te_evp {O : ℕ → ℕ} {a b c d} :
   evalp O c_if_ge_te ⟪a,b,c,d⟫ = if a≥b then c else d := by simp [c_if_ge_te, evp_simps];
-@[simp] theorem c_if_ge_te_ev {O : ℕ → ℕ} {a b c d} :
+@[simp, ev_simps] theorem c_if_ge_te_ev {O : ℕ → ℕ} {a b c d} :
     eval O c_if_ge_te ⟪a,b,c,d⟫ = if a≥b then c else d := by
   rw [← evalp_eq_eval c_if_ge_te_prim]; simp [evp_simps]
 end Oracle.Single.Code
@@ -467,7 +467,7 @@ def c_ifz := c_add.comp <| pair
 theorem c_ifz_ev' {O : ℕ → ℕ} :
     eval O c_ifz = fun (cab : ℕ) => if cab.l=0 then cab.r.l else cab.r.r := by
   rw [← evalp_eq_eval c_ifz_prim]; simp only [c_ifz_evp];
-@[simp] theorem c_ifz_ev {O : ℕ → ℕ} {cab} :
+@[simp, ev_simps] theorem c_ifz_ev {O : ℕ → ℕ} {cab} :
     eval O c_ifz cab = if cab.l=0 then cab.r.l else cab.r.r := by
   simp [c_ifz_ev']
 end Oracle.Single.Code
@@ -488,7 +488,7 @@ def c_ift := c_ifz.comp₂ (c_sg'.comp <| left) right
 theorem c_ift_ev' {O : ℕ → ℕ} :
     eval O c_ift = fun (cab : ℕ) => if (n2b cab.l) then cab.r.l else cab.r.r := by
   rw [← evalp_eq_eval c_ift_prim]; simp only [c_ift_evp];
-@[simp] theorem c_ift_ev {O : ℕ → ℕ} {cab} :
+@[simp, ev_simps] theorem c_ift_ev {O : ℕ → ℕ} {cab} :
     eval O c_ift cab = if (n2b cab.l) then cab.r.l else cab.r.r := by
   simp [c_ift_ev']
 end Oracle.Single.Code
@@ -521,7 +521,7 @@ def c_mul2 := c_mul.comp₂ c_id (c_const 2)
 @[cp] theorem c_mul2_prim : code_prim c_mul2 := by unfold c_mul2; apply_cp
 @[simp, evp_simps] theorem c_mul2_evp {O : ℕ → ℕ} : evalp O c_mul2 = fun x => x*2 := by
   simp [c_mul2, evp_simps]
-@[simp, evp_simps] theorem c_mul2_ev {O : ℕ → ℕ} : eval O c_mul2 = (fun x => x*(2 : ℕ)) := by
+@[simp, ev_simps] theorem c_mul2_ev {O : ℕ → ℕ} : eval O c_mul2 = (fun x => x*(2 : ℕ)) := by
   rw [← evalp_eq_eval c_mul2_prim]; simp only [c_mul2_evp];
 end Oracle.Single.Code
 end mul2
@@ -533,7 +533,7 @@ def c_max := c_if_le_te.comp₄ left right right left
 @[simp, evp_simps] theorem c_max_evp {O : ℕ → ℕ} : evalp O c_max = unpaired2 Nat.max := by
   simp only [c_max, evp_simps]
   exact rfl
-@[simp, evp_simps] theorem c_max_ev {O : ℕ → ℕ} : eval O c_max = unpaired2 Nat.max := by
+@[simp, ev_simps] theorem c_max_ev {O : ℕ → ℕ} : eval O c_max = unpaired2 Nat.max := by
   rw [← evalp_eq_eval c_max_prim]; simp only [c_max_evp]
 end Oracle.Single.Code
 end max
