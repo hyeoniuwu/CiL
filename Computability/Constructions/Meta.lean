@@ -30,11 +30,10 @@ Then the meta-code, named `c_c`, will be: `c_c = c_comp.comp₂ c_succ c_left`.
 -/
 
 
-open Computability.Code
-open Computability
+open Oracle.Single.Code
 
 section constructors
-namespace Computability.Code
+namespace Oracle.Single.Code
 def c_zero := c_const (c2n zero)
 @[cp] theorem c_zero_prim : code_prim c_zero := by unfold c_zero; apply_cp
 @[simp] theorem c_zero_evp {O x} : evalp O c_zero x = c2n zero := by simp [c_zero]
@@ -119,9 +118,10 @@ theorem c_ev_const_evp' {O x} : evalp O c_ev_const x = c2n (comp (n2c x.l) (c_co
 @[simp] theorem c_ev_const_evp {O e x} : evalp O c_ev_const ⟪e, x⟫ = c2n (comp (n2c e) (c_const x)) := by simp [c_ev_const_evp']
 theorem c_ev_const_ev' {O x}:eval O c_ev_const x = c2n (comp (n2c x.l) (c_const x.r)) := by rw [← evalp_eq_eval c_ev_const_prim]; simp [c_ev_const_evp']
 @[simp] theorem c_ev_const_ev {O x e} : eval O c_ev_const ⟪e, x⟫ = c2n (comp (n2c e) (c_const x)) := by rw [← evalp_eq_eval c_ev_const_prim]; simp
-end Computability.Code
+end Oracle.Single.Code
 end constructors
 
+namespace Oracle.Single.Code
 section c_comp₂
 def c_comp₂ :=
   let a := left
@@ -171,3 +171,4 @@ def c_c_ifdom := c_comp₂.comp₃ (c_const c_add) (c_comp.comp₂ c_zero left) 
 @[cp] theorem c_c_ifdom_prim : code_prim c_c_ifdom := by unfold c_c_ifdom; apply_cp
 @[simp] theorem c_c_ifdom_evp {O} : evalp O c_c_ifdom = λ x ↦ c2n (c_ifdom x.l x.r) := by
   simp [c_c_ifdom, c_ifdom]
+end Oracle.Single.Code

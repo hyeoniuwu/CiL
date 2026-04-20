@@ -38,7 +38,7 @@ Note then that this guarantees: `∃ y,[c](x,y)=0 ↔ [dovetail c](x)↓`
 
 open Nat Part
 
-namespace Computability.Code
+namespace Oracle.Single.Code
 
 /-
 We implement
@@ -149,4 +149,4 @@ theorem dovetail_ev_2 {O : ℕ → ℕ} {c: Code} {x : ℕ} : (eval O (dovetail 
   have := (@dovetail_ev_1 O c x).not
   simp at this
   exact Iff.trans (Iff.symm Part.not_none_iff_dom) this
-end Computability.Code
+end Oracle.Single.Code

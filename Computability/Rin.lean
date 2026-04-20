@@ -97,9 +97,9 @@ theorem of_primrecIn {O} {f : ℕ → ℕ} (hf : Nat.PrimrecIn O f) : RecursiveI
   · apply Nat.PrimrecIn.pair hg hh
 
 open Computability
-open Computability.Code
-theorem _root_.Nat.RecursiveIn.eval_K_computable {O} : Nat.RecursiveIn O (fun x ↦ Computability.eval O x x) := by
-  have h:(fun (x:ℕ) ↦ Computability.eval O x x) = (fun (x:ℕ) => Computability.eval O x.unpair.1 x.unpair.2) ∘ (fun x=>Nat.pair x x) := by
+open Oracle.Single.Code
+theorem _root_.Nat.RecursiveIn.eval_K_computable {O} : Nat.RecursiveIn O (fun x ↦ Oracle.Single.eval O x x) := by
+  have h:(fun (x:ℕ) ↦ Oracle.Single.eval O x x) = (fun (x:ℕ) => Oracle.Single.eval O x.unpair.1 x.unpair.2) ∘ (fun x=>Nat.pair x x) := by
     funext xs
     simp only [Function.comp_apply, Nat.unpair_pair]
   rw [h]
@@ -108,7 +108,7 @@ theorem _root_.Nat.RecursiveIn.eval_K_computable {O} : Nat.RecursiveIn O (fun x 
   exact Nat.RecursiveIn.Rin.of_primrecIn (Nat.PrimrecIn.pair Nat.PrimrecIn.id Nat.PrimrecIn.id)
 
 end Nat.RecursiveIn.Rin
-namespace Computability.Code
+namespace Oracle.Single.Code
 def c_pair_proj (x:ℕ) : Code := pair (c_const x) c_id
 theorem c_pair_proj_evp {O x} : evalp O (c_pair_proj x) = Nat.pair x := by simp [c_pair_proj]
 lemma _root_.Nat.PrimrecIn.pair_proj {O x} : Nat.PrimrecIn O (Nat.pair x) := by

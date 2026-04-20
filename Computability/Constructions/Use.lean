@@ -26,7 +26,7 @@ This file constructs codes for `usen` and `use`, almost identically in structure
 open List Nat
 
 section usen
-namespace Computability.Code
+namespace Oracle.Single.Code
 
 /--
 `eval c_usen_aux (_, (c,s)) .last = [ [c]ₛ(0), [c]ₛ(1), ..., [c]ₛ(s) ]`
@@ -771,12 +771,12 @@ theorem c_usen_evp_aux_nMod4 {O x n s} :
 @[simp] theorem c_usen_ev {O x code s}: eval O c_usen ⟪x, code, s⟫ = o2n (usen O code.n2c s x) := by
   rw [← evalp_eq_eval c_usen_prim];
   simp only [PFun.coe_val, c_usen_evp, Part.coe_some]
-end Computability.Code
+end Oracle.Single.Code
 end usen
 
 
 section use
-namespace Computability.Code
+namespace Oracle.Single.Code
 def c_use := (c_rfindOpt (c_usen.comp₃ (right.comp left) (left.comp left) right))
 @[simp] theorem c_use_ev {O c x} : eval O c_use (Nat.pair c x) = use O c.n2c x := by
   simp only [c_use, comp₃, comp₂]
@@ -786,5 +786,5 @@ def c_use := (c_rfindOpt (c_usen.comp₃ (right.comp left) (left.comp left) righ
   simp [c_rfindOpt_ev this]
   rw [use_eq_rfindOpt]
   simp [eval,Seq.seq]
-end Computability.Code
+end Oracle.Single.Code
 end use

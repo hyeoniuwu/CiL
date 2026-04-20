@@ -38,7 +38,8 @@ we let `c_simple` search (by dovetailing) for a step `s` such that its input is 
 
 -/
 
-open Computability.Code
+open Oracle.Single
+open Oracle.Single.Code
 open Computability
 
 
@@ -269,7 +270,7 @@ theorem c_bdd_search_evp_1 {O c s a k l i r}:
       exact ⟨h2,h3⟩
 
 section fs_in
-namespace Computability.Code
+namespace Oracle.Single.Code
 def c_fs_in := c_mod.comp₂
   (c_div.comp₂ left (c_pow.comp₂ (c_const 2) right))
   (c_const 2)
@@ -278,16 +279,16 @@ def c_fs_in := c_mod.comp₂
   simp [c_fs_in,evalp];
   simp [fs_in, b2n]
   grind
-end Computability.Code
+end Oracle.Single.Code
 end fs_in
 
 section fs_add
-namespace Computability.Code
+namespace Oracle.Single.Code
 def c_fs_add := c_or.comp₂ left $ c_pow.comp₂ (c_const 2) right
 @[cp] theorem c_fs_add_prim : code_prim c_fs_add := by unfold c_fs_add; apply_cp
 @[simp] theorem c_fs_add_evp {O x y}: evalp O c_fs_add ⟪x,y⟫ = (fs_add x y) := by
   simp [c_fs_add,evalp];
-end Computability.Code
+end Oracle.Single.Code
 end fs_add
 
 theorem evaln_dom_imp_x_le_s {O s c x} (h:(evaln O s c x).isSome) : x≤s := by

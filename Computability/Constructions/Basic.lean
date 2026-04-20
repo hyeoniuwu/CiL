@@ -19,10 +19,10 @@ This file defines codes for basic functions which are not primitive recursive.
 
 -/
 
-open Computability.Code
+open Oracle.Single.Code
 open Classical
 
-namespace Computability.Code
+namespace Oracle.Single.Code
 
 section diverge
 def c_diverge := rfind' (c_const 1)
@@ -53,7 +53,7 @@ theorem c_ifz1_total {O c a b} (hc:code_total O c) : code_total O (c_ifz1 c a b)
 end ifz1
 
 section ite
-def c_ite (c a b:Computability.Code) := c_eval.comp₂ (c_ifz1 c a.c2n b.c2n) (c_id)
+def c_ite (c a b:Oracle.Single.Code) := c_eval.comp₂ (c_ifz1 c a.c2n b.c2n) (c_id)
 @[simp] theorem c_ite_ev {O c a b x} (hc:code_total O c) : eval O (c_ite c a b) x = if (eval O c x=Part.some 0) then (eval O a x) else (eval O b x) := by
   simp [c_ite]
   simp [Seq.seq]
@@ -112,7 +112,7 @@ def c_if_eq_te' (c1 c2 c3 c4:Code) := c_ite (c_dist.comp₂ c1 c2) c3 c4
 end if_eq_te'
 
 section ifdom
-def c_ifdom (c a:Computability.Code) := c_add.comp₂ (zero.comp c) a
+def c_ifdom (c a:Oracle.Single.Code) := c_add.comp₂ (zero.comp c) a
 @[simp] theorem c_ifdom_ev {O c a x}  : eval O (c_ifdom c a) x = if (eval O c x).Dom then (eval O a x) else Part.none := by
   simp [c_ifdom]
   simp [eval]
@@ -144,11 +144,11 @@ def c_eval₁ := c_eval
 theorem rec_eval₁ {O} : Nat.RecursiveIn O (eval₁ O) := Nat.RecursiveIn.Rin.eval
 end eval₁
 
-end Computability.Code
+end Oracle.Single.Code
 
-open Computability
-open Code
-namespace Nat.RecursiveIn
+open Oracle.Single.Code
+-- namespace Nat.RecursiveIn
+namespace Oracle.Single.RecursiveIn
 theorem Rin.ite {O:ℕ→ℕ} {f g:ℕ→.ℕ} {c:ℕ→ℕ} (hc:Nat.RecursiveIn O c) (hf:Nat.RecursiveIn O f) (hg:Nat.RecursiveIn O g):Nat.RecursiveIn O fun a => if (c a=0) then (f a) else (g a) := by
   apply exists_code.mpr
   rcases exists_code_total.mp hc with ⟨cc,hcc,hcct⟩
@@ -165,3 +165,4 @@ theorem Rin.evalRecInO' {O} {f:ℕ→.ℕ} (h:Nat.RecursiveIn O f):Nat.Recursive
 theorem Rin.none {O} : Nat.RecursiveIn O fun _ => Part.none := by
   rw [← c_diverge_ev']
   exact RecursiveIn_of_eval
+end Oracle.Single.RecursiveIn

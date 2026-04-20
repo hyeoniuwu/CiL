@@ -15,7 +15,7 @@ import Mathlib.Data.Nat.BitIndices
 In this file we define helper functions which will be used in later computability arguments.
 -/
 
-open Nat Classical Computability.Code
+open Nat Classical Oracle.Single.Code
 
 -- general helper functions
 section pair
@@ -125,18 +125,18 @@ theorem fs_in_singleton {x y}: fs_in (2^y) x ↔ x=y := by grind
 theorem fs_in_singleton' {x y}: Nat.testBit (2^y) x = false ↔ y≠x := by grind
 end fs
 
-namespace Computability.Code.nc_to_nn
+namespace Oracle.Single.Code.nc_to_nn
 @[coe] protected def lift (f:ℕ→Code) : ℕ→ℕ := fun x => c2n (f x)
-instance : Coe (ℕ→Code) (ℕ→ℕ) := ⟨Computability.Code.nc_to_nn.lift⟩
-end Computability.Code.nc_to_nn
-namespace Computability.Code.cc_to_nn
+instance : Coe (ℕ→Code) (ℕ→ℕ) := ⟨Oracle.Single.Code.nc_to_nn.lift⟩
+end Oracle.Single.Code.nc_to_nn
+namespace Oracle.Single.Code.cc_to_nn
 @[coe] protected def lift (f:Code→Code) : ℕ→ℕ := c2n ∘ f ∘ n2c
-instance : Coe (Code→Code) (ℕ→ℕ) := ⟨Computability.Code.cc_to_nn.lift⟩
-end Computability.Code.cc_to_nn
+instance : Coe (Code→Code) (ℕ→ℕ) := ⟨Oracle.Single.Code.cc_to_nn.lift⟩
+end Oracle.Single.Code.cc_to_nn
 
 section primrec
 -- templates for primrec constructions as codes
-namespace Computability.Code
+namespace Oracle.Single.Code
 @[aesop safe, cp] inductive code_prim : Code → Prop
 | zero:code_prim zero
 | succ:code_prim succ
@@ -275,11 +275,11 @@ theorem code_prim_of_primrecIn {O f} (h:Nat.PrimrecIn O f) : ∃ c, code_prim c 
     constructor
     · exact code_prim.prec hcf.left hcg.left
     · simp only [evalp]; rw [hcf.right, hcg.right]
-end Computability.Code
+end Oracle.Single.Code
 end primrec
 
 section total
-namespace Computability.Code
+namespace Oracle.Single.Code
 def evalt (O:ℕ→ℕ) (c:Code) (h:code_total O c) : ℕ→ℕ := λ x ↦ (eval O c x).get (h x)
 theorem total_pair_iff {O cf cg} : (code_total O cf) ∧ (code_total O cg) ↔ (code_total O (pair cf cg)) :=
   ⟨
@@ -314,10 +314,10 @@ theorem eval_total_comp {O cf cg x} (h:code_total O (comp cf cg)) :
     simp
     simp [eval]
     exact Part.Dom.bind (Part.Dom.of_bind (h x)) (eval O cf)
-end Computability.Code
+end Oracle.Single.Code
 end total
 
-namespace Computability.Code
+namespace Oracle.Single.Code
 @[simp 1000] theorem RecursiveIn_of_eval {O c} : Nat.RecursiveIn O (eval O c) := by
   induction c with
   | zero => exact Nat.RecursiveIn.zero
@@ -330,4 +330,4 @@ namespace Computability.Code
   | prec ha hb ha_ih hb_ih => unfold eval; exact Nat.RecursiveIn.prec (ha_ih) (hb_ih)
   | rfind' ha ha_ih => unfold eval; exact RecursiveIn.rfind ha_ih
 
-end Computability.Code
+end Oracle.Single.Code

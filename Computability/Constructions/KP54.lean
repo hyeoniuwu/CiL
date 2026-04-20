@@ -32,7 +32,8 @@ The meta-code `c_finite_ext` calculates the code of the dovetail procedure. By a
 
 -/
 
-open Computability.Code
+open Oracle.Single
+open Oracle.Single.Code
 open Computability
 
 

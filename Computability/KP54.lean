@@ -39,14 +39,15 @@ Finally, we prove the requirements `R` and `S` in sections R and S respectively.
 
 -/
 
-open Computability.Code
+open Oracle.Single
+open Oracle.Single.Code
 open Classical
 open Computability
 open Nat
 
-namespace Computability.Code
+namespace Oracle.Single.Code
 
-end Computability.Code
+end Oracle.Single.Code
 
 set_option linter.dupNamespace false
 namespace KP54
@@ -87,7 +88,7 @@ theorem c_kp54_aux_evp {O : ℕ → ℕ} {i n x : ℕ} :
 := by
   simp [
     c_kp54_aux,
-    Computability.eval,
+    Oracle.Single.eval,
     Seq.seq,
     -Denumerable.list_ofNat_succ
     ]

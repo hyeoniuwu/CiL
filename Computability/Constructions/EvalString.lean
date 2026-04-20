@@ -26,7 +26,7 @@ To be able to define `evals`, where the oracle of a computation is changed, we d
 
 open Nat
 section evalnc
-namespace Computability.Code
+namespace Oracle.Single.Code
 def c_evalnc :=
   let u0 := left.comp left
   let s0 := right.comp left
@@ -49,11 +49,11 @@ def c_evalnc :=
   simp only [apply_ite]
   aesop
 @[simp] theorem c_evalnc_ev {O u s c x} : eval O c_evalnc ⟪u,s,c,x⟫ = o2n (evalnc O u s c x) := by simp [← evalp_eq_eval c_evalnc_prim]
-end Computability.Code
+end Oracle.Single.Code
 end evalnc
 
 section evalc
-namespace Computability.Code
+namespace Oracle.Single.Code
 def c_evalc :=
   let u0 := left
   let c0 := left.comp right
@@ -79,7 +79,7 @@ def c_evalc :=
   else
     simp [Part.eq_none_iff'.mpr h]
 
-end Computability.Code
+end Oracle.Single.Code
 end evalc
 
 section c_evalo
@@ -90,7 +90,7 @@ This greatly simplifies the proof, as one only needs to induct on the codes, rat
 
 (The function that modifies the code, `c_replace_oracle`, is already defined in Computability/Constructions/CovRec.lean.)
 -/
-namespace Computability.Code
+namespace Oracle.Single.Code
 def c_evalo :=
   let o := left
   let c := left.comp right
@@ -101,11 +101,11 @@ theorem c_evalo_ev {O o c x} (ho:code_total O o) : eval O c_evalo ⟪o, c, x⟫ 
   simp [c_evalo]
   simp [eval,Seq.seq]
   rw [@eval_replace_oracle_prop O o c ho]
-end Computability.Code
+end Oracle.Single.Code
 end c_evalo
 
 section evals
-namespace Computability.Code
+namespace Oracle.Single.Code
 section c_evals_oracle
 def c_evals_oracle (o:Code):= c_sg.comp $ c_list_getD.comp₃ (c_const o) c_id (c_const whatever)
 @[cp] theorem c_evals_oracle_prim {o} : code_prim (c_evals_oracle o) := by unfold c_evals_oracle; apply_cp
@@ -173,5 +173,5 @@ def c_c_evals :=
 @[simp] theorem c_c_evals_evp {O x} : evalp O c_c_evals x = c_evals := by simp [c_c_evals, c_evals]
 end c_c_evals
 
-end Computability.Code
+end Oracle.Single.Code
 end evals

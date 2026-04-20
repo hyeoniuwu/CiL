@@ -9,7 +9,7 @@ import Mathlib.Data.Nat.PSub
 /-!
 # Eval_Aux.lean
 
-Auxiliary constructs for use in Computability.Constructions.Eval
+Auxiliary constructs for use in Oracle.Single.Constructions.Eval
 
 -/
 
@@ -19,7 +19,7 @@ open Encodable
 open List
 
 section rfindOpt
-namespace Computability.Code
+namespace Oracle.Single.Code
 
 theorem rfind'_eqv_rfind {O c x} : ((Nat.unpaired fun a m => (Nat.rfind fun n => (fun m => m = 0) <$> eval O c (Nat.pair a (n + m))).map (· + m)) (Nat.pair x 0)) = (Nat.rfind fun n => (fun m => m = 0) <$> eval O c ⟪x, n⟫) := by
   simp only [Nat.unpaired, Nat.unpair_pair, add_zero, Part.map_eq_map]
@@ -27,7 +27,7 @@ theorem rfind'_eqv_rfind {O c x} : ((Nat.unpaired fun a m => (Nat.rfind fun n =>
 
 section rfind
 /--`[code_rfind c](x)=smallest n s.t. [c](x,n)=0.`-/
-def c_rfind : Computability.Code→Computability.Code := λ c ↦ (rfind' c).comp (pair c_id zero)
+def c_rfind : Oracle.Single.Code→Oracle.Single.Code := λ c ↦ (rfind' c).comp (pair c_id zero)
 /-- Given a code `c` -/
 abbrev rfind (O:ℕ→ℕ) : Code → ℕ →. ℕ := λ c ↦ λ a ↦ Nat.rfind λ n ↦ (λ m ↦ m = 0) <$> eval O c (Nat.pair a n)
 theorem c_rfind_ev {O c a} : eval O (c_rfind c) a = rfind O c a := by
@@ -96,5 +96,5 @@ def c_rfindOpt (c:Code) := (c_ofOption c).comp₂ c_id (c_rfind (c_isSome.comp (
   else
   simp [Part.eq_none_iff'.mpr hh]
   simp [Seq.seq]
-end Computability.Code
+end Oracle.Single.Code
 end rfindOpt

@@ -24,7 +24,7 @@ For more documentation on theorems related to codes using course-of-values is pr
 -/
 
 section bitwise
-namespace Computability.Code
+namespace Oracle.Single.Code
 /--
 c.f. the definition of `bitwise` in Init\Data\Nat\Bitwise\Basic.lean.
 -/
@@ -178,11 +178,11 @@ theorem c_bitwise_evp_n_m {O c n m} : evalp O (c_bitwise c) ⟪n+1,m+1⟫ = (
         exact (Nat.mod_two_ne_one.mp h).symm
     unfold Nat.bitwise
     simp [ih0, rw0]
-end Computability.Code
+end Oracle.Single.Code
 end bitwise
 
 section lor
-namespace Computability.Code
+namespace Oracle.Single.Code
 def c_lor := c_ifz.comp₃ left
   (c_ifz.comp₃ right zero (c_const 1))
   (c_const 1)
@@ -194,11 +194,11 @@ theorem c_lor_evp {O a b} : evalp O c_lor ⟪a, b⟫ = b2n (n2b a || n2b b) := b
   funext a b;
   simp [c_lor, n2b, b2n]
   split <;> simp_all
-end Computability.Code
+end Oracle.Single.Code
 end lor
 
 section lxor
-namespace Computability.Code
+namespace Oracle.Single.Code
 def c_lxor := c_ifz.comp₃ left
   (c_ifz.comp₃ right zero (c_const 1))
   (c_ifz.comp₃ right (c_const 1) zero)
@@ -210,11 +210,11 @@ theorem c_lxor_evp {O a b} : evalp O c_lxor ⟪a, b⟫ = b2n (n2b a ^^ n2b b) :=
   funext a b;
   simp [c_lxor, n2b, b2n]
   split <;> simp_all
-end Computability.Code
+end Oracle.Single.Code
 end lxor
 
 section land
-namespace Computability.Code
+namespace Oracle.Single.Code
 def c_land := c_ifz.comp₃ left
   zero
   (c_ifz.comp₃ right zero (c_const 1))
@@ -225,29 +225,29 @@ theorem c_land_evp {O a b} : evalp O c_land ⟪a, b⟫ = b2n (n2b a && n2b b) :=
 @[simp] theorem c_land_evp' {O} : (fun a b => n2b $ evalp O c_land ⟪b2n a, b2n b⟫) = Bool.and := by
   funext a b;
   simp [c_land, n2b, b2n]
-end Computability.Code
+end Oracle.Single.Code
 end land
 
 section or
-namespace Computability.Code
+namespace Oracle.Single.Code
 def c_or := c_bitwise (c_lor)
 @[cp] theorem c_or_prim : code_prim c_or := by unfold c_or; apply_cp
 @[simp] theorem c_or_evp {O x y}: evalp O c_or ⟪x,y⟫ = (x ||| y) := by simp [c_or]; rfl
-end Computability.Code
+end Oracle.Single.Code
 end or
 
 section and
-namespace Computability.Code
+namespace Oracle.Single.Code
 def c_and := c_bitwise (c_land)
 @[cp] theorem c_and_prim : code_prim c_and := by unfold c_and; apply_cp
 @[simp] theorem c_and_evp {O x y}: evalp O c_and ⟪x,y⟫ = x &&& y := by simp [c_and]; rfl
-end Computability.Code
+end Oracle.Single.Code
 end and
 
 section xor
-namespace Computability.Code
+namespace Oracle.Single.Code
 def c_xor := c_bitwise (c_lxor)
 @[cp] theorem c_xor_prim : code_prim c_xor := by unfold c_xor; apply_cp
 @[simp] theorem c_xor_evp {O x y}: evalp O c_xor ⟪x,y⟫ = x ^^^ y := by simp [c_xor]; rfl
-end Computability.Code
+end Oracle.Single.Code
 end xor

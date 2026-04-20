@@ -75,7 +75,7 @@ This is the key insight; inputs that are larger than $s$ diverge, so computation
     basically no interaction with `evalp`, as that has all been done in the previous theorems.
 -/
 
-namespace Computability.Code
+namespace Oracle.Single.Code
 
 /--
 `eval c_evaln_aux (_, (c,s)) .last = [ [c]ₛ(0), [c]ₛ(1), ..., [c]ₛ(s) ]`
@@ -856,11 +856,11 @@ theorem c_evaln_evp_aux_nMod4 {O x n s} :
   have : x = (Nat.pair x.l (Nat.pair x.r.l x.r.r)) := by simp
   rw (config:={occs:=.pos [1]}) [this]
   exact c_evaln_evp
-end Computability.Code
+end Oracle.Single.Code
 end evaln
 
 section eval
-namespace Computability.Code
+namespace Oracle.Single.Code
 def c_eval := (c_rfindOpt (c_evaln.comp₃ (right.comp left) (left.comp left) right))
 @[simp] theorem c_eval_ev {O c x}: eval O c_eval (Nat.pair c x) = eval O c.n2c x := by
   simp only [c_eval, comp₃, comp₂]
@@ -879,5 +879,5 @@ theorem _root_.Nat.RecursiveIn.Rin.eval {O} : Nat.RecursiveIn O (fun ex => eval 
   rw (config:={occs:=.pos [1]}) [←(@pair_lr x)]
   exact c_eval_ev
 
-end Computability.Code
+end Oracle.Single.Code
 end eval

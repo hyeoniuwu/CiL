@@ -33,11 +33,11 @@ This file also contains two examples using course-of-values recursion; division 
 
 -/
 
-open Computability.Code
+open Oracle.Single.Code
 open List Nat
 
 section efl_prec
-namespace Computability.Code
+namespace Oracle.Single.Code
 /--
 A specialised code used as an auxiliary for `c_cov_rec`.
 Given an input of the form ``⟪x, i, list⟫``, the code (c_efl_prec c) computes list.append (eval c input).
@@ -47,12 +47,12 @@ def c_efl_prec := λ c ↦ c_list_concat.comp (pair (c_id.comp (right.comp right
 @[cp] theorem c_efl_prec_prim {c} (h:code_prim c):code_prim $ c_efl_prec c := by unfold c_efl_prec; apply_cp
 @[simp] theorem c_efl_prec_evp {O c x} : evalp O (c_efl_prec c) x = l2n ((n2l x.r.r).concat (evalp O c x)) := by
   simp [c_efl_prec]
-end Computability.Code
+end Oracle.Single.Code
 end efl_prec
 
 -- course of values recursion.
 section cov_rec
-namespace Computability.Code
+namespace Oracle.Single.Code
 /--
 Code for course-of-values recursion.
 
@@ -160,7 +160,7 @@ theorem c_cov_rec_evp_get_aux_I {O cf cg x j i} (h:j≤i) :
   rw [← @c_cov_rec_evp_get O cf cg x j i h]
   exact getI_eq_getElem _ _
 
-end Computability.Code
+end Oracle.Single.Code
 end cov_rec
 
 section div
@@ -195,7 +195,7 @@ theorem div_flip_aux_eq_div_flip : div_flip_aux = (flip ((· / ·) : ℕ → ℕ
       simp
       exact zero_lt_of_lt h2
 
-namespace Computability.Code
+namespace Oracle.Single.Code
 /-
 This example serves as a blueprint for using `c_cov_rec` in proofs.
 
@@ -306,11 +306,11 @@ theorem c_div_flip_evp_aux {O} : evalp O c_div_flip = unpaired2 div_flip_aux := 
   rw [← evalp_eq_eval c_div_prim];
   simp
   exact Eq.symm (Part.some_div_some a b)
-end Computability.Code
+end Oracle.Single.Code
 end div
 
 section mod
-namespace Computability.Code
+namespace Oracle.Single.Code
 def c_mod := c_sub.comp₂ left (c_mul.comp₂ right c_div)
 @[cp] theorem c_mod_prim:code_prim c_mod := by unfold c_mod; apply_cp
 @[simp] theorem c_mod_evp {O} : evalp O c_mod = unpaired2 ((· % ·) : ℕ → ℕ → ℕ) := by
@@ -326,28 +326,28 @@ def c_mod := c_sub.comp₂ left (c_mul.comp₂ right c_div)
   simp [add_comm (m % n), Nat.div_add_mod]
 
 @[simp] theorem c_mod_ev {O} : eval O c_mod = unpaired2 ((· % ·) : ℕ → ℕ → ℕ) := by rw [← evalp_eq_eval c_mod_prim]; simp only [c_mod_evp]
-end Computability.Code
+end Oracle.Single.Code
 end mod
 
 section div2
-namespace Computability.Code
+namespace Oracle.Single.Code
 def c_div2 := c_div.comp₂ c_id (c_const 2)
 @[cp] theorem c_div2_prim:code_prim c_div2 := by unfold c_div2; apply_cp
 @[simp] theorem c_div2_evp {O} : evalp O c_div2 = div2 := by simp [c_div2]; funext x; exact Eq.symm (div2_val x)
 @[simp] theorem c_div2_ev {O} : eval O c_div2 = div2 := by simp [← evalp_eq_eval c_div2_prim]
-end Computability.Code
+end Oracle.Single.Code
 end div2
 section mod2
-namespace Computability.Code
+namespace Oracle.Single.Code
 def c_mod2 := c_mod.comp₂ c_id (c_const 2)
 @[cp] theorem c_mod2_prim:code_prim c_mod2 := by unfold c_mod2; apply_cp
 @[simp] theorem c_mod2_evp {O} : evalp O c_mod2 = λ x ↦ x%2 := by simp [c_mod2];
 @[simp] theorem c_mod2_ev {O} : eval O c_mod2 = (λ x:ℕ ↦ x%2) := by simp [← evalp_eq_eval c_mod2_prim]
-end Computability.Code
+end Oracle.Single.Code
 end mod2
 
 section replace_oracle
-namespace Computability.Code
+namespace Oracle.Single.Code
 /-! ### parsing codes with c_cov_rec
 #### Structure of section
   · `c_replace_oracle_aux` : main body of construction, using c_cov_rec
@@ -660,5 +660,5 @@ theorem nMod4_eq_3 {n} (hno:n.bodd=true ) (hn2o:n.div2.bodd=true ) : n%4=3 := by
 theorem eval_replace_oracle_prop {O o c} (ho:code_total O o) : eval O (replace_oracle o c) = eval (λ x ↦ (eval O o x).get (ho x)) c := by
   unfold replace_oracle
   induction c <;> (simp [eval]; try (unfold replace_oracle; simp_all))
-end Computability.Code
+end Oracle.Single.Code
 end replace_oracle

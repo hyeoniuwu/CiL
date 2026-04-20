@@ -49,8 +49,9 @@ We setup sets for use as oracles, (e.g. evaluation with sets as oracles, reducti
 open Nat
 open scoped Computability
 open Classical
-open Computability.Code
-namespace Computability
+open Oracle.Single.Code
+open Oracle.Single
+namespace Oracle.Single
 
 section basic_definitions
 /-- χ O is the characteristic function of the set O.  -/

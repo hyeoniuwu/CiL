@@ -43,9 +43,9 @@ For the construction of the use function given here, see Constructions/Use.lean.
 -/
 
 open List Nat
-open Computability.Code
+open Oracle.Single.Code
 
-namespace Computability.Code
+namespace Oracle.Single.Code
 
 section evaln_lemmas
 -- general lemmas for evaln

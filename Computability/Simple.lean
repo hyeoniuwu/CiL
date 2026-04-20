@@ -31,7 +31,8 @@ For the explicit construction of the specification given here, see Constructions
 -/
 
 open Computability
-open Computability.Code
+open Oracle.Single
+open Oracle.Single.Code
 open List
 
 /-- immuneIn O A := A is immune in O -/
@@ -68,7 +69,7 @@ theorem simpleInReq {O a} : ((W O a)ᶜ.Infinite ∧ ∀ c, (W O c).Infinite →
   rintro ⟨_, h3, h4⟩;
   exact ⟨h3, λ c h5 ↦ (nonempt_int_iff_not_subset_compl (W O c) (W O a)).mpr (h4 c h5)⟩
 
-section Computability.Simple
+section Oracle.Single.Simple
 namespace Simple
 /-! ### Construction of a simple set
 
@@ -669,4 +670,4 @@ theorem A_CoInfinite : Set.Infinite (Aᶜ) := by
 end negative_requirement
 
 end Simple
-end Computability.Simple
+end Oracle.Single.Simple

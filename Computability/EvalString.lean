@@ -4,7 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Edwin Park
 -/
 import Computability.Use
-open Computability.Code
+open Oracle.Single.Code
 open Classical
 
 /-!
@@ -18,7 +18,7 @@ For the construction of these functions via codes, see Computability/Constructio
 
 -/
 
-namespace Computability.Code
+namespace Oracle.Single.Code
 
 -- stands for "evaln clamped"
 noncomputable def evalnc (O:ℕ→ℕ) (u:ℕ) : ℕ → Code → ℕ → Option ℕ := λ s c x ↦ do
@@ -71,4 +71,4 @@ the `whatever` *should* be unnecessary, because the evaluation is clamped by
 I'm not sure how to remove it.
 -/
 
-end Computability.Code
+end Oracle.Single.Code

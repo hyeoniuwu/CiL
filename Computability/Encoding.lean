@@ -17,16 +17,16 @@ import Mathlib.Tactic.Cases -- for induction'
 
 This file is a relativisation of Mathlib/Computability/PartrecCode.lean; notable notions relativised include:
 
-- `Computability.Code`: where a constructor for the oracle is added;
-- `Computability.Code.c2n`: A relativisation of `Nat.Partrec.Code.encodeCode`
-- `Computability.Code.n2c`: A relativisation of `Nat.Partrec.Code.ofNatCode`
-- `Computability.eval` : A relativisation of `Nat.Partrec.Code.eval`
+- `Oracle.Single.Code`: where a constructor for the oracle is added;
+- `Oracle.Single.Code.c2n`: A relativisation of `Nat.Partrec.Code.encodeCode`
+- `Oracle.Single.Code.n2c`: A relativisation of `Nat.Partrec.Code.ofNatCode`
+- `Oracle.Single.eval` : A relativisation of `Nat.Partrec.Code.eval`
 
 -/
 
 open Nat Encodable Denumerable
 
-namespace Computability
+namespace Oracle.Single
 
 inductive Code : Type
 | zero   : Code
@@ -40,8 +40,8 @@ inductive Code : Type
 | rfind' : Code → Code
 
 compile_inductive% Code
-end Computability
-namespace Computability.Code
+end Oracle.Single
+namespace Oracle.Single.Code
 instance instInhabited : Inhabited Code := ⟨zero⟩
 
 /-- Returns a code for the constant function outputting a particular natural. -/
@@ -65,7 +65,7 @@ protected def id : Code :=
 def curry (c : Code) (n : ℕ) : Code :=
   comp c (pair (Code.const n) Code.id)
 
-/-- An encoding of a `Computability.Code` as a ℕ. -/
+/-- An encoding of a `Oracle.Single.Code` as a ℕ. -/
 def c2n : Code → ℕ
 | Code.zero        => 0
 | Code.succ        => 1
@@ -78,7 +78,7 @@ def c2n : Code → ℕ
 | Code.rfind' cf   => 2*(2*(c2n cf                            )+1)+1 + 5
 
 /--
-A decoder for `Computability.Code.c2n`, taking any ℕ to the `Computability.Code` it represents.
+A decoder for `Oracle.Single.Code.c2n`, taking any ℕ to the `Oracle.Single.Code` it represents.
 
 Procedure for decoding:
 
@@ -116,7 +116,7 @@ instance : Coe ℕ Code := ⟨n2c⟩
 instance : Coe Code ℕ := ⟨c2n⟩
 -- /-- Converts an `Code` into a `ℕ`. -/ @[coe] def ofCode : Code → ℕ := encodeCode
 abbrev ofNatCode := n2c
-@[simp] abbrev _root_.Nat.n2c : ℕ → Code := Computability.Code.n2c
+@[simp] abbrev _root_.Nat.n2c : ℕ → Code := Oracle.Single.Code.n2c
 
 @[simp] theorem n2c_c2n : ∀ c, n2c (c2n c) = c := fun c => by
   induction c <;> (simp [c2n, n2c, Nat.div2_val, *])
@@ -150,7 +150,7 @@ theorem encodeCode_inj : Function.Injective c2n  := Function.Bijective.injective
 theorem encodeCode_sur : Function.Surjective c2n := Function.Bijective.surjective encodeCode_bij
 
 
-/-- Proof that `Computability.Code.ofNatCode` is the inverse of `Computability.Code.encodeCode` -/
+/-- Proof that `Oracle.Single.Code.ofNatCode` is the inverse of `Oracle.Single.Code.encodeCode` -/
 private theorem encode_ofNatCode : ∀ n, c2n (ofNatCode n) = n := by exact fun n ↦c2n_n2c n
 
 theorem encodeCode_eq : encode = c2n :=
@@ -184,18 +184,18 @@ theorem encode_lt_rfind' (cf) : encode cf < encode (rfind' cf) := by
 end Code
 
 open Code
-/-- The interpretation of a `Computability.Code` as a partial function.
-* `Computability.Code.zero`: The constant zero function.
-* `Computability.Code.succ`: The successor function.
-* `Computability.Code.left`: Left unpairing of a pair of ℕ (encoded by `Nat.pair`)
-* `Computability.Code.right`: Right unpairing of a pair of ℕ (encoded by `Nat.pair`)
-* `Computability.Code.oracle`: The oracle function.
-* `Computability.Code.pair`: Pairs the outputs of argument codes using `Nat.pair`.
-* `Computability.Code.comp`: Composition of two argument codes.
-* `Computability.Code.prec`: Primitive recursion. Given an argument of the form `Nat.pair a n`:
+/-- The interpretation of a `Oracle.Single.Code` as a partial function.
+* `Oracle.Single.Code.zero`: The constant zero function.
+* `Oracle.Single.Code.succ`: The successor function.
+* `Oracle.Single.Code.left`: Left unpairing of a pair of ℕ (encoded by `Nat.pair`)
+* `Oracle.Single.Code.right`: Right unpairing of a pair of ℕ (encoded by `Nat.pair`)
+* `Oracle.Single.Code.oracle`: The oracle function.
+* `Oracle.Single.Code.pair`: Pairs the outputs of argument codes using `Nat.pair`.
+* `Oracle.Single.Code.comp`: Composition of two argument codes.
+* `Oracle.Single.Code.prec`: Primitive recursion. Given an argument of the form `Nat.pair a n`:
   * If `n = 0`, returns `eval O cf a`.
   * If `n = succ k`, returns `eval O cg (pair a (pair k (eval O (prec cf cg) (pair a k))))`
-* `Computability.Code.rfind'`: Minimization. For `f` an argument of the form `Nat.pair a m`,
+* `Oracle.Single.Code.rfind'`: Minimization. For `f` an argument of the form `Nat.pair a m`,
   `rfind' f m` returns the least `a` such that `f a m = 0`, if one exists and `f b m` terminates
   for `b < a`
 -/
@@ -281,7 +281,7 @@ theorem exists_code {O : ℕ → ℕ} {f : ℕ →. ℕ} : Nat.RecursiveIn O f �
 
 /- A modified evaluation for the code which returns an `Option ℕ` instead of a `Part ℕ`. To avoid
 undecidability, `evaln` takes a parameter `k` and fails if it encounters a number ≥ k in the course
-of its execution. Other than this, the semantics are the same as in `Computability.Code.eval`.
+of its execution. Other than this, the semantics are the same as in `Oracle.Single.Code.eval`.
 -/
 def evaln (O:ℕ→ℕ) : ℕ → Code → ℕ → Option ℕ
 | 0, _ => fun _ => Option.none
