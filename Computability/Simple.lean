@@ -616,14 +616,9 @@ by
   simp? at this says
     simp only [ne_eq, Bool.not_eq_true, Order.add_one_le_iff, Set.mem_setOf_eq, gt_iff_lt, not_and,
       not_lt] at this
-  have := this ?_
+  replace := this ?_
   · simpa using this
-  aesop? says
-    obtain ⟨val, property⟩ := x
-    obtain ⟨val_1, property_1⟩ := y
-    obtain ⟨left, right⟩ := property
-    obtain ⟨left_1, right_1⟩ := property_1
-    simp_all only [Subtype.mk.injEq, not_false_eq_true, forall_const]
+  aesop
 theorem hf_le {i} : ∀ x, @f i x ≤ i :=
 by
   intro x

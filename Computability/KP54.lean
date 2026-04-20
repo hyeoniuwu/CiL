@@ -9,22 +9,27 @@ import Computability.Constructions.EvalString
 /-!
 # KP54.lean
 
-In this file we specify the construction procedure in the KP54 proof, and show that the sets it defines are incomparable.
+In this file we specify the construction procedure in the KP54 proof, and show that the sets it
+defines are incomparable.
 
 ## Structure
 
-In section `finite_ext`, we define the procedure for finding the finite extension of a string such that it allows a certain computation
-to halt.
+In section `finite_ext`, we define the procedure for finding the finite extension of a string such
+that it allows a certain computation to halt.
 
-We then define the main construction procedure, `KP54`, and the corresponding sets it builds by stage `s`, `As s` and `Bs s`.
+We then define the main construction procedure, `KP54`, and the corresponding sets it builds by
+stage `s`, `As s` and `Bs s`.
 
-In section `AsBs_Mono`, we prove various theorems about the growth of the set with respect to the stage. In particular, `AsBsSize` shows that the sets have at least `s` elements by stage `s`, allowing us to define the completed sets `A` and `B`.
+In section `AsBs_Mono`, we prove various theorems about the growth of the set with respect to the
+stage. In particular, `AsBsSize` shows that the sets have at least `s` elements by stage `s`,
+allowing us to define the completed sets `A` and `B`.
 
 Finally, we prove the requirements `R` and `S` in sections R and S respectively.
 
 ## Main declarations
 
-- `KP54.KP54`: a function which takes the stage as input, and returns the sets built up to that stage.
+- `KP54.KP54`: a function which takes the stage as input, and returns the sets built up to that
+  stage.
 - `KP54.A`, `KP54.B`: The sets built by the construction procedure.
 - `KP54.R`: requirement R, asserting that `B` is not reducible to `A`.
 - `KP54.S`: requirement S, asserting that `A` is not reducible to `B`.
@@ -41,7 +46,6 @@ Finally, we prove the requirements `R` and `S` in sections R and S respectively.
 
 open Oracle.Single
 open Oracle.Single.Code
-open Classical
 open Computability
 open Nat
 
@@ -54,16 +58,20 @@ namespace KP54
 
 section finite_ext
 /-!
-We define the procedure of finding a finite extension explicitly as a code, as it is simpler this way.
+We define the procedure of finding a finite extension explicitly as a code, as it is simpler this
+way.
 
-The reason is that the search procedure has to involve dovetailing, and our dovetail implementation depends fundamentally on the code that is being dovetailed.
+The reason is that the search procedure has to involve dovetailing, and our dovetail implementation
+depends fundamentally on the code that is being dovetailed.
 
-So, there would be extra 'unnecessary' work involved to remove any codes in the definition of `finite_ext`.
+So, there would be extra 'unnecessary' work involved to remove any codes in the definition
+of `finite_ext`.
 
 ### Structure
 We define `c_kp54_aux` which checks whether a something is a valid finite extension or not.
 
-Then we can define the search procedure for a finite extension, `finite_ext`, via dovetailing `c_kp54_aux`.
+Then we can define the search procedure for a finite extension, `finite_ext`, via dovetailing
+`c_kp54_aux`.
 
 -/
 
@@ -81,17 +89,11 @@ Later simp calls blow up without `@[irreducible]`. Why?
   c_ifdom
   (c_evals.comp₃ (c_list_append.comp₂ left (succ.comp right)) (c_const i) (c_const n))
   Code.zero
+open Classical in
 theorem c_kp54_aux_evp {O : ℕ → ℕ} {i n x : ℕ} :
-  eval O (c_kp54_aux i n) x
-    =
-  if (evals (x.l.n2l ++ (x.r+1).n2l) i n).Dom then Part.some 0 else Part.none
-:= by
-  simp [
-    c_kp54_aux,
-    Oracle.Single.eval,
-    Seq.seq,
-    -Denumerable.list_ofNat_succ
-    ]
+    eval O (c_kp54_aux i n) x =
+    if (evals (x.l.n2l ++ (x.r+1).n2l) i n).Dom then Part.some 0 else Part.none := by
+  simp [c_kp54_aux, Oracle.Single.eval, Seq.seq, -Denumerable.list_ofNat_succ]
 
 /--
 `finite_ext S i l` gives `x` s.t. `[i : S++x](l)↓`.
@@ -107,16 +109,18 @@ theorem finite_ext_prop {S i n : ℕ} (halts : (finite_ext S i n).Dom) :
     expose_names
     simp only [c_kp54_aux_evp] at this
     contrapose this
-    simp [-Denumerable.list_ofNat_succ]
-    exact this
-theorem finite_ext_prop_div {S i n : ℕ} (h: ¬ (finite_ext S i n).Dom) :
+    simpa [-Denumerable.list_ofNat_succ] using this
+open Classical in
+theorem finite_ext_prop_div {S i n : ℕ} (h : ¬ (finite_ext S i n).Dom) :
   ∀ y, ¬ (evals ((n2l S) ++ (n2l (y+1))) i n).Dom := by
     have := dovetail_ev_1.mp (Part.eq_none_iff'.mpr h)
-    simp [c_kp54_aux_evp, -Denumerable.list_ofNat_succ] at this
+    simp? [c_kp54_aux_evp, -Denumerable.list_ofNat_succ]  at this says
+      simp only [c_kp54_aux_evp, pair_l, pair_r, ne_eq, ite_eq_left_iff, Part.none_ne_some,
+        imp_false, Decidable.not_not] at this
     exact fun y ↦ this y
 end finite_ext
 
-open Nat List in
+open Nat List Classical in
 /--
 The construction procedure in the KP54 proof.
 
@@ -136,7 +140,6 @@ match s with
   let βₚ := (KP54 s).r
   let lb := βₚ.n2l.length
   let la := αₚ.n2l.length
-
   if (s+1)%2=0 then -- then s+1=2i+2, and we will work on Rᵢ.
     let dvt := finite_ext αₚ i lb -- this is the step where we search for a finite extension.
     if halts : dvt.Dom then
@@ -162,12 +165,12 @@ noncomputable def As (s : ℕ) := n2l (KP54 s).l
 noncomputable def Bs (s : ℕ) := n2l (KP54 s).r
 
 section AsBs_Mono
--- We prove a bunch of theorems about the monotonicity of growth of the strings `As` and `Bs`, and their sizes.
+-- We prove a bunch of theorems about the monotonicity of growth of the strings `As` and `Bs`, and
+-- their sizes.
 theorem AsBs_Mono_0 {i : ℕ} : (As i) <+: (As (i+1)) ∧ (Bs i) <+: (Bs (i+1)) := by
   unfold As
   unfold Bs
   rw (config := {occs := .pos [1,2]}) [KP54]
-  simp (config := {zeta := false}) [-Nat.rfind_dom]
   if h0 : (i+1) % 2 = 0 then
     simp [h0,-Nat.rfind_dom]
     split <;> simp
@@ -179,23 +182,26 @@ theorem AsBs_Mono_1 {i j : ℕ} : (As i) <+: (As (i+j)) ∧ (Bs i) <+: (Bs (i+j)
   | zero => simp_all
   | succ jM1 ihj =>
     rw [← add_assoc]
-    constructor
-    exact List.IsPrefix.trans ihj.left (@AsBs_Mono_0 (i + jM1)).left
-    exact List.IsPrefix.trans ihj.right (@AsBs_Mono_0 (i + jM1)).right
+    exact ⟨
+      List.IsPrefix.trans ihj.left (@AsBs_Mono_0 (i + jM1)).left,
+      List.IsPrefix.trans ihj.right (@AsBs_Mono_0 (i + jM1)).right
+    ⟩
 theorem AsBs_Mono_2 {i j : ℕ} (h : i ≤ j) : (As i) <+: (As j) ∧ (Bs i) <+: (Bs j) := by
   rw [Eq.symm (Nat.add_sub_of_le h)]
   exact AsBs_Mono_1
-theorem As_Mono_3 {k i j} (hi : k<(As i).length) (hh : k<(As j).length) : (As i)[k] = (As j)[k] := by
+theorem As_Mono_3 {k i j} (hi : k < (As i).length) (hh : k < (As j).length) :
+    (As i)[k] = (As j)[k] := by
   cases Classical.em (i ≤ j) with
   | inl h => exact List.IsPrefix.getElem ((AsBs_Mono_2 h).left) hi
   | inr h =>
-    simp at h
+    simp only [not_le] at h
     exact (List.IsPrefix.getElem (AsBs_Mono_2 (Nat.le_of_succ_le h)).left hh).symm
-theorem Bs_Mono_3 {k i j} (hi : k<(Bs i).length) (hh : k<(Bs j).length) : (Bs i)[k] = (Bs j)[k] := by
+theorem Bs_Mono_3 {k i j} (hi : k < (Bs i).length) (hh : k < (Bs j).length) :
+    (Bs i)[k] = (Bs j)[k] := by
   cases Classical.em (i ≤ j) with
   | inl h => exact List.IsPrefix.getElem ((AsBs_Mono_2 h).right) hi
   | inr h =>
-    simp at h
+    simp only [not_le] at h
     have := (AsBs_Mono_2 (Nat.le_of_succ_le h)).right
     exact Eq.symm (List.IsPrefix.getElem this hh)
 theorem As_Mono_4 {ii j k smth} (hii : ii < (As j).length) (asz : ii < (As k).length) :
@@ -213,30 +219,35 @@ theorem Bs_Mono_4 {ii j k smth} (hii : ii < (Bs j).length) (asz : ii < (Bs k).le
     exact Bs_Mono_3 hii asz
   rw [this]
 @[simp] private lemma AsBsSize_aux_0 {i} : (2 * i + 1 + 1) % 2 = 0 := by omega
-theorem AsSize_o2e {i : ℕ} : (As (2*i+1)).length = (As (2*i)).length + 1 := by
+theorem AsSize_o2e {i : ℕ} : (As (2 * i + 1)).length = (As (2*i)).length + 1 := by
   rw [As, KP54]
-  simp (config := {zeta := false})
+  simp (config := { zeta := false }) only [mul_add_mod_self_left, mod_succ, one_ne_zero, ↓reduceIte,
+    sg'.eq_1, Lean.Elab.WF.paramLet]
   extract_lets; expose_names
   if h0 : dvt.Dom then simp [h0]; rfl
   else simp [h0]; rfl
-theorem AsSize_e2o {i : ℕ} : (As (2*i+1)).length < (As (2*i+2)).length :=  by
+theorem AsSize_e2o {i : ℕ} : (As (2 * i + 1)).length < (As (2*i+2)).length :=  by
   rw (config := {occs := .pos [2]}) [As]
   unfold KP54
-  simp (config := {zeta := false})
+  simp (config := { zeta := false }) only [div2_succ, bodd_mul, bodd_succ, bodd_zero,
+    Bool.not_false, Bool.not_true, Bool.false_and, div2_bit0, succ_eq_add_one, cond_false,
+    AsBsSize_aux_0, ↓reduceIte, sg'.eq_1, Lean.Elab.WF.paramLet]
   extract_lets; expose_names
-  rw [show As (2*i+1) = n2l αₚ from rfl]
+  rw [show As (2 * i + 1) = n2l αₚ from rfl]
   if h0 : dvt.Dom then simp [h0]
   else simp [h0]
-theorem BsSize_o2e {i : ℕ} : (Bs (2*i+2)).length = (Bs (2*i+1)).length + 1 := by
+theorem BsSize_o2e {i : ℕ} : (Bs (2*i+2)).length = (Bs (2 * i + 1)).length + 1 := by
   rw [Bs, KP54]
-  simp (config := {zeta := false})
+  simp (config := { zeta := false }) only [AsBsSize_aux_0, ↓reduceIte, sg'.eq_1,
+    Lean.Elab.WF.paramLet]
   extract_lets; expose_names
   if h0 : dvt.Dom then simp [h0]; rfl
   else simp [h0]; rfl
-theorem BsSize_e2o {i : ℕ} : (Bs (2*i)).length < (Bs (2*i+1)).length :=  by
+theorem BsSize_e2o {i : ℕ} : (Bs (2*i)).length < (Bs (2 * i + 1)).length :=  by
   rw (config := {occs := .pos [2]}) [Bs]
   unfold KP54
-  simp (config := {zeta := false})
+  simp (config := { zeta := false }) only [div2_bit0, mul_add_mod_self_left, mod_succ, one_ne_zero,
+    ↓reduceIte, sg'.eq_1, Lean.Elab.WF.paramLet]
   extract_lets; expose_names
   rw [show Bs (2*i) = n2l βₚ from rfl]
   if h0 : dvt.Dom then simp [h0]
@@ -255,17 +266,19 @@ theorem AsSize_mono' {i : ℕ} : (As i).length < (As (i+1)).length := by
     rcases h with ⟨h1,h2⟩
     rw [h2]
     simp [@AsSize_e2o h1]
-theorem AsSize_mono {i j : ℕ} (hij : i<j) : (As i).length < (As j).length := by
+theorem AsSize_mono {i j : ℕ} (hij : i < j) : (As i).length < (As j).length := by
   have a0 := @AsSize_mono' i
   have a1 := (@AsBs_Mono_2 (i+1) j (hij)).left
   exact Nat.lt_of_lt_of_le a0 (List.IsPrefix.length_le a1)
-theorem append_len_geq {α lst} (A B : List α) (h1 : A.length < B.length) (h2 : A ++ lst = B) : lst.length > 0 := by
+theorem append_len_geq {α lst}
+    (A B : List α) (h1 : A.length < B.length) (h2 : A ++ lst = B) :
+    lst.length > 0 := by
   grind
 theorem nonempt_l2n (A : List ℕ) (h1 : A.length > 0) : l2n A ≠ 0 := by
   contrapose h1
-  simp at h1 ⊢
+  simp only [gt_iff_lt, not_lt, nonpos_iff_eq_zero, List.length_eq_zero_iff] at h1 ⊢
   apply Encodable.encode_inj.mp h1
-theorem As_ex_ext {i j : ℕ} (hij : i<j): ∃ lM1, (As i)++(n2l (lM1+1))=As j := by
+theorem As_ex_ext {i j : ℕ} (hij : i < j) : ∃ lM1, (As i)++(n2l (lM1+1))=As j := by
   rcases (@AsBs_Mono_2 i j (Nat.le_of_succ_le hij)).left with ⟨h1,h2⟩
   have a2 : h1.length > 0 := append_len_geq (As i) (As j) (AsSize_mono hij) h2
   have a4 : (l2n h1)-1+1=l2n h1 := Nat.succ_pred_eq_of_ne_zero (nonempt_l2n h1 a2)
@@ -284,11 +297,11 @@ theorem BsSize_mono' {i : ℕ} : (Bs i).length < (Bs (i+1)).length := by
     rcases h with ⟨h1,h2⟩
     rw [h2]
     simp [@BsSize_o2e h1]
-theorem BsSize_mono {i j : ℕ} (hij : i<j) : (Bs i).length < (Bs j).length := by
+theorem BsSize_mono {i j : ℕ} (hij : i < j) : (Bs i).length < (Bs j).length := by
   have a0 := @BsSize_mono' i
   have a1 := (@AsBs_Mono_2 (i+1) j (hij)).right
   exact Nat.lt_of_lt_of_le a0 (List.IsPrefix.length_le a1)
-theorem Bs_ex_ext {i j : ℕ} (hij : i<j): ∃ lM1, (Bs i)++(n2l (lM1+1))=Bs j := by
+theorem Bs_ex_ext {i j : ℕ} (hij : i < j) : ∃ lM1, (Bs i)++(n2l (lM1+1))=Bs j := by
   rcases (@AsBs_Mono_2 i j (Nat.le_of_succ_le hij)).right with ⟨h1,h2⟩
   have a2 : h1.length > 0 := append_len_geq (Bs i) (Bs j) (BsSize_mono hij) h2
   have a4 : (l2n h1)-1+1=l2n h1 := Nat.succ_pred_eq_of_ne_zero (nonempt_l2n h1 a2)
@@ -298,41 +311,34 @@ theorem AsBsSize {i : ℕ} : i ≤ (As i).length ∧ i ≤ (Bs i).length := by
   induction i with
   | zero => exact ⟨Nat.zero_le (As 0).length, Nat.zero_le (Bs 0).length⟩
   | succ i ih =>
-    unfold As
-    unfold Bs
-    unfold KP54
-    simp (config := {zeta := false}) [-Nat.rfind_dom]
-    lift_lets
-    extract_lets
-    expose_names
+    unfold As Bs KP54
+    simp (config := { zeta := false }) only [sg'.eq_1, Lean.Elab.WF.paramLet]
+    lift_lets; extract_lets; expose_names
     if h0 : (i + 1) % 2 = 0 then
-      simp [h0,-Nat.rfind_dom]
+      simp? [h0, -Nat.rfind_dom] says
+        simp only [h0, ↓reduceIte, Denumerable.list_ofNat_succ, unpair1_to_l, Denumerable.ofNat_nat,
+          unpair2_to_r, List.concat_eq_append]
       if h1 : dvt.Dom  then
-        simp [h1,-Nat.rfind_dom]
-        constructor
-        refine Nat.add_le_add ih.left ?_
-        exact Nat.le_add_left 1 _
-        exact ih.right
+        simpa [h1, -Nat.rfind_dom] using ⟨Nat.add_le_add ih.left (Nat.le_add_left 1 _), ih.right⟩
       else
-        simp [h1,-Nat.rfind_dom]
-        exact ih
+        simpa [h1,-Nat.rfind_dom]
     else
-      simp [h0,-Nat.rfind_dom]
+      simp? [h0, -Nat.rfind_dom] says
+        simp only [h0, ↓reduceIte, Denumerable.list_ofNat_succ, unpair1_to_l, Denumerable.ofNat_nat,
+          unpair2_to_r, List.concat_eq_append]
       if h1 : (dvt_1).Dom  then
-        simp [h1,-Nat.rfind_dom]
-        constructor
-        exact ih.left
-        refine Nat.add_le_add ih.right ?_
-        exact Nat.le_add_left 1 _
+        simpa [h1, -Nat.rfind_dom] using ⟨ih.left, Nat.add_le_add ih.right (Nat.le_add_left 1 _)⟩
       else
-        simp [h1,-Nat.rfind_dom]
-        exact ih
+        simpa [h1,-Nat.rfind_dom] using ih
 
-@[simp] theorem AsSize {i : ℕ} : i<(As (i+1)).length := (@AsBsSize (i+1)).left
-@[simp] theorem BsSize {i : ℕ} : i<(Bs (i+1)).length := (@AsBsSize (i+1)).right
+@[simp] theorem AsSize {i : ℕ} : i < (As (i+1)).length := (@AsBsSize (i+1)).left
+@[simp] theorem BsSize {i : ℕ} : i < (Bs (i+1)).length := (@AsBsSize (i+1)).right
 
--- The "completed" sets `A` and `B`, defined from `As` and `Bs` noting that by stage `x+1`, index `x` is defined by the monotonicty theorems above.
--- The [x] 's require the theorems AsSize and BsSize above.
+/-
+The "completed" sets `A` and `B`, defined from `As` and `Bs` noting that by stage `x+1`, index
+`x` is defined by the monotonicty theorems above.
+The [x] 's require the theorems AsSize and BsSize above.
+-/
 def A := { x | n2b (As (x+1))[x] }
 def B := { x | n2b (Bs (x+1))[x] }
 end AsBs_Mono
@@ -342,121 +348,131 @@ section R
 We wish to prove
 `theorem R (i : ℕ) : eval A i ≠ χ B`.
 
-We shall prove this with two auxiliary lemmas. The first, `R_aux_0`, states that for any <|i\in\N$, <|n=\sz{B_s(2i+1)}$ witnesses:
+We shall prove this with two auxiliary lemmas. The first, `R_aux_0`, states that for any <|i\in\N$,
+<|n=\sz{B_s(2i+1)}$ witnesses:
+
 \begin{align}
 	[i : A_{2i+2}](n)\ne \lss{n\in B_{2i+2}}.
 \end{align}
 
 We will define that witness as `R_wt`.
 
-The second, `As_Uninjured`, states that the computation <|[i : A_{2i+2}](x)$ will have its value unchanged through subsequent stages.
+The second, `As_Uninjured`, states that the computation <|[i : A_{2i+2}](x)$ will have its value
+unchanged through subsequent stages.
 
-We split the proof into two cases, `As_Uninjured_0` and `As_Uninjured_1`, depending on whether the value halts or not (respectively).
+We split the proof into two cases, `As_Uninjured_0` and `As_Uninjured_1`, depending on whether the
+value halts or not (respectively).
 -/
 
 /-- R_wt i is the natural that witnesses the requirement `R i`. -/
-private noncomputable def R_wt (i : ℕ) := (Bs (2*(i+1)-1)).length
+private noncomputable def R_wt (i : ℕ) := (Bs (2 * (i + 1)-1)).length
 @[simp] theorem BsSize_o2e_Rwt {i} : R_wt i < (Bs (2 * (i + 1))).length := by
-  rw [show R_wt i = (Bs (2*(i+1)-1)).length from rfl]
-  have : 2 * (i + 1) - 1 = 2*i+1 := by exact rfl
+  rw [show R_wt i = (Bs (2 * (i + 1)-1)).length from rfl]
+  have : 2 * (i + 1) - 1 = 2 * i + 1 := by exact rfl
   rw [this]
-  have : 2*(i+1) = 2*i + 2 :=  by exact rfl
+  have : 2 * (i + 1) = 2*i + 2 :=  by exact rfl
   rw [this]
   have := @BsSize_o2e i
   simp_all only [Nat.add_one_sub_one, lt_add_iff_pos_right, zero_lt_one]
-
+open Classical in
 /--
-`R_aux_0` proves that `R_wt i` witnesses the failure of program `i` to be the characteristic function of `Bs`;
-that [i : As](R_wt i) ≠ (R_wt i) ∈ Bs.
+`R_aux_0` proves that `R_wt i` witnesses the failure of program `i` to be the characteristic
+function of `Bs`; that [i : As](R_wt i) ≠ (R_wt i) ∈ Bs.
 
 The proof follows easily from unravelling if-statements.
 -/
-private theorem R_aux_0 (i : ℕ) (h : (evals (As (2*i+1+1)) i (R_wt i)).Dom):
-(evals (As (2*i+1+1)) i (R_wt i)).get h ≠ b2n (n2b <| (Bs (2*i+1+1))[R_wt i]'(@BsSize_o2e_Rwt i)) := by
-  unfold Bs
-  unfold As
-  unfold KP54
-  simp (config := {zeta := false})
+private theorem R_aux_0 (i : ℕ) (h : (evals (As (2 * i + 1 + 1)) i (R_wt i)).Dom) :
+    (evals (As (2 * i + 1 + 1)) i (R_wt i)).get h ≠
+    b2n (n2b <| (Bs (2 * i + 1 + 1))[R_wt i]'(@BsSize_o2e_Rwt i)) := by
+  unfold Bs As KP54
+  simp? (config := { zeta := false }) says
+    simp (config := { zeta := false }) only [div2_succ, bodd_mul, bodd_succ, bodd_zero,
+      Bool.not_false, Bool.not_true, Bool.false_and, div2_bit0, succ_eq_add_one, cond_false,
+      AsBsSize_aux_0, ↓reduceIte, sg'.eq_1, Lean.Elab.WF.paramLet, ne_eq]
   simp (config := {zetaHave := false}) only []
   -- memory blows up if i lift the non-have lets. why?
-
   lift_lets; extract_lets; expose_names
   have i_1_simp: i_1 = i := rfl
   let (eq := hdvt) dvt := (finite_ext αₚ i_1 lb)
   simp (config := {zeta := false}) only [← hdvt]
-
   -- if ¬ dvt.Dom, then our entire computation would have diverged, contradicting `h`.
   have halts : dvt.Dom := by
     apply byContradiction
     intro halts
-    rcases @As_ex_ext (2*i+1) (2*i+2) (Nat.lt_add_one (2 * i + 1)) with ⟨h3,h2⟩
+    rcases @As_ex_ext (2 * i + 1) (2*i+2) (Nat.lt_add_one (2 * i + 1)) with ⟨h3,h2⟩
     have := finite_ext_prop_div halts h3
-    rw [show n2l αₚ = As (2*i+1) from rfl, h2, i_1_simp] at this
+    rw [show n2l αₚ = As (2 * i + 1) from rfl, h2, i_1_simp] at this
     exact this h
-
-  let (eq := hrf) rf := dvt.get halts -- rf is a natural such that (eval_string ((n2l A) ++ (n2l rf)) i n).Dom.
+  -- rf is a natural such that (eval_string ((n2l A) ++ (n2l rf)) i n).Dom.
+  let (eq := hrf) rf := dvt.get halts
   let (eq := hαₛ) αₛ := (n2l αₚ) ++ (n2l (rf+1))
   simp (config := {zeta := false}) only [← hrf, ← hαₛ, halts]
-  simp (config := {zeta := false}) only [↓reduceDIte, List.concat_eq_append, Lean.Elab.WF.paramLet, ne_eq]
+  simp (config := {zeta := false}) only [↓reduceDIte, List.concat_eq_append, Lean.Elab.WF.paramLet,
+    ne_eq]
   lift_lets; extract_lets; expose_names
-
   have lbrw : R_wt i = (n2l βₚ).length := rfl
   simp [lbrw]; simp only [← lbrw]
   simp [show (evals (αₛ) i (R_wt i)).get (finite_ext_prop halts) = A_result from rfl]
   cases A_result <;> simp [n2b,b2n]
 
-theorem R_aux_χ {i}: χ B (R_wt i) = b2n (n2b ((Bs (2 * (i + 1)))[(R_wt i)]'(@BsSize_o2e_Rwt i))) := by
-  simp [B, χ, Bs_Mono_3 (@BsSize (R_wt i)) (@BsSize_o2e_Rwt i)]
-  exact rfl
+theorem R_aux_χ {i} :
+    χ B (R_wt i) = b2n (n2b ((Bs (2 * (i + 1)))[(R_wt i)]'(@BsSize_o2e_Rwt i))) := by
+  simpa [B, χ, Bs_Mono_3 (@BsSize (R_wt i)) (@BsSize_o2e_Rwt i)] using by rfl
 
 /--
 If `[i : As](k)` halts, then its value will be unchanged in all subsequent steps.
 
-The proof follows from an invocation of the use principle. The monotonicity of As proves that the oracles are in-
-deed equivalent up to the use.
+The proof follows from an invocation of the use principle. The monotonicity of As proves that the
+oracles are indeed equivalent up to the use.
 -/
-theorem As_Uninjured_0 {i k} (hh : (evals (As (2*(i+1))) i k).Dom): evals (As (2*(i+1))) i k = evalSet A i k := by
-  simp [A,evalSet]; unfold χ; simp [evals] -- unfold defns
-
+theorem As_Uninjured_0 {i k} (hh : (evals (As (2 * (i + 1))) i k).Dom) :
+    evals (As (2 * (i + 1))) i k = evalSet A i k := by
+  -- unfold defns
+  simp only [evalSet, A]; unfold χ;
+  simp only [evals, List.getD_eq_getElem?_getD, Set.mem_setOf_eq]
   have h1 := evalc_prop_0 hh
-  simp at h1
+  simp only [List.getD_eq_getElem?_getD] at h1
   rw [h1]
   have hh2 := hh
-  simp [evals, h1] at hh2
+  simp only [evals, List.getD_eq_getElem?_getD, h1] at hh2
   apply use_principle_eval hh2
   intro ii hii
   rw [As_Mono_4 (Nat.lt_of_lt_of_le hii (evalc_prop_1 hh)) AsSize]
   split <;> next h => simp [b2n,h]
 
 /- contrapositive of As_Uninjured_0. -/
-theorem As_Uninjured_0' {k} {i : ℕ} : ¬ (evalSet A i k).Dom → ¬ (evals (As (2*(i+1))) i k).Dom := by
+theorem As_Uninjured_0' {k} {i : ℕ} :
+    ¬ (evalSet A i k).Dom → ¬ (evals (As (2 * (i + 1))) i k).Dom := by
   contrapose
   intro h
   rwa [← As_Uninjured_0 h]
-
+open Classical in
 /--
 If `[i : As](k)` diverges, then it will always diverge in subsequent steps.
 
-This is proven by contraposition; if the final computation converges, we must have found some finite extension.
+This is proven by contraposition; if the final computation converges, we must have found some
+finite extension.
 
 If the final computation converges, it must have some finite use <|u$.
 
-To show \mono{(evals (As (2*(i+1))) i (R\_wt i)).Dom}, it suffices to show that the corresponding finite extension was found in the KP54 construction procedure.
+To show \mono{(evals (As (2 * (i + 1))) i (R\_wt i)).Dom}, it suffices to show that the
+corresponding finite extension was found in the KP54 construction procedure.
 
 But we know a finite extension must exist, as the use of the computation is finite.
-
 -/
-lemma As_Uninjured_1 {i} : ¬(evals (As (2*i+1+1)) i (R_wt i)).Dom → ¬(evalSet A i (R_wt i)).Dom := by
-  unfold As
-  unfold KP54
-  simp (config := {zeta := false})
+lemma As_Uninjured_1 {i} :
+    ¬ (evals (As (2 * i + 1 + 1)) i (R_wt i)).Dom → ¬(evalSet A i (R_wt i)).Dom := by
+  unfold As KP54
+  simp? (config := { zeta := false }) says
+    simp (config := { zeta := false }) only [div2_succ, bodd_mul, bodd_succ, bodd_zero,
+      Bool.not_false, Bool.not_true, Bool.false_and, div2_bit0, succ_eq_add_one, cond_false,
+      AsBsSize_aux_0, ↓reduceIte, sg'.eq_1, Lean.Elab.WF.paramLet]
   lift_lets; extract_lets; expose_names
   have i_1_simp: i_1 = i := rfl
   have keqlb : R_wt i=lb := rfl
-
   -- if dvt.Dom, this contradicts our assumption that the computation diverges.
   if h0 : dvt.Dom then
-    simp (config := {zeta := false}) [h0]
+    simp (config := { zeta := false }) only [h0, ↓reduceDIte, Lean.Elab.WF.paramLet]
     lift_lets; extract_lets; expose_names
     simp only [List.concat_eq_append, pair_l, Denumerable.ofNat_encode]
     intro h
@@ -465,55 +481,66 @@ lemma As_Uninjured_1 {i} : ¬(evals (As (2*i+1+1)) i (R_wt i)).Dom → ¬(evalSe
     simp only [i_1_simp] at this
     exact h this
   else
-
-  simp (config := {zeta := false}) [h0]
-
+  -- we now proceed with the assumption that the search procedure diverges.
+  simp (config := { zeta := false }) only [h0, ↓reduceDIte, List.concat_eq_append, pair_l,
+    Denumerable.ofNat_encode]
   have a1 := finite_ext_prop_div h0
   intro h; clear h
   contrapose a1
-  -- simp at a1
   rename' a1 => final_comp_halts
-  simp [-Denumerable.list_ofNat_succ]
-  -- the goal now reads:
-  -- if the final computation converges, we must have found some finite extension `x` at stage `2*i+1`.
-
+  simp only [not_forall, Decidable.not_not]
+  /-
+    the goal now reads:
+    if the final computation converges, we must have found some finite extension `x` at
+    stage `2 * i + 1`.
+  -/
   rw [i_1_simp]
   rw [← keqlb]
   simp only [evals]
   have use_dom := e2u final_comp_halts
   let use_compl := (use (χ A) (i.n2c) (R_wt i)).get use_dom
-  rw [show n2l αₚ = As (2*i+1) from rfl]
+  rw [show n2l αₚ = As (2 * i + 1) from rfl]
   /-
-  As the final computation (on index `i`, input `R_wt i`) only uses up to `use_compl`, this means we only need our string `As` to be as long as `use_compl` for our computation to halt.
+  As the final computation (on index `i`, input `R_wt i`) only uses up to `use_compl`, this means we
+  only need our string `As` to be as long as `use_compl` for our computation to halt.
 
   That is, the string `As (use_compl + 1)` is enough to make the computation halt.
 
-  We are currently at stage `2*i+1`, so we split into two cases.
+  We are currently at stage `2 * i + 1`, so we split into two cases.
 
-  If `2*i+1 ≤ use_compl`, then we use the extension that will get us to the string `As (use_compl + 1)`.
-  (This can be extracted with `As_ex_ext`).
+  A.
+  If `2 * i + 1 ≤ use_compl`, then we use the extension that will get us to the string
+  `As (use_compl + 1)`. (This can be extracted with `As_ex_ext`).
 
-  If `use_compl < 2*i+1`, this means that we don't need an extension at all, as our current string is already an extension of `As (use_compl + 1)`.
+  B.
+  If `use_compl < 2 * i + 1`, this means that we don't need an extension at all, as our current
+  string is already an extension of `As (use_compl + 1)`.
 
-  To actually prove the computation halts, we appeal to `evalc_prop_4.mp`, which tells us that `evalc` halts if the use is defined and is smaller than the imposed limit (which here is the size of the string `As`),
+  To actually prove the computation halts, we appeal to `evalc_prop_4.mp`, which tells us that
+  `evalc` halts if the use is defined and is smaller than the imposed limit (which here is the
+  size of the string `As`),
 
-  That the use is defined is proved via the use principle, showing our use is equivalent to the final computation's use.
+  That the use is defined is proved via the use principle, showing our use is equivalent to the
+  final computation's use.
 
   To show that our use is smaller than the limit:
-    · in the case we use `As (use_compl + 1)`, note by monotonicty of `As` its length is `≥ use_compl + 1`.
-    · in the other case this follows directly from `use_compl < 2*i+1`.
-
+    · in the case we use `As (use_compl + 1)`, note by monotonicty of `As` its length is
+      `≥ use_compl + 1`.
+    · in the other case this follows directly from `use_compl < 2 * i + 1`.
   -/
-  if h0 : 2*i+1 ≤ use_compl then
-    rcases @As_ex_ext (2*i+1) (use_compl+1) (Nat.add_lt_add_right h0 1) with ⟨x,hx⟩
+  -- A.
+  if h0 : 2 * i + 1 ≤ use_compl then
+    rcases @As_ex_ext (2 * i + 1) (use_compl+1) (Nat.add_lt_add_right h0 1) with ⟨x,hx⟩
     use x
     rw [hx]
     -- showing that the current use is equivalent to the final computation's use
-    have mainrw : use (fun e ↦ b2n (n2b ((As (use_compl + 1)).getD e whatever))) i (R_wt i) = use (χ A) i (R_wt i) := by
+    have mainrw :
+        use (fun e ↦ b2n (n2b ((As (use_compl + 1)).getD e whatever))) i (R_wt i) =
+        use (χ A) i (R_wt i) := by
       apply Eq.symm
       refine use_principle_use final_comp_halts ?_
       intro i2 hi2
-      simp [χ,A]
+      simp only [χ, A, Set.mem_setOf_eq, List.getD_eq_getElem?_getD]
       have hi3 : i2 < (As (use_compl + 1)).length := calc
         i2 < use_compl := hi2
         use_compl <  (As (use_compl + 1)).length := AsSize
@@ -521,10 +548,9 @@ lemma As_Uninjured_1 {i} : ¬(evals (As (2*i+1+1)) i (R_wt i)).Dom → ¬(evalSe
       simp only [b2n, ite_eq_ite]
     have := Nat.le_of_succ_le (@AsSize use_compl)
     apply evalc_prop_4.mp <;> (simp only [mainrw]; assumption)
-
   else
-
-  simp at h0
+  -- B.
+  simp only [not_le] at h0
   use 0 -- use 0, as we do not need any extension
   -- showing that the use is below the length of our string
   have a6 : use_compl < (As (2 * i + 1)).length := calc
@@ -535,24 +561,29 @@ lemma As_Uninjured_1 {i} : ¬(evals (As (2*i+1+1)) i (R_wt i)).Dom → ¬(evalSe
     _     ≤ (As (2 * i + 1)).length := AsSize
     _     ≤ (As (2 * i + 1) ++ n2l (0 + 1)).length := by
       simp only [zero_add, List.length_append, le_add_iff_nonneg_right, zero_le]
-
   -- showing that the current use is equivalent to the final computation's use
-  have mainrw : use (fun e ↦ b2n (n2b ((As (2 * i + 1) ++ n2l (0 + 1)).getD e whatever))) i.n2c (R_wt i) = use (χ A) i.n2c (R_wt i) :=  by
+  have mainrw :
+      use (fun e ↦ b2n (n2b ((As (2 * i + 1) ++ n2l (0 + 1)).getD e whatever))) i.n2c (R_wt i) =
+      use (χ A) i.n2c (R_wt i) :=  by
     apply Eq.symm
     refine use_principle_use final_comp_halts ?_
     intro i2 hi2
     have hi3 := lt_trans hi2 a6
-    unfold χ
-    unfold A
-    simp
+    unfold χ A
+    simp? says
+      simp only [Set.mem_setOf_eq, zero_add, Denumerable.list_ofNat_succ, unpair_zero,
+        Prod.fst_zero, Denumerable.ofNat_nat, Prod.snd_zero, Denumerable.list_ofNat_zero,
+        List.getD_eq_getElem?_getD]
     rw [@list_access_small _ _ _ [0] hi3]
-    rw [@As_Mono_4 i2 (2*i+1) (i2 + 1) whatever (hi3) (AsSize)]
+    rw [@As_Mono_4 i2 (2 * i + 1) (i2 + 1) whatever (hi3) (AsSize)]
     simp only [b2n, ite_eq_ite]
   apply evalc_prop_4.mp <;> (simp only [mainrw]; assumption)
-lemma As_Uninjured_1' {i : ℕ} : (evalSet A i (R_wt i)).Dom  → (evals (As (2*(i+1))) i (R_wt i)).Dom := not_imp_not.mp (@As_Uninjured_1 i)
+lemma As_Uninjured_1' {i : ℕ} :
+    (evalSet A i (R_wt i)).Dom  → (evals (As (2 * (i + 1))) i (R_wt i)).Dom :=
+  not_imp_not.mp (@As_Uninjured_1 i)
 
 /-- states that the computation [i](R_wt i) will remain unchanged. -/
-theorem As_Uninjured (i : ℕ) : evalSet A i (R_wt i) = evals (As (2*(i+1))) i (R_wt i) := by
+theorem As_Uninjured (i : ℕ) : evalSet A i (R_wt i) = evals (As (2 * (i + 1))) i (R_wt i) := by
   if h : (evalSet A i (R_wt i)).Dom then
     rw [@As_Uninjured_0 (i) (R_wt i) (As_Uninjured_1' h)]
   else
@@ -571,19 +602,18 @@ theorem R (i : ℕ) : evalSet A i ≠ χ B := Function.ne_iff.mpr ⟨R_wt i, R_a
 end R
 
 section S
-/-
-This section is essentially identical to section R, so we remove any comments.
--/
+/- This section is essentially identical to section R, so we remove any comments. -/
 private noncomputable def S_wt (i : ℕ) := (As (2*i)).length
-@[simp] theorem AsSize_o2e_wt {i} : S_wt i < (As (2*i+1)).length := by
+@[simp] theorem AsSize_o2e_wt {i} : S_wt i < (As (2 * i + 1)).length := by
   rw [show S_wt i = (As (2*i)).length from rfl]
   exact AsSize_mono'
-private theorem S_aux_0 (i : ℕ) (h : (evals (Bs (2*i+1)) i (S_wt i)).Dom):
-(evals (Bs (2*i+1)) i (S_wt i)).get h ≠ b2n (n2b <| (As (2*i+1))[S_wt i]'(@AsSize_o2e_wt i)) := by
-  unfold Bs
-  unfold As
-  unfold KP54
-  simp (config := {zeta := false})
+open Classical in
+private theorem S_aux_0 (i : ℕ) (h : (evals (Bs (2 * i + 1)) i (S_wt i)).Dom) :
+    (evals (Bs (2 * i + 1)) i (S_wt i)).get h ≠
+    b2n (n2b <| (As (2 * i + 1))[S_wt i]'(@AsSize_o2e_wt i)) := by
+  unfold Bs As KP54
+  simp (config := { zeta := false }) only [div2_bit0, mul_add_mod_self_left, mod_succ, one_ne_zero,
+    ↓reduceIte, sg'.eq_1, Lean.Elab.WF.paramLet, ne_eq]
   simp (config := {zetaHave := false}) only []
   lift_lets; extract_lets; expose_names
   have i_1_simp: i_1 = i := rfl
@@ -592,47 +622,49 @@ private theorem S_aux_0 (i : ℕ) (h : (evals (Bs (2*i+1)) i (S_wt i)).Dom):
   have halts : dvt.Dom := by
     apply byContradiction
     intro halts
-    rcases @Bs_ex_ext (2*i) (2*i+1) (Nat.lt_add_one (2*i)) with ⟨h3,h2⟩
+    rcases @Bs_ex_ext (2*i) (2 * i + 1) (Nat.lt_add_one (2*i)) with ⟨h3,h2⟩
     have := finite_ext_prop_div halts h3
     rw [show n2l βₚ = Bs (2*i) from rfl, h2, i_1_simp] at this
     exact this h
   let (eq := hrf) rf := dvt.get halts
   let (eq := hβₛ) βₛ := (n2l βₚ) ++ (n2l (rf+1))
   simp (config := {zeta := false}) only [← hrf, ← hβₛ, halts]
-  simp (config := {zeta := false}) only [↓reduceDIte, List.concat_eq_append, Lean.Elab.WF.paramLet, ne_eq]
+  simp (config := {zeta := false}) only [↓reduceDIte, List.concat_eq_append, Lean.Elab.WF.paramLet,
+    ne_eq]
   lift_lets; extract_lets; expose_names
   have lbrw : S_wt i = (n2l αₚ).length := rfl
   simp [lbrw]; simp only [← lbrw]
   simp [show (evals (βₛ) i (S_wt i)).get (finite_ext_prop halts) = B_result from rfl]
   cases B_result <;> simp [n2b,b2n]
-theorem S_aux_χ {i}: χ A (S_wt i) = b2n (n2b ((As (2*i+1))[(S_wt i)]'(@AsSize_o2e_wt i))) := by
-  simp [A, χ]
-  simp [As_Mono_3 (@AsSize (S_wt i)) (@AsSize_o2e_wt i)]
-  exact rfl
-theorem Bs_Uninjured_0 {i k} (hh : (evals (Bs (2*i+1)) i k).Dom): evals (Bs (2*i+1)) i k = evalSet B i k := by
-  simp [B, evalSet]; unfold χ; simp [evals]
+theorem S_aux_χ {i} : χ A (S_wt i) = b2n (n2b ((As (2 * i + 1))[(S_wt i)]'(@AsSize_o2e_wt i))) := by
+  simpa [A, χ, As_Mono_3 (@AsSize (S_wt i)) (@AsSize_o2e_wt i)] using by rfl
+theorem Bs_Uninjured_0 {i k} (hh : (evals (Bs (2 * i + 1)) i k).Dom) :
+    evals (Bs (2 * i + 1)) i k = evalSet B i k := by
+  simp only [evalSet, B]; unfold χ;
   have h1 := evalc_prop_0 hh
   simp at h1
-  rw [h1]
   have hh2 := hh
-  simp [evals, h1] at hh2
+  simp only [evals, List.getD_eq_getElem?_getD, h1, Set.mem_setOf_eq] at hh2 ⊢
   apply use_principle_eval hh2
   intro ii hii
   rw [Bs_Mono_4 (Nat.lt_of_lt_of_le hii (evalc_prop_1 hh)) BsSize]
   split <;> next h => simp [b2n,h]
-theorem Bs_Uninjured_0' {k} {i : ℕ} : ¬ (evalSet B i k).Dom → ¬ (evals (Bs (2*i+1)) i k).Dom := by
+theorem Bs_Uninjured_0' {k} {i : ℕ} :
+    ¬ (evalSet B i k).Dom → ¬ (evals (Bs (2 * i + 1)) i k).Dom := by
   contrapose
   intro h
   rwa [← Bs_Uninjured_0 h]
-lemma Bs_Uninjured_1 {i} : ¬(evals (Bs (2*i+1)) i (S_wt i)).Dom → ¬(evalSet B i (S_wt i)).Dom := by
-  unfold Bs
-  unfold KP54
-  simp (config := {zeta := false})
+open Classical in
+lemma Bs_Uninjured_1 {i} :
+    ¬(evals (Bs (2 * i + 1)) i (S_wt i)).Dom → ¬(evalSet B i (S_wt i)).Dom := by
+  unfold Bs KP54
+  simp (config := { zeta := false }) only [div2_bit0, mul_add_mod_self_left, mod_succ, one_ne_zero,
+    ↓reduceIte, sg'.eq_1, Lean.Elab.WF.paramLet]
   lift_lets; extract_lets; expose_names
   have i_1_simp: i_1 = i := rfl
   have keqlb : S_wt i = la := rfl
   if h0 : dvt.Dom then
-    simp (config := {zeta := false}) [h0]
+    simp (config := { zeta := false }) only [h0, ↓reduceDIte, Lean.Elab.WF.paramLet]
     lift_lets; extract_lets; expose_names
     simp only [List.concat_eq_append, pair_r, Denumerable.ofNat_encode]
     intro h
@@ -641,12 +673,13 @@ lemma Bs_Uninjured_1 {i} : ¬(evals (Bs (2*i+1)) i (S_wt i)).Dom → ¬(evalSet 
     simp only [i_1_simp] at this
     exact h this
   else
-  simp (config := {zeta := false}) [h0]
+  simp (config := { zeta := false }) only [h0, ↓reduceDIte, List.concat_eq_append, pair_r,
+    Denumerable.ofNat_encode]
   have a1 := finite_ext_prop_div h0
   intro h; clear h
   contrapose a1
   rename' a1 => final_comp_halts
-  simp [-Denumerable.list_ofNat_succ]
+  simp only [not_forall, Decidable.not_not]
   rw [i_1_simp]
   rw [← keqlb]
   simp only [evals]
@@ -657,11 +690,13 @@ lemma Bs_Uninjured_1 {i} : ¬(evals (Bs (2*i+1)) i (S_wt i)).Dom → ¬(evalSet 
     rcases @Bs_ex_ext (2*i) (use_compl+1) (Nat.lt_add_one_of_le h0) with ⟨x,hx⟩
     use x
     rw [hx]
-    have mainrw : use (fun e ↦ b2n (n2b ((Bs (use_compl + 1)).getD e whatever))) i (S_wt i) = use (χ B) i (S_wt i) := by
+    have mainrw :
+        use (fun e ↦ b2n (n2b ((Bs (use_compl + 1)).getD e whatever))) i (S_wt i) =
+        use (χ B) i (S_wt i) := by
       apply Eq.symm
       refine use_principle_use final_comp_halts ?_
       intro i2 hi2
-      simp [χ,B]
+      simp only [χ, B, Set.mem_setOf_eq, List.getD_eq_getElem?_getD]
       have hi3 : i2 < (Bs (use_compl + 1)).length := calc
         i2 < use_compl := hi2
         use_compl <  (Bs (use_compl + 1)).length := BsSize
@@ -670,7 +705,7 @@ lemma Bs_Uninjured_1 {i} : ¬(evals (Bs (2*i+1)) i (S_wt i)).Dom → ¬(evalSet 
     have := Nat.le_of_succ_le (@BsSize use_compl)
     apply evalc_prop_4.mp <;> (simp only [mainrw]; assumption)
   else
-  simp at h0
+  simp only [not_le] at h0
   use 0
   have a6 : use_compl < (Bs (2*i)).length := calc
     use_compl < 2*i := h0
@@ -680,20 +715,25 @@ lemma Bs_Uninjured_1 {i} : ¬(evals (Bs (2*i+1)) i (S_wt i)).Dom → ¬(evalSet 
     _     ≤ (Bs (2*i)).length := (@AsBsSize <| 2*i).right
     _     ≤ (Bs (2*i) ++ n2l (0 + 1)).length := by
       simp only [zero_add, List.length_append, le_add_iff_nonneg_right, zero_le]
-  have mainrw : use (fun e ↦ b2n (n2b ((Bs (2*i) ++ n2l (0 + 1)).getD e whatever))) (i.n2c) (S_wt i) = use (χ B) (i.n2c) (S_wt i) :=  by
+  have mainrw :
+      use (fun e ↦ b2n (n2b ((Bs (2*i) ++ n2l (0 + 1)).getD e whatever))) (i.n2c) (S_wt i) =
+      use (χ B) (i.n2c) (S_wt i) :=  by
     apply Eq.symm
     refine use_principle_use final_comp_halts ?_
     intro i2 hi2
     have hi3 := Nat.lt_trans hi2 a6
     unfold χ
     unfold B
-    simp
+    simp only [Set.mem_setOf_eq, zero_add, Denumerable.list_ofNat_succ, unpair_zero, Prod.fst_zero,
+      Denumerable.ofNat_nat, Prod.snd_zero, Denumerable.list_ofNat_zero, List.getD_eq_getElem?_getD]
     rw [@list_access_small _ _ _ [0] hi3]
     rw [@Bs_Mono_4 i2 (2*i) (i2 + 1) whatever (hi3) (BsSize)]
     simp only [b2n, ite_eq_ite]
   apply evalc_prop_4.mp <;> (simp only [mainrw]; assumption)
-lemma Bs_Uninjured_1' {i : ℕ} : (evalSet B i (S_wt i)).Dom  → (evals (Bs (2*i+1)) i (S_wt i)).Dom := not_imp_not.mp (@Bs_Uninjured_1 i)
-theorem Bs_Uninjured (i : ℕ) : evalSet B i (S_wt i) = evals (Bs (2*i+1)) i (S_wt i) := by
+lemma Bs_Uninjured_1' {i : ℕ} :
+    (evalSet B i (S_wt i)).Dom  → (evals (Bs (2 * i + 1)) i (S_wt i)).Dom :=
+  not_imp_not.mp (@Bs_Uninjured_1 i)
+theorem Bs_Uninjured (i : ℕ) : evalSet B i (S_wt i) = evals (Bs (2 * i + 1)) i (S_wt i) := by
   if h : (evalSet B i (S_wt i)).Dom then
     rw [@Bs_Uninjured_0 i (S_wt i) (Bs_Uninjured_1' h)]
   else
