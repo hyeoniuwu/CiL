@@ -86,8 +86,8 @@ theorem c_bitwise_evp_0_m {O c m} : evalp O (c_bitwise c) ⟪0, m+1⟫ = Nat.bit
   have hkP1: k+1 = ⟪0, m+1⟫ := Nat.sub_add_cancel pair_nonzero_right_pos
   rw [← hkP1]
   -- more unfolding
-  let (eq:=hinp) inp := evalp O (c_bitwise_aux c) ⟪17, k⟫
-  let (eq:=hcri) cri := ⟪17, k, inp⟫
+  let (eq := hinp) inp := evalp O (c_bitwise_aux c) ⟪17, k⟫
+  let (eq := hcri) cri := ⟪17, k, inp⟫
   unfold c_bitwise_aux at hinp; lift_lets at hinp
   simp [← hinp, ← hcri]
   -- simplify lets
@@ -103,8 +103,8 @@ theorem c_bitwise_evp_n_0 {O c n} : evalp O (c_bitwise c) ⟪n+1, 0⟫ = Nat.bit
   have hkP1: k+1 = ⟪n+1, 0⟫ := Nat.sub_add_cancel pair_nonzero_left_pos
   rw [← hkP1]
   -- more unfolding
-  let (eq:=hinp) inp := evalp O (c_bitwise_aux c) ⟪17, k⟫
-  let (eq:=hcri) cri := ⟪17, k, inp⟫
+  let (eq := hinp) inp := evalp O (c_bitwise_aux c) ⟪17, k⟫
+  let (eq := hcri) cri := ⟪17, k, inp⟫
   unfold c_bitwise_aux at hinp; lift_lets at hinp
   simp [← hinp, ← hcri]
   -- simplify lets
@@ -129,8 +129,8 @@ theorem c_bitwise_evp_n_m {O c n m} : evalp O (c_bitwise c) ⟪n+1,m+1⟫ = (
     exact Nat.sub_add_cancel kP1_gt_0
   rw [←hkP1]
 
-  let (eq:=hinp) inp := evalp O (c_bitwise_aux c) ⟪17, k⟫
-  let (eq:=hcri) cri := ⟪17, k, inp⟫
+  let (eq := hinp) inp := evalp O (c_bitwise_aux c) ⟪17, k⟫
+  let (eq := hcri) cri := ⟪17, k, inp⟫
   unfold c_bitwise_aux at hinp; lift_lets at hinp
   simp [← hinp, ← hcri]
 
@@ -160,7 +160,7 @@ theorem c_bitwise_evp_n_m {O c n m} : evalp O (c_bitwise c) ⟪n+1,m+1⟫ = (
   let n := nm.l; let m := nm.r
   have nm_eq : nm = Nat.pair n m := by exact Eq.symm pair_lr
   rw [nm_eq]
-  match hn_val:n, hm_val:m with
+  match hn_val : n, hm_val : m with
   | 0,    0    => simp [c_bitwise_evp_0_0]
   | 0,    m+1  => simp [c_bitwise_evp_0_m]
   | n+1,  0    => simp [c_bitwise_evp_n_0]

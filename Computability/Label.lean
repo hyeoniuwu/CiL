@@ -4,7 +4,7 @@ register_label_attr cp
 
 open Lean
 
-macro "apply_cp" : tactic =>
+macro "apply_cp":tactic =>
   `(tactic|
     apply_rules
       (config := { maxDepth := 30
@@ -14,7 +14,7 @@ macro "apply_cp" : tactic =>
       only [*] using $(mkIdent `cp)
   )
 
-macro "apply_cp" n:num : tactic =>
+macro "apply_cp" n:num:tactic =>
   `(tactic|
     apply_rules
       (config := { maxDepth := $n

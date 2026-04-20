@@ -20,8 +20,6 @@ This file defines codes for basic functions which are not primitive recursive.
 -/
 
 open Oracle.Single.Code
-open Classical
-
 namespace Oracle.Single.Code
 
 section diverge
@@ -34,8 +32,9 @@ theorem c_diverge_ev' {O} : eval O c_diverge = fun _ ↦ Part.none := by funext;
 end diverge
 
 section ifz1
-def c_ifz1 (c) (a b:ℕ) := c_add.comp₂ (c_mul.comp₂ (c_const b) (c_sg.comp c)) (c_mul.comp₂ (c_const a) (c_sg'.comp c))
-@[simp] theorem c_ifz1_ev {O c a b x} (hc:code_total O c) : eval O (c_ifz1 c a b) x = if (eval O c x=Part.some 0) then Part.some a else Part.some b := by
+def c_ifz1 (c) (a b : ℕ) := c_add.comp₂ (c_mul.comp₂ (c_const b) (c_sg.comp c)) (c_mul.comp₂ (c_const a) (c_sg'.comp c))
+open Classical in
+@[simp] theorem c_ifz1_ev {O c a b x} (hc : code_total O c) : eval O (c_ifz1 c a b) x = if (eval O c x=Part.some 0) then Part.some a else Part.some b := by
   simp [c_ifz1]
   simp [eval]
   simp [Seq.seq]
@@ -44,7 +43,7 @@ def c_ifz1 (c) (a b:ℕ) := c_add.comp₂ (c_mul.comp₂ (c_const b) (c_sg.comp 
   split
   next h => simp [Part.get_eq_iff_eq_some.mp h]
   next h => simp [Part.ne_of_get_ne' h]
-theorem c_ifz1_total {O c a b} (hc:code_total O c) : code_total O (c_ifz1 c a b) := by
+theorem c_ifz1_total {O c a b} (hc : code_total O c) : code_total O (c_ifz1 c a b) := by
   intro x
   simp [c_ifz1_ev hc]
   split
@@ -53,8 +52,9 @@ theorem c_ifz1_total {O c a b} (hc:code_total O c) : code_total O (c_ifz1 c a b)
 end ifz1
 
 section ite
-def c_ite (c a b:Oracle.Single.Code) := c_eval.comp₂ (c_ifz1 c a.c2n b.c2n) (c_id)
-@[simp] theorem c_ite_ev {O c a b x} (hc:code_total O c) : eval O (c_ite c a b) x = if (eval O c x=Part.some 0) then (eval O a x) else (eval O b x) := by
+def c_ite (c a b : Oracle.Single.Code) := c_eval.comp₂ (c_ifz1 c a.c2n b.c2n) (c_id)
+open Classical in
+@[simp] theorem c_ite_ev {O c a b x} (hc : code_total O c) : eval O (c_ite c a b) x = if (eval O c x=Part.some 0) then (eval O a x) else (eval O b x) := by
   simp [c_ite]
   simp [Seq.seq]
   have d := @c_ifz1_total O c a.c2n b.c2n hc x
@@ -63,10 +63,10 @@ def c_ite (c a b:Oracle.Single.Code) := c_eval.comp₂ (c_ifz1 c a.c2n b.c2n) (c
   split
   next h => simp only [Part.get_some, n2c_c2n]
   next h => simp only [Part.get_some, n2c_c2n]
-theorem exists_code_nat {O:ℕ → ℕ} {f:ℕ →. ℕ} : Nat.RecursiveIn O f ↔ ∃ c:ℕ , eval O c.n2c = f := by
+theorem exists_code_nat {O : ℕ → ℕ} {f : ℕ →. ℕ} : Nat.RecursiveIn O f ↔ ∃ c : ℕ , eval O c.n2c = f := by
   rw [@exists_code O f]
   exact Function.Surjective.exists n2c_sur
-theorem exists_code_total {O:ℕ → ℕ} {f:ℕ → ℕ} : Nat.RecursiveIn O f ↔ ∃ c , eval O c = f ∧ code_total O c := by
+theorem exists_code_total {O : ℕ → ℕ} {f : ℕ → ℕ} : Nat.RecursiveIn O f ↔ ∃ c , eval O c = f ∧ code_total O c := by
   constructor
   · intro h
     rcases exists_code.mp h with ⟨c,hc⟩
@@ -83,8 +83,8 @@ end ite
 
 section if_le_te'
 -- like c_if_le_te, but allows either branch to diverge
-def c_if_le_te' (c1 c2 c3 c4:Code) := c_ite (c_sub.comp₂ c1 c2) c3 c4
-@[simp] theorem c_if_le_te'_ev {O c1 c2 c3 c4 x} (hc1:code_total O c1) (hc2:code_total O c2) : eval O (c_if_le_te' c1 c2 c3 c4) x = if (eval O c1 x).get (hc1 x) ≤ (eval O c2 x).get (hc2 x) then (eval O c3 x) else (eval O c4 x) := by
+def c_if_le_te' (c1 c2 c3 c4 : Code) := c_ite (c_sub.comp₂ c1 c2) c3 c4
+@[simp] theorem c_if_le_te'_ev {O c1 c2 c3 c4 x} (hc1 : code_total O c1) (hc2 : code_total O c2) : eval O (c_if_le_te' c1 c2 c3 c4) x = if (eval O c1 x).get (hc1 x) ≤ (eval O c2 x).get (hc2 x) then (eval O c3 x) else (eval O c4 x) := by
   simp [c_if_le_te']
   have : code_total O (c_sub.comp₂ c1 c2) := by
     apply total_comp_of <| prim_total c_sub_prim
@@ -99,8 +99,9 @@ end if_le_te'
 
 section if_eq_te'
 -- like c_if_eq_te, but allows either branch to diverge
-def c_if_eq_te' (c1 c2 c3 c4:Code) := c_ite (c_dist.comp₂ c1 c2) c3 c4
-@[simp] theorem c_if_eq_te'_ev {O c1 c2 c3 c4 x} (hc1:code_total O c1) (hc2:code_total O c2) : eval O (c_if_eq_te' c1 c2 c3 c4) x = if (eval O c1 x).get (hc1 x) = (eval O c2 x).get (hc2 x) then (eval O c3 x) else (eval O c4 x) := by
+def c_if_eq_te' (c1 c2 c3 c4 : Code) := c_ite (c_dist.comp₂ c1 c2) c3 c4
+open Classical in
+@[simp] theorem c_if_eq_te'_ev {O c1 c2 c3 c4 x} (hc1 : code_total O c1) (hc2 : code_total O c2) : eval O (c_if_eq_te' c1 c2 c3 c4) x = if (eval O c1 x).get (hc1 x) = (eval O c2 x).get (hc2 x) then (eval O c3 x) else (eval O c4 x) := by
   simp [c_if_eq_te']
   have : code_total O (c_dist.comp₂ c1 c2) := by
     apply total_comp_of <| prim_total c_dist_prim
@@ -112,7 +113,8 @@ def c_if_eq_te' (c1 c2 c3 c4:Code) := c_ite (c_dist.comp₂ c1 c2) c3 c4
 end if_eq_te'
 
 section ifdom
-def c_ifdom (c a:Oracle.Single.Code) := c_add.comp₂ (zero.comp c) a
+def c_ifdom (c a : Oracle.Single.Code) := c_add.comp₂ (zero.comp c) a
+open Classical in
 @[simp] theorem c_ifdom_ev {O c a x}  : eval O (c_ifdom c a) x = if (eval O c x).Dom then (eval O a x) else Part.none := by
   simp [c_ifdom]
   simp [eval]
@@ -126,7 +128,7 @@ end ifdom
 
 section evaln₁
 def c_evaln₁ := c_evaln.comp₃ (left.comp right) (left) (right.comp right)
-def evaln₁ (O:ℕ→ℕ):ℕ→ℕ := fun abc => Encodable.encode (evaln O abc.r.r abc.l.n2c abc.r.l)
+def evaln₁ (O : ℕ→ℕ) : ℕ→ℕ := fun abc => Encodable.encode (evaln O abc.r.r abc.l.n2c abc.r.l)
 theorem c_evaln₁_evp {O} : evalp O c_evaln₁ = evaln₁ O := by
   simp [c_evaln₁]
   exact rfl
@@ -135,7 +137,7 @@ theorem prim_evaln₁ {O} : Nat.PrimrecIn O (evaln₁ O) := by
 end evaln₁
 
 section eval₁
-def eval₁ (O:ℕ→ℕ):ℕ→.ℕ := fun ex => eval O ex.l.n2c ex.r
+def eval₁ (O : ℕ→ℕ) : ℕ→.ℕ := fun ex => eval O ex.l.n2c ex.r
 def c_eval₁ := c_eval
 @[simp] theorem c_eval₁_ev {O} : eval O c_eval₁ = eval₁ O := by
   simp [c_eval₁]
@@ -149,7 +151,7 @@ end Oracle.Single.Code
 open Oracle.Single.Code
 -- namespace Nat.RecursiveIn
 namespace Oracle.Single.RecursiveIn
-theorem Rin.ite {O:ℕ→ℕ} {f g:ℕ→.ℕ} {c:ℕ→ℕ} (hc:Nat.RecursiveIn O c) (hf:Nat.RecursiveIn O f) (hg:Nat.RecursiveIn O g):Nat.RecursiveIn O fun a => if (c a=0) then (f a) else (g a) := by
+theorem Rin.ite {O : ℕ→ℕ} {f g : ℕ→.ℕ} {c : ℕ→ℕ} (hc : Nat.RecursiveIn O c) (hf : Nat.RecursiveIn O f) (hg : Nat.RecursiveIn O g) : Nat.RecursiveIn O fun a => if (c a=0) then (f a) else (g a) := by
   apply exists_code.mpr
   rcases exists_code_total.mp hc with ⟨cc,hcc,hcct⟩
   rcases exists_code_nat.mp hf with ⟨ca,hca⟩
@@ -158,7 +160,7 @@ theorem Rin.ite {O:ℕ→ℕ} {f g:ℕ→.ℕ} {c:ℕ→ℕ} (hc:Nat.RecursiveIn
   funext x
   simp [c_ite_ev hcct]
   simp [hcc, hca, hcb]
-theorem Rin.evalRecInO' {O} {f:ℕ→.ℕ} (h:Nat.RecursiveIn O f):Nat.RecursiveIn O (fun x => (f x) >>= (eval₁ O)) := by
+theorem Rin.evalRecInO' {O} {f : ℕ→.ℕ} (h : Nat.RecursiveIn O f) : Nat.RecursiveIn O (fun x => (f x) >>= (eval₁ O)) := by
   simp only [Part.bind_eq_bind]
   refine Nat.RecursiveIn.comp ?_ h
   apply rec_eval₁

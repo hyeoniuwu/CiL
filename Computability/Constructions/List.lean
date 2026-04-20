@@ -46,7 +46,7 @@ def c_list_tail := right.comp c_pred
 @[cp] theorem c_list_tail_prim : code_prim c_list_tail := by unfold c_list_tail; apply_cp
 @[simp] theorem c_list_tail_evp {O : ℕ → ℕ} {lN : ℕ} : evalp O c_list_tail lN = l2n (tail (n2l lN)) := by
   simp [c_list_tail]
-  by_cases hl:lN=0
+  by_cases hl : lN=0
   · simp [hl,r]
   · rw [←(exists_add_one_eq.mpr (one_le_iff_ne_zero.mpr hl)).choose_spec]; simp
 @[simp] theorem c_list_tail_ev {O : ℕ → ℕ} {lN : ℕ} : eval O c_list_tail lN = l2n (tail (n2l lN)) := by simp [← evalp_eq_eval c_list_tail_prim]
@@ -59,7 +59,7 @@ def c_list_head? := c_ifz.comp₃ c_id zero <| succ.comp (left.comp c_pred)
 @[cp] theorem c_list_head?_prim : code_prim c_list_head? := by unfold c_list_head?; apply_cp
 @[simp] theorem c_list_head?_evp {O : ℕ → ℕ} {lN : ℕ} : evalp O c_list_head? lN = o2n (head? (n2l lN)) := by
   simp [c_list_head?]
-  by_cases hl:lN=0
+  by_cases hl : lN=0
   · simp [hl]
   · rw [←(exists_add_one_eq.mpr (one_le_iff_ne_zero.mpr hl)).choose_spec]; simp
 @[simp] theorem c_list_head?_ev {O : ℕ → ℕ} {lN : ℕ} : eval O c_list_head? lN = o2n (head? (n2l lN)) := by simp [← evalp_eq_eval c_list_head?_prim]
@@ -72,7 +72,7 @@ def c_list_headI := c_ifz.comp₃ c_id zero (left.comp c_pred)
 @[cp] theorem c_list_headI_prim : code_prim c_list_headI := by unfold c_list_headI; apply_cp
 @[simp] theorem c_list_headI_evp {O : ℕ → ℕ} {lN : ℕ} : evalp O c_list_headI lN = headI (n2l lN) := by
   simp [c_list_headI]
-  by_cases hl:lN=0
+  by_cases hl : lN=0
   · simp [hl]
   · rw [←(exists_add_one_eq.mpr (one_le_iff_ne_zero.mpr hl)).choose_spec]; simp
 @[simp] theorem c_list_headI_ev {O : ℕ → ℕ} {lN : ℕ} : eval O c_list_headI lN = headI (n2l lN) := by simp [← evalp_eq_eval c_list_headI_prim]
@@ -85,7 +85,7 @@ def c_list_casesOn (cl c cg : Code) :=
   let x := left.comp (c_pred.comp cl)
   let xs := right.comp (c_pred.comp cl)
   c_if_eq_te.comp₄ cl (c_const 0) c (cg.comp₂ x xs)
-@[cp] theorem c_list_casesOn_prim {cl cg} (hcl : code_prim cl)  {c : Code} (hc : code_prim c) (hcg:code_prim cg) : code_prim (c_list_casesOn cl c cg) := by unfold c_list_casesOn; apply_cp
+@[cp] theorem c_list_casesOn_prim {cl cg} (hcl : code_prim cl)  {c : Code} (hc : code_prim c) (hcg : code_prim cg) : code_prim (c_list_casesOn cl c cg) := by unfold c_list_casesOn; apply_cp
 @[simp] theorem c_list_casesOn_evp {O : ℕ → ℕ} {cl c cg input} : evalp O (c_list_casesOn cl c cg) input =
   List.casesOn
   (n2l (evalp O cl input))
@@ -93,16 +93,16 @@ def c_list_casesOn (cl c cg : Code) :=
   (fun x xs => evalp O cg (Nat.pair x (l2n xs)))
   := by
   simp [c_list_casesOn]
-  by_cases hl:(evalp O cl input)=0
+  by_cases hl : (evalp O cl input)=0
   · simp [hl]
   · rw [←(exists_add_one_eq.mpr (one_le_iff_ne_zero.mpr hl)).choose_spec]; simp
 end Oracle.Single.Code
 end list_casesOn
 section list_casesOn'
 namespace Oracle.Single.Code
-def c_list_casesOn' (cl c cg:Code) :=
+def c_list_casesOn' (cl c cg : Code) :=
   c_if_eq_te.comp₄ cl (c_const 0) c cg
-@[cp] theorem c_list_casesOn'_prim {cl cg} (hcl:code_prim cl)  {c : Code} (hc : code_prim c) (hcg:code_prim cg):code_prim (c_list_casesOn' cl c cg) := by unfold c_list_casesOn'; apply_cp
+@[cp] theorem c_list_casesOn'_prim {cl cg} (hcl : code_prim cl)  {c : Code} (hc : code_prim c) (hcg : code_prim cg) : code_prim (c_list_casesOn' cl c cg) := by unfold c_list_casesOn'; apply_cp
 @[simp] theorem c_list_casesOn'_evp {O : ℕ → ℕ} {cl c cg input} : evalp O (c_list_casesOn' cl c cg) input =
   List.casesOn
   (n2l (evalp O cl input))
@@ -110,7 +110,7 @@ def c_list_casesOn' (cl c cg:Code) :=
   (fun _ => evalp O cg input)
   := by
   simp [c_list_casesOn']
-  by_cases hl:(evalp O cl input)=0
+  by_cases hl : (evalp O cl input)=0
   · simp [hl]
   · rw [←(exists_add_one_eq.mpr (one_le_iff_ne_zero.mpr hl)).choose_spec]; simp
 end Oracle.Single.Code
@@ -127,7 +127,7 @@ def c_list_drop :=
 @[cp] theorem c_list_drop_prim : code_prim c_list_drop := by unfold c_list_drop; apply_cp
 @[simp] theorem c_list_drop_evp {O : ℕ → ℕ} {lN i : ℕ} : evalp O c_list_drop (Nat.pair i lN) = l2n (drop i (n2l lN)) := by
   simp [c_list_drop]
-  by_cases hl:lN=0
+  by_cases hl : lN=0
   · simp [hl]
     induction i with
     | zero => simp
@@ -164,7 +164,7 @@ def c_list_getI := c_pred.comp c_list_getElem?
 @[cp] theorem c_list_getI_prim : code_prim c_list_getI := by unfold c_list_getI; apply_cp
 @[simp] theorem c_list_getI_evp {O : ℕ → ℕ} {lN i : ℕ} : evalp O c_list_getI ⟪lN, i⟫ = ((n2l lN).getI i) := by
   simp [c_list_getI]
-  by_cases hl:i<(n2l lN).length <;> simp [hl, getI]
+  by_cases hl : i<(n2l lN).length <;> simp [hl, getI]
 @[simp] theorem c_list_getI_ev {O : ℕ → ℕ} {lN i : ℕ} : eval O c_list_getI ⟪lN, i⟫ = ((n2l lN).getI i) := by simp [← evalp_eq_eval c_list_getI_prim]
 end Oracle.Single.Code
 end list_getI
@@ -173,13 +173,13 @@ section list_get
 namespace Oracle.Single.Code
 def c_list_get := c_list_getI
 @[cp] theorem c_list_get_prim : code_prim c_list_get := by unfold c_list_get; apply_cp
-@[simp] theorem c_list_get_evp {O : ℕ → ℕ} {lN i : ℕ} (h:i<(n2l lN).length) : evalp O c_list_get ⟪lN, i⟫ = (n2l lN)[i] := by
+@[simp] theorem c_list_get_evp {O : ℕ → ℕ} {lN i : ℕ} (h : i<(n2l lN).length) : evalp O c_list_get ⟪lN, i⟫ = (n2l lN)[i] := by
   simp [c_list_get]
   simp [getI]
-  by_cases hl:i<(n2l lN).length
+  by_cases hl : i<(n2l lN).length
   · simp [hl]
   · contradiction
-@[simp] theorem c_list_get_ev {O : ℕ → ℕ} {lN i : ℕ} (h:i<(n2l lN).length) : eval O c_list_get ⟪lN, i⟫ = (n2l lN)[i] := by
+@[simp] theorem c_list_get_ev {O : ℕ → ℕ} {lN i : ℕ} (h : i<(n2l lN).length) : eval O c_list_get ⟪lN, i⟫ = (n2l lN)[i] := by
   simp [← evalp_eq_eval c_list_get_prim]
   simp [h]
 end Oracle.Single.Code
@@ -188,20 +188,20 @@ end list_get
 /-
 `foldl :: (a -> b -> a) -> a -> [b] -> a`
 `foldl fn acc [] = acc`
-`foldl fn acc (x:xs) = foldl fn (fn acc x) xs`
+`foldl fn acc (x : xs) = foldl fn (fn acc x) xs`
 -/
 section list_foldl
 namespace Oracle.Single.Code
-def c_list_foldl_aux (c:Code) :=
-  let x:=left.comp (c_pred.comp right)
-  let xs:=right.comp (c_pred.comp right)
+def c_list_foldl_aux (c : Code) :=
+  let x := left.comp (c_pred.comp right)
+  let xs := right.comp (c_pred.comp right)
   c_list_casesOn' right c_id (pair (c.comp₂ left x) (xs))
-def c_list_foldl_aux2 (c:Code) := (c_nat_iterate (c_list_foldl_aux c)).comp₂ c_id right
-def c_list_foldl (c:Code) := left.comp (c_list_foldl_aux2 c)
+def c_list_foldl_aux2 (c : Code) := (c_nat_iterate (c_list_foldl_aux c)).comp₂ c_id right
+def c_list_foldl (c : Code) := left.comp (c_list_foldl_aux2 c)
 @[cp] theorem c_list_foldl_prim  {c : Code} (hc : code_prim c) : code_prim (c_list_foldl c) := by rewrite [c_list_foldl, c_list_foldl_aux2, c_list_foldl_aux]; apply_cp
 @[simp] theorem c_list_foldl_aux_evp {O : ℕ → ℕ} {c : Code} {init lN : ℕ}: evalp O (c_list_foldl_aux c) ⟪init, lN⟫ = if (n2l lN) = [] then ⟪init, lN⟫ else Nat.pair (evalp O c (Nat.pair init (n2l lN).headI)) (l2n (tail (n2l lN))) := by
   simp [c_list_foldl_aux]
-  by_cases hl:lN=0
+  by_cases hl : lN=0
   · simp [hl]
   · rw [←(exists_add_one_eq.mpr (one_le_iff_ne_zero.mpr hl)).choose_spec]; simp
 @[simp] theorem c_list_foldl_evp {O : ℕ → ℕ} {c : Code} {init lN : ℕ} :
@@ -225,13 +225,13 @@ def c_list_foldl (c:Code) := left.comp (c_list_foldl_aux2 c)
   | zero => simp
   | succ n ih =>
 
-    by_cases hl:lN=0
+    by_cases hl : lN=0
     · simp [hl]
       have fixedp : evalp O c.c_list_foldl_aux ⟪init, 0⟫ = ⟪init, 0⟫ := by simp
       apply Function.iterate_fixed fixedp
     · simp only [Function.iterate_succ']
 
-      by_cases hl2:(n2l lN).length ≤ n
+      by_cases hl2 : (n2l lN).length ≤ n
       · simp? [ih, hl2] says
           simp only [Function.comp_apply, ih, c_list_foldl_aux_evp, ofNat_encode, drop_eq_nil_iff,
             hl2, ↓reduceIte, pair_eq_pair, encode_inj, drop_eq_drop_iff, inf_of_le_right,
@@ -265,7 +265,7 @@ end list_foldl
 
 section list_reverse
 namespace Oracle.Single.Code
--- Note that reverse = foldl (flip (:)) [].
+-- Note that reverse = foldl (flip ( : )) [].
 def c_list_reverse := (c_list_foldl (c_list_cons.comp c_flip)).comp₂ c_list_nil c_id
 @[cp] theorem c_list_reverse_prim : code_prim c_list_reverse := by unfold c_list_reverse; apply_cp
 @[simp] theorem c_list_reverse_evp {O : ℕ → ℕ} {lN} : evalp O c_list_reverse lN =  l2n (reverse (n2l lN)) := by
@@ -284,11 +284,11 @@ end list_reverse
 /-
 `foldr :: (a -> b -> b) -> b -> [a] -> b`
 `foldr fn acc [] = acc`
-`foldr fn acc (x:xs) = fn x (foldr fn acc xs)`
+`foldr fn acc (x : xs) = fn x (foldr fn acc xs)`
 -/
 section list_foldr
 namespace Oracle.Single.Code
-def c_list_foldr (c:Code) := (c_list_foldl (c.comp c_flip)).comp₂ left (c_list_reverse.comp right)
+def c_list_foldr (c : Code) := (c_list_foldl (c.comp c_flip)).comp₂ left (c_list_reverse.comp right)
 @[cp] theorem c_list_foldr_prim {c : Code} (hc : code_prim c) : code_prim (c_list_foldr c) := by unfold c_list_foldr; apply_cp
 @[simp] theorem c_list_foldr_evp {O : ℕ → ℕ} {c : Code} {init lN : ℕ} :
   evalp O (c_list_foldr c) ⟪init, lN⟫ = foldr
@@ -299,7 +299,7 @@ def c_list_foldr (c:Code) := (c_list_foldl (c.comp c_flip)).comp₂ left (c_list
 end Oracle.Single.Code
 end list_foldr
 
--- https://hackage.haskell.org/package/ghc-internal-9.1201.0/docs/src/GHC.Internal.Data.Foldable.html#length
+-- https : //hackage.haskell.org/package/ghc-internal-9.1201.0/docs/src/GHC.Internal.Data.Foldable.html#length
 section list_length
 namespace Oracle.Single.Code
 def c_list_length := (c_list_foldl (succ.comp left)).comp₂ zero c_id
@@ -332,7 +332,7 @@ end list_getLastI
 
 /-
 (++) []     ys = ys
-(++) (x:xs) ys = x : xs ++ ys
+(++) (x : xs) ys = x : xs ++ ys
 -/
 section list_append
 namespace Oracle.Single.Code
@@ -349,7 +349,7 @@ end list_append
 
 section list_singleton
 namespace Oracle.Single.Code
-def c_list_singleton (c:Code) := c_list_cons.comp₂ c c_list_nil
+def c_list_singleton (c : Code) := c_list_cons.comp₂ c c_list_nil
 @[cp] theorem c_list_singleton_prim  {c : Code} (hc : code_prim c) : code_prim (c_list_singleton c) := by unfold c_list_singleton; apply_cp
 @[simp] theorem c_list_singleton_evp {O : ℕ → ℕ} {c x} : evalp O (c_list_singleton c) x = l2n ([evalp O c x]) := by
   simp [c_list_singleton]
@@ -366,10 +366,10 @@ def c_list_concat := c_list_append.comp₂ left (c_list_singleton right)
 end Oracle.Single.Code
 end list_concat
 
--- https://hackage.haskell.org/package/ghc-internal-9.1201.0/docs/src/GHC.Internal.Base.html#map
+-- https : //hackage.haskell.org/package/ghc-internal-9.1201.0/docs/src/GHC.Internal.Base.html#map
 section list_map
 namespace Oracle.Single.Code
-def c_list_map (c:Code) := (c_list_foldr (c_list_cons.comp₂ (c.comp left) right)).comp₂ (c_list_nil) (c_id)
+def c_list_map (c : Code) := (c_list_foldr (c_list_cons.comp₂ (c.comp left) right)).comp₂ (c_list_nil) (c_id)
 @[cp] theorem c_list_map_prim  {c : Code} (hc : code_prim c) : code_prim (c_list_map c) := by unfold c_list_map; apply_cp
 @[simp] theorem c_list_map_evp {O : ℕ → ℕ} {c : Code} {lN : ℕ} : evalp O (c_list_map c) lN = l2n ((n2l lN).map (evalp O c)) := by
   simp [c_list_map, -encode_list_cons, -encode_list_nil]
@@ -385,7 +385,7 @@ namespace Oracle.Single.Code
 zipL :: [a] -> [b] -> [(a,b)]
 zipL xs ys = reverse <| fst <| foldl step ([], ys) xs
   where
-    step (acc, y:ys') x = ((x,y) : acc, ys')
+    step (acc, y : ys') x = ((x,y) : acc, ys')
     step (acc, [])    _ = (acc, [])
 -/
 def c_list_zipWith_aux (c : Code) :=
@@ -402,11 +402,11 @@ def c_list_zipWith_aux (c : Code) :=
     (pair (c_list_cons.comp₂ (c.comp₂ x y) acc) ys')
 
   (c_list_foldl step).comp₂ (pair c_list_nil right) left
-def c_list_zipWith (c:Code) := c_list_reverse.comp <| left.comp (c_list_zipWith_aux c)
+def c_list_zipWith (c : Code) := c_list_reverse.comp <| left.comp (c_list_zipWith_aux c)
 
 @[cp] theorem c_list_zipWith_aux_prim  {c : Code} (hc : code_prim c) : code_prim (c_list_zipWith_aux c) := by unfold c_list_zipWith_aux; apply_cp
 @[cp] theorem c_list_zipWith_prim  {c : Code} (hc : code_prim c) : code_prim (c_list_zipWith c) := by unfold c_list_zipWith; apply_cp
-theorem c_list_zipWith_evp_aux_2 {a b c : List ℕ} {f:ℕ→ℕ→ℕ} (h:a.length≤b.length) : zipWith f (b++c) a = zipWith f b a := by
+theorem c_list_zipWith_evp_aux_2 {a b c : List ℕ} {f : ℕ→ℕ→ℕ} (h : a.length≤b.length) : zipWith f (b++c) a = zipWith f b a := by
   -- rw `b` => `take a.length b ++ drop a.length b`
   rewrite [(take_append_drop a.length b).symm]
   -- rw `take a.length b ++ drop a.length b ++ c` => `take a.length b ++ (drop a.length b ++ c)`
@@ -424,16 +424,16 @@ theorem zipWith_flip {α β γ : Type} {f : α → β → γ} {a : List α} {b :
     | nil => simp
     | cons _ _ yih => simp [xih, flip]
 
-theorem c_list_zipWith_evp_aux_1 {a b c : List ℕ} {f:ℕ→ℕ→ℕ} (h:a.length≤b.length) : zipWith f a (b++c) = zipWith f a b := by
+theorem c_list_zipWith_evp_aux_1 {a b c : List ℕ} {f : ℕ→ℕ→ℕ} (h : a.length≤b.length) : zipWith f a (b++c) = zipWith f a b := by
   rw [zipWith_flip]
-  rw (config:={occs:=.pos [2]}) [zipWith_flip]
+  rw (config := {occs := .pos [2]}) [zipWith_flip]
   exact c_list_zipWith_evp_aux_2 h
 
-theorem c_list_zipWith_evp_aux_3 {f:ℕ→ℕ→ℕ} {head} {tail : List ℕ} {l2N head2 list2} (hh:tail.length < (n2l l2N).length) (hl2 : drop tail.length (n2l l2N) = head2 :: list2) : (f head (head2 :: list2).headI :: (zipWith f tail.reverse (n2l l2N)).reverse) = (zipWith f (tail.reverse ++ [head]) (n2l l2N)).reverse := by
+theorem c_list_zipWith_evp_aux_3 {f : ℕ→ℕ→ℕ} {head} {tail : List ℕ} {l2N head2 list2} (hh : tail.length < (n2l l2N).length) (hl2 : drop tail.length (n2l l2N) = head2 :: list2) : (f head (head2 :: list2).headI :: (zipWith f tail.reverse (n2l l2N)).reverse) = (zipWith f (tail.reverse ++ [head]) (n2l l2N)).reverse := by
   simp
   have aux5 : (n2l l2N) = (take tail.length (n2l l2N)) ++ [head2] ++ list2 := by
     -- rw `(n2l l2N)` => `(take tail.length (n2l l2N)) ++ drop tail.length (n2l l2N)`
-    rw (config:={occs:=.pos [1]}) [Eq.symm (take_append_drop tail.length (n2l l2N))]
+    rw (config := {occs := .pos [1]}) [Eq.symm (take_append_drop tail.length (n2l l2N))]
     rw [append_assoc, hl2]
     simp
   have aux7 :
@@ -454,9 +454,9 @@ theorem c_list_zipWith_evp_aux_3 {f:ℕ→ℕ→ℕ} {head} {tail : List ℕ} {l
   have aux9 : tail.reverse.length ≤ (take tail.length (n2l l2N)).length := by
     simp only [length_reverse, length_take, le_inf_iff, le_refl, true_and]
     exact le_of_succ_le hh
-  rw (config:={occs:=.pos [2]}) [aux5]
+  rw (config := {occs := .pos [2]}) [aux5]
   rw [zipWith_eq_append_iff.mpr aux7]
-  rw (config:={occs:=.pos [1]}) [aux5]
+  rw (config := {occs := .pos [1]}) [aux5]
   rw [append_assoc (take tail.length (n2l l2N)) [head2] list2]
   simp
   exact c_list_zipWith_evp_aux_1 aux9
@@ -468,7 +468,7 @@ theorem c_list_zipWith_aux_evp {O c l1N l2N} :
   let f := fun x y => evalp O c ⟪x,y⟫
 
   simp [c_list_zipWith_aux, -encode_list_cons, -encode_list_nil]
-  induction h:(n2l l1N).reverse generalizing l1N with
+  induction h : (n2l l1N).reverse generalizing l1N with
   | nil => simp_all
   | cons head tail ih =>
     have asd2 : (n2l l1N) = (tail.reverse).concat head := by
@@ -487,7 +487,7 @@ theorem c_list_zipWith_aux_evp {O c l1N l2N} :
     simp [-encode_list_cons, -encode_list_nil, -foldl_reverse]
     clear ih lolz asdd asd2
 
-    by_cases hh : drop tail.length (n2l l2N) = ([]:List ℕ)
+    by_cases hh : drop tail.length (n2l l2N) = ([] : List ℕ)
     · simp only [hh]
       rw [show drop (tail.length + 1) (n2l l2N) = [] from by simp at hh ⊢; omega]
       have aux4 := drop_eq_nil_iff.mp hh
@@ -495,7 +495,7 @@ theorem c_list_zipWith_aux_evp {O c l1N l2N} :
       simp [c_list_zipWith_evp_aux_2 aux4]
     · -- this is the case where l2N is longer than l1N.
       rcases ne_nil_iff_exists_cons.mp hh with ⟨head2, list2, hl2⟩
-      -- now we have `drop tail.length (n2l l2N) = head2::list2`
+      -- now we have `drop tail.length (n2l l2N) = head2 :: list2`
       simp only [hl2]
       simp only [drop_eq_nil_iff, not_le] at hh
       have main : (f head (head2 :: list2).headI :: (zipWith f tail.reverse (n2l l2N)).reverse) = (zipWith f (tail.reverse ++ [head]) (n2l l2N)).reverse := c_list_zipWith_evp_aux_3 hh hl2
@@ -554,7 +554,7 @@ namespace Oracle.Single.Code
 /--
 `evalp O (c_list_map' c) ⟪lN, aux⟫ = ((n2l lN).map (fun ele => evalp O c (Nat.pair ele aux)))`
 -/
-def c_list_map' (c:Code) :=
+def c_list_map' (c : Code) :=
   let lN  := left
   let aux := right
   (c_list_map c).comp ((c_list_zipWith c_id).comp₂ lN (c_list_replicate.comp₂ (c_list_length.comp lN) aux))
@@ -570,7 +570,7 @@ def c_list_map' (c:Code) :=
 end Oracle.Single.Code
 end list_map'
 
-@[simp] theorem getLastI_append {x} {y:ℕ}: (x++[y]).getLastI = y := by
+@[simp] theorem getLastI_append {x} {y : ℕ}: (x++[y]).getLastI = y := by
   simp [getLastI_eq_getLast?_getD]
 
 /-
@@ -586,7 +586,7 @@ This is used in the construction of a simple set.
 -/
 section list_foldr_param
 namespace Oracle.Single.Code
-def c_list_foldr_param_aux (c:Code) :=
+def c_list_foldr_param_aux (c : Code) :=
   let param := left
   let init := left.comp right
   let lN := right.comp right
@@ -594,7 +594,7 @@ def c_list_foldr_param_aux (c:Code) :=
   (pair (left.comp left) <| c.comp₃ (left.comp left) (right.comp left) (right.comp right))).comp₂
   (pair param init)
   ((c_list_zipWith c_id).comp₂ (c_list_replicate.comp₂ (c_list_length.comp lN) (param)) lN)
-def c_list_foldr_param (c:Code) := right.comp (c_list_foldr_param_aux c)
+def c_list_foldr_param (c : Code) := right.comp (c_list_foldr_param_aux c)
 @[cp] theorem c_list_foldr_param_aux_prim  {c : Code} (hc : code_prim c) : code_prim (c_list_foldr_param_aux c) := by unfold c_list_foldr_param_aux; apply_cp 60
 @[cp] theorem c_list_foldr_param_prim  {c : Code} (hc : code_prim c) : code_prim (c_list_foldr_param c) := by
   rewrite [c_list_foldr_param]

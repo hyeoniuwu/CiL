@@ -180,23 +180,23 @@ theorem c_evaln_evp_aux_0_np1 {O x n} : evalp O (c_evaln) (Nat.pair x (Nat.pair 
   unfold c_evaln; unfold c_evaln_aux
   lift_lets; extract_lets; expose_names
 
-  let k:=((Nat.pair (n+1) 0))-1
+  let k := ((Nat.pair (n+1) 0))-1
   have kP1_gt_0 : (Nat.pair (n+1) 0)>0 := by
     apply pair_l_gt0
     exact zero_lt_succ n
   have hkP1: k+1=((Nat.pair (n+1) 0)) := by exact Nat.sub_add_cancel kP1_gt_0
   rw [←hkP1]
 
-  let (eq:=hinp) inp := evalp O c_evaln_aux ⟪17, k⟫
+  let (eq := hinp) inp := evalp O c_evaln_aux ⟪17, k⟫
   unfold c_evaln_aux at hinp; lift_lets at hinp
-  let (eq:=hcovrec_inp) covrec_inp := ⟪17, k, inp⟫
+  let (eq := hcovrec_inp) covrec_inp := ⟪17, k, inp⟫
 
   simp [← hinp, ← hcovrec_inp]
 
   have hs : evalp O s covrec_inp = 0 := by simp [s,code_s,covrec_inp,hkP1]
   simp [hs, getI, evaln]
 
-theorem c_evaln_evp_aux {O code x s} (hcode_val:code≤4) :
+theorem c_evaln_evp_aux {O code x s} (hcode_val : code≤4) :
   evalp O (c_evaln) (Nat.pair x (Nat.pair code (s+1)))
     =
   o2n (evaln O (s+1) code.n2c x)
@@ -206,16 +206,16 @@ theorem c_evaln_evp_aux {O code x s} (hcode_val:code≤4) :
   lift_lets; extract_lets; expose_names
   simp
 
-  let k:=⟪code, s+1⟫-1
+  let k := ⟪code, s+1⟫-1
   have kP1_gt_0 : ⟪code, s+1⟫>0 := by
     apply pair_r_gt0
     exact zero_lt_succ s
   have hkP1: k+1=⟪code, s+1⟫ := by exact Nat.sub_add_cancel kP1_gt_0
   rw [←hkP1]
 
-  let (eq:=hinp) inp := evalp O c_evaln_aux ⟪17, k⟫
+  let (eq := hinp) inp := evalp O c_evaln_aux ⟪17, k⟫
   unfold c_evaln_aux at hinp; lift_lets at hinp
-  let (eq:=hcovrec_inp) covrec_inp := ⟪17, k, inp⟫
+  let (eq := hcovrec_inp) covrec_inp := ⟪17, k, inp⟫
   simp [← hinp, ← hcovrec_inp]
 
   have hcode_s : evalp O code_s covrec_inp = ⟪code, s+1⟫ := by simp [code_s,covrec_inp,hkP1]
@@ -267,11 +267,11 @@ theorem c_evaln_evp_aux {O code x s} (hcode_val:code≤4) :
       cases Classical.em (elem≤s) with
       | inl h => simp [h, Nat.not_lt_of_le h]
       | inr h => simp [h, gt_of_not_le h]
-  have hzero_mapped:evalp O zero_mapped covrec_inp = (map (o2n ∘ evaln O (s+1) zero) (range (s+1))) := by simp [zero_mapped, hs,hopt_zero]
-  have hsucc_mapped:evalp O succ_mapped covrec_inp = (map (o2n ∘ evaln O (s+1) succ) (range (s+1))) := by simp [succ_mapped, hs,hopt_succ]
-  have hleft_mapped:evalp O left_mapped covrec_inp = (map (o2n ∘ evaln O (s+1) left) (range (s+1))) := by simp [left_mapped, hs,hopt_left]
-  have hright_mapped:evalp O right_mapped covrec_inp = (map (o2n ∘ evaln O (s+1) right) (range (s+1))) := by simp [right_mapped, hs,hopt_right]
-  have horacle_mapped:evalp O oracle_mapped covrec_inp = (map (o2n ∘ evaln O (s+1) oracle) (range (s+1))) := by simp [oracle_mapped, hs,hopt_oracle]
+  have hzero_mapped : evalp O zero_mapped covrec_inp = (map (o2n ∘ evaln O (s+1) zero) (range (s+1))) := by simp [zero_mapped, hs,hopt_zero]
+  have hsucc_mapped : evalp O succ_mapped covrec_inp = (map (o2n ∘ evaln O (s+1) succ) (range (s+1))) := by simp [succ_mapped, hs,hopt_succ]
+  have hleft_mapped : evalp O left_mapped covrec_inp = (map (o2n ∘ evaln O (s+1) left) (range (s+1))) := by simp [left_mapped, hs,hopt_left]
+  have hright_mapped : evalp O right_mapped covrec_inp = (map (o2n ∘ evaln O (s+1) right) (range (s+1))) := by simp [right_mapped, hs,hopt_right]
+  have horacle_mapped : evalp O oracle_mapped covrec_inp = (map (o2n ∘ evaln O (s+1) oracle) (range (s+1))) := by simp [oracle_mapped, hs,hopt_oracle]
 
   simp [hs,hcode]
 
@@ -303,7 +303,7 @@ theorem c_evaln_evp_aux {O code x s} (hcode_val:code≤4) :
     | inr h => simp [h, n2c, evaln, Nat.not_le_of_lt (not_lt.mp h)]
   | n+5 => simp at hcode_val
 
-theorem unpair_right_le' (n:ℕ) : n.r ≤ n := by unfold r; exact unpair_right_le n
+theorem unpair_right_le' (n : ℕ) : n.r ≤ n := by unfold r; exact unpair_right_le n
 lemma c_evaln_bounds_0 {n} : n.div2.div2 < n+5 := by
   simp only [Nat.div2_val]
   exact lt_of_le_of_lt (le_trans (Nat.div_le_self _ _) (Nat.div_le_self _ _)) (Nat.succ_le_succ (Nat.le_add_right _ _))
@@ -363,7 +363,7 @@ theorem c_evaln_evp_aux_nMod4 {O x n s} :
           let i ← n2o (pc_c_sM1 (left) (Nat.pair elem.l (elem.r-1)))
           n2o (pc_mr_s (left) (Nat.pair elem.l (Nat.pair (elem.r-1) i)))
       )
-    elem.r:Option ℕ)
+    elem.r : Option ℕ)
     )
 
   let opt_rfind' elem :=
@@ -393,7 +393,7 @@ theorem c_evaln_evp_aux_nMod4 {O x n s} :
     exact Nat.sub_add_cancel kP1_gt_0
   rw [←hkP1]
 
-  let (eq:=hinp) inp := evalp O c_evaln_aux ⟪17, k⟫
+  let (eq := hinp) inp := evalp O c_evaln_aux ⟪17, k⟫
   unfold c_evaln_aux at hinp; lift_lets at hinp
   have covrec_inp_simp : ⟪17, k, inp⟫ = covrec_inp := rfl
 
@@ -410,14 +410,14 @@ theorem c_evaln_evp_aux_nMod4 {O x n s} :
   have hmr     : evalp O mr_1 covrec_inp   = mr      := by simp [mr_1,hm,mr]
   have hnMod4  : evalp O nMod4 covrec_inp  = n%4     := by simp [nMod4,hn]
 
-  have hlookup {x' c' s'} (elem:ℕ)
+  have hlookup {x' c' s'} (elem : ℕ)
   (hcs'': Nat.pair (evalp O c' ⟪elem, covrec_inp⟫) (evalp O s' ⟪elem, covrec_inp⟫) ≤ k)
   :
   evalp O (lookup x' c' s') ⟪elem, covrec_inp⟫
     =
-  let x'':=evalp O x' ⟪elem, covrec_inp⟫
-  let c'':=evalp O c' ⟪elem, covrec_inp⟫
-  let s'':=evalp O s' ⟪elem, covrec_inp⟫
+  let x'' := evalp O x' ⟪elem, covrec_inp⟫
+  let c'' := evalp O c' ⟪elem, covrec_inp⟫
+  let s'' := evalp O s' ⟪elem, covrec_inp⟫
   evalp O c_evaln ⟪x'', c'', s''⟫
     := by
     lift_lets; extract_lets; expose_names
@@ -433,35 +433,35 @@ theorem c_evaln_evp_aux_nMod4 {O x n s} :
     lift_lets
     simp [hcs'']
 
-  have bounds_left {elem:ℕ} : Nat.pair (evalp O (ml_1.comp right) ⟪elem, covrec_inp⟫) (evalp O (s_1.comp right) ⟪elem, covrec_inp⟫) ≤ k := by
+  have bounds_left {elem : ℕ} : Nat.pair (evalp O (ml_1.comp right) ⟪elem, covrec_inp⟫) (evalp O (s_1.comp right) ⟪elem, covrec_inp⟫) ≤ k := by
     simp [hml,hs]
     exact c_evaln_bounds_left
-  have bounds_right {elem:ℕ} : Nat.pair (evalp O (mr_1.comp right) ⟪elem, covrec_inp⟫) (evalp O (s_1.comp right) ⟪elem, covrec_inp⟫) ≤ k := by
+  have bounds_right {elem : ℕ} : Nat.pair (evalp O (mr_1.comp right) ⟪elem, covrec_inp⟫) (evalp O (s_1.comp right) ⟪elem, covrec_inp⟫) ≤ k := by
     simp [hmr,hs]
     exact c_evaln_bounds_right
-  have bounds_m {elem:ℕ} : Nat.pair (evalp O (m_1.comp right) ⟪elem, covrec_inp⟫) (evalp O (s_1.comp right) ⟪elem, covrec_inp⟫) ≤ k := by
+  have bounds_m {elem : ℕ} : Nat.pair (evalp O (m_1.comp right) ⟪elem, covrec_inp⟫) (evalp O (s_1.comp right) ⟪elem, covrec_inp⟫) ≤ k := by
     simp [hm,hs]
     exact c_evaln_bounds_3
-  have bounds_pc_c_sM1 {elem:ℕ} : Nat.pair (evalp O (code.comp right) ⟪elem, covrec_inp⟫) (evalp O (sM1.comp right) ⟪elem, covrec_inp⟫) ≤ k := by
+  have bounds_pc_c_sM1 {elem : ℕ} : Nat.pair (evalp O (code.comp right) ⟪elem, covrec_inp⟫) (evalp O (sM1.comp right) ⟪elem, covrec_inp⟫) ≤ k := by
     simp [hcode,hsM1]
     exact c_evaln_bounds_4
 
-  have hpc_ml_s c' (elem:ℕ): (evalp O (pc_ml_s_1 c') ⟪elem, covrec_inp⟫) = pc_ml_s c' elem := by
+  have hpc_ml_s c' (elem : ℕ): (evalp O (pc_ml_s_1 c') ⟪elem, covrec_inp⟫) = pc_ml_s c' elem := by
     simp [pc_ml_s_1]
     simp [hlookup elem bounds_left]
     unfold pc_ml_s
     simp [hs,hml,covrec_inp]
-  have hpc_mr_s c' (elem:ℕ): evalp O (pc_mr_s_1 c') ⟪elem, covrec_inp⟫ = pc_mr_s c' elem := by
+  have hpc_mr_s c' (elem : ℕ): evalp O (pc_mr_s_1 c') ⟪elem, covrec_inp⟫ = pc_mr_s c' elem := by
     simp [pc_mr_s_1]
     simp [hlookup elem bounds_right]
     unfold pc_mr_s
     simp [hs,hmr,covrec_inp]
-  have hpc_m_s c' (elem:ℕ): evalp O (pc_m_s_1 c') ⟪elem, covrec_inp⟫ = pc_m_s c' elem := by
+  have hpc_m_s c' (elem : ℕ): evalp O (pc_m_s_1 c') ⟪elem, covrec_inp⟫ = pc_m_s c' elem := by
     simp [pc_m_s_1]
     simp [hlookup elem bounds_m]
     unfold pc_m_s
     simp [hs,hm,covrec_inp]
-  have hpc_c_sM1 c' (elem:ℕ): evalp O (pc_c_sM1_1 c') ⟪elem, covrec_inp⟫ = pc_c_sM1 c' elem := by
+  have hpc_c_sM1 c' (elem : ℕ): evalp O (pc_c_sM1_1 c') ⟪elem, covrec_inp⟫ = pc_c_sM1 c' elem := by
     simp [pc_c_sM1_1]
     simp [hlookup elem bounds_pc_c_sM1]
     unfold pc_c_sM1
@@ -490,7 +490,7 @@ theorem c_evaln_evp_aux_nMod4 {O x n s} :
             simp [not_none_imp_not_zero hhh]
             simp [hnat_to_opt_2 hh, hnat_to_opt_2 hhh]
       | inr h => simp [h, gt_of_not_le h]
-  have hpair_mapped:evalp O pair_mapped covrec_inp = (map (opt_pair) (range (s+1))) := by simp [pair_mapped, hs,hopt_pair]
+  have hpair_mapped : evalp O pair_mapped covrec_inp = (map (opt_pair) (range (s+1))) := by simp [pair_mapped, hs,hopt_pair]
 
   have hopt_comp :
     (fun ele => evalp O opt_comp_1 ⟪ele,covrec_inp⟫)
@@ -522,7 +522,7 @@ theorem c_evaln_evp_aux_nMod4 {O x n s} :
             simp [pc_ml_s]
             simp [hpc_mr_s]
       | inr h => simp [h, gt_of_not_le h]
-  have hcomp_mapped:evalp O comp_mapped covrec_inp = (map (opt_comp) (range (s+1))) := by simp [comp_mapped, hs,hopt_comp]
+  have hcomp_mapped : evalp O comp_mapped covrec_inp = (map (opt_comp) (range (s+1))) := by simp [comp_mapped, hs,hopt_comp]
   have hprec_x elem : evalp O prec_x ⟪elem, covrec_inp⟫ = elem.l := by simp [prec_x,ele]
   have hprec_i elem : evalp O prec_i ⟪elem, covrec_inp⟫ = elem.r := by simp [prec_i,ele]
   have hprec_iM1 elem : evalp O prec_iM1 ⟪elem, covrec_inp⟫ = elem.r-1 := by simp [prec_iM1,hprec_i]
@@ -547,7 +547,7 @@ theorem c_evaln_evp_aux_nMod4 {O x n s} :
       cases Classical.em (elem≤s) with
       | inl h =>
         simp [h, Nat.not_lt_of_le h]
-        cases helemr:elem.r with
+        cases helemr : elem.r with
         | zero =>
           simp [pc_ml_s]
           simp [hprec_x,hprec_i,helemr]
@@ -575,7 +575,7 @@ theorem c_evaln_evp_aux_nMod4 {O x n s} :
             simp [hprec_x, hprec_iM1]
 
       | inr h => simp [h, gt_of_not_le h]
-  have hprec_mapped:evalp O prec_mapped covrec_inp = (map (opt_prec) (range (s+1))) := by simp [prec_mapped, hs,hopt_prec]
+  have hprec_mapped : evalp O prec_mapped covrec_inp = (map (opt_prec) (range (s+1))) := by simp [prec_mapped, hs,hopt_prec]
 
   have hopt_rfind' :
     (fun ele => evalp O opt_rfind'_1 ⟪ele,covrec_inp⟫)
@@ -611,10 +611,10 @@ theorem c_evaln_evp_aux_nMod4 {O x n s} :
           | inl hhh => simp [hhh]
           | inr hhh => simp [hhh]
       | inr h => simp [h, gt_of_not_le h]
-  have hrfind'_mapped:evalp O rfind'_mapped covrec_inp = (map (opt_rfind') (range (s+1))) := by simp [rfind'_mapped, hs,hopt_rfind']
+  have hrfind'_mapped : evalp O rfind'_mapped covrec_inp = (map (opt_rfind') (range (s+1))) := by simp [rfind'_mapped, hs,hopt_rfind']
 
   simp [hs,hcode,hnMod4]
-  match h:n%4 with
+  match h : n%4 with
   | 0 =>
     simp [hpair_mapped]
     unfold opt_pair
@@ -646,7 +646,7 @@ theorem c_evaln_evp_aux_nMod4 {O x n s} :
 @[simp] theorem c_evaln_evp {O x code s}: evalp O (c_evaln) (Nat.pair x (Nat.pair code s)) =
   o2n (evaln O s code.n2c x) := by
 
-  let code_s:=Nat.pair code s
+  let code_s := Nat.pair code s
   rw [show Nat.pair code s = code_s by rfl]
   rw [show code = code_s.l by simp [code_s]]
   rw [show s = code_s.r by simp [code_s]]
@@ -654,12 +654,12 @@ theorem c_evaln_evp_aux_nMod4 {O x n s} :
   induction code_s using Nat.strong_induction_on generalizing x with
   | _ code_s ih =>
 
-  let code:=code_s.l
-  let s:=code_s.r
+  let code := code_s.l
+  let s := code_s.r
   rw [show code_s = (Nat.pair code s) from by simp [code,s]]
   simp only [pair_r, pair_l]
 
-  match hs_val:s,hcode_val:code with
+  match hs_val : s,hcode_val : code with
   | 0,    0    => exact c_evaln_evp_aux_x_0_0
   | 0,    n+1  => exact c_evaln_evp_aux_0_np1
   | sM1+1, 0   => apply c_evaln_evp_aux; decide
@@ -694,8 +694,8 @@ theorem c_evaln_evp_aux_nMod4 {O x n s} :
 
   rw [show n+5=(n+4)+1 from rfl]
 
-  cases hno:n.bodd with
-  | false => cases hn2o:n.div2.bodd with
+  cases hno : n.bodd with
+  | false => cases hn2o : n.div2.bodd with
     | false => -- pair
       have h0: n%4=0 := nMod4_eq_0 hno hn2o
       -- simplify the rhs
@@ -738,7 +738,7 @@ theorem c_evaln_evp_aux_nMod4 {O x n s} :
             rw [←(n2c_c2n (((n2c n.div2.div2.l).prec (n2c n.div2.div2.r))))]
             simp [rw3_aux]
           rw [rw3]
-  | true => cases hn2o:n.div2.bodd with
+  | true => cases hn2o : n.div2.bodd with
     | false => -- comp
       have h0: n%4=1 := nMod4_eq_1 hno hn2o
       -- simplify the rhs
@@ -821,15 +821,15 @@ theorem c_evaln_evp_aux_nMod4 {O x n s} :
   have cp_left_mapped : code_prim left_mapped := by apply_cp
   have cp_right_mapped : code_prim right_mapped := by apply_cp
   have cp_oracle_mapped : code_prim oracle_mapped := by apply_cp
-  have cp_lookup {x' c' s'} (hx':code_prim x') (hc':code_prim c') (hs':code_prim s') : code_prim (lookup x' c' s') := by apply_cp
-  have cp_pc_ml_s {c'} (hc':code_prim c') : code_prim (pc_ml_s c') := by apply_cp
-  have cp_pc_mr_s {c'} (hc':code_prim c') : code_prim (pc_mr_s c') := by apply_cp
-  have cp_pc_m_s  {c'} (hc':code_prim c') : code_prim (pc_m_s c') := by apply_cp
+  have cp_lookup {x' c' s'} (hx' : code_prim x') (hc' : code_prim c') (hs' : code_prim s') : code_prim (lookup x' c' s') := by apply_cp
+  have cp_pc_ml_s {c'} (hc' : code_prim c') : code_prim (pc_ml_s c') := by apply_cp
+  have cp_pc_mr_s {c'} (hc' : code_prim c') : code_prim (pc_mr_s c') := by apply_cp
+  have cp_pc_m_s  {c'} (hc' : code_prim c') : code_prim (pc_m_s c') := by apply_cp
   have cp_opt_pair : code_prim opt_pair := by apply_cp 60
   have cp_pair_mapped : code_prim pair_mapped := by apply_cp
   have cp_opt_comp : code_prim opt_comp := by apply_cp 60
   have cp_comp_mapped : code_prim comp_mapped := by apply_cp
-  have cp_pc_c_sM1 {c'} (hc':code_prim c') : code_prim (pc_c_sM1 c') := by apply_cp
+  have cp_pc_c_sM1 {c'} (hc' : code_prim c') : code_prim (pc_c_sM1 c') := by apply_cp
   have cp_prec_x : code_prim prec_x := by apply_cp
   have cp_prec_i : code_prim prec_i := by apply_cp
   have cp_prec_iM1 : code_prim prec_iM1 := by apply_cp
@@ -854,7 +854,7 @@ theorem c_evaln_evp_aux_nMod4 {O x n s} :
 @[simp] theorem c_evaln_evp' {O}: evalp O (c_evaln) = fun x => o2n <| evaln O x.r.r x.r.l.n2c x.l := by
   funext x
   have : x = (Nat.pair x.l (Nat.pair x.r.l x.r.r)) := by simp
-  rw (config:={occs:=.pos [1]}) [this]
+  rw (config := {occs := .pos [1]}) [this]
   exact c_evaln_evp
 end Oracle.Single.Code
 end evaln
@@ -870,13 +870,13 @@ def c_eval := (c_rfindOpt (c_evaln.comp₃ (right.comp left) (left.comp left) ri
   simp [eval,Seq.seq]
 @[simp] theorem c_eval_ev' {O}: eval O c_eval = fun x => eval O (n2c x.l) x.r := by
   funext x
-  rw (config:={occs:=.pos [1]}) [show x = ⟪x.l, x.r⟫ from by simp]
+  rw (config := {occs := .pos [1]}) [show x = ⟪x.l, x.r⟫ from by simp]
   exact c_eval_ev
 theorem _root_.Nat.RecursiveIn.Rin.eval {O} : Nat.RecursiveIn O (fun ex => eval O ex.l.n2c ex.r) := by
   apply exists_code.mpr
   use c_eval
   funext x
-  rw (config:={occs:=.pos [1]}) [←(@pair_lr x)]
+  rw (config := {occs := .pos [1]}) [←(@pair_lr x)]
   exact c_eval_ev
 
 end Oracle.Single.Code

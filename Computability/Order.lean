@@ -13,9 +13,9 @@ import Mathlib.Order.Antisymmetrization
 @[simp] abbrev TuringReducibleStrict (f g : ℕ → ℕ) : Prop := Nat.RecursiveIn g f ∧ ¬ Nat.RecursiveIn f g
 @[simp] abbrev TuringEquivalent (f g : ℕ → ℕ) : Prop := AntisymmRel TuringReducible f g
 
-@[reducible,simp,inherit_doc] scoped[Computability] infix:50 " ≤ᵀᶠ " => TuringReducible
-@[reducible,simp,inherit_doc] scoped[Computability] infix:50 " ≡ᵀᶠ " => TuringEquivalent
-@[reducible,simp,inherit_doc] scoped[Computability] infix:50 " <ᵀᶠ " => TuringReducibleStrict
+@[reducible,simp,inherit_doc] scoped[Computability] infix : 50 " ≤ᵀᶠ " => TuringReducible
+@[reducible,simp,inherit_doc] scoped[Computability] infix : 50 " ≡ᵀᶠ " => TuringEquivalent
+@[reducible,simp,inherit_doc] scoped[Computability] infix : 50 " <ᵀᶠ " => TuringReducibleStrict
 
 open scoped Computability
 
@@ -25,7 +25,7 @@ protected theorem TuringReducible.rfl {f} : f ≤ᵀᶠ f := .refl _
 instance : IsRefl (ℕ → ℕ) TuringReducible where refl _ := .rfl
 
 theorem TuringReducible.trans {f g h} (hg : f ≤ᵀᶠ g) (hh : g ≤ᵀᶠ h) : f ≤ᵀᶠ h := by
-  generalize z : (↑f:ℕ→.ℕ)=x at hg
+  generalize z : (↑f : ℕ→.ℕ)=x at hg
   simp only [TuringReducible,z] at *
   induction hg with
   | zero => exact Nat.RecursiveIn.zero
@@ -39,7 +39,7 @@ theorem TuringReducible.trans {f g h} (hg : f ≤ᵀᶠ g) (hh : g ≤ᵀᶠ h) 
   | rfind hf ih => (expose_names; exact Nat.RecursiveIn.rfind ih)
 
 theorem TuringReducible.trans' {f g h} (hg : Nat.RecursiveIn g f) (hh : g ≤ᵀᶠ h) : Nat.RecursiveIn h f := by
-  generalize z : (↑f:ℕ→.ℕ)=x at hg
+  generalize z : (↑f : ℕ→.ℕ)=x at hg
   simp only [TuringReducible,z] at *
   induction hg with
   | zero => exact Nat.RecursiveIn.zero

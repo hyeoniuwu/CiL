@@ -56,7 +56,7 @@ open Computability
 
   If no such value is found, `none` is returned.
 -/
-def c_bdd_search (c:Code) := prec
+def c_bdd_search (c : Code) := prec
   (
     let compt := c_evaln.comp₃ (left.comp right) c (left) -- = [e]ₛ(a)
     c_ifz.comp₃ compt zero <|
@@ -79,7 +79,7 @@ def c_bdd_search (c:Code) := prec
     )
     prev_comp
   )
-@[cp] theorem c_bdd_search_prim {c} (h:code_prim c):code_prim <| c_bdd_search c := by
+@[cp] theorem c_bdd_search_prim {c} (h : code_prim c) : code_prim <| c_bdd_search c := by
   unfold c_bdd_search
   lift_lets
   extract_lets
@@ -103,7 +103,7 @@ theorem c_bdd_search_evp_0 {O c s a k l} :
     unfold c_bdd_search
     lift_lets; extract_lets; expose_names
     simp [evalp]
-    let (eq:=hinp) inp := ⟪⟪s,a,k⟫, ⟪n,evalp O (c_bdd_search c) ⟪⟪s,a,k⟫, n⟫⟫⟫
+    let (eq := hinp) inp := ⟪⟪s,a,k⟫, ⟪n,evalp O (c_bdd_search c) ⟪⟪s,a,k⟫, n⟫⟫⟫
     unfold c_bdd_search at hinp; lift_lets at hinp; simp at hinp
     rw [← hinp]
     have hprev_comp : evalp O prev_comp inp = evalp O (c_bdd_search c) ⟪⟪s,a,k⟫, n⟫ := by
@@ -127,7 +127,7 @@ theorem c_bdd_search_evp_0 {O c s a k l} :
       next h3 =>
         simp
         intro i hi
-        cases hi:Nat.le_or_eq_of_le_succ hi with
+        cases hi : Nat.le_or_eq_of_le_succ hi with
         | inl h => exact ih1 i h
         | inr h =>
           simp [h]
@@ -146,7 +146,7 @@ theorem c_bdd_search_evp_0 {O c s a k l} :
       · intro h
         apply ih.mpr ?_
         exact fun i hi ↦ h i (Nat.le_add_right_of_le hi)
-theorem c_bdd_aux {x} (h:x≠0) : ∃ y z, ⟪y, z⟫ ∈ n2o x := by
+theorem c_bdd_aux {x} (h : x≠0) : ∃ y z, ⟪y, z⟫ ∈ n2o x := by
   use (x-1).l; use (x-1).r
   simp [hnat_to_opt_2 h]
 theorem c_bdd_search_evp_1 {O c s a k l i r}:
@@ -191,7 +191,7 @@ theorem c_bdd_search_evp_1 {O c s a k l i r}:
     unfold c_bdd_search
     lift_lets; extract_lets; expose_names
     simp [evalp]
-    let (eq:=hinp) inp := ⟪⟪s,⟪a,k⟫⟫, ⟪n,evalp O (c_bdd_search c) ⟪⟪s,a,k⟫, n⟫⟫⟫
+    let (eq := hinp) inp := ⟪⟪s,⟪a,k⟫⟫, ⟪n,evalp O (c_bdd_search c) ⟪⟪s,a,k⟫, n⟫⟫⟫
     unfold c_bdd_search at hinp; lift_lets at hinp; simp at hinp
     rw [← hinp]
     have hprev_comp : evalp O prev_comp inp = evalp O (c_bdd_search c) ⟪⟪s,a,k⟫, n⟫ := by
@@ -291,7 +291,7 @@ def c_fs_add := c_or.comp₂ left <| c_pow.comp₂ (c_const 2) right
 end Oracle.Single.Code
 end fs_add
 
-theorem evaln_dom_imp_x_le_s {O s c x} (h:(evaln O s c x).isSome) : x≤s := by
+theorem evaln_dom_imp_x_le_s {O s c x} (h : (evaln O s c x).isSome) : x≤s := by
   contrapose h
   simp at h
   simp
@@ -354,7 +354,7 @@ def c_step :=
   lift_lets; extract_lets; expose_names
   simp
 
-  let (eq:=hinp) inp := ⟪s, i, prev⟫
+  let (eq := hinp) inp := ⟪s, i, prev⟫
   rw [←hinp]
 
   have hprev : (evalp (χ ∅) prev_1 inp) = prev := by simp [prev_1, inp]
@@ -393,7 +393,7 @@ def c_step :=
       apply congrArg
       simp [x, search, hs,hi, hi2P1]
       simp [hnat_12 hzr]
-      let (eq:=hnf) nf := Nat.find found
+      let (eq := hnf) nf := Nat.find found
       have nf0 := @Nat.find_min _ _ found
       have nf1 := @Nat.find_spec _ _ found
       rw [←hnf] at nf0 nf1 ⊢
@@ -487,7 +487,7 @@ theorem c_simple_ev : W ∅ c_simple = Simple.A := by
     exact Exists.intro s hs
 
 
-theorem exists_simple_set : ∃ A:Set ℕ, simpleIn ∅ A := by
+theorem exists_simple_set : ∃ A : Set ℕ, simpleIn ∅ A := by
   use Simple.A
   rw [←c_simple_ev]
   apply simpleInReq.mp

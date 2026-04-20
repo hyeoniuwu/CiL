@@ -43,14 +43,14 @@ namespace Oracle.Single.Code
 /-
 We implement
 -/
-def dovetailn (c:Code) : Code :=
+def dovetailn (c : Code) : Code :=
   c_rfind <|
   c_if_eq'.comp₂
   (c_evaln.comp₃ (pair left (left.comp right)) (c_const c) (right.comp right))
   (c_const 1)
 
-theorem dovetailn_ev_0 {O : ℕ → ℕ} {c: Code} {x : ℕ} (h:(eval O (dovetailn c) x).Dom) :
-let (eq:=hdvt) dvt := (eval O (dovetailn c) x).get h
+theorem dovetailn_ev_0 {O : ℕ → ℕ} {c: Code} {x : ℕ} (h : (eval O (dovetailn c) x).Dom) :
+let (eq := hdvt) dvt := (eval O (dovetailn c) x).get h
 evaln O dvt.r c ⟪x, dvt.l⟫=Option.some 0 := by
   extract_lets; expose_names
   unfold dovetailn at h hdvt
@@ -64,7 +64,7 @@ evaln O dvt.r c ⟪x, dvt.l⟫=Option.some 0 := by
   have := Part.eq_some_iff.mpr h4; clear h4
   simp [o2n] at this
   exact Encodable.encode_inj.mp this
-theorem dovetailn_ev_0' {O : ℕ → ℕ} {c: Code} {x : ℕ} (h:(eval O (dovetailn c) x).Dom) :
+theorem dovetailn_ev_0' {O : ℕ → ℕ} {c: Code} {x : ℕ} (h : (eval O (dovetailn c) x).Dom) :
 let dvt := (eval O (dovetailn c) x).get h
 eval O c ⟪x, dvt.l⟫=Part.some 0 := by
   have := dovetailn_ev_0 h
@@ -118,7 +118,7 @@ theorem dovetailn_ev_2 {O : ℕ → ℕ} {c: Code} {x : ℕ} : (eval O (dovetail
   simp at this
   exact Iff.trans (Iff.symm Part.not_none_iff_dom) this
 
-def dovetail (c:Code) : Code := left.comp (dovetailn c)
+def dovetail (c : Code) : Code := left.comp (dovetailn c)
 
 theorem dovetail_dom_iff_dovetailn_dom {O : ℕ → ℕ} {c: Code} {x : ℕ} : (eval O (dovetail c) x).Dom ↔ (eval O (dovetailn c) x).Dom := by
   simp [dovetail,eval]
@@ -126,7 +126,7 @@ theorem dovetail_none_iff_dovetailn_none {O : ℕ → ℕ} {c: Code} {x : ℕ} :
   apply not_iff_not.mp
   simp [not_none_iff_dom]
   exact dovetail_dom_iff_dovetailn_dom
-theorem dovetail_ev_0 {O : ℕ → ℕ} {c: Code} {x : ℕ} (h:(eval O (dovetail c) x).Dom) :
+theorem dovetail_ev_0 {O : ℕ → ℕ} {c: Code} {x : ℕ} (h : (eval O (dovetail c) x).Dom) :
 let dvt := (eval O (dovetail c) x).get h
 eval O c ⟪x, dvt⟫ = Part.some 0 := by
   have : (eval O (dovetailn c) x).Dom := by

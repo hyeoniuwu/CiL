@@ -44,7 +44,7 @@ Given an input of the form ``⟪x, i, list⟫``, the code (c_efl_prec c) compute
 (The form above is what you would expect in the inductive case in primitive recursion.)
 -/
 def c_efl_prec := fun c ↦ c_list_concat.comp (pair (c_id.comp (right.comp right)) c)
-@[cp] theorem c_efl_prec_prim {c} (h:code_prim c):code_prim <| c_efl_prec c := by unfold c_efl_prec; apply_cp
+@[cp] theorem c_efl_prec_prim {c} (h : code_prim c) : code_prim <| c_efl_prec c := by unfold c_efl_prec; apply_cp
 @[simp] theorem c_efl_prec_evp {O c x} : evalp O (c_efl_prec c) x = l2n ((n2l x.r.r).concat (evalp O c x)) := by
   simp [c_efl_prec]
 end Oracle.Single.Code
@@ -67,7 +67,7 @@ def c_cov_rec (cf cg : Code) :=
   prec
   (c_list_concat.comp₂ c_list_nil cf)
   (c_efl_prec cg)
-@[cp] theorem c_cov_rec_prim {c1 c2} (hc1:code_prim c1) (hc2:code_prim c2) : code_prim (c_cov_rec c1 c2) := by unfold c_cov_rec; apply_cp
+@[cp] theorem c_cov_rec_prim {c1 c2} (hc1 : code_prim c1) (hc2 : code_prim c2) : code_prim (c_cov_rec c1 c2) := by unfold c_cov_rec; apply_cp
 @[simp] theorem c_cov_rec_evp_size_positive {O cf cg x i} : 0<(n2l (evalp O (c_cov_rec cf cg) ⟪x,i⟫)).length := by
   unfold c_cov_rec
   induction i <;> simp
@@ -115,14 +115,14 @@ theorem c_cov_rec_evp_last_I {O cf cg x i} :
   getI (n2l (evalp O (c_cov_rec cf cg) ⟪x,i⟫)) i := by
   rw [c_cov_rec_evp_last]
   exact (getI_eq_getElem _ _).symm
-theorem c_cov_rec_evp_get_aux {O cf cg x j i} (h:j≤i) :
+theorem c_cov_rec_evp_get_aux {O cf cg x j i} (h : j≤i) :
   (n2l (evalp O (c_cov_rec cf cg) ⟪x,i⟫))[j]'(by simp [c_cov_rec_evp_size]; omega)
     =
   (n2l (evalp O (c_cov_rec cf cg) ⟪x, i+1⟫))[j]'(by simp [c_cov_rec_evp_size]; omega)
   := by
   simp [c_cov_rec_evp_indt]
   exact getElem_append_left' _ _
-theorem c_cov_rec_evp_get_aux_I {O cf cg x j i} (h:j≤i) :
+theorem c_cov_rec_evp_get_aux_I {O cf cg x j i} (h : j≤i) :
   getI (n2l (evalp O (c_cov_rec cf cg) ⟪x,i⟫)) j
     =
   getI (n2l (evalp O (c_cov_rec cf cg) ⟪x, i+1⟫)) j
@@ -138,7 +138,7 @@ theorem c_cov_rec_evp_get_aux_I {O cf cg x j i} (h:j≤i) :
   simp [getI]
   grind? says grind only [= List.getElem?_eq_none, length_append, getElem?_pos, getElem?_neg, getElem?_append, → eq_nil_of_append_eq_nil]
 
-@[simp] theorem c_cov_rec_evp_get {O cf cg x j i} (h:j≤i):
+@[simp] theorem c_cov_rec_evp_get {O cf cg x j i} (h : j≤i):
   (n2l (evalp O (c_cov_rec cf cg) ⟪x,i⟫))[j]'(by simp [c_cov_rec_evp_size]; omega)
     =
   getLastI (evalp O (c_cov_rec cf cg) ⟪x, j⟫) := by
@@ -153,7 +153,7 @@ theorem c_cov_rec_evp_get_aux_I {O cf cg x j i} (h:j≤i) :
       rw [← ih h1]
       rw [← c_cov_rec_evp_get_aux]
       exact h1
-@[simp] theorem c_cov_rec_evp_getI {O cf cg x j i} (h:j≤i):
+@[simp] theorem c_cov_rec_evp_getI {O cf cg x j i} (h : j≤i):
   getI (n2l (evalp O (c_cov_rec cf cg) ⟪x,i⟫)) j
     =
   getLastI (evalp O (c_cov_rec cf cg) ⟪x, j⟫) := by
@@ -207,7 +207,7 @@ This is because in the interface for `c_cov_rec`, the second argument is the "in
 (In our recursive form of division above, the recursive call is made with respect to the
 dividend and the divisor stays the same. )
 
-For this specific example, one can bypass defining the auxiliary function `c_div_flip_aux` and write a shorter proof; see https://github.com/hyeoniuwu/CiL/blob/99fd356e7835d1856fb73306df7828f96b42a85c/Computability/Constructions.lean#L758.
+For this specific example, one can bypass defining the auxiliary function `c_div_flip_aux` and write a shorter proof; see https : //github.com/hyeoniuwu/CiL/blob/99fd356e7835d1856fb73306df7828f96b42a85c/Computability/Constructions.lean#L758.
 
 However, I've written the "longer" way, which is more efficient. For more complex constructions, this longer way becomes necessary.
 
@@ -246,13 +246,13 @@ theorem c_div_flip_evp_aux_aux {O d n} :
   if n<d then 0 else evalp O c_div_flip ⟪d+1, n-d⟫ + 1
     := by
 
-  rw (config:={occs:=.pos [1]}) [c_div_flip]
+  rw (config := {occs := .pos [1]}) [c_div_flip]
   unfold c_div_flip_aux
   lift_lets; extract_lets; expose_names
 
-  let (eq:=hinp2) inp2 := evalp O c_div_flip_aux (Nat.pair (d+1) (n))
+  let (eq := hinp2) inp2 := evalp O c_div_flip_aux (Nat.pair (d+1) (n))
   unfold c_div_flip_aux at hinp2; lift_lets at hinp2
-  let (eq:=hinp) inp := Nat.pair (d + 1) (Nat.pair n inp2)
+  let (eq := hinp) inp := Nat.pair (d + 1) (Nat.pair n inp2)
 
   have hdivisor : evalp O divisor inp = d+1 := by simp [hinp, divisor]
   have hdividend : evalp O dividend inp = n+1 := by simp [hinp, dividend]
@@ -279,7 +279,7 @@ theorem c_div_flip_evp_aux {O} : evalp O c_div_flip = unpaired2 div_flip_aux := 
   cases n with
   | zero => simp [div_flip_aux_eq_div_flip,flip, c_div_flip, c_div_flip_aux, evalp]
   | succ n' =>
-    cases hd:d with
+    cases hd : d with
     | zero => simp [div_flip_aux_eq_div_flip,flip,c_div_flip, c_div_flip_aux, evalp]
     | succ d' =>
       rw [c_div_flip_evp_aux_aux]
@@ -312,13 +312,13 @@ end div
 section mod
 namespace Oracle.Single.Code
 def c_mod := c_sub.comp₂ left (c_mul.comp₂ right c_div)
-@[cp] theorem c_mod_prim:code_prim c_mod := by unfold c_mod; apply_cp
+@[cp] theorem c_mod_prim : code_prim c_mod := by unfold c_mod; apply_cp
 @[simp] theorem c_mod_evp {O} : evalp O c_mod = unpaired2 ((· % ·) : ℕ → ℕ → ℕ) := by
   simp [c_mod,evalp];
 
   funext mn
-  let m:=mn.l
-  let n:=mn.r
+  let m := mn.l
+  let n := mn.r
   have mn_eq : mn = ⟪m, n⟫ := by exact Eq.symm (pair_unpair mn)
   rw [mn_eq]
 
@@ -332,7 +332,7 @@ end mod
 section div2
 namespace Oracle.Single.Code
 def c_div2 := c_div.comp₂ c_id (c_const 2)
-@[cp] theorem c_div2_prim:code_prim c_div2 := by unfold c_div2; apply_cp
+@[cp] theorem c_div2_prim : code_prim c_div2 := by unfold c_div2; apply_cp
 @[simp] theorem c_div2_evp {O} : evalp O c_div2 = div2 := by simp [c_div2]; funext x; exact Eq.symm (div2_val x)
 @[simp] theorem c_div2_ev {O} : eval O c_div2 = div2 := by simp [← evalp_eq_eval c_div2_prim]
 end Oracle.Single.Code
@@ -340,9 +340,9 @@ end div2
 section mod2
 namespace Oracle.Single.Code
 def c_mod2 := c_mod.comp₂ c_id (c_const 2)
-@[cp] theorem c_mod2_prim:code_prim c_mod2 := by unfold c_mod2; apply_cp
+@[cp] theorem c_mod2_prim : code_prim c_mod2 := by unfold c_mod2; apply_cp
 @[simp] theorem c_mod2_evp {O} : evalp O c_mod2 = fun x ↦ x%2 := by simp [c_mod2];
-@[simp] theorem c_mod2_ev {O} : eval O c_mod2 = (fun x:ℕ ↦ x%2) := by simp [← evalp_eq_eval c_mod2_prim]
+@[simp] theorem c_mod2_ev {O} : eval O c_mod2 = (fun x : ℕ ↦ x%2) := by simp [← evalp_eq_eval c_mod2_prim]
 end Oracle.Single.Code
 end mod2
 
@@ -445,7 +445,7 @@ If one were to instead unfold all let-bindings, there are performance penalties.
   have cp_rfind'_code : code_prim rfind'_code := by apply_cp
   apply_cp 40
 
-theorem c_replace_oracle_evp_aux {O o x} (hx:x≤4): evalp O (c_replace_oracle) ⟪o, x⟫ = c2n (replace_oracle (n2c o) (n2c x)) := by
+theorem c_replace_oracle_evp_aux {O o x} (hx : x≤4): evalp O (c_replace_oracle) ⟪o, x⟫ = c2n (replace_oracle (n2c o) (n2c x)) := by
   unfold c_replace_oracle
   unfold c_replace_oracle_aux
   lift_lets; extract_lets; expose_names
@@ -503,7 +503,7 @@ theorem c_replace_oracle_evp_aux_nMod4 {O o n} :
   unfold c_replace_oracle;
   unfold c_replace_oracle_aux
   lift_lets; extract_lets; expose_names
-  let (eq:=hinp) inp := evalp O c_replace_oracle_aux ⟪o, n+4⟫
+  let (eq := hinp) inp := evalp O c_replace_oracle_aux ⟪o, n+4⟫
   unfold c_replace_oracle_aux at hinp; lift_lets at hinp
 
   have hinput_to_decode : evalp O input_to_decode ⟪o, n+4, inp⟫ = n+5 := by simp [input_to_decode]
@@ -547,7 +547,7 @@ theorem c_replace_oracle_evp_aux_nMod4 {O o n} :
   simp [hinput_to_decode]
   simp only [hnMod4]
 
-  match h:n%4 with
+  match h : n%4 with
   | 0 => simp [hpair_code]
   | 1 => simp [hcomp_code]
   | 2 => simp [hprec_code]
@@ -567,7 +567,7 @@ lemma codes_aux_aux_0 {n} (hno : n.bodd = false) :  2 * n.div2 = n := by
 lemma codes_aux_aux_1 {n} (hno : n.bodd = true) :  2 * n.div2 +1 = n := by
   have h0 := bodd_add_div2 n
   simp [hno] at h0
-  rw (config:={occs:=.pos [2]}) [←h0]
+  rw (config := {occs := .pos [2]}) [←h0]
   exact Nat.add_comm (2 * n.div2) 1
 lemma codes_aux_0 {n} (hno : n.bodd = false) (hn2o : n.div2.bodd = false) : 2 * (2 * n.div2.div2) = n := by
   rw [codes_aux_aux_0 hn2o]
@@ -582,15 +582,15 @@ lemma codes_aux_3 {n} (hno : n.bodd = true) (hn2o : n.div2.bodd = true) : 2 * (2
   rw [codes_aux_aux_1 hn2o]
   rw [codes_aux_aux_1 hno]
 
-theorem nMod4_eq_0 {n} (hno:n.bodd=false) (hn2o:n.div2.bodd=false) : n%4=0 := by rw [←codes_aux_0 hno hn2o]; omega
-theorem nMod4_eq_1 {n} (hno:n.bodd=true ) (hn2o:n.div2.bodd=false) : n%4=1 := by rw [←codes_aux_1 hno hn2o]; omega
-theorem nMod4_eq_2 {n} (hno:n.bodd=false) (hn2o:n.div2.bodd=true ) : n%4=2 := by rw [←codes_aux_2 hno hn2o]; omega
-theorem nMod4_eq_3 {n} (hno:n.bodd=true ) (hn2o:n.div2.bodd=true ) : n%4=3 := by rw [←codes_aux_3 hno hn2o]; omega
+theorem nMod4_eq_0 {n} (hno : n.bodd=false) (hn2o : n.div2.bodd=false) : n%4=0 := by rw [←codes_aux_0 hno hn2o]; omega
+theorem nMod4_eq_1 {n} (hno : n.bodd=true ) (hn2o : n.div2.bodd=false) : n%4=1 := by rw [←codes_aux_1 hno hn2o]; omega
+theorem nMod4_eq_2 {n} (hno : n.bodd=false) (hn2o : n.div2.bodd=true ) : n%4=2 := by rw [←codes_aux_2 hno hn2o]; omega
+theorem nMod4_eq_3 {n} (hno : n.bodd=true ) (hn2o : n.div2.bodd=true ) : n%4=3 := by rw [←codes_aux_3 hno hn2o]; omega
 
 @[simp] theorem c_replace_oracle_evp {O}: evalp O (c_replace_oracle) = fun x ↦c2n (replace_oracle (n2c x.l) (n2c x.r)) := by
   funext oc
-  let o:=oc.l
-  let c:=oc.r
+  let o := oc.l
+  let c := oc.r
   have oc_eq : oc = Nat.pair o c := by exact Eq.symm (pair_unpair oc)
   rw [oc_eq]
   simp only [pair_l, pair_r] -- simplify the rhs
@@ -612,8 +612,8 @@ theorem nMod4_eq_3 {n} (hno:n.bodd=true ) (hn2o:n.div2.bodd=true ) : n%4=3 := by
 
       rw [show n+5=(n+4)+1 from rfl]
 
-      cases hno:n.bodd with
-      | false => cases hn2o:n.div2.bodd with
+      cases hno : n.bodd with
+      | false => cases hn2o : n.div2.bodd with
         -- pair
         | false =>
           have h0: n%4=0 := nMod4_eq_0 hno hn2o
@@ -633,7 +633,7 @@ theorem nMod4_eq_3 {n} (hno:n.bodd=true ) (hn2o:n.div2.bodd=true ) : n%4=3 := by
           constructor
           · rw [ih m.l _m1];
           · rw [ih m.r _m2];
-      | true => cases hn2o:n.div2.bodd with
+      | true => cases hn2o : n.div2.bodd with
         -- comp
         | false =>
           have h0: n%4=1 := nMod4_eq_1 hno hn2o
@@ -651,13 +651,13 @@ theorem nMod4_eq_3 {n} (hno:n.bodd=true ) (hn2o:n.div2.bodd=true ) : n%4=3 := by
           simp [h0]
           rw [ih m hm];
 
-@[simp] theorem c_replace_oracle_ev {O} : eval O (c_replace_oracle) = fun x:ℕ ↦ c2n (replace_oracle (n2c x.l) (n2c x.r)) := by rw [← evalp_eq_eval c_replace_oracle_prim]; simp only [c_replace_oracle_evp];
+@[simp] theorem c_replace_oracle_ev {O} : eval O (c_replace_oracle) = fun x : ℕ ↦ c2n (replace_oracle (n2c x.l) (n2c x.r)) := by rw [← evalp_eq_eval c_replace_oracle_prim]; simp only [c_replace_oracle_evp];
 
-@[simp] theorem plift_eq {O o} (ho:code_total O o) : (@PFun.lift ℕ ℕ fun x ↦ (eval O o x).get (ho x) )= eval O o := by
+@[simp] theorem plift_eq {O o} (ho : code_total O o) : (@PFun.lift ℕ ℕ fun x ↦ (eval O o x).get (ho x) )= eval O o := by
   ext a b : 1
   simp_all only [PFun.coe_val, Part.some_get]
 
-theorem eval_replace_oracle_prop {O o c} (ho:code_total O o) : eval O (replace_oracle o c) = eval (fun x ↦ (eval O o x).get (ho x)) c := by
+theorem eval_replace_oracle_prop {O o c} (ho : code_total O o) : eval O (replace_oracle o c) = eval (fun x ↦ (eval O o x).get (ho x)) c := by
   unfold replace_oracle
   induction c <;> (simp [eval]; try (unfold replace_oracle; simp_all))
 end Oracle.Single.Code

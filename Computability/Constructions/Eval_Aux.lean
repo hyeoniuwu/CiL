@@ -29,7 +29,7 @@ section rfind
 /--`[code_rfind c](x)=smallest n s.t. [c](x,n)=0.`-/
 def c_rfind : Oracle.Single.Code→Oracle.Single.Code := fun c ↦ (rfind' c).comp (pair c_id zero)
 /-- Given a code `c` -/
-abbrev rfind (O:ℕ→ℕ) : Code → ℕ →. ℕ := fun c ↦ fun a ↦ Nat.rfind fun n ↦ (fun m ↦ m = 0) <$> eval O c (Nat.pair a n)
+abbrev rfind (O : ℕ→ℕ) : Code → ℕ →. ℕ := fun c ↦ fun a ↦ Nat.rfind fun n ↦ (fun m ↦ m = 0) <$> eval O c (Nat.pair a n)
 theorem c_rfind_ev {O c a} : eval O (c_rfind c) a = rfind O c a := by
   unfold c_rfind
   unfold rfind
@@ -60,8 +60,8 @@ def c_ppred := c_rfind (c_if_eq'.comp₂ left (succ.comp right))
     simp
     aesop
 
-def c_ofOption (c:Code) := c_ppred.comp c
-theorem c_ofOption_ev {O c x} (hc1:code_total O c) : eval O (c_ofOption c) x = ↑(n2o ((eval O c x).get (hc1 x))) := by
+def c_ofOption (c : Code) := c_ppred.comp c
+theorem c_ofOption_ev {O c x} (hc1 : code_total O c) : eval O (c_ofOption c) x = ↑(n2o ((eval O c x).get (hc1 x))) := by
   unfold c_ofOption
   simp [eval]
   simp [Part.Dom.bind (hc1 x)]
@@ -69,8 +69,8 @@ theorem c_ofOption_ev {O c x} (hc1:code_total O c) : eval O (c_ofOption c) x = �
   | zero => simp;
   | succ n => simp;
 
-def c_rfindOpt (c:Code) := (c_ofOption c).comp₂ c_id (c_rfind (c_isSome.comp (c)))
-@[simp] theorem c_rfindOpt_ev {O c x} (hc1:code_total O c) : eval O (c_rfindOpt c) x =  Nat.rfindOpt (fun y => n2o <| (eval O c (Nat.pair x y)).get (hc1 (Nat.pair x y))) := by
+def c_rfindOpt (c : Code) := (c_ofOption c).comp₂ c_id (c_rfind (c_isSome.comp (c)))
+@[simp] theorem c_rfindOpt_ev {O c x} (hc1 : code_total O c) : eval O (c_rfindOpt c) x =  Nat.rfindOpt (fun y => n2o <| (eval O c (Nat.pair x y)).get (hc1 (Nat.pair x y))) := by
   unfold c_rfindOpt
   simp [c_rfind_ev']
   unfold rfindOpt

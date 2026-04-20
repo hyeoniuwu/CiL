@@ -283,7 +283,7 @@ theorem exists_code {O : ℕ → ℕ} {f : ℕ →. ℕ} : Nat.RecursiveIn O f �
 undecidability, `evaln` takes a parameter `k` and fails if it encounters a number ≥ k in the course
 of its execution. Other than this, the semantics are the same as in `Oracle.Single.Code.eval`.
 -/
-def evaln (O:ℕ→ℕ) : ℕ → Code → ℕ → Option ℕ
+def evaln (O : ℕ→ℕ) : ℕ → Code → ℕ → Option ℕ
 | 0, _ => fun _ => Option.none
 | k + 1, .zero => fun n => do
   guard (n ≤ k)
