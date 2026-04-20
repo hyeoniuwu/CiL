@@ -1,6 +1,7 @@
 import Lean.LabelAttribute
 import Lean
 register_label_attr cp
+register_simp_attr evp_simps
 
 open Lean
 

@@ -296,7 +296,8 @@ theorem c_div_flip_evp_aux {O} : evalp O c_div_flip = unpaired2 div_flip_aux := 
       rw [ih (n'-d') (sub_lt_succ n' d')]
       unfold div_flip_aux; simp
 
-@[simp] theorem c_div_flip_evp {O} : evalp O c_div_flip = unpaired2 (flip ((· / ·) : ℕ → ℕ → ℕ)) := by
+@[simp] theorem c_div_flip_evp {O} :
+    evalp O c_div_flip = unpaired2 (flip ((· / ·) : ℕ → ℕ → ℕ)) := by
   rw [c_div_flip_evp_aux]
   simp [div_flip_aux_eq_div_flip]
 @[simp] theorem c_div_evp {O a b} : evalp O c_div ⟪a,b⟫ = a/b := by
@@ -312,7 +313,7 @@ theorem c_div_flip_evp_aux {O} : evalp O c_div_flip = unpaired2 div_flip_aux := 
 
 @[simp] theorem c_div_ev {O a b} : eval O c_div ⟪a,b⟫ = a/b := by
   rw [← evalp_eq_eval c_div_prim];
-  simp
+  simp only [PFun.coe_val, c_div_evp, Part.coe_some]
   exact Eq.symm (Part.some_div_some a b)
 end Oracle.Single.Code
 end div
@@ -322,8 +323,8 @@ namespace Oracle.Single.Code
 def c_mod := c_sub.comp₂ left (c_mul.comp₂ right c_div)
 @[cp] theorem c_mod_prim : code_prim c_mod := by unfold c_mod; apply_cp
 @[simp] theorem c_mod_evp {O} : evalp O c_mod = unpaired2 ((· % ·) : ℕ → ℕ → ℕ) := by
-  simp [c_mod,evalp];
-
+  -- simp [c_mod, evalp]
+  simp only [c_mod, comp₂_evp, evalp, c_mul_evp, c_sub_evp]
   funext mn
   let m := mn.l
   let n := mn.r

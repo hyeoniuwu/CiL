@@ -181,7 +181,7 @@ theorem prim_total {O} {c} (h : code_prim c): code_total O c := by
     induction x.r with
     | zero => exact ha_ih x.l
     | succ y' IH' => use IH'; apply hb_ih
-@[simp] def evalp (O : ℕ → ℕ) : Code→ℕ → ℕ
+@[simp, evp_simps] def evalp (O : ℕ → ℕ) : Code→ℕ → ℕ
 | zero       => fun _ ↦ 0
 | succ       => Nat.succ
 | left       => Nat.l
