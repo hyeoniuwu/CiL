@@ -59,7 +59,7 @@ def c_finite_ext :=
   )
   c_zero
 @[cp] theorem c_finite_ext_prim : code_prim c_finite_ext := by unfold c_finite_ext; apply_cp
-@[simp] theorem c_finite_ext_evp {O} : evalp O c_finite_ext = fun x : ℕ ↦ c2n (dovetail (KP54.c_kp54_aux x.l x.r)) := by
+@[simp, evp_simps] theorem c_finite_ext_evp {O} : evalp O c_finite_ext = fun x : ℕ ↦ c2n (dovetail (KP54.c_kp54_aux x.l x.r)) := by
   simp [c_finite_ext, KP54.c_kp54_aux]
 end c_finite_ext
 
@@ -132,7 +132,7 @@ def c_kp54 := c_prec1 0 c_kp54_indt
 -- set_option pp.raw true in
 -- set_option maxRecDepth 5006 in
 -- set_option trace.Meta.Tactic.simp true in
-@[simp] theorem c_kp54_evp {x} : evalp (K0 (fun _↦0)) c_kp54 x = KP54.KP54 x := by
+@[simp, evp_simps] theorem c_kp54_evp {x} : evalp (K0 (fun _↦0)) c_kp54 x = KP54.KP54 x := by
   induction x with
   | zero => rfl
   | succ s_1 ih =>
@@ -237,7 +237,7 @@ Now that we have defined KP54.KP54, we can easily define (characeristic function
 -/
 def c_A := c_n2b.comp <| c_list_getI.comp₂ (left.comp <| c_kp54.comp succ) c_id
 @[cp] theorem c_A_prim : code_prim c_A := by unfold c_A; apply_cp 10
-@[simp] theorem c_A_evp : evalp (K0 (fun _↦0)) c_A = χ KP54.A := by
+@[simp, evp_simps] theorem c_A_evp : evalp (K0 (fun _↦0)) c_A = χ KP54.A := by
   funext x
   simp [c_A]; congr
   exact getI_eq_getElem
@@ -250,7 +250,7 @@ theorem A_le_J1 : KP54.A ≤ᵀ ∅⌜ := by
   exact (K0χ_eq_χSetK ∅).1
 def c_B := c_n2b.comp <| c_list_getI.comp₂ (right.comp <| c_kp54.comp succ) c_id
 @[cp] theorem c_B_prim : code_prim c_B := by unfold c_B; apply_cp 10
-@[simp] theorem c_B_evp : evalp (K0 (fun _↦0)) c_B = χ KP54.B := by
+@[simp, evp_simps] theorem c_B_evp : evalp (K0 (fun _↦0)) c_B = χ KP54.B := by
   funext x
   simp [c_B]; congr
   exact getI_eq_getElem
@@ -263,7 +263,7 @@ theorem B_le_J1 : KP54.B ≤ᵀ ∅⌜ := by
   exact (K0χ_eq_χSetK ∅).1
 
 
-theorem ex_incomparable_sets_below_j1 : ∃ A B : Set ℕ, A ≤ ᵀ∅⌜ ∧ B ≤ ᵀ∅⌜ ∧ A|ᵀB := by
+theorem ex_incomparable_sets_below_j1 : ∃ A B : Set ℕ, A≤ᵀ∅⌜ ∧ B≤ᵀ∅⌜ ∧ A|ᵀB := by
   use KP54.A
   use KP54.B
   constructor

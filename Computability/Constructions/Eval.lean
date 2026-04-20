@@ -643,7 +643,7 @@ theorem c_evaln_evp_aux_nMod4 {O x n s} :
     rw [show x.succ.succ.succ.succ=x+4 from rfl] at contrad
     simp at contrad
 
-@[simp] theorem c_evaln_evp {O x code s}: evalp O (c_evaln) (Nat.pair x (Nat.pair code s)) =
+@[simp, evp_simps] theorem c_evaln_evp {O x code s}: evalp O (c_evaln) (Nat.pair x (Nat.pair code s)) =
   o2n (evaln O s code.n2c x) := by
 
   let code_s := Nat.pair code s
@@ -851,7 +851,7 @@ theorem c_evaln_evp_aux_nMod4 {O x n s} :
   rw [← evalp_eq_eval c_evaln_prim];
   simp only [PFun.coe_val, c_evaln_evp, Part.coe_some]
 
-@[simp] theorem c_evaln_evp' {O}: evalp O (c_evaln) = fun x => o2n <| evaln O x.r.r x.r.l.n2c x.l := by
+@[simp, evp_simps] theorem c_evaln_evp' {O}: evalp O (c_evaln) = fun x => o2n <| evaln O x.r.r x.r.l.n2c x.l := by
   funext x
   have : x = (Nat.pair x.l (Nat.pair x.r.l x.r.r)) := by simp
   rw (config := {occs := .pos [1]}) [this]

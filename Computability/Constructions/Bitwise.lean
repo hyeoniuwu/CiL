@@ -158,7 +158,7 @@ theorem c_bitwise_evp_n_m {O c n m} : evalp O (c_bitwise c) ⟪n+1,m+1⟫ = (
       exact c_bitwise_evp_rec_bounds
     simp [this]
   simp [hn, hm, hb₁, hb₂, hr]
-@[simp] theorem c_bitwise_evp {O c} :
+@[simp, evp_simps] theorem c_bitwise_evp {O c} :
     evalp O (c_bitwise c) =
     Nat.unpaired2 (Nat.bitwise (fun a b => n2b <| evalp O c ⟪b2n a, b2n b⟫)) := by
   funext nm
@@ -196,7 +196,7 @@ def c_lor := c_ifz.comp₃ left
 theorem c_lor_evp {O a b} : evalp O c_lor ⟪a, b⟫ = b2n (n2b a || n2b b) := by
   simp [c_lor, n2b, b2n]
   split <;> simp_all
-@[simp] theorem c_lor_evp' {O} : (fun a b => n2b <| evalp O c_lor ⟪b2n a, b2n b⟫) = Bool.or := by
+@[simp, evp_simps] theorem c_lor_evp' {O} : (fun a b => n2b <| evalp O c_lor ⟪b2n a, b2n b⟫) = Bool.or := by
   funext a b;
   simp [c_lor, n2b, b2n]
   split <;> simp_all
@@ -212,7 +212,7 @@ def c_lxor := c_ifz.comp₃ left
 theorem c_lxor_evp {O a b} : evalp O c_lxor ⟪a, b⟫ = b2n (n2b a ^^ n2b b) := by
   simp [c_lxor, n2b, b2n]
   split <;> simp_all
-@[simp] theorem c_lxor_evp' {O} : (fun a b => n2b <| evalp O c_lxor ⟪b2n a, b2n b⟫) = Bool.xor := by
+@[simp, evp_simps] theorem c_lxor_evp' {O} : (fun a b => n2b <| evalp O c_lxor ⟪b2n a, b2n b⟫) = Bool.xor := by
   funext a b;
   simp [c_lxor, n2b, b2n]
   split <;> simp_all
@@ -228,7 +228,7 @@ def c_land := c_ifz.comp₃ left
 theorem c_land_evp {O a b} : evalp O c_land ⟪a, b⟫ = b2n (n2b a && n2b b) := by
   simp [c_land, n2b, b2n]
   split <;> simp_all
-@[simp] theorem c_land_evp' {O} : (fun a b => n2b <| evalp O c_land ⟪b2n a, b2n b⟫) = Bool.and := by
+@[simp, evp_simps] theorem c_land_evp' {O} : (fun a b => n2b <| evalp O c_land ⟪b2n a, b2n b⟫) = Bool.and := by
   funext a b;
   simp [c_land, n2b, b2n]
 end Oracle.Single.Code
@@ -238,7 +238,7 @@ section or
 namespace Oracle.Single.Code
 def c_or := c_bitwise (c_lor)
 @[cp] theorem c_or_prim : code_prim c_or := by unfold c_or; apply_cp
-@[simp] theorem c_or_evp {O x y} : evalp O c_or ⟪x,y⟫ = (x ||| y) := by simp [c_or]; rfl
+@[simp, evp_simps] theorem c_or_evp {O x y} : evalp O c_or ⟪x,y⟫ = (x ||| y) := by simp [c_or]; rfl
 end Oracle.Single.Code
 end or
 
@@ -246,7 +246,7 @@ section and
 namespace Oracle.Single.Code
 def c_and := c_bitwise (c_land)
 @[cp] theorem c_and_prim : code_prim c_and := by unfold c_and; apply_cp
-@[simp] theorem c_and_evp {O x y} : evalp O c_and ⟪x,y⟫ = x &&& y := by simp [c_and]; rfl
+@[simp, evp_simps] theorem c_and_evp {O x y} : evalp O c_and ⟪x,y⟫ = x &&& y := by simp [c_and]; rfl
 end Oracle.Single.Code
 end and
 
@@ -254,6 +254,6 @@ section xor
 namespace Oracle.Single.Code
 def c_xor := c_bitwise (c_lxor)
 @[cp] theorem c_xor_prim : code_prim c_xor := by unfold c_xor; apply_cp
-@[simp] theorem c_xor_evp {O x y} : evalp O c_xor ⟪x,y⟫ = x ^^^ y := by simp [c_xor]; rfl
+@[simp, evp_simps] theorem c_xor_evp {O x y} : evalp O c_xor ⟪x,y⟫ = x ^^^ y := by simp [c_xor]; rfl
 end Oracle.Single.Code
 end xor

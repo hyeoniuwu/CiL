@@ -576,7 +576,7 @@ theorem c_usen_evp_aux_nMod4 {O x n s} :
     rw [show x.succ.succ.succ.succ=x+4 from rfl] at contrad
     simp at contrad
 
-@[simp] theorem c_usen_evp {O x code s} : evalp O c_usen ⟪x, code, s⟫ =
+@[simp, evp_simps] theorem c_usen_evp {O x code s} : evalp O c_usen ⟪x, code, s⟫ =
   o2n (usen O code.n2c s x) := by
 
   let code_s := Nat.pair code s

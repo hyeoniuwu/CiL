@@ -42,7 +42,7 @@ def c_evalnc :=
   (c_usen.comp₃ x0 c0 s0) <|
   c_if_le_te.comp₄ right u1 (c_evaln.comp₃ x1 c1 s1) zero
 @[cp] theorem c_evalnc_prim : code_prim c_evalnc := by unfold c_evalnc; apply_cp 90
-@[simp] theorem c_evalnc_evp {O u s c x} : evalp O c_evalnc ⟪u,s,c,x⟫ = o2n (evalnc O u s c x) := by
+@[simp, evp_simps] theorem c_evalnc_evp {O u s c x} : evalp O c_evalnc ⟪u,s,c,x⟫ = o2n (evalnc O u s c x) := by
   simp [c_evalnc,evalp];
   simp [evalnc]
   congr; funext a_0
@@ -129,7 +129,7 @@ end c_evals_oracle
 section c_c_evals_oracle
 def c_c_evals_oracle := c_comp.comp₂ (c_const c_sg) (c_comp₃.comp₄ (c_const c_list_getD) (c_c_const.comp left) (c_const c_id) (c_const <| c_const whatever))
 @[cp] def c_c_evals_oracle_prim : code_prim c_c_evals_oracle := by unfold c_c_evals_oracle; apply_cp
-@[simp] theorem c_c_evals_oracle_evp {O o c x} : evalp O c_c_evals_oracle ⟪o,c,x⟫ =
+@[simp, evp_simps] theorem c_c_evals_oracle_evp {O o c x} : evalp O c_c_evals_oracle ⟪o,c,x⟫ =
 c2n (c_evals_oracle o) := by simp [c_c_evals_oracle, c_evals_oracle]
 theorem c_c_evals_oracle_ev {O o c x} : eval O c_c_evals_oracle ⟪o,c,x⟫ = c2n (c_evals_oracle o) := by simp [← evalp_eq_eval c_c_evals_oracle_prim]
 end c_c_evals_oracle
@@ -170,7 +170,7 @@ def c_c_evals :=
   (c_const <| c_const c_evals_code)
   (c_const c_id)
 @[cp] theorem c_c_evals_prim : code_prim c_c_evals := by unfold c_c_evals; apply_cp
-@[simp] theorem c_c_evals_evp {O x} : evalp O c_c_evals x = c_evals := by simp [c_c_evals, c_evals]
+@[simp, evp_simps] theorem c_c_evals_evp {O x} : evalp O c_c_evals x = c_evals := by simp [c_c_evals, c_evals]
 end c_c_evals
 
 end Oracle.Single.Code

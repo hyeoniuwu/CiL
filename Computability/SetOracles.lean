@@ -74,7 +74,7 @@ def jumpn : ℕ → Set ℕ → Set ℕ
 | i+1 => SetJump ∘ jumpn i
 
 -- Order between sets is written in the way below, to be able to make use of automation with ordering thms.
--- that is why we don't write: scoped[Computability] infix : 50 " ≤ ᵀ" => SetTuringReducible
+-- that is why we don't write: scoped[Computability] infix : 50 "≤ᵀ" => SetTuringReducible
 protected theorem SetTuringReducible.refl (A : Set ℕ) : SetTuringReducible A A := by exact RecursiveIn.oracle
 protected theorem SetTuringReducible.rfl (A : Set ℕ) : SetTuringReducible A A := SetTuringReducible.refl _
 instance : IsRefl (Set ℕ) SetTuringReducible where refl _ := by (expose_names; exact SetTuringReducible.refl x)
@@ -102,7 +102,7 @@ def SetTuringDegreeNLE (A B : Set ℕ) : Prop := ¬ TuringDegree.PO.le ⟦A⟧ �
 def SetTuringDegreeLT (A B : Set ℕ) : Prop := TuringDegree.PO.lt ⟦A⟧ ⟦B⟧
 def SetTuringDegreeEQ (A B : Set ℕ) : Prop := AntisymmRel TuringDegree.PO.le ⟦A⟧ ⟦B⟧
 def SetTuringDegreeIN (A B : Set ℕ) : Prop := (¬TuringDegree.PO.le ⟦A⟧ ⟦B⟧)∧(¬TuringDegree.PO.le ⟦B⟧ ⟦A⟧)
-scoped[Computability] infix : 50 " ≤ ᵀ" => SetTuringDegreeLE
+scoped[Computability] infix : 50 "≤ᵀ" => SetTuringDegreeLE
 scoped[Computability] infix : 50 "≰ᵀ" => SetTuringDegreeNLE
 scoped[Computability] infix : 50 "<ᵀ" => SetTuringDegreeLT
 scoped[Computability] infix : 50 "≡ᵀ" => SetTuringDegreeEQ
@@ -127,7 +127,7 @@ alias Rin := RecursiveIn
 
 theorem TR_Set_iff_Fn {O₁ O₂} : O₁ ≤ᵀ O₂ ↔ (χ O₁) ≤ᵀᶠ (χ O₂) := Eq.to_iff rfl
 theorem TR_Set_iff_Fn' {O₁ O₂} : O₁ ≤ᵀ O₂ ↔ Rin (χ O₂) (χ O₁) := TR_Set_iff_Fn
-theorem reducible_iff_code {A B : Set ℕ} : A ≤ ᵀB ↔ ∃ c, eval (χ B) c = χ A := by
+theorem reducible_iff_code {A B : Set ℕ} : A≤ᵀB ↔ ∃ c, eval (χ B) c = χ A := by
   simp [TR_Set_iff_Fn, exists_code]
 
 -- theorem χ_le_χSetK0 {O : Set ℕ} : Rin (χ (SetK0 O)) (χ O) := by
@@ -287,7 +287,7 @@ theorem χSetK_eq_K0χ (O : Set ℕ) : (χ (SetK O)) ≡ᵀᶠ (K0 (χ O)) := Tu
 theorem K0χ_eq_χSetK (O : Set ℕ) : (K0 (χ O)) ≡ᵀᶠ (χ (SetK O)) := (χSetK_eq_K0χ O).symm
 theorem SetK0_eq_Jump (O : Set ℕ) : SetK0 O ≡ᵀ O⌜ := SetK0_eq_SetK O
 
-theorem SetJump_not_le_Set (O : Set ℕ) : ¬O⌜ ≤ ᵀO := by
+theorem SetJump_not_le_Set (O : Set ℕ) : ¬O⌜≤ᵀO := by
   intro h
   simp only [SetJump] at h
   apply K_nle_O
@@ -375,7 +375,7 @@ theorem dom_to_ran_prop {O e} : W O e = WR O (dom_to_ran e) := by
 
 def c_dom_to_ran := c_c_ifdom.comp₂ (c_comp₂.comp₃ (c_const c_eval) (c_c_const) (c_const c_id)) (c_const c_id)
 @[cp] theorem c_dom_to_ran_prim : code_prim c_dom_to_ran := by unfold c_dom_to_ran; apply_cp
-@[simp] theorem c_dom_to_ran_evp {O} : evalp O c_dom_to_ran = fun (x : ℕ) ↦ c2n (dom_to_ran x) := by
+@[simp, evp_simps] theorem c_dom_to_ran_evp {O} : evalp O c_dom_to_ran = fun (x : ℕ) ↦ c2n (dom_to_ran x) := by
   simp [c_dom_to_ran, dom_to_ran]
 theorem Nat.PrimrecIn.dom_to_ran {O} : Nat.PrimrecIn O (fun (x : ℕ) ↦ (dom_to_ran x).c2n) := by
   rw [← c_dom_to_ran_evp]; exact code_prim_prop
@@ -431,7 +431,7 @@ def c_ran_to_dom := c_dovetail.comp <|
   c_comp₂.comp₃ (c_const c_if_eq') c_left <|
   c_comp₂.comp₃ (c_const c_eval₁) c_c_const c_right
 @[cp] theorem c_ran_to_dom_prim : code_prim c_ran_to_dom := by unfold c_ran_to_dom; apply_cp
-@[simp] theorem c_ran_to_dom_evp {O} : evalp O c_ran_to_dom = fun (x : ℕ) ↦ c2n (ran_to_dom x) := by
+@[simp, evp_simps] theorem c_ran_to_dom_evp {O} : evalp O c_ran_to_dom = fun (x : ℕ) ↦ c2n (ran_to_dom x) := by
   simp [c_ran_to_dom, ran_to_dom]
 theorem Nat.PrimrecIn.ran_to_dom {O} : Nat.PrimrecIn O (fun (x : ℕ) ↦ (ran_to_dom x).c2n) := by
   rw [← c_ran_to_dom_evp]; exact code_prim_prop
@@ -472,12 +472,12 @@ theorem CEin_range {O A} : CEin O A ↔ ∃ c, A = WR O c := by
 /-
 Proof sketch:
 
-Let A ≤ ᵀB via `c`.
+Let A≤ᵀB via `c`.
 
 Then, the function:
 fun x ↦ 0 if (c B x)↓ else ↑ has domain A.
 -/
-theorem reducible_imp_W {A B} : A ≤ ᵀB → ∃ c, W B c = A := by
+theorem reducible_imp_W {A B} : A≤ᵀB → ∃ c, W B c = A := by
   intro h
   rcases reducible_iff_code.mp h with ⟨c,h⟩
   use c_ite c c_diverge zero
@@ -486,11 +486,11 @@ theorem reducible_imp_W {A B} : A ≤ ᵀB → ∃ c, W B c = A := by
   unfold χ
   aesop
 
-theorem Cin_iff_Cin' {A B} : A ≤ ᵀB ↔ Aᶜ ≤ ᵀB := by
+theorem Cin_iff_Cin' {A B} : A≤ᵀB ↔ Aᶜ≤ᵀB := by
   /-
-  proof sketch; if A ≤ ᵀB via c, then Aᶜ ≤ ᵀB via Nat.sg' c.
+  proof sketch; if A≤ᵀB via c, then Aᶜ≤ᵀB via Nat.sg' c.
   -/
-  have main (A B) : A ≤ ᵀB → Aᶜ ≤ ᵀB := by
+  have main (A B) : A≤ᵀB → Aᶜ≤ᵀB := by
     intro h
     simp only [reducible_iff_code] at *
     rcases h with ⟨c,hc⟩
@@ -505,7 +505,7 @@ theorem Cin_iff_Cin' {A B} : A ≤ ᵀB ↔ Aᶜ ≤ ᵀB := by
   simp only [compl_compl] at this
   exact this
 
-theorem Cin_iff_CEin_CEin' {A B} : A ≤ ᵀB ↔ (CEin B A ∧ CEin B Aᶜ) := by
+theorem Cin_iff_CEin_CEin' {A B} : A≤ᵀB ↔ (CEin B A ∧ CEin B Aᶜ) := by
   constructor
   -- first, the trivial direction.
   · intro h

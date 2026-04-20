@@ -275,7 +275,7 @@ def c_fs_in := c_mod.comp₂
   (c_div.comp₂ left (c_pow.comp₂ (c_const 2) right))
   (c_const 2)
 @[cp] theorem c_fs_in_prim : code_prim c_fs_in := by unfold c_fs_in; apply_cp
-@[simp] theorem c_fs_in_evp {O x y}: evalp O c_fs_in ⟪x,y⟫ = (b2n <| fs_in x y) := by
+@[simp, evp_simps] theorem c_fs_in_evp {O x y}: evalp O c_fs_in ⟪x,y⟫ = (b2n <| fs_in x y) := by
   simp [c_fs_in,evalp];
   simp [fs_in, b2n]
   grind
@@ -286,7 +286,7 @@ section fs_add
 namespace Oracle.Single.Code
 def c_fs_add := c_or.comp₂ left <| c_pow.comp₂ (c_const 2) right
 @[cp] theorem c_fs_add_prim : code_prim c_fs_add := by unfold c_fs_add; apply_cp
-@[simp] theorem c_fs_add_evp {O x y}: evalp O c_fs_add ⟪x,y⟫ = (fs_add x y) := by
+@[simp, evp_simps] theorem c_fs_add_evp {O x y}: evalp O c_fs_add ⟪x,y⟫ = (fs_add x y) := by
   simp [c_fs_add,evalp];
 end Oracle.Single.Code
 end fs_add
@@ -347,7 +347,7 @@ def c_step :=
   have hsearch : code_prim search := by apply_cp
   have hx : code_prim x := by apply_cp
   apply_cp 60
-@[simp] theorem c_step_evp {s i prev} : evalp (χ ∅) c_step ⟪s, i, prev⟫ = Simple.step s i prev := by
+@[simp, evp_simps] theorem c_step_evp {s i prev} : evalp (χ ∅) c_step ⟪s, i, prev⟫ = Simple.step s i prev := by
   -- funext x
   unfold Simple.step
   unfold c_step
@@ -438,7 +438,7 @@ def c_C := c_prec1 0 <|
 
 @[cp] theorem c_C_prim : code_prim c_C := by unfold c_C; apply_cp
 
-@[simp] theorem c_C_evp : evalp (χ ∅) c_C = Simple.C := by
+@[simp, evp_simps] theorem c_C_evp : evalp (χ ∅) c_C = Simple.C := by
   funext x
   induction x with
   | zero =>

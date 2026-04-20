@@ -49,7 +49,7 @@ Given an input of the form ``⟪x, i, list⟫``, the code `c_efl_prec c` compute
 def c_efl_prec := fun c ↦ c_list_concat.comp (pair (c_id.comp (right.comp right)) c)
 @[cp] theorem c_efl_prec_prim {c} (h : code_prim c) : code_prim <| c_efl_prec c := by
   unfold c_efl_prec; apply_cp
-@[simp] theorem c_efl_prec_evp {O c x} :
+@[simp, evp_simps] theorem c_efl_prec_evp {O c x} :
     evalp O (c_efl_prec c) x = l2n ((n2l x.r.r).concat (evalp O c x)) := by
   simp [c_efl_prec]
 end Oracle.Single.Code
@@ -75,11 +75,11 @@ def c_cov_rec (cf cg : Code) :=
 @[cp] theorem c_cov_rec_prim {c1 c2} (hc1 : code_prim c1) (hc2 : code_prim c2) :
     code_prim (c_cov_rec c1 c2) := by
   unfold c_cov_rec; apply_cp
-@[simp] theorem c_cov_rec_evp_size_positive {O cf cg x i} :
+@[simp, evp_simps] theorem c_cov_rec_evp_size_positive {O cf cg x i} :
     0 < (n2l (evalp O (c_cov_rec cf cg) ⟪x,i⟫)).length := by
   unfold c_cov_rec
   induction i <;> simp
-@[simp] theorem c_cov_rec_evp_size {O cf cg x i} :
+@[simp, evp_simps] theorem c_cov_rec_evp_size {O cf cg x i} :
     (n2l (evalp O (c_cov_rec cf cg) ⟪x,i⟫)).length = i + 1 := by
   unfold c_cov_rec
   simp [evalp]
@@ -94,16 +94,16 @@ theorem c_cov_rec_evp_indt {O cf cg x i} :
   rw [c_cov_rec]
   rw [evalp]
   simp
-@[simp] theorem c_cov_rec_evp_base_I {O cf cg x} :
+@[simp, evp_simps] theorem c_cov_rec_evp_base_I {O cf cg x} :
     getLastI (n2l (evalp O (c_cov_rec cf cg) ⟪x,0⟫)) = evalp O cf x := by
   unfold c_cov_rec
   simp [getLastI]
-@[simp] theorem c_cov_rec_evp_get0 {O cf cg x i} :
+@[simp, evp_simps] theorem c_cov_rec_evp_get0 {O cf cg x i} :
     (n2l (evalp O (c_cov_rec cf cg) ⟪x,i⟫))[0] = evalp O cf x := by
   induction i with
   | zero => unfold c_cov_rec; simp [evalp]
   | succ i h => simp [c_cov_rec_evp_indt, h]
-@[simp] theorem c_cov_rec_evp_get0_I {O cf cg x i} :
+@[simp, evp_simps] theorem c_cov_rec_evp_get0_I {O cf cg x i} :
     getI (n2l (evalp O (c_cov_rec cf cg) ⟪x,i⟫)) 0 = evalp O cf x := by
   induction i with
   | zero => unfold c_cov_rec; simp [evalp, getI]
@@ -146,7 +146,7 @@ theorem c_cov_rec_evp_get_aux_I {O cf cg x j i} (h : j ≤ i) :
   simp [getI]
   grind
 
-@[simp] theorem c_cov_rec_evp_get {O cf cg x j i} (h : j ≤ i) :
+@[simp, evp_simps] theorem c_cov_rec_evp_get {O cf cg x j i} (h : j ≤ i) :
     (n2l (evalp O (c_cov_rec cf cg) ⟪x,i⟫))[j]'(by simp [c_cov_rec_evp_size]; omega) =
     getLastI (evalp O (c_cov_rec cf cg) ⟪x, j⟫) := by
   rw [c_cov_rec_evp_last]
@@ -159,7 +159,7 @@ theorem c_cov_rec_evp_get_aux_I {O cf cg x j i} (h : j ≤ i) :
       rw [← ih h1]
       rw [← c_cov_rec_evp_get_aux]
       exact h1
-@[simp] theorem c_cov_rec_evp_getI {O cf cg x j i} (h : j ≤ i) :
+@[simp, evp_simps] theorem c_cov_rec_evp_getI {O cf cg x j i} (h : j ≤ i) :
     getI (n2l (evalp O (c_cov_rec cf cg) ⟪x,i⟫)) j =
     getLastI (evalp O (c_cov_rec cf cg) ⟪x, j⟫) := by
   rw [← @c_cov_rec_evp_get O cf cg x j i h]
@@ -296,11 +296,11 @@ theorem c_div_flip_evp_aux {O} : evalp O c_div_flip = unpaired2 div_flip_aux := 
       rw [ih (n'-d') (sub_lt_succ n' d')]
       unfold div_flip_aux; simp
 
-@[simp] theorem c_div_flip_evp {O} :
+@[simp, evp_simps] theorem c_div_flip_evp {O} :
     evalp O c_div_flip = unpaired2 (flip ((· / ·) : ℕ → ℕ → ℕ)) := by
   rw [c_div_flip_evp_aux]
   simp [div_flip_aux_eq_div_flip]
-@[simp] theorem c_div_evp {O a b} : evalp O c_div ⟪a,b⟫ = a/b := by
+@[simp, evp_simps] theorem c_div_evp {O a b} : evalp O c_div ⟪a,b⟫ = a/b := by
   unfold c_div
   simp [evalp]
   simp [flip]
@@ -322,7 +322,7 @@ section mod
 namespace Oracle.Single.Code
 def c_mod := c_sub.comp₂ left (c_mul.comp₂ right c_div)
 @[cp] theorem c_mod_prim : code_prim c_mod := by unfold c_mod; apply_cp
-@[simp] theorem c_mod_evp {O} : evalp O c_mod = unpaired2 ((· % ·) : ℕ → ℕ → ℕ) := by
+@[simp, evp_simps] theorem c_mod_evp {O} : evalp O c_mod = unpaired2 ((· % ·) : ℕ → ℕ → ℕ) := by
   -- simp [c_mod, evalp]
   simp only [c_mod, comp₂_evp, evalp, c_mul_evp, c_sub_evp]
   funext mn
@@ -342,7 +342,7 @@ section div2
 namespace Oracle.Single.Code
 def c_div2 := c_div.comp₂ c_id (c_const 2)
 @[cp] theorem c_div2_prim : code_prim c_div2 := by unfold c_div2; apply_cp
-@[simp] theorem c_div2_evp {O} : evalp O c_div2 = div2 := by simp [c_div2]; funext x; exact Eq.symm (div2_val x)
+@[simp, evp_simps] theorem c_div2_evp {O} : evalp O c_div2 = div2 := by simp [c_div2]; funext x; exact Eq.symm (div2_val x)
 @[simp] theorem c_div2_ev {O} : eval O c_div2 = div2 := by simp [← evalp_eq_eval c_div2_prim]
 end Oracle.Single.Code
 end div2
@@ -350,7 +350,7 @@ section mod2
 namespace Oracle.Single.Code
 def c_mod2 := c_mod.comp₂ c_id (c_const 2)
 @[cp] theorem c_mod2_prim : code_prim c_mod2 := by unfold c_mod2; apply_cp
-@[simp] theorem c_mod2_evp {O} : evalp O c_mod2 = fun x ↦ x%2 := by simp [c_mod2];
+@[simp, evp_simps] theorem c_mod2_evp {O} : evalp O c_mod2 = fun x ↦ x%2 := by simp [c_mod2];
 @[simp] theorem c_mod2_ev {O} : eval O c_mod2 = (fun x : ℕ ↦ x%2) := by simp [← evalp_eq_eval c_mod2_prim]
 end Oracle.Single.Code
 end mod2
@@ -604,7 +604,7 @@ theorem nMod4_eq_2 {n} (hno : n.bodd = false) (hn2o : n.div2.bodd = true) : n%4=
 theorem nMod4_eq_3 {n} (hno : n.bodd = true) (hn2o : n.div2.bodd = true) : n%4=3 := by
   rw [←codes_aux_3 hno hn2o]; omega
 
-@[simp] theorem c_replace_oracle_evp {O} :
+@[simp, evp_simps] theorem c_replace_oracle_evp {O} :
     evalp O (c_replace_oracle) = fun x ↦c2n (replace_oracle (n2c x.l) (n2c x.r)) := by
   funext oc
   let o := oc.l

@@ -1,5 +1,5 @@
 /-
--- in cooper p.220 theres the requirement also that A ≤ ᵀjumpn 1 ∅. is this necessary?
+-- in cooper p.220 theres the requirement also that A≤ᵀjumpn 1 ∅. is this necessary?
 def lowNIn (n : ℕ) (A O : Set ℕ) : Prop := jumpn n A = jumpn n O
 def lowN (n : ℕ) (A : Set ℕ) : Prop := lowNIn n A ∅
 abbrev low := lowN 1

@@ -22,7 +22,7 @@ section isSome
 namespace Oracle.Single.Code
 def c_isSome := c_sg'
 @[cp] theorem c_isSome_prim : code_prim c_isSome := by unfold c_isSome; apply_cp
-@[simp] theorem c_isSome_evp {O : ℕ → ℕ} : evalp O c_isSome = fun o => b'2n <| (n2o o).isSome := by
+@[simp, evp_simps] theorem c_isSome_evp {O : ℕ → ℕ} : evalp O c_isSome = fun o => b'2n <| (n2o o).isSome := by
   funext x; cases x <;> simp [c_isSome, b'2n, n2o]
 @[simp] theorem c_isSome_ev {O} : eval O c_isSome = fun o => b'2n <| (n2o o).isSome := by
   rw [← evalp_eq_eval c_isSome_prim]; simp only [c_isSome_evp];
@@ -33,13 +33,13 @@ section opt_iget
 namespace Oracle.Single.Code
 def c_opt_iget := c_pred
 @[cp] theorem c_opt_iget_prim : code_prim c_opt_iget := by unfold c_opt_iget; apply_cp
-@[simp] theorem c_opt_iget_evp {O : ℕ → ℕ} {o} : evalp O c_opt_iget o = Option.getD (n2o o) 0 := by
+@[simp, evp_simps] theorem c_opt_iget_evp {O : ℕ → ℕ} {o} : evalp O c_opt_iget o = Option.getD (n2o o) 0 := by
   simp [c_opt_iget]
   by_cases ho : o=0
   · simp [ho];
   · rcases exists_add_one_eq.mpr (one_le_iff_ne_zero.mpr ho) with ⟨k,hk⟩
     simp [←hk]
-@[simp] theorem iget_evp_2 {o} (h : o ≠ 0) : Option.getD (n2o o) 0 = o-1 :=  by
+@[simp, evp_simps] theorem iget_evp_2 {o} (h : o ≠ 0) : Option.getD (n2o o) 0 = o-1 :=  by
   rw [Eq.symm (succ_pred_eq_of_ne_zero h)]
   exact rfl
 
@@ -51,7 +51,7 @@ section opt_getD
 namespace Oracle.Single.Code
 def c_opt_getD := c_ifz.comp₃ left right (c_opt_iget.comp left)
 @[cp] theorem c_opt_getD_prim : code_prim c_opt_getD := by unfold c_opt_getD; apply_cp
-@[simp] theorem c_opt_getD_evp {O : ℕ → ℕ} {o d} :
+@[simp, evp_simps] theorem c_opt_getD_evp {O : ℕ → ℕ} {o d} :
     evalp O c_opt_getD (Nat.pair o d) = (n2o o).getD d := by
   simp [c_opt_getD]
   by_cases ho : o=0
@@ -69,7 +69,7 @@ namespace Oracle.Single.Code
 def c_opt_none := c_const 0
 @[cp] theorem c_opt_none_prim : code_prim c_opt_none := by
   unfold c_opt_none; apply_cp
-@[simp] theorem c_opt_none_evp {O : ℕ → ℕ} {o} : evalp O c_opt_none o = o2n Option.none := by
+@[simp, evp_simps] theorem c_opt_none_evp {O : ℕ → ℕ} {o} : evalp O c_opt_none o = o2n Option.none := by
   simp [c_opt_none]
 @[simp] theorem c_opt_none_ev {O : ℕ → ℕ} {o} :
     n2o <$> (eval O c_opt_none o) = (Option.none : Option ℕ) := by
@@ -82,7 +82,7 @@ namespace Oracle.Single.Code
 def c_opt_bind (cf cg : Code) :=  c_ifz.comp₃ cf zero (cg.comp₂ c_id (c_opt_iget.comp cf))
 @[cp] theorem c_opt_bind_prim {cf cg : Code} (hcf : code_prim cf) (hcg : code_prim cg) :
   code_prim (c_opt_bind cf cg) := by unfold c_opt_bind; apply_cp
-@[simp] theorem c_opt_bind_evp {O : ℕ → ℕ} {cf cg : Code} {x} : evalp O (c_opt_bind cf cg) x =
+@[simp, evp_simps] theorem c_opt_bind_evp {O : ℕ → ℕ} {cf cg : Code} {x} : evalp O (c_opt_bind cf cg) x =
   o2n do
     let t ← n2o (evalp O cf x)
     let r ← n2o (evalp O cg (Nat.pair x t))
@@ -105,7 +105,7 @@ namespace Oracle.Single.Code
 def c_opt_bind' (cf cg : Code) :=  c_ifz.comp₃ cf zero cg
 @[cp] theorem c_opt_bind'_prim {cf cg : Code} (hcf : code_prim cf) (hcg : code_prim cg) :
   code_prim (c_opt_bind' cf cg) := by unfold c_opt_bind'; apply_cp
-@[simp] theorem c_opt_bind'_evp {O : ℕ → ℕ} {cf cg : Code} {x} : evalp O (c_opt_bind' cf cg) x =
+@[simp, evp_simps] theorem c_opt_bind'_evp {O : ℕ → ℕ} {cf cg : Code} {x} : evalp O (c_opt_bind' cf cg) x =
   o2n do
     let _ ← n2o (evalp O cf x)
     let r ← n2o (evalp O cg x)
