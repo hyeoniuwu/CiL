@@ -609,43 +609,79 @@ lemma usen_rfind_prop2_indt_helper
   rw [← (Part.eq_get_iff_mem (en2e evalnindtdom)).mpr this]
   rw [← add_assoc]
   simp
-lemma usen_rfind_prop2_indt_helper_2
-(O : ℕ → ℕ)
-(k : ℕ)
-(cf : Code)
-(roM1 x : ℕ)
-(h1 : (evaln O (k + 1) cf x).isSome = true)
-(base : ℕ)
-(nrop6 : ∀ j ≤ roM1 + 1, roM1 + 1 + x.r ∈ evaln O (k + 1 - j) cf.rfind' ⟪x.l,j + x.r⟫)
-(usenindtdom : (usen O cf.rfind' k ⟪x.l,x.r + 1⟫).isSome = true)
-(aux0 : (evaln O (k + 1) cf ⟪x.l,x.r + 1⟫).isSome = true)
-(nrop : evaln O k cf ⟪x.l,1 + x.r⟫ = some 0 ∧
-  (∀ j ≤ 1, (evaln O (k + 1 - j) cf ⟪x.l,j + x.r⟫).isSome = true) ∧ ¬evaln O (k + 1) cf x = some 0)
-(hroM1 : roM1 = 0)
-:
- some (base.max (((usen O cf (k + 1) x).get (en2un h1)).max ((usen O cf.rfind' k ⟪x.l,x.r + 1⟫).get usenindtdom))) =
-  if roM1 = 0 then
-    some (max base (max ((usen O cf (k + 1) x).get (en2un h1)) ((usen O cf (k + 1) ⟪x.l,x.r + 1⟫).get (en2un aux0))))
-  else
-    (usen O cf.rfind' k ⟪x.l,x.r + 1 + 1⟫).bind fun a ↦
-      some
-        (max base
-          (max ((usen O cf (k + 1) x).get (en2un h1)) (((usen O cf (k + 1) ⟪x.l,x.r + 1⟫).get (en2un aux0)).max a))) := by
-        simp? [hroM1]  at ⊢ nrop6 nrop says
-          simp only [hroM1, zero_add, Option.mem_def, add_tsub_cancel_right, lt_one_iff, forall_eq,
-            tsub_zero, pair_lr, ↓reduceIte, Nat.max_assoc, Option.some.injEq] at ⊢ nrop6 nrop
-        have nropleft := nrop.left
-        rw [add_comm] at nropleft
-        have :
-            ((usen O cf.rfind' k ⟪x.l, x.r+1⟫).get usenindtdom) =
-            ((usen O cf (k + 1) ⟪x.l, x.r+1⟫).get (en2un aux0)) := by
-          have := nrop6 1 (le_rfl)
-          simp at this
-          have : k=k-1+1 := nrf_aux usenindtdom
-          simp (config := { singlePass := true }) only [this]
-          simp only [usen, pair_l, pair_r, Option.bind_eq_bind, Option.get_bind, Option.some_get]
-          simpa [← this, nropleft] using usen_sing'
-        rw [this]
+
+lemma usen_rfind_prop2_indt_helper2
+    (O : ℕ → ℕ) (k : ℕ) (cf : Code)
+    (roM1 x : ℕ)
+    (h1 : (evaln O (k + 1) cf x).isSome = true)
+    (base : ℕ)
+    (usenindtdom : (usen O cf.rfind' k ⟪x.l,x.r + 1⟫).isSome = true)
+    (nrop1 : 0 ∈ evaln O (k + 1 - (roM1 + 1)) cf ⟪x.l,roM1 + 1 + x.r⟫)
+    (nrop2 : ∀ j ≤ roM1 + 1, (evaln O (k + 1 - j) cf ⟪x.l,j + x.r⟫).isSome = true)
+    (nrop3 : ∀ j < roM1 + 1, 0 ∉ evaln O (k + 1 - j) cf ⟪x.l,j + x.r⟫)
+    (nrop6 : ∀ j ≤ roM1 + 1, roM1 + 1 + x.r ∈ evaln O (k + 1 - j) cf.rfind' ⟪x.l,j + x.r⟫)
+    (aux0 : (evaln O (k + 1) cf ⟪x.l,x.r + 1⟫).isSome = true) :
+    (if roM1 = 0 then
+        some ((base.max ((usen O cf (k + 1) x).get (en2un h1))).max
+        ((usen O cf (k + 1) ⟪x.l,x.r + 1⟫).get (en2un aux0)))
+      else
+        (usen O cf.rfind' k ⟪⟪x.l,x.r + 1⟫.l,⟪x.l,x.r + 1⟫.r + 1⟫).bind fun a ↦
+          some
+            ((base.max ((usen O cf (k + 1) x).get (en2un h1))).max
+              (((usen O cf (k + 1) ⟪x.l,x.r + 1⟫).get (en2un aux0)).max a))) =
+      some (base.max (((usen O cf (k + 1) x).get (en2un h1)).max
+      ((usen O cf.rfind' k ⟪x.l,x.r + 1⟫).get usenindtdom))) := by
+  if hroM1 : roM1=0 then
+  simp? [hroM1]  at ⊢ nrop6 nrop1 says
+    simp only [hroM1, zero_add, Option.mem_def, add_tsub_cancel_right,
+    ↓reduceIte, Nat.max_assoc, Option.some.injEq] at ⊢ nrop6 nrop1
+  have nropleft := nrop1
+  rw [add_comm] at nropleft
+  have :
+      ((usen O cf.rfind' k ⟪x.l, x.r+1⟫).get usenindtdom) =
+      ((usen O cf (k + 1) ⟪x.l, x.r+1⟫).get (en2un aux0)) := by
+    have := nrop6 1 (le_rfl)
+    simp at this
+    have : k=k-1+1 := nrf_aux usenindtdom
+    simp (config := { singlePass := true }) only [this]
+    simp only [usen, pair_l, pair_r, Option.bind_eq_bind, Option.get_bind, Option.some_get]
+    simpa [← this, nropleft] using usen_sing'
+  rw [this]
+else
+  -- clear ih
+  simp [hroM1]
+  have roM1M1: roM1 = roM1-1+1 := Eq.symm (succ_pred_eq_of_ne_zero hroM1)
+  simp (config := {singlePass := true}) [roM1M1] at *
+  have : (usen O cf.rfind' k (Nat.pair x.l (x.r + 1 + 1))).isSome := by
+    have := nrop6 (1+1) (le_add_left (1 + 1) (roM1 - 1))
+    simp only [reduceSubDiff] at this
+    have := Option.isSome_of_mem this
+    ac_nf at this ⊢
+    simp at this ⊢
+    exact usen_mono_dom (show k-1 ≤ k from sub_le k 1) (en2un this)
+  simp [isSome.bind this]
+  apply congrArg
+  apply congrArg
+  have kkk : k=k-1+1 :=  nrf_aux usenindtdom
+  simp [congrFun (congrArg (usen O cf.rfind') kkk) ⟪x.l, x.r+1⟫]
+  simp [usen]
+  have auxdom1 : (evaln O k cf ⟪x.l, x.r+1⟫).isSome := by
+    have := nrop2 1 (le_add_left 1 (roM1 - 1 + 1))
+    simp at this
+    rwa [add_comm]
+  have r1 : (evaln O k cf ⟪x.l, x.r+1⟫).get auxdom1 ≠ 0 := by
+    have := nrop3 1 (one_lt_succ_succ (roM1 - 1))
+    simp at this
+    rw [add_comm] at this
+    contrapose this
+    rw [← this]
+    simp
+  simp at this
+  rw [add_comm] at this
+  simp [← kkk]
+  simp [r1]
+  apply congr (congr rfl usen_sing') usen_sing'
+
 set_option pp.proofs true in
 /--
 rewrites the use of a rfind' in terms of a for loop,
@@ -665,276 +701,157 @@ theorem usen_rfind_prop2 {O k x y cf} :
   rw [unrpeq0]
   rw [unrpeq1]
   constructor
-  intro h
-  rcases h with ⟨_,h2,h3⟩
-  have h1 : (evaln O (k + 1) cf x).isSome := (nrf (en2un h2)).right.right
-  use h2
-  let base' := 0
-  rw [show 0=base' from rfl]
-  have :
+  · intro h
+    rcases h with ⟨_, h2,h3⟩
+    have h1 : (evaln O (k + 1) cf x).isSome := (nrf (en2un h2)).right.right
+    use h2
+    let base' := 0
+    rw [show 0=base' from rfl]
+    have :
+      (if (evaln O (k + 1) cf.rfind' x).get h2 - x.r = 0 then (usen O cf (k + 1) x) else
+        (usen O cf.rfind' (k + 1 - 1) ⟪x.l, x.r+1⟫).bind fun usen_indt ↦
+          some (((usen O cf (k + 1) x).get (en2un h1)).max usen_indt)) =
+      (if (evaln O (k + 1) cf.rfind' x).get h2 - x.r = 0 then (some (base'.max ((usen O cf (k + 1) x).get (en2un h1)))) else
+        (usen O cf.rfind' (k + 1 - 1) ⟪x.l, x.r+1⟫).bind fun usen_indt ↦
+          some (base'.max <| ((usen O cf (k + 1) x).get (en2un h1)).max usen_indt)) := by
+      simp [show base' = 0 from rfl]
+    rw [this] at h3
+    -- we prepare to induct on the rfind'_obtain value.
+    clear this
+    have rorw : rfind'_obtain (en2e h2) = (evaln O (k + 1) cf.rfind' x).get h2 - x.r := by
+      simp [rfind'_obtain, evaln_eq_eval h2]
+    revert h3
+    revert rorw
+    generalize base'=base
+    clear base'
+    induction (evaln O (k + 1) cf.rfind' x).get h2 - x.r generalizing base h2 x with
+    | zero => simp [isSome.bind <| en2un h1]
+    | succ roM1 ih =>
+      simp? (config := { singlePass := true }) [rr_indt] says
+        simp (config := { singlePass := true }) only [Nat.add_eq_zero_iff, add_tsub_cancel_right,
+          rr_indt, forIn_cons]
+      simp only [one_ne_zero, and_false, ↓reduceIte, reduceSubDiff, Option.pure_def,
+        Option.bind_eq_bind]
+      intro hro h
+      have usenindtdom : (usen O cf.rfind' k ⟪x.l, x.r+1⟫).isSome := by
+        contrapose h; simp at h; simp [h]
+      simp only [isSome.bind usenindtdom, Option.some.injEq, add_tsub_cancel_right] at h ih
+      have evalnindtdom := un2en usenindtdom
+      have nrfindt := nrf usenindtdom
+      rcases nrfind'_obtain_prop' h2 with ⟨nrop1, nrop2, nrop3, nrop4⟩
+      have nrop6 := nrfind'_obtain_prop_6' h2
+      rw [hro] at nrop1 nrop2 nrop3 nrop4 nrop6
+      have nrop2' : (∀ j ≤ roM1 + 1, (usen O cf (k + 1 - j) ⟪x.l, j+x.r⟫).isSome) :=
+        fun j a ↦ en2un (nrop2 j a)
+      have asddom : (usen O cf (k - roM1) ⟪x.l,roM1 + 1 + x.r⟫).isSome := by
+        have := nrop2' (roM1+1) (le_rfl)
+        simpa using this
+      simp only [isSome.bind asddom, Option.bind_some]
+      have aux0 : (evaln O (k + 1) cf ⟪x.l, x.r+1⟫).isSome :=
+        Option.isSome_of_mem (evaln_mono (le_add_right k 1) (Option.get_mem nrfindt.right.right))
+      replace ih := @ih
+        ⟪x.l, x.r+1⟫
+        aux0
+        (Option.isSome_of_mem (evaln_mono (le_add_right k 1) (Option.get_mem evalnindtdom)))
+        aux0
+        (base.max ((usen O cf (k + 1) x).get (en2un h1)))
+        ?_
+        ?_
+      rotate_left
+      · exact usen_rfind_prop2_indt_helper O k cf roM1 x h2 hro evalnindtdom
+      · rw [← h]
+        (expose_names;
+          exact
+            usen_rfind_prop2_indt_helper2 O k cf roM1 x w base usenindtdom nrop1 nrop2 nrop3 nrop6
+              aux0)
+
+      simp at ih
+      have := @lemlemlem2 O k cf x roM1 (asddom) base h1 (en2un h1) (en2un aux0) (fun j a ↦ nrop2' j a)
+      rw [this] at ih
+      rw [ih]
+
+  · -- mpr
+    intro h
+    rcases h with ⟨h2,h3⟩
+    have h1 : (evaln O (k + 1) cf x).isSome := (nrf (en2un h2)).right.right
+    use h1; use h2
+    let base' := 0
+    rw [show 0=base' from rfl] at h3
+    have :
     (if (evaln O (k + 1) cf.rfind' x).get h2 - x.r = 0 then (usen O cf (k + 1) x) else
       (usen O cf.rfind' (k + 1 - 1) ⟪x.l, x.r+1⟫).bind fun usen_indt ↦
-        some (((usen O cf (k + 1) x).get (en2un h1)).max usen_indt)) =
+        some (((usen O cf (k + 1) x).get (en2un h1)).max usen_indt))
+      =
     (if (evaln O (k + 1) cf.rfind' x).get h2 - x.r = 0 then (some (base'.max ((usen O cf (k + 1) x).get (en2un h1)))) else
       (usen O cf.rfind' (k + 1 - 1) ⟪x.l, x.r+1⟫).bind fun usen_indt ↦
-        some (base'.max <| ((usen O cf (k + 1) x).get (en2un h1)).max usen_indt)) := by
-    simp [show base' = 0 from rfl]
-  rw [this] at h3
-  -- we prepare to induct on the rfind'_obtain value.
-  clear this
-  have rorw : rfind'_obtain (en2e h2) = (evaln O (k + 1) cf.rfind' x).get h2 - x.r := by
-    simp [rfind'_obtain, evaln_eq_eval h2]
-  revert h3
-  revert rorw
-  generalize base'=base
-  clear base'
-  induction (evaln O (k + 1) cf.rfind' x).get h2 - x.r generalizing base h2 x with
-  | zero => simp [isSome.bind <| en2un h1]
-  | succ roM1 ih =>
-    -- simp
-    -- simp at ih
-    simp? (config := { singlePass := true }) [rr_indt] says
-      simp (config := { singlePass := true }) only [Nat.add_eq_zero_iff, add_tsub_cancel_right,
-        rr_indt, forIn_cons]
-    simp only [one_ne_zero, and_false, ↓reduceIte, reduceSubDiff, Option.pure_def,
-      Option.bind_eq_bind]
-    intro hro h
-    have usenindtdom : (usen O cf.rfind' k ⟪x.l, x.r+1⟫).isSome := by
-      contrapose h; simp at h; simp [h]
-    simp only [isSome.bind usenindtdom, Option.some.injEq, add_tsub_cancel_right] at h ih
-    have evalnindtdom := un2en usenindtdom
-    have nrfindt := nrf usenindtdom
-    -- have nrop := nrfind'_obtain_prop' h2
-    rcases nrfind'_obtain_prop' h2 with ⟨nrop1, nrop222, nrop3, nrop4⟩
+        some (base'.max <| ((usen O cf (k + 1) x).get (en2un h1)).max usen_indt))
+  := by
+      simp [show base'=0 from rfl]
+    rw [this]
+    clear this
 
-    have nrop6 := nrfind'_obtain_prop_6' h2
-    rw [hro] at nrop1 nrop222 nrop3 nrop4 nrop6
-    have nrop2 : (∀ j ≤ roM1 + 1, (usen O cf (k + 1 - j) ⟪x.l, j+x.r⟫).isSome) := fun j a ↦ en2un (nrop222 j a)
-    have asddom : (usen O cf (k - roM1) ⟪x.l,roM1 + 1 + x.r⟫).isSome := by
-      have := nrop2 (roM1+1) (le_rfl)
-      simpa using this
-    simp only [isSome.bind asddom, Option.bind_some]
-    have aux0 : (evaln O (k + 1) cf ⟪x.l, x.r+1⟫).isSome := Option.isSome_of_mem (evaln_mono (le_add_right k 1) (Option.get_mem nrfindt.right.right))
-    replace ih := @ih
-      ⟪x.l, x.r+1⟫
-      aux0
-      (Option.isSome_of_mem (evaln_mono (le_add_right k 1) (Option.get_mem evalnindtdom)))
-      aux0
-      (base.max ((usen O cf (k + 1) x).get (en2un h1)))
-      ?_
-      ?_
-    rotate_left
-    · exact usen_rfind_prop2_indt_helper O k cf roM1 x h2 hro evalnindtdom
-    · rw [← h]
-      if hroM1 : roM1=0 then
-        simp? [hroM1]  at ⊢ nrop6 nrop says
-          simp only [hroM1, zero_add, Option.mem_def, add_tsub_cancel_right, lt_one_iff, forall_eq,
-            tsub_zero, pair_lr, ↓reduceIte, Nat.max_assoc, Option.some.injEq] at ⊢ nrop6 nrop1 nrop222 nrop3 nrop4
-        have nropleft := nrop1
-        rw [add_comm] at nropleft
-        have :
-            ((usen O cf.rfind' k ⟪x.l, x.r+1⟫).get usenindtdom) =
-            ((usen O cf (k + 1) ⟪x.l, x.r+1⟫).get (en2un aux0)) := by
-          have := nrop6 1 (le_rfl)
-          simp at this
-          have : k=k-1+1 := nrf_aux usenindtdom
-          simp (config := { singlePass := true }) only [this]
-          simp only [usen, pair_l, pair_r, Option.bind_eq_bind, Option.get_bind, Option.some_get]
-          simpa [← this, nropleft] using usen_sing'
-        rw [this]
-      else
-        clear ih
-        simp [hroM1]
-        have roM1M1: roM1 = roM1-1+1 := Eq.symm (succ_pred_eq_of_ne_zero hroM1)
-        simp (config := {singlePass := true}) [roM1M1] at *
-        have : (usen O cf.rfind' k (Nat.pair x.l (x.r + 1 + 1))).isSome := by
-          have := nrop6 (1+1) (le_add_left (1 + 1) (roM1 - 1))
-          simp only [reduceSubDiff] at this
-          have := Option.isSome_of_mem this
-          ac_nf at this ⊢
-          simp at this ⊢
-          exact usen_mono_dom (show k-1 ≤ k from sub_le k 1) (en2un this)
-        simp [isSome.bind this]
-        apply congrArg
-        apply congrArg
+    have rwro : rfind'_obtain (en2e h2) = (evaln O (k + 1) cf.rfind' x).get h2 - x.r := by
+      simp [rfind'_obtain]
+      rw [evaln_eq_eval h2]
+    revert h3
+    revert rwro
+    generalize base'=base
+    clear base'
 
-        have kkk : k=k-1+1 :=  nrf_aux usenindtdom
-        simp [show (usen O cf.rfind' k ⟪x.l, x.r+1⟫) = (usen O cf.rfind' (k-1+1) ⟪x.l, x.r+1⟫) from congrFun
-          (congrArg (usen O cf.rfind') kkk) ⟪x.l, x.r+1⟫]
-
-        simp [usen]
-
-        have auxdom1 : (evaln O k cf ⟪x.l, x.r+1⟫).isSome := by
-          have := nrop222 1 (le_add_left 1 (roM1 - 1 + 1))
-          simp at this
-          rwa [add_comm]
-        have r1 : (evaln O k cf ⟪x.l, x.r+1⟫).get auxdom1 ≠ 0 := by
-          have := nrop3 1 (one_lt_succ_succ (roM1 - 1))
-          simp at this
-          rw [add_comm] at this
-          contrapose this
-          rw [← this]
-          simp
+    induction (evaln O (k + 1) cf.rfind' x).get h2 - x.r generalizing base h2 x with
+    | zero => simp [isSome.bind <| en2un h1]
+    | succ roM1 ih =>
+      simp at ih ⊢
+      intro asd h
+      simp (config := {singlePass := true}) [rr_indt] at h
+      simp at h
+      -- have nrop := nrfind'_obtain_prop' h2
+      rcases nrfind'_obtain_prop' h2 with ⟨nrop1,nrop2,nrop3,nrop4⟩
+      -- have nrop4 := nrfind'_obtain_prop_4' h2
+      have nrop6 := nrfind'_obtain_prop_6' h2
+      rw [asd] at nrop1 nrop2 nrop3 nrop6 nrop4
+      have nrop2' : (∀ j ≤ roM1 + 1, (usen O cf (k + 1 - j) ⟪x.l, j+x.r⟫).isSome) :=
+        fun j a ↦ en2un (nrop2 j a)
+      have asddom : (usen O cf (k - roM1) ⟪x.l,roM1 + 1 + x.r⟫).isSome := by
+        have := nrop2' (roM1+1) (le_rfl)
+        simp at this
+        exact this
+      simp [isSome.bind asddom] at h
+      have usenindtdom : (usen O cf.rfind' k ⟪x.l, x.r+1⟫).isSome := by
+        have := nrop4 1 (le_add_left 1 roM1)
+        simp at this
+        rw [add_comm]
+        exact en2un this
+      have evalnindtdom := un2en usenindtdom
+      have nrfindt := nrf usenindtdom
+      have aux0 : (evaln O (k + 1) cf ⟪x.l, x.r+1⟫).isSome := by
+        have := nrop2 1 (le_add_left 1 roM1)
         simp at this
         rw [add_comm] at this
-        simp [← kkk]
-        simp [r1]
-        apply congr
-        apply congr
-        exact rfl
-        exact usen_sing'
-        exact usen_sing'
-
-    simp at ih
-    have := @lemlemlem2 O k cf x roM1 (asddom) base h1 (en2un h1) (en2un aux0) (fun j a ↦ nrop2 j a)
-    rw [this] at ih
-    rw [ih]
-
-  -- mpr
-  intro h
-  rcases h with ⟨h2,h3⟩
-  have h1 : (evaln O (k + 1) cf x).isSome := (nrf (en2un h2)).right.right
-  use h1
-  use h2
-
-  let base' := 0
-  rw [show 0=base' from rfl] at h3
-  have :
-  (if (evaln O (k + 1) cf.rfind' x).get h2 - x.r = 0 then (usen O cf (k + 1) x) else
-    (usen O cf.rfind' (k + 1 - 1) ⟪x.l, x.r+1⟫).bind fun usen_indt ↦
-      some (((usen O cf (k + 1) x).get (en2un h1)).max usen_indt))
-    =
-  (if (evaln O (k + 1) cf.rfind' x).get h2 - x.r = 0 then (some (base'.max ((usen O cf (k + 1) x).get (en2un h1)))) else
-    (usen O cf.rfind' (k + 1 - 1) ⟪x.l, x.r+1⟫).bind fun usen_indt ↦
-      some (base'.max <| ((usen O cf (k + 1) x).get (en2un h1)).max usen_indt))
- := by
-    simp [show base'=0 from rfl]
-  rw [this]
-  clear this
-
-  have asd : rfind'_obtain (en2e h2) = (evaln O (k + 1) cf.rfind' x).get h2 - x.r := by
-    simp [rfind'_obtain]
-    rw [evaln_eq_eval h2]
-
-
-  revert h3
-  revert asd
-  generalize base'=base
-  clear base'
-
-  induction (evaln O (k + 1) cf.rfind' x).get h2 - x.r generalizing base h2 x with
-  | zero => simp [isSome.bind <| en2un h1]
-  | succ roM1 ih =>
-    simp at ih ⊢
-    intro asd h
-    simp (config := {singlePass := true}) [rr_indt] at h
-    simp at h
-    -- have nrop := nrfind'_obtain_prop' h2
-    rcases nrfind'_obtain_prop' h2 with ⟨nrop1,nrop2,nrop3,nrop4⟩
-    -- have nrop4 := nrfind'_obtain_prop_4' h2
-    have nrop6 := nrfind'_obtain_prop_6' h2
-    rw [asd] at nrop1 nrop2 nrop3 nrop6 nrop4
-    have nrop222 : (∀ j ≤ roM1 + 1, (usen O cf (k + 1 - j) ⟪x.l, j+x.r⟫).isSome) := fun j a ↦ en2un (nrop2 j a)
-    have asddom : (usen O cf (k - roM1) ⟪x.l,roM1 + 1 + x.r⟫).isSome := by
-      have := nrop222 (roM1+1) (le_rfl)
-      simp at this
-      exact this
-    simp [isSome.bind asddom] at h
-    have usenindtdom : (usen O cf.rfind' k ⟪x.l, x.r+1⟫).isSome := by
-      have := nrop4 1 (le_add_left 1 roM1)
-      simp at this
-      rw [add_comm]
-      exact en2un this
-    have evalnindtdom := un2en usenindtdom
-    have nrfindt := nrf usenindtdom
-    have aux0 : (evaln O (k + 1) cf ⟪x.l, x.r+1⟫).isSome := by
-      have := nrop2 1 (le_add_left 1 roM1)
-      simp at this
-      rw [add_comm] at this
-      exact evaln_mono_dom (show k ≤ k + 1 from le_add_right k 1) this
-    have ih1 := @ih
-      ⟪x.l, x.r+1⟫
-      (Option.isSome_of_mem (evaln_mono (show k ≤ k + 1 from le_add_right k 1) (Option.get_mem evalnindtdom)))
-      aux0
-      (base.max ((usen O cf (k + 1) x).get (en2un h1)))
-      (usen_rfind_prop2_indt_helper O k cf roM1 x h2 asd evalnindtdom)
-      ?_
-    rotate_left
-    · simp
-      have := @lemlemlem2 O k cf x roM1 (asddom) base h1 (en2un h1) (en2un aux0) (fun j a ↦ nrop222 j a)
-      rw [this]
-      exact h
-    simp at ih1
-    rw [← ih1]
-    simp [isSome.bind usenindtdom]
--- TODO : DUPLICATED (the below is duplciated from above)
-    if hroM1 : roM1=0 then
-        -- apply usen_rfind_prop2_indt_helper_2
-        -- assumption
-        -- assumption
-        -- assumption
-        -- · 
-          
-        --   sorry
-        -- -- assumption
-        -- assumption
-        simp? [hroM1]  at ⊢ nrop6 nrop says
-          simp only [hroM1, zero_add, Option.mem_def, add_tsub_cancel_right, lt_one_iff, forall_eq,
-            tsub_zero, pair_lr, ↓reduceIte, Option.some.injEq] at ⊢ nrop6 nrop1 nrop2 nrop3 
-        have nropleft := nrop1
-        rw [add_comm] at nropleft
-        have :
-            ((usen O cf.rfind' k ⟪x.l, x.r+1⟫).get usenindtdom) =
-            ((usen O cf (k + 1) ⟪x.l, x.r+1⟫).get (en2un aux0)) := by
-          have := nrop6 1 (le_rfl)
-          simp at this
-          have : k=k-1+1 := nrf_aux usenindtdom
-          simp (config := { singlePass := true }) only [this]
-          simp only [usen, pair_l, pair_r, Option.bind_eq_bind, Option.get_bind, Option.some_get]
-          simpa [← this, nropleft] using usen_sing'
+        exact evaln_mono_dom (le_add_right k 1) this
+      have ih1 := @ih
+        ⟪x.l, x.r+1⟫
+        (Option.isSome_of_mem (evaln_mono (le_add_right k 1) (Option.get_mem evalnindtdom)))
+        aux0
+        (base.max ((usen O cf (k + 1) x).get (en2un h1)))
+        (usen_rfind_prop2_indt_helper O k cf roM1 x h2 asd evalnindtdom)
+        ?_
+      rotate_left
+      · simp
+        have := @lemlemlem2 O k cf x roM1 (asddom) base h1
+          (en2un h1) (en2un aux0) (fun j a ↦ nrop2' j a)
         rw [this]
-    else
-      clear ih
-      simp [hroM1]
-      have roM1M1: roM1 = roM1-1+1 := Eq.symm (succ_pred_eq_of_ne_zero hroM1)
-      simp (config := {singlePass := true}) [roM1M1] at *
-      have : (usen O cf.rfind' k (Nat.pair x.l (x.r + 1 + 1))).isSome := by
-        have := nrop6 (1+1) (le_add_left (1 + 1) (roM1 - 1))
-        simp only [reduceSubDiff] at this
-        have := Option.isSome_of_mem this
-        ac_nf at this ⊢
-        simp at this ⊢
-        exact usen_mono_dom (show k-1 ≤ k from sub_le k 1) (en2un this)
-      simp [isSome.bind this]
-      apply congrArg
-      apply congrArg
+        exact h
+      simp at ih1
+      rw [← ih1]
+      simp [isSome.bind usenindtdom]
+      -- expose_names;
+      have := usen_rfind_prop2_indt_helper2 O k cf roM1 x (evaln_rfind_base h2) base usenindtdom nrop1 nrop2 nrop3 nrop6 aux0
+      rw [←this]
+      aesop? says
+        simp_all only [reduceSubDiff, Option.mem_def, Nat.max_assoc, pair_l, pair_r,
+          Option.some.injEq]
 
-      have kkk : k=k-1+1 := nrf_aux usenindtdom
-      simp [show (usen O cf.rfind' k ⟪x.l, x.r+1⟫) = (usen O cf.rfind' (k-1+1) ⟪x.l, x.r+1⟫) from congrFun
-        (congrArg (usen O cf.rfind') kkk) ⟪x.l, x.r+1⟫]
-
-      simp [usen]
-
-      have auxdom1 : (evaln O k cf ⟪x.l, x.r+1⟫).isSome := by
-        have := nrop2 1 (le_add_left 1 (roM1 - 1 + 1))
-        simp at this
-        rwa [add_comm]
-      have r1 : (evaln O k cf ⟪x.l, x.r+1⟫).get auxdom1 ≠ 0 := by
-        have := nrop3 1 (one_lt_succ_succ (roM1 - 1))
-        simp at this
-        rw [add_comm] at this
-        contrapose this
-        rw [← this]
-        simp
-      simp at this
-      rw [add_comm] at this
-      simp [← kkk]
-      simp [r1]
-      apply congr
-      apply congr
-      exact rfl
-      exact usen_sing'
-      exact usen_sing'
 theorem usen_rfind_prop2' {O cf k x} (h : (usen O (rfind' cf) (k + 1) x).isSome) :
     (usen O cf.rfind' (k + 1) x).get h = (do
     guard (x ≤ k);
@@ -1494,7 +1411,7 @@ theorem usen_complete_rfind'
         have := rop1 (j+1) (Nat.add_le_add_right hj 1)
         rw [← add_assoc]
         exact rop1 (j+1) (Nat.add_le_add_right hj 1)
-        
+
         constructor
         · intro j hj
           rw [← add_assoc]

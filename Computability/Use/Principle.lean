@@ -423,8 +423,7 @@ theorem usen_mono_rfind' {O cf s x j} (hh : (usen O (rfind' cf) (s + 1) x).isSom
         aesop
       have := @ih (base.max ((usen O cf (s + 1-n) ⟪x.l, n+x.r⟫).get dom4)) (le_of_succ_le h)
       aesop? says
-        simp_all only [implies_true, not_false_eq_true, and_self,List.mem_reverse, List.mem_range,
-          ro]
+        simp_all only [List.mem_reverse, List.mem_range, ro]
   have dom5 := usen_rfind'_dom hh j hjro
   have dom8 (k : ℕ) := usen_rfind'_dom hh (ro-k) (sub_le ro k)
   have dom9 (k : ℕ) := forInDom
@@ -700,8 +699,7 @@ theorem usen_principle {O₁ O₂} {s c x} (hh : (evaln O₁ s c x).isSome)
       simp only [isSome.bind <| en2un aux00]
       simp [ih_cg]
   | hrfind' cf s x ih =>
-    rcases nrfind'_obtain_prop hh with ⟨nrop1, nrop2, nrop3, nrop4⟩
-    clear nrop4
+    rcases nrfind'_obtain_prop hh with ⟨nrop1, nrop2, nrop3, _⟩
     let (eq := hnro) nro := nrfind'_obtain hh
     simp only [← hnro, Option.mem_def] at nrop1 nrop2
     replace ih : ∀ j ≤ nro,
