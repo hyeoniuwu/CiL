@@ -523,38 +523,37 @@ theorem c_evaln_evp_aux_nMod4 {O x n s} :
       (fun ele => evalp O opt_rfind'_1 ⟪ele,cri⟫) =
       opt_rfind' := by
     funext elem
-    simp [opt_rfind'_1]
-    simp [hsM1,ele]
-    simp
-    [
-      rfind'_base,
-      rfind'_indt,
-    ]
-    simp [ele]
-    simp [hpc_m_s]
-    simp [opt_rfind']
+    simp only [evp_simps, opt_rfind'_1, hsM1,ele,rfind'_base,rfind'_indt,hpc_m_s,opt_rfind']
     cases Classical.em (elem ≤ s) with
     | inl h =>
-      simp [h, Nat.not_lt_of_le h]
-      simp [pc_m_s]
+      simp only [h, Nat.not_lt_of_le h]
+      simp only [pc_m_s]
       cases Classical.em (evalp O c_evaln (Nat.pair elem (Nat.pair m (s + 1)))=o2n Option.none) with
       | inl hh => simp [hh,hnat_to_opt_0]
       | inr hh =>
-        simp [not_none_imp_not_zero hh]
-        simp [hnat_to_opt_2 hh]
-        simp [hpc_c_sM1]
-        simp [pc_c_sM1]
-
+        simp only [↓reduceIte, evalp, pair_l, pred_eq_sub_one, succ_eq_add_one, guard_true,
+          Option.pure_def, unpaired, unpair2_to_r, unpair1_to_l, Option.bind_eq_bind,
+          Option.bind_some]
+        simp only [not_none_imp_not_zero hh]
+        simp only [hnat_to_opt_2 hh]
+        simp only [hpc_c_sM1]
+        simp only [pc_c_sM1]
         cases Classical.em (evalp O c_evaln (Nat.pair elem (Nat.pair m (s + 1))) - 1 = 0) with
         | inl hhh => simp [hhh]
         | inr hhh => simp [hhh]
     | inr h => simp [h, gt_of_not_le h]
   have hrfind'_mapped : evalp O rfind'_mapped cri = (map (opt_rfind') (range (s+1))) := by
     simp [rfind'_mapped, hs,hopt_rfind']
-  simp [hs,hcode,hnMod4]
+  simp only [hs,hcode,hnMod4]
   match h : n%4 with
   | 0 =>
     simp [hpair_mapped]
+    -- rewrite [hpair_mapped]
+    -- simp only [Nat.add_eq_zero_iff, one_ne_zero, and_false, ↓reduceIte, OfNat.ofNat_ne_zero,
+      -- and_self, Nat.add_eq_right, reduceEqDiff]
+    
+    -- simp only [↓reduceIte]
+    -- simp only [hpair_mapped]
     unfold opt_pair
     intro hh
     simp [Nat.not_le_of_lt hh]
@@ -729,7 +728,6 @@ theorem c_evaln_evp_aux_nMod4 {O x n s} :
           rw [←n2c_c2n ((n2c n.div2.div2).rfind')]
           simp [rw0_aux]
         rw [rw0]
-
       | inr h => simp [h]
 
 @[cp] theorem c_evaln_aux_prim : code_prim (c_evaln_aux) := by
