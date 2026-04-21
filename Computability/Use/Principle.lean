@@ -311,57 +311,49 @@ lemma cm_aux_1 {l'} {l} {head : ℕ} {tail : List ℕ}
   use h1 ++ [head]
   aesop
 theorem clause_mono_2_opt
-{base1 base2 : ℕ}
-{l : List ℕ}
-{f : (a : ℕ)→(l' : List ℕ)→(∃l'',l''++l'=l)→(a∈l')→ℕ}
-(hf : ∀ a head tail (m : a∈tail) (l' : List ℕ) (h3t : ∃l'',l''++l'=l) (hht : head :: tail=l'), (f a (head :: tail) (cm_aux_0 h3t hht) (List.mem_cons_of_mem head (List.forIn'_congr._proof_1 (Eq.refl tail) a m))) = f a tail (cm_aux_1 h3t hht) m)
-{h : ∀ (l') (base : ℕ) (htt : ∃l'',l''++l'=l),  (forIn' (l') base fun a h b ↦ some (ForInStep.yield (b.max (f a l' (htt) h)))).isSome}
-{h2 : base1 ≤ base2}
-:
-((forIn' l base1 fun a h b ↦ some (ForInStep.yield (b.max (f a l ⟨[],rfl⟩ h)))).get (h l base1 (⟨[],rfl⟩))
-≤
-(forIn' l base2 fun a h b ↦ some (ForInStep.yield (b.max (f a l ⟨[],rfl⟩ h)))).get (h l base2 (⟨[],rfl⟩)))
-∧
-(base1 ≤ (forIn' l base2 fun a h b ↦ some (ForInStep.yield (b.max (f a l ⟨[],rfl⟩ h)))).get (h l base2 (⟨[],rfl⟩)))
-:= by
+    {base1 base2 : ℕ} {l : List ℕ} {f : (a : ℕ)→(l' : List ℕ)→(∃l'',l''++l'=l)→(a∈l')→ℕ}
+    (hf : ∀ a head tail (m : a∈tail) (l' : List ℕ) (h3t : ∃l'',l''++l'=l) (hht : head :: tail=l'),
+      (f a (head :: tail) (cm_aux_0 h3t hht) (mem_cons_of_mem head m)) =
+      f a tail (cm_aux_1 h3t hht) m)
+    {h : ∀ (l') (base : ℕ) (htt : ∃l'',l''++l'=l),
+      (forIn' (l') base fun a h b ↦ some (ForInStep.yield (b.max (f a l' (htt) h)))).isSome}
+    {h2 : base1 ≤ base2} :
+    (forIn' l base1 fun a h b ↦
+      some (ForInStep.yield (b.max (f a l ⟨[],rfl⟩ h)))).get (h l base1 (⟨[],rfl⟩)) ≤
+    (forIn' l base2 fun a h b ↦
+      some (ForInStep.yield (b.max (f a l ⟨[],rfl⟩ h)))).get (h l base2 (⟨[],rfl⟩)) ∧
+    base1 ≤ (forIn' l base2 fun a h b ↦ some (ForInStep.yield (b.max (f a l ⟨[],rfl⟩ h)))).get
+      (h l base2 (⟨[],rfl⟩)) := by
   induction l generalizing base1 base2 with
   | nil => simpa
   | cons head tail ih =>
-    simp
+    simp only [forIn'_cons, Option.pure_def, Option.bind_eq_bind, Option.bind_some]
     have httconv {l'} (htt : ∃ l'', l'' ++ l' = tail) : ∃ l'', l'' ++ l' = head :: tail := by
       rcases htt with ⟨h1,h2⟩
-      exact ⟨head :: h1,Eq.symm (List.append_cancel_left (congrArg (HAppend.hAppend tail) (congrArg (List.cons head) (_root_.id (Eq.symm h2)))))⟩
+      exact ⟨head :: h1, Eq.symm (List.append_cancel_left (congrArg (HAppend.hAppend tail)
+        (congrArg (List.cons head) (_root_.id (Eq.symm h2)))))⟩
     have ihmain :
     ∀ (l' : List ℕ) (base : ℕ) (htt : ∃ l'', l'' ++ l' = tail),
-       (forIn' l' base fun a h b ↦ some (ForInStep.yield (b.max (f a l' (httconv htt) h)))).isSome
-     := by
+       (forIn' l' base fun a h b ↦
+        some (ForInStep.yield (b.max (f a l' (httconv htt) h)))).isSome := by
       intro l' base h1
       rcases h1 with ⟨l'',hl''⟩
       have : (head :: l'') ++ l' = head :: tail := by simp [hl'']
       exact h l' base  ⟨(head :: l''),this⟩
     let addendum := (f head (head :: tail) ⟨[],rfl⟩ (List.mem_cons_self))
-    have ihmain2 : base1.max addendum ≤ base2.max addendum := sup_le_sup_right h2 addendum
-    have ihmain0 : (∀ (a head : ℕ) (tail_1 : List ℕ) (m : a ∈ tail_1) (l' : List ℕ) (h3t : ∃ l'', l'' ++ l' = tail)
-    (hht : head :: tail_1 = l'), f a (head :: tail_1) (httconv (cm_aux_0 h3t hht)) (List.mem_cons_of_mem head (List.forIn'_congr._proof_1 (Eq.refl tail_1) a m)) = f a tail_1 (httconv (cm_aux_1 h3t hht)) m) := by
-      intro a head tail_1 m l' h3t hht
-      exact hf a head tail_1 m l' (httconv h3t) hht
-    have ih1 := @ih (base1.max addendum) (base2.max addendum) (fun a l' h hl => f a l' (httconv h) hl) ihmain0 ihmain ihmain2
-
-    simp [show f head (head :: tail) ⟨[],rfl⟩ (List.mem_cons_self) = addendum from rfl]
-
-    have aux (a : ℕ) (m : a∈tail) : (f a (head :: tail) ⟨[],rfl⟩ (List.mem_cons_of_mem head (List.forIn'_congr._proof_1 (Eq.refl tail) a m))) = (f a tail (httconv ⟨[],rfl⟩) m) := by
-      exact hf a head tail m (head :: tail) ⟨[],rfl⟩ rfl
-
+    have ihmain0 := fun a head tail_1 m l' h3t hht => hf a head tail_1 m l' (httconv h3t) hht
+    replace ih := @ih
+      (base1.max addendum)
+      (base2.max addendum)
+      (fun a l' h hl => f a l' (httconv h) hl)
+      ihmain0 ihmain (sup_le_sup_right h2 addendum)
     have :
-    (fun a m (b : ℕ) ↦ some (ForInStep.yield (b.max (f a (head :: tail) ⟨[],rfl⟩ (List.mem_cons_of_mem head (List.forIn'_congr._proof_1 (Eq.refl tail) a m))))))
-    =
-    fun a m (b : ℕ) ↦ some (ForInStep.yield (b.max (f a tail (httconv ⟨[],rfl⟩) m)))
-   := by
+        (fun a m (b : ℕ) ↦ some (ForInStep.yield (b.max (f a (head :: tail) ⟨[],rfl⟩
+          (mem_cons_of_mem head m))))) =
+        fun a m (b : ℕ) ↦ some (ForInStep.yield (b.max (f a tail (httconv ⟨[],rfl⟩) m))) := by
       funext a m b
-      simp [aux a m]
-    simp [this]
-    exact ⟨ih1.left,le_of_max_le_left ih1.right⟩
-
+      simp [hf a head tail m (head :: tail) ⟨[], rfl⟩ rfl]
+    simpa [this] using ⟨ih.left, le_of_max_le_left ih.right⟩
 
 theorem le_of_le_sub {c} {a b : ℕ} (h : a ≤ b - c) : a ≤ b := by grind
 
@@ -378,17 +370,14 @@ theorem usen_mono_rfind' {O cf s x j} (hh : (usen O (rfind' cf) (s + 1) x).isSom
   have rop3 := rop.right.right
   have rop4 := nrfind'_obtain_prop_4 (un2en hh)
   simp [← hro] at rop4
-
   have aux3 := rop2 0 (Nat.zero_le ro)
   simp only [tsub_zero, zero_add, pair_lr] at aux3
-
   simp only [usen_rfind_prop2', Option.pure_def, Option.bind_eq_bind, Option.bind_some,
     Option.bind_fun_some, Option.get_bind, ge_iff_le]
   simp only [
     show (evaln O (s + 1) (rfind' cf) x).get (un2en hh) - x.r = ro from rfl,
     forIn_eq_forIn'
     ]
-
   -- we simplify the function within the forIn' by noting the bind is unnecesarry; the
   -- usen term halts.
   have :
@@ -413,8 +402,9 @@ theorem usen_mono_rfind' {O cf s x j} (hh : (usen O (rfind' cf) (s + 1) x).isSom
   -- simp only [forIn_eq_forIn']
   have : (usen O cf (s + 1) x).isSome := en2un aux3
   have dom2 := en2un <| rop2 ro le_rfl
-  have dom3 {a' k} (h0 : k ≤ ro) (h : a' ∈ (List.range k).reverse) : a' ∈ (List.range ro).reverse := by
-    simp at h ⊢
+  have dom3 {a' k} (h0 : k ≤ ro) (h : a' ∈ (List.range k).reverse) :
+      a' ∈ (List.range ro).reverse := by
+    simp only [mem_reverse, mem_range] at h ⊢
     exact Nat.lt_of_lt_of_le h h0
   have dom3 (a' k m) (h0 : k ≤ ro) := en2un <|
     rop2 a' <| rr_mem_bound
@@ -463,16 +453,14 @@ theorem usen_mono_rfind' {O cf s x j} (hh : (usen O (rfind' cf) (s + 1) x).isSom
             rw [h5] at h3
             exact dom3 a h4 h3 (Nat.le_trans h6 hjro)
         )
-      have bigaux : ∀ (l' : List ℕ) (base : ℕ) (htt : ∃ l'', l'' ++ l' = (List.range j).reverse),
-      (forIn' l' base fun a h b ↦ some (ForInStep.yield (b.max (f a l' htt h)))).isSome := by
-        intro l' base htt
-        unfold f
-        rcases listrevlem htt with ⟨h1,h2,h3⟩
-        simp [h2]
-        have : h1 ≤ ro := Nat.le_trans h3 hjro
-        exact forInDom base this
-      exact And.right <| @clause_mono_2_opt base base (List.range j).reverse f
-        (fun a head tail m l' h3t hht ↦ rfl) bigaux (le_rfl)
+      refine And.right <| @clause_mono_2_opt base base (List.range j).reverse f
+        (fun a head tail m l' h3t hht ↦ rfl) ?_ (le_rfl)
+      intro l' base htt
+      unfold f
+      rcases listrevlem htt with ⟨h1,h2,h3⟩
+      simp only [h2]
+      replace : h1 ≤ ro := Nat.le_trans h3 hjro
+      exact forInDom base this
   -- here we are saying, starting calculations from j, we'll get smaller results bc we're not taking
   -- into account the values j~ro.
   have main3 : ∀ k,
@@ -537,7 +525,7 @@ theorem usen_mono_rfind' {O cf s x j} (hh : (usen O (rfind' cf) (s + 1) x).isSom
           (List.range (ro - n - 1)).reverse f
           (fun a head tail m l' h3t hht ↦ rfl)
           aux12 (Nat.le_max_right _ base1)
-        have : s-(ro - n - 1 ) =  s + 1 - (ro - n - 1 + 1) := by grind
+        replace : s - (ro - n - 1 ) =  s + 1 - (ro - n - 1 + 1) := by grind
         simp (config := {singlePass := true}) only [this] at ih
         exact Nat.le_trans mainclause.left ih
   replace := main3 (ro-j)
