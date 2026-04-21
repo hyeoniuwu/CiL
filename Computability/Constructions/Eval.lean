@@ -546,32 +546,10 @@ theorem c_evaln_evp_aux_nMod4 {O x n s} :
     simp [rfind'_mapped, hs,hopt_rfind']
   simp only [hs,hcode,hnMod4]
   match h : n%4 with
-  | 0 =>
-    simp [hpair_mapped]
-    -- rewrite [hpair_mapped]
-    -- simp only [Nat.add_eq_zero_iff, one_ne_zero, and_false, ↓reduceIte, OfNat.ofNat_ne_zero,
-      -- and_self, Nat.add_eq_right, reduceEqDiff]
-    
-    -- simp only [↓reduceIte]
-    -- simp only [hpair_mapped]
-    unfold opt_pair
-    intro hh
-    simp [Nat.not_le_of_lt hh]
-  | 1 =>
-    simp [hcomp_mapped]
-    unfold opt_comp
-    intro hh
-    simp [Nat.not_le_of_lt hh]
-  | 2 =>
-    simp [hprec_mapped]
-    unfold opt_prec
-    intro hh
-    simp [Nat.not_le_of_lt hh]
-  | 3 =>
-    simp [hrfind'_mapped]
-    unfold opt_rfind'
-    intro hh
-    simp [Nat.not_le_of_lt hh]
+  | 0 => simpa [hpair_mapped, opt_pair] using fun hh => by simp [Nat.not_le_of_lt hh]
+  | 1 => simpa [hcomp_mapped, opt_comp] using fun hh => by simp [Nat.not_le_of_lt hh]
+  | 2 => simpa [hprec_mapped, opt_prec] using fun hh => by simp [Nat.not_le_of_lt hh]
+  | 3 => simpa [hrfind'_mapped, opt_rfind'] using fun hh => by simp [Nat.not_le_of_lt hh]
   | x+4 =>
     have contrad : n%4<4 := by
       apply Nat.mod_lt
@@ -633,18 +611,12 @@ theorem c_evaln_evp_aux_nMod4 {O x n s} :
   | false => cases hn2o : n.div2.bodd with
     | false => -- pair
       have h0: n%4=0 := nMod4_eq_0 hno hn2o
-      -- simplify the rhs
-      simp [n2c]
-      simp [evaln,hno, hn2o]
-      rw [c_evaln_evp_aux_nMod4]
-      simp [h0]
-      rw [ih mr_s mr_s_lt_cs];
-      rw [ih ml_s ml_s_lt_cs];
-      simp [ml_s, mr_s, m]
+      simp [n2c,evaln, hno, hn2o, c_evaln_evp_aux_nMod4, h0, ih mr_s mr_s_lt_cs, ih ml_s ml_s_lt_cs,
+        ml_s, mr_s, m]
     | true => -- prec
       have h0: n%4=2 := nMod4_eq_2 hno hn2o
       -- simplify the rhs
-      simp [n2c]
+      simp only [n2c]
       simp only [hno, hn2o, evaln]
 
       rw [c_evaln_evp_aux_nMod4]
@@ -678,29 +650,23 @@ theorem c_evaln_evp_aux_nMod4 {O x n s} :
   | true => cases hn2o : n.div2.bodd with
     | false => -- comp
       have h0: n%4=1 := nMod4_eq_1 hno hn2o
-      -- simplify the rhs
-      simp [n2c]
-      simp [evaln,hno, hn2o]
-
+      simp only [Nat.n2c, n2c, unpair1_to_l, unpair2_to_r]
+      simp only [evaln,hno, hn2o]
       rw [c_evaln_evp_aux_nMod4]
-      simp [h0]
-
+      simp only [h0, one_ne_zero, ↓reduceIte, evalp, pair_l, Option.bind_eq_bind,
+        Encodable.encode_inj]
       rw [ih mr_s mr_s_lt_cs];
-      simp [mr_s, m]
-
+      simp only [mr_s, m]
       cases Classical.em (x ≤ sM1) with
       | inl h =>
-        simp [h]
+        simp only [h]
         cases Classical.em (evaln O (sM1 + 1) (n2c n.div2.div2.r) x=Option.none) with
         | inl hh => simp [hh]
         | inr hh =>
           have optval := Option.eq_none_or_eq_some (evaln O (sM1 + 1) (n2c n.div2.div2.r) x)
-          simp [hh] at optval
+          simp only [hh, false_or] at optval
           rcases optval with ⟨inter, hinter⟩
-          simp [hinter]
-          rw [ih ml_s ml_s_lt_cs];
-          simp [ml_s, m]
-
+          simp [hinter, ih ml_s ml_s_lt_cs, ml_s, m]
       | inr h => simp [h]
     | true => -- rfind
       have h0: n%4=3 := nMod4_eq_3 hno hn2o
