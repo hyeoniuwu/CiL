@@ -316,7 +316,8 @@ def c_list_reverse := (c_list_foldl (c_list_cons.comp c_flip)).comp₂ c_list_ni
   rw [aux (n2l lN) (l2n [])]
   simp
 @[simp, ev_simps] theorem c_list_reverse_ev {O : ℕ → ℕ} {lN} :
-  eval O c_list_reverse lN =  l2n (reverse (n2l lN)) := by simp [← evalp_eq_eval c_list_reverse_prim]
+    eval O c_list_reverse lN =  l2n (reverse (n2l lN)) := by
+  simp [← evalp_eq_eval c_list_reverse_prim]
 end Oracle.Single.Code
 end list_reverse
 
