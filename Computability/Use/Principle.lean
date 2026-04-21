@@ -467,12 +467,14 @@ theorem usen_mono_rfind' {O cf s x j} (hh : (usen O (rfind' cf) (s + 1) x).isSom
     (forIn'
       (List.range (ro-k)).reverse
       ((usen O cf (s + 1-(ro-k)) (Nat.pair x.l ((ro-k) + x.r))).get (dom8 k))
-      fun a' m b ↦ some (ForInStep.yield (b.max ((usen O cf (s + 1-a') (Nat.pair x.l (a' + x.r))).get
+      fun a' m b ↦ some (ForInStep.yield (b.max
+        ((usen O cf (s + 1-a') (Nat.pair x.l (a' + x.r))).get
       (dom3 a' (ro-k) m (sub_le ro k)))))).get (dom9 k) ≤
     (forIn'
       (List.range ro).reverse
       ((usen O cf (s + 1-ro) (Nat.pair x.l (ro + x.r))).get dom2)
-      fun a' m b ↦ some (ForInStep.yield (b.max ((usen O cf (s + 1-a') (Nat.pair x.l (a' + x.r))).get
+      fun a' m b ↦ some (ForInStep.yield (b.max
+        ((usen O cf (s + 1-a') (Nat.pair x.l (a' + x.r))).get
       (dom3 a' ro m (le_rfl)))))).get dom7 := by
     intro k
     induction k with

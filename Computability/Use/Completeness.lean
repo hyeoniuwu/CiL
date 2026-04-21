@@ -1364,40 +1364,14 @@ x∈eval O (rfind' cf) y→y.r ≤ x := by
   simp [eval]
   grind
 
--- set_option maxHeartbeats 1000000 in
-theorem usen_complete {O} {c n x} : x ∈ use O c n ↔ ∃ s, x ∈ usen O c s n := by
-  refine ⟨fun h => ?_, fun ⟨k, h⟩ => usen_sound h⟩
-  rsuffices ⟨k, h⟩ : ∃ k, x ∈ usen O  c (k + 1) n
-  · exact ⟨k + 1, h⟩
-
-  induction c generalizing n x with
-  | pair cf cg hf hg =>
-    simp [use, usen, pure, Seq.seq, Option.bind_eq_some_iff] at h ⊢
-    rcases h with ⟨x, hx, y, hy, rfl⟩
-    rcases hf hx with ⟨k₁, hk₁⟩; rcases hg hy with ⟨k₂, hk₂⟩
-    refine ⟨max k₁ k₂, ?_⟩
-    refine
-      ⟨le_max_of_le_left <| Nat.le_of_lt_succ <| usen_bound hk₁, _,
-        usen_mono (Nat.succ_le_succ <| le_max_left _ _) hk₁, _,
-        usen_mono (Nat.succ_le_succ <| le_max_right _ _) hk₂, rfl⟩
-  | comp cf cg hf hg =>
-    simp [use, usen, pure, Seq.seq, Option.bind_eq_some_iff] at h ⊢
-    rcases h with ⟨y, hy, hx1, hx2, hx3, hx4, hx5⟩
-    rcases hg hy with ⟨k₁, hk₁⟩; rcases hf hx4 with ⟨k₂, hk₂⟩
-    refine ⟨max k₁ k₂, ?_⟩
-    refine
-      ⟨le_max_of_le_left <| Nat.le_of_lt_succ <| usen_bound hk₁, _,
-        usen_mono (Nat.succ_le_succ <| le_max_left _ _) hk₁,
-        ?_⟩
-    use hx1
-    constructor
-    · rcases usen_dom_iff_evaln_dom.mp (Exists.intro y hk₁) with ⟨b,hb⟩
-      rcases evaln_complete.mp hx2 with ⟨kk,hkk⟩
-      rw [evaln_sing hkk hb]
-      exact evaln_mono (Nat.succ_le_succ <| le_max_left _ _) hb
-    · refine ⟨_,usen_mono (Nat.succ_le_succ <| le_max_right _ _) hk₂,
-      (by subst hx5; exact Nat.max_comm hx3 y) ⟩
-  | prec cf cg hf hg =>
+theorem usen_complete_prec
+{O : ℕ → ℕ}
+{cf cg : Code}
+{hf : ∀ {n x : ℕ}, x ∈ use O cf n → ∃ k, x ∈ usen O cf (k + 1) n}
+{hg : ∀ {n x : ℕ}, x ∈ use O cg n → ∃ k, x ∈ usen O cg (k + 1) n}
+{n x : ℕ}
+{h : x ∈ use O (cf.prec cg) n} :
+∃ k, x ∈ usen O (cf.prec cg) (k + 1) n := by
     simp [use, usen, pure, Seq.seq, Option.bind_eq_some_iff] at h ⊢
     revert h
     generalize n.l = n₁; generalize n.r = n₂
@@ -1454,6 +1428,48 @@ theorem usen_complete {O} {c n x} : x ∈ use O c n ↔ ∃ s, x ∈ usen O c s 
       simp only [Option.bind_some]
       rw [aux1]
       simp
+theorem usen_complete_rfind'
+(O : ℕ → ℕ)
+(cf : Code)
+(hf : ∀ {n x : ℕ}, x ∈ use O cf n → ∃ k, x ∈ usen O cf (k + 1) n)
+(n x : ℕ)
+(h : x ∈ use O cf.rfind' n) :
+∃ k, x ∈ usen O cf.rfind' (k + 1) n := by
+  sorry
+-- set_option maxHeartbeats 1000000 in
+theorem usen_complete {O} {c n x} : x ∈ use O c n ↔ ∃ s, x ∈ usen O c s n := by
+  refine ⟨fun h => ?_, fun ⟨k, h⟩ => usen_sound h⟩
+  rsuffices ⟨k, h⟩ : ∃ k, x ∈ usen O  c (k + 1) n
+  · exact ⟨k + 1, h⟩
+
+  induction c generalizing n x with
+  | pair cf cg hf hg =>
+    simp [use, usen, pure, Seq.seq, Option.bind_eq_some_iff] at h ⊢
+    rcases h with ⟨x, hx, y, hy, rfl⟩
+    rcases hf hx with ⟨k₁, hk₁⟩; rcases hg hy with ⟨k₂, hk₂⟩
+    refine ⟨max k₁ k₂, ?_⟩
+    refine
+      ⟨le_max_of_le_left <| Nat.le_of_lt_succ <| usen_bound hk₁, _,
+        usen_mono (Nat.succ_le_succ <| le_max_left _ _) hk₁, _,
+        usen_mono (Nat.succ_le_succ <| le_max_right _ _) hk₂, rfl⟩
+  | comp cf cg hf hg =>
+    simp [use, usen, pure, Seq.seq, Option.bind_eq_some_iff] at h ⊢
+    rcases h with ⟨y, hy, hx1, hx2, hx3, hx4, hx5⟩
+    rcases hg hy with ⟨k₁, hk₁⟩; rcases hf hx4 with ⟨k₂, hk₂⟩
+    refine ⟨max k₁ k₂, ?_⟩
+    refine
+      ⟨le_max_of_le_left <| Nat.le_of_lt_succ <| usen_bound hk₁, _,
+        usen_mono (Nat.succ_le_succ <| le_max_left _ _) hk₁,
+        ?_⟩
+    use hx1
+    constructor
+    · rcases usen_dom_iff_evaln_dom.mp (Exists.intro y hk₁) with ⟨b,hb⟩
+      rcases evaln_complete.mp hx2 with ⟨kk,hkk⟩
+      rw [evaln_sing hkk hb]
+      exact evaln_mono (Nat.succ_le_succ <| le_max_left _ _) hb
+    · refine ⟨_,usen_mono (Nat.succ_le_succ <| le_max_right _ _) hk₂,
+      (by subst hx5; exact Nat.max_comm hx3 y) ⟩
+  | prec cf cg hf hg => exact usen_complete_prec O cf cg hf hg n x h
   | rfind' cf hf =>
     simp [use] at h
     suffices ∃k,x ∈ (do
