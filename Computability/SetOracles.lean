@@ -88,7 +88,6 @@ ordering thms. that is why we don't write:
 protected theorem SetTuringReducible.refl (A : Set ℕ) : SetTuringReducible A A := RecursiveIn.oracle
 protected theorem SetTuringReducible.rfl (A : Set ℕ) : SetTuringReducible A A :=
   SetTuringReducible.refl _
-instance : IsRefl (Set ℕ) SetTuringReducible where refl _ := by (expose_names; exact SetTuringReducible.refl x)
 theorem SetTuringReducible.trans {A B C : Set ℕ}
     (hg : SetTuringReducible A B) (hh : SetTuringReducible B C) : SetTuringReducible A C := by
   simp only [SetTuringReducible] at *
