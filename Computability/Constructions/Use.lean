@@ -4,7 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Edwin Park
 -/
 import Computability.Constructions.Eval
-import Computability.Use
+import Computability.Use.Principle
 
 /-!
 # Use.lean

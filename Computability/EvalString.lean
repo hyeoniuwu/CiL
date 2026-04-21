@@ -3,7 +3,7 @@ Copyright (c) 2026 Edwin Park. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Edwin Park
 -/
-import Computability.Use
+import Computability.Use.Completeness
 open Oracle.Single.Code
 
 /-!

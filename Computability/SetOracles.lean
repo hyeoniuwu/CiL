@@ -7,7 +7,7 @@ import Computability.Jump
 import Computability.Rin
 import Computability.Constructions.Eval
 import Computability.Constructions.Dovetail
-import Computability.Use
+import Computability.Use.Basic
 import Computability.EvalString
 import Mathlib.Order.Basic
 
