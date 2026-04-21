@@ -164,73 +164,74 @@ theorem evaln_rfind_as_eval_rfind {O s c x}
   use h1
   constructor
   constructor
-  have := evaln_sound (Option.get_mem h)
-  have : evaln O (s + 1 - h1) c (Nat.pair x.l (h1 + x.r)) = some 0 := by
-    clear h3
-    clear this
-    induction h1 generalizing x s with
-    | zero =>
-      simp at ⊢ h4
-      simp [evaln] at h4
-      have hh := evaln_rfind_base h
-      let (eq:=rwbase) base := (evaln O (s + 1) c x).get hh
-      contrapose h4
-      simp [← rwbase]
-      have : base ≠ 0 := by
-        contrapose h4;
-        rw [h4] at rwbase
-        rw [show 0=(Option.some 0).get (Option.isSome_some) from rfl] at rwbase
-        exact Option.get_inj.mp rwbase.symm
-      simp [this]
-      have halt2 := evaln_rfind_indt h hh this
-      have := nrfind'_geq_xr halt2
-      simp only [pair_r, ge_iff_le] at this
-      exact Nat.ne_of_lt this
-    | succ roM1 ih =>
-      have := @ih (s-1) ⟪x.l, x.r+1⟫ ?_ ?_
-      simp at this ⊢
-      all_goals
-        have hh := evaln_rfind_base h
-        let base := (evaln O (s + 1) c x).get hh
-        have rwbase : (evaln O (s + 1) c x).get hh =base := rfl
-      rotate_left
-      ·
+  · have := evaln_sound (Option.get_mem h)
+    have : evaln O (s + 1 - h1) c (Nat.pair x.l (h1 + x.r)) = some 0 := by
+      clear h3
+      clear this
+      induction h1 generalizing x s with
+      | zero =>
+        simp only [zero_add, tsub_zero, pair_lr] at ⊢ h4
+        simp? [evaln]  at h4 says
+          simp only [evaln, unpaired, unpair1_to_l, unpair2_to_r, pair_lr, Option.pure_def,
+            Option.bind_eq_bind, Option.get_bind] at h4
         contrapose h4
-        simp at h4
-        simp [evaln]
-        simp [rwbase]
-
-        if h3 : base=0 then simp [h3] else
-        simp [h3]
-        have halt2 := evaln_rfind_indt h hh h3
-        cases s with
-        | zero => simp [evaln] at halt2
-        | succ sM1 => simp_all
-
-      ·
-        simp only [pair_r]
-        cases s with
-        | zero => simp [evaln] at h4 ⊢
-        | succ sM1 =>
-          simp
-          simp [evaln] at h4
-          simp [rwbase] at h4
-          cases hbase : base with
-          | zero  => simp [hbase] at h4
+        have hh := evaln_rfind_base h
+        let (eq:=rwbase) base := (evaln O (s + 1) c x).get hh
+        simp only [← rwbase, ne_eq]
+        have : base ≠ 0 := by
+          contrapose h4;
+          rw [h4] at rwbase
+          rw [show 0=(Option.some 0).get (Option.isSome_some) from rfl] at rwbase
+          exact Option.get_inj.mp rwbase.symm
+        simp only [this, ↓reduceIte, ne_eq]
+        have halt2 := evaln_rfind_indt h hh this
+        have := nrfind'_geq_xr halt2
+        simp only [pair_r, ge_iff_le] at this
+        exact Nat.ne_of_lt this
+      | succ roM1 ih =>
+        have := @ih (s-1) ⟪x.l, x.r+1⟫ ?_ ?_
+        all_goals
+          have hh := evaln_rfind_base h
+          let base := (evaln O (s + 1) c x).get hh
+          have rwbase : (evaln O (s + 1) c x).get hh =base := rfl
+        · 
+          simp only [pair_l, pair_r, reduceSubDiff] at this ⊢
+          cases s with
+          | zero => simp_all [evaln]
           | succ n =>
-            simp [hbase] at h4
-            simp [evaln]
-            ac_nf at h4 ⊢
-      · cases s with
-      | zero => simp_all [evaln]
-      | succ n =>
-        simp at this
-        ac_nf at this ⊢
-  exact this
+            simp only [add_tsub_cancel_right] at this
+            ac_nf at this ⊢
+        · contrapose h4
+          simp at h4
+          simp [evaln]
+          simp [rwbase]
+
+          if h3 : base=0 then simp [h3] else
+          simp [h3]
+          have halt2 := evaln_rfind_indt h hh h3
+          cases s with
+          | zero => simp [evaln] at halt2
+          | succ sM1 => simp_all
+        ·
+          simp only [pair_r]
+          cases s with
+          | zero => simp [evaln] at h4 ⊢
+          | succ sM1 =>
+            simp
+            simp [evaln] at h4
+            simp [rwbase] at h4
+            cases hbase : base with
+            | zero  => simp [hbase] at h4
+            | succ n =>
+              simp [hbase] at h4
+              simp [evaln]
+              ac_nf at h4 ⊢
+    exact this
   all_goals
     have halt_base := evaln_rfind_base h
+    -- let (eq:=hbase_val) base_val := (evaln O (s + 1) c x).get halt_base
     let base_val := (evaln O (s + 1) c x).get halt_base
-    have rwasd : (evaln O (s + 1) c x).get halt_base =base_val := rfl
+    have rwasd : (evaln O (s + 1) c x).get halt_base = base_val := rfl
   ·
     intro j hj
 
@@ -238,16 +239,15 @@ theorem evaln_rfind_as_eval_rfind {O s c x}
     -- clear h4
     induction j generalizing x s h1 with
     | zero =>
-      simp
+      simp only [tsub_zero, zero_add, pair_lr]
       use base_val
       constructor
-      exact Option.eq_some_of_isSome halt_base
+      · exact Option.eq_some_of_isSome halt_base
       have := h3 hj
       simp at this
       -- simp_all only [ne_eq, base_val]
-      obtain ⟨g1,g2,g3⟩ := this
+      rcases this with ⟨g1,g2,g3⟩
       have eqe := evaln_eq_eval halt_base
-
       have : eval O c x = Part.some g1 := by exact Part.eq_some_iff.mpr g2
       simp [this] at eqe
       simp [eqe] at rwasd
@@ -291,10 +291,12 @@ theorem evaln_rfind_as_eval_rfind {O s c x}
           cases s with
           | zero => simp [evaln] at halt2
           | succ sM1 => simpa [add_comm]
-      replace ih := @ih (s-1) (Nat.pair x.l (1+x.r)) ?_ (h1-1) ?_ ?_ ?_ ?_ ?_
-
+      replace ih := @ih (s-1) (Nat.pair x.l (1+x.r))
+        ih_aux_0 (h1-1) ?_ ?_
+        (evaln_rfind_base ih_aux_0)
+        rfl
+        (lt_sub_of_add_lt hj)
       rotate_left
-      · exact ih_aux_0
       · simp only [pair_r]
         rw [show h1 - 1 + (1 + x.r) = h1+x.r from by grind]
         exact ih_aux_1
@@ -303,12 +305,7 @@ theorem evaln_rfind_as_eval_rfind {O s c x}
         simp only [pair_l, pair_r]
         rw [← add_assoc]
         exact @h3 (j+1) (add_lt_of_lt_sub hjro)
-      · exact evaln_rfind_base ih_aux_0
-      · exact rfl
-      · exact lt_sub_of_add_lt hj
-      simp at ih
-      simp
-
+      simp only [pair_l, pair_r, reduceSubDiff] at ih ⊢
       rcases ih with ⟨g1,g2,g3⟩
       cases s with
       | zero => simp_all [evaln]
@@ -317,7 +314,7 @@ theorem evaln_rfind_as_eval_rfind {O s c x}
         rw [add_assoc]
         aesop? says simp_all only [Option.some.injEq, exists_eq_left', not_false_eq_true]
   simp_all only
-
+-- #exit
 theorem evaln_rfind_as_eval_rfind_reverse {O s c x}
     (h : ((Nat.unpaired fun a m =>
     (Nat.rfind fun n => (fun x => x = 0) <$> evaln O ((s + 1) - n) c (Nat.pair a (n + m))).map
@@ -579,7 +576,7 @@ theorem rfind'_obtain_prop_6 {O cf x} (h : (eval O (rfind' cf) x).Dom) :
   exact fun j jj =>
     evaln_sound ((nrfind'_obtain_prop_6' (Option.isSome_of_eq_some h2)) j jj)
 end rfind_obtain
-#exit
+-- #exit
 -- /--
 -- we define the use `max(all naturals queried to the oracle)+1`
 -- use=0 when no queries are made.

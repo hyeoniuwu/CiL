@@ -585,12 +585,11 @@ theorem c_evaln_evp_aux_nMod4 {O x n s} :
   -- in the case that the codes are recursive, we use the inductive hypothesis.
   rw [show n.succ.succ.succ.succ.succ=n+5 by rfl] at hcode_val
   rw [succ_eq_add_one] at hs_val
-
+  -- to see what m/m1/m2 represents, see the defn for Oracle.Single.Code.n2c.
   let m := n.div2.div2
   have hm : m < n + 5 := c_evaln_bounds_0
   have _m1 : m.l < n + 5 := lt_of_le_of_lt m.unpair_left_le hm
   have _m2 : m.r < n + 5 := lt_of_le_of_lt m.unpair_right_le hm
-
   have hcode_s : code_s=Nat.pair (n+5) (sM1+1) := by
     rw [←hs_val]
     rw [←hcode_val]
@@ -600,13 +599,12 @@ theorem c_evaln_evp_aux_nMod4 {O x n s} :
   let mr_s    := Nat.pair m.r (sM1+1)
   let m_s     := Nat.pair m (sM1+1)
   let c_sM1   := Nat.pair (n+4+1) sM1
-  have ml_s_lt_cs : ml_s  < code_s := by unfold ml_s;  rw [hcode_s]; exact pair_lt_pair_left  (sM1+1) _m1
-  have mr_s_lt_cs : mr_s  < code_s := by unfold mr_s;  rw [hcode_s]; exact pair_lt_pair_left  (sM1+1) _m2
-  have m_s_lt_cs  : m_s   < code_s := by unfold m_s;   rw [hcode_s]; exact pair_lt_pair_left  (sM1+1) hm
-  have c_sM1_lt_cs : c_sM1 < code_s := by unfold c_sM1; rw [hcode_s]; exact pair_lt_pair_right (n+4+1) (lt_add_one sM1)
-
+  have ml_s_lt_cs  : ml_s  < code_s := by rw [hcode_s]; exact pair_lt_pair_left  (sM1+1) _m1
+  have mr_s_lt_cs  : mr_s  < code_s := by rw [hcode_s]; exact pair_lt_pair_left  (sM1+1) _m2
+  have m_s_lt_cs   : m_s   < code_s := by rw [hcode_s]; exact pair_lt_pair_left  (sM1+1) hm
+  have c_sM1_lt_cs : c_sM1 < code_s := by
+    rw [hcode_s]; exact pair_lt_pair_right (n+4+1) (lt_add_one sM1)
   rw [show n+5=(n+4)+1 from rfl]
-
   cases hno : n.bodd with
   | false => cases hn2o : n.div2.bodd with
     | false => -- pair
@@ -616,37 +614,36 @@ theorem c_evaln_evp_aux_nMod4 {O x n s} :
     | true => -- prec
       have h0: n%4=2 := nMod4_eq_2 hno hn2o
       -- simplify the rhs
-      simp only [n2c]
-      simp only [hno, hn2o, evaln]
-
+      simp only [n2c, hno, hn2o, evaln]
+      -- simplfy the lhs
       rw [c_evaln_evp_aux_nMod4]
-      simp [h0]
-
+      simp? [h0] says
+        simp only [h0, OfNat.ofNat_ne_zero, ↓reduceIte, OfNat.ofNat_ne_one, evalp, pair_l,
+          Option.bind_eq_bind, unpaired, unpair1_to_l, unpair2_to_r, Encodable.encode_inj]
+      -- use ih
       rw [ih ml_s ml_s_lt_cs]
       rw [ih c_sM1 c_sM1_lt_cs]
       have ih_i {i} :
-          (evalp O c_evaln (Nat.pair (Nat.pair x.l (Nat.pair (x.r - 1) i)) (Nat.pair n.div2.div2.r (sM1 + 1)))) =
-          (o2n (evaln O mr_s.r (n2c mr_s.l) (Nat.pair x.l (Nat.pair (x.r - 1) i)))) := by
+          evalp O c_evaln
+            (Nat.pair ⟪x.l, x.r - 1, i⟫
+            (Nat.pair n.div2.div2.r (sM1 + 1))) =
+          o2n (evaln O mr_s.r (n2c mr_s.l) ⟪x.l, x.r - 1, i⟫) := by
         rw [ih mr_s mr_s_lt_cs];
-      simp [ih_i]
-
+      simp only [Nat.n2c, Denumerable.ofNat_encode, ih_i]
       cases Classical.em (x ≤ sM1) with
       | inr h => simp [h]
       | inl h =>
-        simp [h, ml_s, mr_s, c_sM1, m]
+        simp only [h, ml_s, mr_s, c_sM1, m]
         cases x.r with
-        | zero => rfl
+        | zero => simp
         | succ xxx =>
-          simp
           have rw3_aux : c2n (((n2c n.div2.div2.l).prec (n2c n.div2.div2.r))) = (n + 4 + 1) := by
-            simp [c2n]
-            apply codes_aux_2 hno hn2o
-
+            simpa [c2n] using codes_aux_2 hno hn2o
           have rw3 : ((n2c n.div2.div2.l).prec (n2c n.div2.div2.r)) = (n2c (n + 4 + 1)) := by
             rw [←(n2c_c2n (n2c (n + 4 + 1)))]
             rw [←(n2c_c2n (((n2c n.div2.div2.l).prec (n2c n.div2.div2.r))))]
             simp [rw3_aux]
-          rw [rw3]
+          simp [rw3]
   | true => cases hn2o : n.div2.bodd with
     | false => -- comp
       have h0: n%4=1 := nMod4_eq_1 hno hn2o
@@ -670,31 +667,27 @@ theorem c_evaln_evp_aux_nMod4 {O x n s} :
       | inr h => simp [h]
     | true => -- rfind
       have h0: n%4=3 := nMod4_eq_3 hno hn2o
-      simp [n2c]
-      simp [evaln,hno, hn2o]
-
+      -- simplify the lhs
+      simp only [n2c, evaln, hno, hn2o]
+      -- simplify the rhs
       rw [c_evaln_evp_aux_nMod4]
-      simp [h0]
-
-      rw [ih m_s m_s_lt_cs];
+      simp? [h0] says
+        simp only [h0, OfNat.ofNat_ne_zero, ↓reduceIte, OfNat.ofNat_ne_one, Nat.succ_ne_self,
+          unpaired, evalp, pair_l, unpair2_to_r, Option.pure_def, unpair1_to_l, Option.bind_eq_bind,
+          pair_lr, Encodable.encode_inj]
+      -- use ih
+      rw [ih m_s m_s_lt_cs]
       rw [ih c_sM1 c_sM1_lt_cs]
-
       cases Classical.em (x ≤ sM1) with
+      | inr h => simp [h]
       | inl h =>
-        simp [h]
-        simp [m_s]
-        simp [m]
-        simp [c_sM1]
-
         have rw0_aux : c2n ((n2c n.div2.div2).rfind') = n + 4 + 1 := by
-          simp [c2n]
-          exact codes_aux_3 hno hn2o
+          simpa [c2n] using codes_aux_3 hno hn2o
         have rw0 : (n2c (n + 4 + 1)) = (n2c n.div2.div2).rfind' := by
           rw [←(n2c_c2n (n2c (n + 4 + 1)))]
           rw [←n2c_c2n ((n2c n.div2.div2).rfind')]
           simp [rw0_aux]
-        rw [rw0]
-      | inr h => simp [h]
+        simp [h, m_s, m, c_sM1, rw0]
 
 @[cp] theorem c_evaln_aux_prim : code_prim (c_evaln_aux) := by
   unfold c_evaln_aux
