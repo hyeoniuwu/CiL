@@ -196,7 +196,9 @@ theorem c_evaln_evp_aux_0_np1 {O x n} :
   have kP1_gt_0 : (Nat.pair (n+1) 0)>0 := pair_l_gt0 <| zero_lt_succ n
   have hkP1: k+1=((Nat.pair (n+1) 0)) := Nat.sub_add_cancel kP1_gt_0
   rw [←hkP1]
-  -- we will simplify the recursive c
+  -- `cri` is the input that is fed into the recursive code in cov_rec.
+  -- we rewrite everything into `cri` where possible to keep expressions in the
+  -- goal short.
   let (eq := hinp) inp := evalp O c_evaln_aux ⟪17, k⟫
   unfold c_evaln_aux at hinp; lift_lets at hinp
   let (eq := hcri) cri := ⟪17, k, inp⟫
