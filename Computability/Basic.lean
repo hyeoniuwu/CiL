@@ -19,12 +19,12 @@ open Nat Oracle.Single.Code
 
 -- general helper functions
 section pair
-notation "⟪" x "," y "⟫" => Nat.pair x y
-notation "⟪" x "," y "⟫" => Nat.pair <$> x <*> y
-notation "⟪" x "," y "," z "⟫" => Nat.pair x (Nat.pair y z)
-notation "⟪" x "," y "," z "⟫" => Nat.pair <$> x <*> (Nat.pair <$> y <*> z)
-notation "⟪" x "," y "," z "," w "⟫" => Nat.pair (Nat.pair x y) (Nat.pair z w)
-notation "⟪" x "," y "," z "," w "⟫" =>
+notation "⟪"x","y"⟫" => Nat.pair x y
+notation "⟪"x","y"⟫" => Nat.pair <$> x <*> y
+notation "⟪"x","y","z"⟫" => Nat.pair x (Nat.pair y z)
+notation "⟪"x","y","z"⟫" => Nat.pair <$> x <*> (Nat.pair <$> y <*> z)
+notation "⟪"x","y","z","w"⟫" => Nat.pair (Nat.pair x y) (Nat.pair z w)
+notation "⟪"x","y","z","w"⟫" =>
   Nat.pair <$> (Nat.pair <$> x <*> y) <*> (Nat.pair <$> z <*> w)
 def Nat.l (n : ℕ) := n.unpair.1
 def Nat.r (n : ℕ) := n.unpair.2
