@@ -250,7 +250,6 @@ def c_list_foldl (c : Code) := left.comp (c_list_foldl_aux2 c)
     init
     (n2l lN) := by
   simp only [c_list_foldl,c_list_foldl_aux2, evp_simps]
-  simp only [pair_r]
   -- change goal
   suffices ∀ n,
       (evalp O c.c_list_foldl_aux)^[n] ⟪init, lN⟫ =

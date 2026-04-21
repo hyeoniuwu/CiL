@@ -28,8 +28,9 @@ notation "⟪" x "," y "," z "," w "⟫" =>
   Nat.pair <$> (Nat.pair <$> x <*> y) <*> (Nat.pair <$> z <*> w)
 def Nat.l (n : ℕ) := n.unpair.1
 def Nat.r (n : ℕ) := n.unpair.2
-@[simp] theorem pair_l {x y} : (Nat.pair x y).l = x := by simp [Nat.l]
-@[simp] theorem pair_r {x y} : (Nat.pair x y).r = y := by simp [Nat.r]
+-- pair_l and pair_r are useful for evp_simps particularly in cov_rec proofs
+@[simp, evp_simps] theorem pair_l {x y} : (Nat.pair x y).l = x := by simp [Nat.l]
+@[simp, evp_simps] theorem pair_r {x y} : (Nat.pair x y).r = y := by simp [Nat.r]
 @[simp] theorem pair_lr {x} : (Nat.pair x.l x.r) = x := by simp [Nat.r, Nat.l]
 @[simp] theorem unpair1_to_l {n : ℕ} : (n.unpair.1) = n.l := by simp [Nat.l]
 @[simp] theorem unpair2_to_r {n : ℕ} : (n.unpair.2) = n.r := by simp [Nat.r]

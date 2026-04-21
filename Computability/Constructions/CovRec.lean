@@ -247,7 +247,7 @@ theorem c_div_flip_evp_aux_aux {O d n} :
   rw (config := {occs := .pos [1]}) [c_div_flip]
   unfold c_div_flip_aux
   lift_lets; extract_lets; expose_names
-  -- we will simplify the input in the recursive case to `cri`
+  -- we will simplify the input in the recursive case to `cri`.
   let (eq := hinp) inp := evalp O c_div_flip_aux ⟪d+1, n⟫
   unfold c_div_flip_aux at hinp; lift_lets at hinp
   let (eq := hcri) cri := ⟪d+1, n, inp⟫
