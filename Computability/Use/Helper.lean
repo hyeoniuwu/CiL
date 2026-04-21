@@ -382,28 +382,28 @@ theorem evaln_rfind_as_eval_rfind_reverse' {O s c x}
 
   rw [this] at h ⊢
   exact evaln_rfind_as_eval_rfind_reverse h
-theorem nrfind'_obtain_prop {O s cf x}
-    (h : (evaln O (s + 1) (rfind' cf) x).isSome) :
-    0 ∈ (evaln O (s + 1-(nrfind'_obtain h)) cf (Nat.pair x.l (nrfind'_obtain h+x.r)))
-    ∧ (∀ j ≤ nrfind'_obtain h, (evaln O (s + 1-j) cf  ⟪x.l, j+x.r⟫).isSome)
-    ∧ (∀ j < nrfind'_obtain h, ¬0 ∈ (evaln O (s + 1-j) cf ⟪x.l, j+x.r⟫)) := by
+private lemma mpp_leq {j ro} {x : ℕ} (hjro : j ≤ ro) : (ro - j + (j + x)) = ro + x := by
+  simp only [hjro, ← add_assoc,Nat.sub_add_cancel]
+theorem nrfind'_obtain_prop {O s cf x} (h : (evaln O (s + 1) (rfind' cf) x).isSome) :
+    0 ∈ (evaln O (s + 1-(nrfind'_obtain h)) cf (Nat.pair x.l (nrfind'_obtain h+x.r))) ∧
+    (∀ j ≤ nrfind'_obtain h, (evaln O (s + 1-j) cf  ⟪x.l, j+x.r⟫).isSome) ∧
+    (∀ j < nrfind'_obtain h, ¬0 ∈ (evaln O (s + 1-j) cf ⟪x.l, j+x.r⟫)) ∧ 
+    (∀ j ≤ nrfind'_obtain h, (evaln O (s + 1-j) (rfind' cf) ⟪x.l, j+x.r⟫).isSome)
+    := by
   let (eq := hrf) rf := (evaln O (s + 1) cf.rfind' x).get h
   have aux0 : rf ∈ evaln O (s + 1) cf.rfind' x := Option.get_mem h
   have := evaln_rfind_as_eval_rfind h
   rw [← hrf] at this; clear hrf
   replace := this
-  simp at this
-
+  simp?  at this says
+    simp only [unpaired, unpair2_to_r, unpair1_to_l, Part.map_eq_map, Part.mem_map_iff, mem_rfind,
+      Part.mem_ofOption, Option.mem_def, decide_eq_true_eq, exists_eq_right,
+      decide_eq_false_iff_not] at this
   rcases this with ⟨ro,⟨lll,rrr⟩,ha⟩
   have aux4: nrfind'_obtain h = ro := Eq.symm (Nat.eq_sub_of_add_eq ha)
-
-  constructor
-  ·
-    rw [aux4]
-    exact lll
   rw [aux4]
-  constructor
-  ·
+  have goal1 : 0 ∈ evaln O (s + 1 - ro) cf ⟪x.l,ro + x.r⟫ := lll
+  have goal2 : ∀ j ≤ ro, (evaln O (s + 1 - j) cf ⟪x.l,j + x.r⟫).isSome := by
     intro j hja
     cases lt_or_eq_of_le hja with
     | inl hja =>
@@ -412,37 +412,54 @@ theorem nrfind'_obtain_prop {O s cf x}
     | inr hja =>
       rw [hja]
       exact Option.isSome_of_mem lll
-  · 
-    intro j hja
+  constructor
+  · exact goal1
+  constructor
+  · exact goal2
+  constructor
+  · intro j hja
     rcases rrr hja with ⟨witness,⟨hwitness_1,hwitness_2⟩⟩
     exact opt_ne_of_mem_imp_not_mem hwitness_1 hwitness_2
+  · intro j hjro
+    apply evaln_rfind_as_eval_rfind_reverse' ?_
+    simp
+    use ro-j
+    constructor
+    · rw [mpp_leq hjro]
+      rw [Nat.sub_sub_sub_cancel_right hjro]
+      exact goal1
+    intro m hm
+    rw [← (Nat.add_assoc m j x.r)]
+    have := goal2 (m+j) (le_of_succ_le (add_lt_of_lt_sub hm))
+    rwa [Eq.symm (Simproc.sub_add_eq_comm (s + 1) m j)]
 theorem nrfind'_obtain_prop' {O s cf x} (h : (evaln O (s + 1) (rfind' cf) x).isSome) :
     0 ∈ (evaln O (s + 1-(rfind'_obtain (en2e h))) cf (Nat.pair x.l (rfind'_obtain (en2e h)+x.r))) ∧
     (∀ j ≤ rfind'_obtain (en2e h), (evaln O (s + 1-j) cf  ⟪x.l, j+x.r⟫).isSome) ∧
-    (∀ j < rfind'_obtain (en2e h), ¬0 ∈ (evaln O (s + 1-j) cf ⟪x.l, j+x.r⟫)) := by
+    (∀ j < rfind'_obtain (en2e h), ¬0 ∈ (evaln O (s + 1-j) cf ⟪x.l, j+x.r⟫)) ∧
+    (∀ j ≤ rfind'_obtain (en2e h), (evaln O (s + 1-j) (rfind' cf) ⟪x.l, j+x.r⟫).isSome) := by
   rw [← nrop_eq_rop h]
   exact nrfind'_obtain_prop h
-private lemma mpp_leq {j ro} {x : ℕ} (hjro : j ≤ ro) : (ro - j + (j + x)) = ro + x := by
-  simp only [hjro, ← add_assoc,Nat.sub_add_cancel]
-theorem nrfind'_obtain_prop_4 {O s cf x} (h : (evaln O (s + 1) (rfind' cf) x).isSome) :
-∀ j ≤ nrfind'_obtain h, (evaln O (s + 1-j) (rfind' cf) ⟪x.l, j+x.r⟫).isSome := by
-  have rop := nrfind'_obtain_prop h
-  let (eq := hro) ro := nrfind'_obtain h
-  simp [← hro] at rop ⊢
-  rcases rop with ⟨rop1,rop2,_⟩
 
-  intro j hjro
-  apply evaln_rfind_as_eval_rfind_reverse' ?_
-  simp
-  use ro-j
-  constructor
-  · rw [mpp_leq hjro]
-    rw [Nat.sub_sub_sub_cancel_right hjro]
-    exact rop1
-  intro m hm
-  rw [← (Nat.add_assoc m j x.r)]
-  have := rop2 (m+j) (le_of_succ_le (add_lt_of_lt_sub hm))
-  rwa [Eq.symm (Simproc.sub_add_eq_comm (s + 1) m j)]
+-- theorem nrfind'_obtain_prop_4 {O s cf x} (h : (evaln O (s + 1) (rfind' cf) x).isSome) :
+--     ∀ j ≤ nrfind'_obtain h,
+--       (evaln O (s + 1-j) (rfind' cf) ⟪x.l, j+x.r⟫).isSome := by
+--   have rop := nrfind'_obtain_prop h
+--   let (eq := hro) ro := nrfind'_obtain h
+--   simp [← hro] at rop ⊢
+--   rcases rop with ⟨rop1,rop2,_⟩
+
+--   intro j hjro
+--   apply evaln_rfind_as_eval_rfind_reverse' ?_
+--   simp
+--   use ro-j
+--   constructor
+--   · rw [mpp_leq hjro]
+--     rw [Nat.sub_sub_sub_cancel_right hjro]
+--     exact rop1
+--   intro m hm
+--   rw [← (Nat.add_assoc m j x.r)]
+--   have := rop2 (m+j) (le_of_succ_le (add_lt_of_lt_sub hm))
+--   rwa [Eq.symm (Simproc.sub_add_eq_comm (s + 1) m j)]
 private lemma mem_shambles {x} {o : Option ℕ} {p : Part ℕ} (h0 : x∉o) (h1 : o.isSome) (h2 : o.get h1∈p) : (x∉p) := by
   contrapose h2
   rw [Part.eq_some_iff.mpr h2] -- `p` => `Part.some x`
@@ -451,6 +468,41 @@ private lemma mem_shambles {x} {o : Option ℕ} {p : Part ℕ} (h0 : x∉o) (h1 
   contrapose this
   rw [← this]
   exact Option.eq_some_of_isSome h1
+lemma test {a b}: ¬(a ∧ b) ↔ ¬a∨¬b := by
+  exact Classical.not_and_iff_not_or_not
+
+-- theorem nrfind'_prop {O s cf x y} (h : (evaln O s (rfind' cf) x).isSome) :
+--     y+x.r ∈ (evaln O s (rfind' cf) x) ↔
+--     0 ∈ (evaln O (s-y) cf ⟪x.l, y+x.r⟫) ∧
+--     (∀ j ≤ y, (evaln O (s-j) cf ⟪x.l, j+x.r⟫).isSome) ∧
+--     (∀ j < y, ¬0 ∈ (evaln O (s-j) cf ⟪x.l, j+x.r⟫)) ∧
+--     (∀ j ≤ y, (evaln O (s-j) (rfind' cf) ⟪x.l, j+x.r⟫).isSome)
+--     := by
+--   simp (config := { singlePass := true }) only [evaln_sG1 h, Option.mem_def] at h ⊢
+--   constructor
+--   · intro h1
+--     have : y=nrfind'_obtain h := by
+--       unfold nrfind'_obtain
+--       simp_all
+--     rw [this]
+--     exact nrfind'_obtain_prop h
+--   contrapose
+--   intro h1
+--   simp (config := { singlePass := true }) only [not_and]
+--   simp (config := { singlePass := true }) only [not_and]
+--   simp only [Classical.not_and_iff_not_or_not]
+--   push Not
+--   intro h2 h3
+--   replace h1 := mem_shambles h1 h (evaln_rfind_as_eval_rfind h)
+--   simp? at h1 says
+--     simp only [unpaired, unpair2_to_r, unpair1_to_l, Part.map_eq_map, Part.mem_map_iff, mem_rfind,
+--       Part.mem_ofOption, Option.mem_def, decide_eq_true_eq, exists_eq_right,
+--       decide_eq_false_iff_not, Nat.add_right_cancel_iff, not_and, not_forall,
+--       not_exists, Decidable.not_not] at h1
+--   rcases h1 h2 with ⟨h4,h5,h6⟩
+--   apply Or.inl
+--   use h4
+--   refine ⟨h5, forall_mem_option (h3 h4 (le_of_succ_le h5)) h6⟩
 theorem nrfind'_prop {O s cf x y} (h : (evaln O s (rfind' cf) x).isSome) :
     y+x.r ∈ (evaln O s (rfind' cf) x) ↔
     0 ∈ (evaln O (s-y) cf ⟪x.l, y+x.r⟫) ∧
@@ -464,7 +516,8 @@ theorem nrfind'_prop {O s cf x y} (h : (evaln O s (rfind' cf) x).isSome) :
       unfold nrfind'_obtain
       simp_all
     rw [this]
-    exact nrfind'_obtain_prop h
+    have := nrfind'_obtain_prop h
+    aesop
   contrapose
   intro h1
   push Not
@@ -480,8 +533,8 @@ theorem nrfind'_obtain_prop_6 {O s cf x} (h : (evaln O (s + 1) (rfind' cf) x).is
   have rop := nrfind'_obtain_prop h
   let (eq := hro) ro := nrfind'_obtain h
   simp [← hro] at rop ⊢
-  rcases rop with ⟨rop1,rop2,rop3⟩
-  have rop4 := nrfind'_obtain_prop_4 h
+  rcases rop with ⟨rop1,rop2,rop3,rop4⟩
+  -- have rop4 := nrfind'_obtain_prop_4 h
   intro j hjro
   have := @nrfind'_prop O (s + 1-j) cf ⟪x.l, j+x.r⟫ (ro-j) (rop4 j hjro)
   simp [mpp_leq hjro] at this
@@ -494,14 +547,19 @@ theorem nrfind'_obtain_prop_6 {O s cf x} (h : (evaln O (s + 1) (rfind' cf) x).is
     rw [← add_assoc]
     have rop2' := rop2 (j2+j) (add_le_of_le_sub hjro hj2)
     rwa [Eq.symm (Simproc.sub_add_eq_comm (s + 1) j2 j)]
+  -- constructor
   · intro j2 hj2
     rw [← add_assoc]
     have rop3' := rop3 (j2+j) (add_lt_of_lt_sub hj2)
     rwa [Eq.symm (Simproc.sub_add_eq_comm (s + 1) j2 j)]
-theorem nrfind'_obtain_prop_4' {O s cf x} (h : (evaln O (s + 1) (rfind' cf) x).isSome) :
-    ∀ j ≤ rfind'_obtain (en2e h), (evaln O (s + 1-j) (rfind' cf) ⟪x.l, j+x.r⟫).isSome := by
-  rw [← nrop_eq_rop h]
-  exact fun j a ↦ nrfind'_obtain_prop_4 h j a
+  -- · intro j2 hj2
+  --   rw [← add_assoc]
+  --   have rop4' := rop4 (j2+j) (add_le_of_le_sub hjro hj2)
+  --   rwa [Eq.symm (Simproc.sub_add_eq_comm (s + 1) j2 j)]
+-- theorem nrfind'_obtain_prop_4' {O s cf x} (h : (evaln O (s + 1) (rfind' cf) x).isSome) :
+--     ∀ j ≤ rfind'_obtain (en2e h), (evaln O (s + 1-j) (rfind' cf) ⟪x.l, j+x.r⟫).isSome := by
+--   rw [← nrop_eq_rop h]
+--   exact fun j a ↦ nrfind'_obtain_prop_4 h j a
 theorem nrfind'_obtain_prop_6' {O s cf x} (h : (evaln O (s + 1) (rfind' cf) x).isSome) :
     ∀ j ≤ rfind'_obtain (en2e h),
     (rfind'_obtain (en2e h))+x.r ∈ (evaln O (s + 1-j) (rfind' cf) ⟪x.l, j+x.r⟫) := by
@@ -539,44 +597,28 @@ theorem evaln_sound''' {O s c x y} (h : (evaln O s c x).isSome) :
 theorem rfind'_obtain_prop {O cf x} (h : (eval O (rfind' cf) x).Dom) :
     0 ∈ (eval O cf (Nat.pair x.l (rfind'_obtain h+x.r))) ∧
     (∀ j ≤ rfind'_obtain h, (eval O cf ⟪x.l, j+x.r⟫).Dom) ∧
-    (∀ j < rfind'_obtain h, ¬0 ∈ (eval O cf ⟪x.l, j+x.r⟫)) := by
+    (∀ j < rfind'_obtain h, ¬0 ∈ (eval O cf ⟪x.l, j+x.r⟫)) ∧
+    (∀ j ≤ rfind'_obtain h, (eval O (rfind' cf) ⟪x.l, j+x.r⟫).Dom) := by
   rcases evaln_complete''.mp (Part.get_mem h) with ⟨h1,h2⟩
-  rcases (nrfind'_obtain_prop' (Option.isSome_of_eq_some h2)) with ⟨nrop1,nrop2,nrop3⟩
-  exact
+  rcases (nrfind'_obtain_prop' (Option.isSome_of_eq_some h2)) with ⟨nrop1,nrop2,nrop3,nrop4⟩
+  -- exact
+  refine
   ⟨
     evaln_sound nrop1,
     fun j a ↦ en2e (nrop2 j a),
-    fun j jj => evaln_sound''' (nrop2 j (le_of_succ_le jj)) (nrop3 j jj)
+    fun j jj => evaln_sound''' (nrop2 j (le_of_succ_le jj)) (nrop3 j jj),
+    fun j a ↦ en2e (nrop4 j a)
   ⟩
-theorem rfind'_obtain_prop_4 {O cf x} (h : (eval O (rfind' cf) x).Dom) :
-    ∀ j ≤ rfind'_obtain h, (eval O (rfind' cf) ⟪x.l, j+x.r⟫).Dom :=
-  fun j jj => en2e <| nrfind'_obtain_prop_4'
-    (Option.isSome_of_eq_some (evaln_complete''.mp (Part.get_mem h)).choose_spec) j jj
+  
+-- theorem rfind'_obtain_prop_4 {O cf x} (h : (eval O (rfind' cf) x).Dom) :
+--     ∀ j ≤ rfind'_obtain h, (eval O (rfind' cf) ⟪x.l, j+x.r⟫).Dom :=
+--   fun j jj => en2e <| nrfind'_obtain_prop_4'
+--     (Option.isSome_of_eq_some (evaln_complete''.mp (Part.get_mem h)).choose_spec) j jj
 
-theorem rfind'_prop {O cf x y} (h : (eval O (rfind' cf) x).Dom) :
-    y+x.r∈eval O (rfind' cf) x ↔
-    0 ∈ (eval O cf ⟪x.l, y+x.r⟫) ∧
-    (∀ j ≤ y, (eval O cf ⟪x.l, j+x.r⟫).Dom) ∧
-    (∀ j < y, ¬0 ∈ (eval O cf ⟪x.l, j+x.r⟫)) := by
-  constructor
-  · intro h1
-    have : y=rfind'_obtain h := by
-      unfold rfind'_obtain
-      have aux0 : (eval O cf.rfind' x).get h = y+x.r := by exact Part.get_eq_of_mem h1 h
-      simp_all only [add_tsub_cancel_right]
-    rw [this]
-    exact rfind'_obtain_prop h
-  contrapose
-  intro h1
-  push Not
-  intro h2 h3
-  simp [eval] at h1
-  rcases h1 h2 with ⟨h4,h5,h6⟩
-  use h4
-  refine ⟨h5,forall_mem_part (h3 h4 (le_of_succ_le h5)) h6⟩
 theorem rfind'_obtain_prop_6 {O cf x} (h : (eval O (rfind' cf) x).Dom) :
 ∀ j ≤ rfind'_obtain h, (rfind'_obtain h)+x.r ∈ (eval O (rfind' cf) ⟪x.l, j+x.r⟫) := by
   rcases evaln_complete''.mp (Part.get_mem h) with ⟨h1,h2⟩
   exact fun j jj =>
     evaln_sound ((nrfind'_obtain_prop_6' (Option.isSome_of_eq_some h2)) j jj)
 end rfind_obtain
+end Oracle.Single.Code

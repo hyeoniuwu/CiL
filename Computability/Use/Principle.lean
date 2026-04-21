@@ -364,12 +364,13 @@ theorem usen_mono_rfind' {O cf s x j} (hh : (usen O (rfind' cf) (s + 1) x).isSom
   intro hjro
   have rop := nrfind'_obtain_prop (un2en hh)
   let (eq := hro) ro := nrfind'_obtain (un2en hh)
-  simp only [← hro] at rop 
-  have rop1 := rop.left
-  have rop2 := rop.right.left
-  have rop3 := rop.right.right
-  have rop4 := nrfind'_obtain_prop_4 (un2en hh)
-  simp [← hro] at rop4
+  simp only [← hro] at rop
+  rcases rop with ⟨rop1, rop2, rop3, rop4⟩
+  -- have rop1 := rop.left
+  -- have rop2 := rop.right.left
+  -- have rop3 := rop.right.right
+  -- have rop4 := nrfind'_obtain_prop_4 (un2en hh)
+  -- simp [← hro] at rop4
   have aux3 := rop2 0 (Nat.zero_le ro)
   simp only [tsub_zero, zero_add, pair_lr] at aux3
   simp only [usen_rfind_prop2', Option.pure_def, Option.bind_eq_bind, Option.bind_some,
@@ -699,7 +700,8 @@ theorem usen_principle {O₁ O₂} {s c x} (hh : (evaln O₁ s c x).isSome)
       simp only [isSome.bind <| en2un aux00]
       simp [ih_cg]
   | hrfind' cf s x ih =>
-    rcases nrfind'_obtain_prop hh with ⟨nrop1, nrop2, nrop3⟩
+    rcases nrfind'_obtain_prop hh with ⟨nrop1, nrop2, nrop3, nrop4⟩
+    clear nrop4
     let (eq := hnro) nro := nrfind'_obtain hh
     simp only [← hnro, Option.mem_def] at nrop1 nrop2
     replace ih : ∀ j ≤ nro,
@@ -786,10 +788,8 @@ theorem usen_principle {O₁ O₂} {s c x} (hh : (evaln O₁ s c x).isSome)
           max := Nat.max max usen_i
         max : Option ℕ)
     from by
-      have rw1 := @usen_rfind_prop2'' O₁ (s-1) x cf
-      rw [← rw1] at this
-      have rw2 := @usen_rfind_prop2'' O₂ (s-1) x cf
-      rw [← rw2] at this
+      rw [← @usen_rfind_prop2'' O₁ (s-1) x cf] at this
+      rw [← @usen_rfind_prop2'' O₂ (s-1) x cf] at this
       exact this
     simp only [Option.pure_def, Option.bind_eq_bind, Option.bind_some, Option.bind_fun_some]
     simp only [evaln_xles hh, guard_true, Option.pure_def, Option.bind_some]
