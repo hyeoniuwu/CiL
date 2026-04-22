@@ -206,7 +206,7 @@ def c_add := (prec c_id ((succ.comp right).comp right))
 @[simp, evp_simps] theorem c_add_evp {O : ℕ → ℕ} : evalp O c_add = unpaired2 Nat.add := by
   simp only [c_add, evp_simps]
   funext n;
-  simp only [unpaired, unpair1_to_l, pair_r, succ_eq_add_one, unpair2_to_r, unpaired2, add_eq]
+  simp only [unpaired, unpair1_to_l, succ_eq_add_one, unpair2_to_r, unpaired2, add_eq]
   induction n.r with
   | zero => exact rfl
   | succ n h => exact Nat.add_left_inj.mpr h
@@ -290,7 +290,7 @@ def c_sub := prec c_id ((c_pred.comp right).comp right)
   simp only [c_sub, evp_simps]
   funext n;
   simp? [unpaired2] says
-    simp only [unpaired, unpair1_to_l, pair_r, pred_eq_sub_one, unpair2_to_r, unpaired2, sub_eq]
+    simp only [unpaired, unpair1_to_l, pred_eq_sub_one, unpair2_to_r, unpaired2, sub_eq]
   induction n.r with
   | zero => exact rfl
   | succ n h =>
@@ -506,7 +506,7 @@ def c_nat_iterate (cf : Code) :=
 @[simp, evp_simps] theorem c_nat_iterate_evp {O : ℕ → ℕ} {cf input i} :
     evalp O (c_nat_iterate cf) ⟪input, i⟫ = (evalp O cf)^[i] (input) := by
   simp only [c_nat_iterate, evp_simps]
-  simp only [unpaired, unpair_pair, pair_r]
+  simp only [unpaired, unpair_pair]
   induction i with
   | zero => simp
   | succ n ih =>

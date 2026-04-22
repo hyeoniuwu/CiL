@@ -16,7 +16,8 @@ import Mathlib.Tactic.Cases -- for induction'
 /-!
 # Gödel Numbering for Functions Partial Recursive in an Oracle.
 
-This file is a relativisation of Mathlib/Computability/PartrecCode.lean; notable notions relativised include:
+This file is a relativisation of Mathlib/Computability/PartrecCode.lean; notable notions relativised
+include:
 
 - `Oracle.Single.Code`: where a constructor for the oracle is added;
 - `Oracle.Single.Code.c2n`: A relativisation of `Nat.Partrec.Code.encodeCode`
