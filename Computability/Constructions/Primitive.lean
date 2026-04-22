@@ -33,12 +33,13 @@ Suppose we want to construct a primitive recursive function `f : ℕ → ℕ`.
   · theorem which asserts that the code `c_f` implements `f` upon evaluation with `eval`.
     This follows "for free" once you have `c_f_evp `.
   
-`theorem Nat.PrimrecIn.f : Nat.PrimrecIn O f := by rw [←c_f_evp]; exact code_prim_prop`
+`theorem PrimrecIn.f : PrimrecIn O f := by rw [←c_f_evp]; exact code_prim_prop`
   · theorem asserting that the function `f` is primitive recursive. This again follows
     immediately from `c_f_evp`.
 
 -/
 
+open Oracle.Single
 open Oracle.Single.Code
 open Nat
 
@@ -97,7 +98,7 @@ def c_id := left.pair right
 theorem c_id_evp' {O : ℕ → ℕ} : evalp O c_id = id := by funext x; simp [evp_simps]
 @[simp, ev_simps] theorem c_id_ev {O : ℕ → ℕ} {n} : eval O c_id n = n := by simp [c_id,eval,Seq.seq]
 end Oracle.Single.Code
-theorem Nat.PrimrecIn.id {O : ℕ → ℕ} : Nat.PrimrecIn O id := by
+theorem PrimrecIn.id {O : ℕ → ℕ} : PrimrecIn O id := by
   rw [← c_id_evp']; exact code_prim_prop
 end id
 
@@ -177,9 +178,9 @@ def c_sg' := comp (prec (c_const 1) (((zero).comp left).comp left)) (pair zero c
 @[simp, ev_simps] theorem c_sg'_ev {O : ℕ → ℕ} : eval O c_sg' = Nat.sg' := by
   rw [← evalp_eq_eval c_sg'_prim]; simp only [c_sg'_evp]
 end Oracle.Single.Code
-theorem Nat.PrimrecIn.sg {O : ℕ → ℕ} : Nat.PrimrecIn O Nat.sg := by
+theorem PrimrecIn.sg {O : ℕ → ℕ} : PrimrecIn O Nat.sg := by
   rw [← c_sg_evp]; exact code_prim_prop
-theorem Nat.PrimrecIn.sg' {O : ℕ → ℕ} : Nat.PrimrecIn O Nat.sg' := by
+theorem PrimrecIn.sg' {O : ℕ → ℕ} : PrimrecIn O Nat.sg' := by
   rw [← c_sg'_evp]; exact code_prim_prop
 @[simp] abbrev c_not := c_sg'
 end sgsg'
@@ -256,8 +257,8 @@ def c_prec1 (m) (cf : Code) := ((prec (c_const m) (cf.comp right)).comp (zero.pa
     evalp O (c_prec1 m cf) = (fun n => n.rec m fun y IH => evalp O cf <| Nat.pair y IH) := by
   simp [c_prec1, evp_simps]
 end Oracle.Single.Code
-theorem Nat.PrimrecIn.prec1 {cf m} {O : ℕ → ℕ} :
-    Nat.PrimrecIn O (fun n => n.rec m fun y IH => evalp O cf <| Nat.pair y IH) := by
+theorem PrimrecIn.prec1 {cf m} {O : ℕ → ℕ} :
+    PrimrecIn O (fun n => n.rec m fun y IH => evalp O cf <| Nat.pair y IH) := by
   rw [← c_prec1_evp]; exact code_prim_prop
 end prec1
 section casesOn1

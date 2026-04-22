@@ -257,18 +257,18 @@ theorem evalp_eq_eval {O} {c} (h : code_prim c) : evalp O c = eval O c := by
       rw [a0]
 theorem evalp_eq_eval_ext {O c x} (h : code_prim c) : eval O c x = evalp O c x :=
   congrFun (_root_.id (Eq.symm (@evalp_eq_eval O c h))) x
-@[simp 1000] theorem code_prim_prop {O} {c} : Nat.PrimrecIn O (evalp O c) := by
+@[simp 1000] theorem code_prim_prop {O} {c} : PrimrecIn O (evalp O c) := by
   induction c with
-  | zero => exact Nat.PrimrecIn.zero
-  | succ => exact Nat.PrimrecIn.succ
-  | left => exact Nat.PrimrecIn.left
-  | right => exact Nat.PrimrecIn.right
-  | oracle => exact Nat.PrimrecIn.oracle
-  | pair ha hb ha_ih hb_ih => unfold evalp; exact Nat.PrimrecIn.pair (ha_ih) (hb_ih)
-  | comp ha hb ha_ih hb_ih => unfold evalp; exact Nat.PrimrecIn.comp (ha_ih) (hb_ih)
-  | prec ha hb ha_ih hb_ih => unfold evalp; exact Nat.PrimrecIn.prec (ha_ih) (hb_ih)
-  | rfind' ha ha_ih => exact Nat.PrimrecIn.zero
-theorem code_prim_of_primrecIn {O f} (h : Nat.PrimrecIn O f) : ∃ c, code_prim c ∧ f=evalp O c := by
+  | zero => exact PrimrecIn.zero
+  | succ => exact PrimrecIn.succ
+  | left => exact PrimrecIn.left
+  | right => exact PrimrecIn.right
+  | oracle => exact PrimrecIn.oracle
+  | pair ha hb ha_ih hb_ih => unfold evalp; exact PrimrecIn.pair (ha_ih) (hb_ih)
+  | comp ha hb ha_ih hb_ih => unfold evalp; exact PrimrecIn.comp (ha_ih) (hb_ih)
+  | prec ha hb ha_ih hb_ih => unfold evalp; exact PrimrecIn.prec (ha_ih) (hb_ih)
+  | rfind' ha ha_ih => exact PrimrecIn.zero
+theorem code_prim_of_primrecIn {O f} (h : PrimrecIn O f) : ∃ c, code_prim c ∧ f=evalp O c := by
   induction h with
   | zero => use Code.zero; exact ⟨code_prim.zero,rfl⟩
   | succ => use Code.succ; exact ⟨code_prim.succ,rfl⟩
@@ -343,16 +343,16 @@ end Oracle.Single.Code
 end total
 
 namespace Oracle.Single.Code
-@[simp 1000] theorem RecursiveIn_of_eval {O c} : Nat.RecursiveIn O (eval O c) := by
+@[simp 1000] theorem RecursiveIn_of_eval {O c} : RecursiveIn O (eval O c) := by
   induction c with
-  | zero => exact Nat.RecursiveIn.zero
-  | succ => exact Nat.RecursiveIn.succ
-  | left => exact Nat.RecursiveIn.left
-  | right => exact Nat.RecursiveIn.right
-  | oracle => exact Nat.RecursiveIn.oracle
-  | pair ha hb ha_ih hb_ih => unfold eval; exact Nat.RecursiveIn.pair (ha_ih) (hb_ih)
-  | comp ha hb ha_ih hb_ih => unfold eval; exact Nat.RecursiveIn.comp (ha_ih) (hb_ih)
-  | prec ha hb ha_ih hb_ih => unfold eval; exact Nat.RecursiveIn.prec (ha_ih) (hb_ih)
+  | zero => exact RecursiveIn.zero
+  | succ => exact RecursiveIn.succ
+  | left => exact RecursiveIn.left
+  | right => exact RecursiveIn.right
+  | oracle => exact RecursiveIn.oracle
+  | pair ha hb ha_ih hb_ih => unfold eval; exact RecursiveIn.pair (ha_ih) (hb_ih)
+  | comp ha hb ha_ih hb_ih => unfold eval; exact RecursiveIn.comp (ha_ih) (hb_ih)
+  | prec ha hb ha_ih hb_ih => unfold eval; exact RecursiveIn.prec (ha_ih) (hb_ih)
   | rfind' ha ha_ih => unfold eval; exact RecursiveIn.rfind ha_ih
 
 end Oracle.Single.Code

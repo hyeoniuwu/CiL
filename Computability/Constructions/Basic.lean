@@ -70,11 +70,11 @@ open Classical in
   next h => simp only [Part.get_some, n2c_c2n]
   next h => simp only [Part.get_some, n2c_c2n]
 theorem exists_code_nat {O : ℕ → ℕ} {f : ℕ →. ℕ} :
-    Nat.RecursiveIn O f ↔ ∃ c : ℕ , eval O c.n2c = f := by
+    RecursiveIn O f ↔ ∃ c : ℕ , eval O c.n2c = f := by
   rw [@exists_code O f]
   exact Function.Surjective.exists n2c_sur
 theorem exists_code_total {O : ℕ → ℕ} {f : ℕ → ℕ} :
-    Nat.RecursiveIn O f ↔ ∃ c , eval O c = f ∧ code_total O c := by
+    RecursiveIn O f ↔ ∃ c , eval O c = f ∧ code_total O c := by
   constructor
   · intro h
     rcases exists_code.mp h with ⟨c,hc⟩
@@ -146,7 +146,7 @@ def evaln₁ (O : ℕ → ℕ) : ℕ → ℕ :=
 theorem c_evaln₁_evp {O} : evalp O c_evaln₁ = evaln₁ O := by
   unfold evaln₁
   simp [c_evaln₁]
-theorem prim_evaln₁ {O} : Nat.PrimrecIn O (evaln₁ O) := by
+theorem prim_evaln₁ {O} : PrimrecIn O (evaln₁ O) := by
   simp [← c_evaln₁_evp]
 end evaln₁
 
@@ -157,7 +157,7 @@ def c_eval₁ := c_eval
   unfold eval₁
   simp [c_eval₁]
 
-theorem rec_eval₁ {O} : Nat.RecursiveIn O (eval₁ O) := Nat.RecursiveIn.Rin.eval
+theorem rec_eval₁ {O} : RecursiveIn O (eval₁ O) := RecursiveIn.Rin.eval
 end eval₁
 
 end Oracle.Single.Code
@@ -165,8 +165,8 @@ end Oracle.Single.Code
 open Oracle.Single.Code
 namespace Oracle.Single.RecursiveIn
 theorem Rin.ite {O : ℕ → ℕ} {f g : ℕ →. ℕ} {c : ℕ → ℕ}
-    (hc : Nat.RecursiveIn O c) (hf : Nat.RecursiveIn O f) (hg : Nat.RecursiveIn O g) :
-    Nat.RecursiveIn O fun a => if (c a=0) then (f a) else (g a) := by
+    (hc : RecursiveIn O c) (hf : RecursiveIn O f) (hg : RecursiveIn O g) :
+    RecursiveIn O fun a => if (c a=0) then (f a) else (g a) := by
   apply exists_code.mpr
   rcases exists_code_total.mp hc with ⟨cc,hcc,hcct⟩
   rcases exists_code_nat.mp hf with ⟨ca,hca⟩
@@ -175,12 +175,12 @@ theorem Rin.ite {O : ℕ → ℕ} {f g : ℕ →. ℕ} {c : ℕ → ℕ}
   funext x
   simp [c_ite_ev hcct]
   simp [hcc, hca, hcb]
-theorem Rin.evalRecInO' {O} {f : ℕ →. ℕ} (h : Nat.RecursiveIn O f) :
-    Nat.RecursiveIn O (fun x => (f x) >>= (eval₁ O)) := by
+theorem Rin.evalRecInO' {O} {f : ℕ →. ℕ} (h : RecursiveIn O f) :
+    RecursiveIn O (fun x => (f x) >>= (eval₁ O)) := by
   simp only [Part.bind_eq_bind]
-  refine Nat.RecursiveIn.comp ?_ h
+  refine RecursiveIn.comp ?_ h
   apply rec_eval₁
-theorem Rin.none {O} : Nat.RecursiveIn O fun _ => Part.none := by
+theorem Rin.none {O} : RecursiveIn O fun _ => Part.none := by
   rw [← c_diverge_ev']
   exact RecursiveIn_of_eval
 end Oracle.Single.RecursiveIn

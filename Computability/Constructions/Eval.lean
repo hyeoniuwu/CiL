@@ -768,13 +768,15 @@ def c_eval := (c_rfindOpt (c_evaln.comp₃ (right.comp left) (left.comp left) ri
   funext x
   rw (config := {occs := .pos [1]}) [show x = ⟪x.l, x.r⟫ from by simp]
   exact c_eval_ev
-theorem _root_.Nat.RecursiveIn.Rin.eval {O} :
-    Nat.RecursiveIn O (fun ex => eval O ex.l.n2c ex.r) := by
+end Oracle.Single.Code
+namespace Oracle.Single
+open Oracle.Single.Code
+theorem RecursiveIn.Rin.eval {O} :
+    RecursiveIn O (fun ex => eval O ex.l.n2c ex.r) := by
   apply exists_code.mpr
   use c_eval
   funext x
   rw (config := {occs := .pos [1]}) [←(@pair_lr x)]
   exact c_eval_ev
-
-end Oracle.Single.Code
+end Oracle.Single
 end eval

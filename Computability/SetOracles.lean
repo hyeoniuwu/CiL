@@ -71,7 +71,7 @@ theorem χsimp {O} : χ O = fun x ↦ if x ∈ O then 1 else 0 := rfl
 noncomputable def evalnSet (O : Set ℕ) := evaln (χ O)
 @[simp] noncomputable def evalSet₁ (O : Set ℕ) : ℕ →. ℕ := eval₁ (χ O)
 @[simp] noncomputable def evalnSet₁ (O : Set ℕ) : ℕ → ℕ := evaln₁ (χ O)
-theorem prim_evalnSet₁ {O} : Nat.PrimrecIn (χ O) (evalnSet₁ O) := by
+theorem prim_evalnSet₁ {O} : PrimrecIn (χ O) (evalnSet₁ O) := by
   simp only [evalnSet₁]; exact prim_evaln₁
 def SetK0 (A : Set ℕ) := {ex : ℕ | (evalSet A ex.l ex.r).Dom}
 def SetK (A : Set ℕ) := {x : ℕ | (evalSet A x x).Dom}
@@ -194,7 +194,7 @@ theorem χSetK0_leq_K0χ {O : Set ℕ} : Rin (K0 (χ O)) (χ (SetK0 O)) := by
     funext xs
     simp [f, k]
   have rin_f : Rin (K0 (χ O)) f := by
-    exact Rin.totalComp (Rin.of_primrecIn Nat.PrimrecIn.sg) Rin.oracle
+    exact Rin.totalComp (Rin.of_primrecIn PrimrecIn.sg) Rin.oracle
   rw [h0]
   rw [k_eq_f]
   exact rin_f
@@ -252,7 +252,7 @@ theorem χ_le_χSetK (O : Set ℕ) : O ≤ᵀ (SetK O) := by
       cases χ_eq_0or1 with
       | inl h2 => simpa [h] using False.elim (h h2)
       | inr h2 => simpa [h] using h2
-  have f'_recIn_χK : Nat.RecursiveIn (χK) f' := by
+  have f'_recIn_χK : RecursiveIn (χK) f' := by
     simp only [f']
     refine Rin.someTotal χK (fun x ↦ χK (cg.n2c.comp (c_const x)).c2n) ?_
     refine Rin.totalComp' Rin.oracle ?_
@@ -263,7 +263,7 @@ theorem χ_le_χSetK (O : Set ℕ) : O ≤ᵀ (SetK O) := by
   rw [f_eq_f']
   exact f'_recIn_χK
 open Classical in
-theorem Kχ_le_χSetK (O : Set ℕ) : Nat.RecursiveIn (χ (SetK O)) (K (χ O)) := by
+theorem Kχ_le_χSetK (O : Set ℕ) : RecursiveIn (χ (SetK O)) (K (χ O)) := by
   let k : ℕ → ℕ := fun x ↦ if (eval (χ O) (n2c x) x).Dom then 1 else 0
   have h0 : χ (SetK O) = k := rfl
   have h1 (x : ℕ) : k x = 0 ↔ ¬(eval (χ O) (n2c x) x).Dom := by simp [k]
@@ -276,12 +276,12 @@ theorem Kχ_le_χSetK (O : Set ℕ) : Nat.RecursiveIn (χ (SetK O)) (K (χ O)) :
     | inr h => simpa [f, h, (h2 xs).mp h, K] using by apply some_comp_simp
   have rin_f : Rin k f := by
     apply Rin.ite Rin.oracle Rin.zero <| Rin.comp Rin.succ ?_
-    apply TuringReducible.trans' Nat.RecursiveIn.eval_K_computable (χ_le_χSetK O)
+    apply TuringReducible.trans' Rin.eval_K_computable (χ_le_χSetK O)
   rw [h0]
   rw [h3]
   exact rin_f
 open Classical in
-theorem χSetK_le_χSetK0 (O : Set ℕ) : Nat.RecursiveIn (χ (SetK0 O)) (χ (SetK O)) := by
+theorem χSetK_le_χSetK0 (O : Set ℕ) : RecursiveIn (χ (SetK0 O)) (χ (SetK O)) := by
   have main : (χ (SetK O)) = (χ (SetK0 O)) ∘ fun x => Nat.pair x x := by
     funext xs
     simp [χ, SetK, SetK0]
@@ -400,7 +400,7 @@ def c_dom_to_ran := c_c_ifdom.comp₂
 @[simp, evp_simps] theorem c_dom_to_ran_evp {O} :
     evalp O c_dom_to_ran = fun (x : ℕ) ↦ c2n (dom_to_ran x) := by
   simp [c_dom_to_ran, dom_to_ran]
-theorem Nat.PrimrecIn.dom_to_ran {O} : Nat.PrimrecIn O (fun (x : ℕ) ↦ (dom_to_ran x).c2n) := by
+theorem PrimrecIn.dom_to_ran {O} : PrimrecIn O (fun (x : ℕ) ↦ (dom_to_ran x).c2n) := by
   rw [← c_dom_to_ran_evp]; exact code_prim_prop
 end dom_to_ran
 
@@ -460,7 +460,7 @@ def c_ran_to_dom := c_dovetail.comp <|
 @[simp, evp_simps] theorem c_ran_to_dom_evp {O} :
     evalp O c_ran_to_dom = fun (x : ℕ) ↦ c2n (ran_to_dom x) := by
   simp [c_ran_to_dom, ran_to_dom]
-theorem Nat.PrimrecIn.ran_to_dom {O} : Nat.PrimrecIn O (fun (x : ℕ) ↦ (ran_to_dom x).c2n) := by
+theorem PrimrecIn.ran_to_dom {O} : PrimrecIn O (fun (x : ℕ) ↦ (ran_to_dom x).c2n) := by
   rw [← c_ran_to_dom_evp]; exact code_prim_prop
 end ran_to_dom
 

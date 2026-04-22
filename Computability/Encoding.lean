@@ -246,7 +246,7 @@ theorem eval_curry {O : ℕ → ℕ} (c n x) : eval O (curry c n) x = eval O c (
 
 /-- A function is partial recursive if and only if there is a code implementing it. Therefore,
 `eval` is a **universal partial recursive function**. -/
-theorem exists_code {O : ℕ → ℕ} {f : ℕ →. ℕ} : Nat.RecursiveIn O f ↔ ∃ c : Code, eval O c = f := by
+theorem exists_code {O : ℕ → ℕ} {f : ℕ →. ℕ} : RecursiveIn O f ↔ ∃ c : Code, eval O c = f := by
   refine ⟨fun h => ?_, ?_⟩
   · induction h with
     | zero => exact ⟨.zero, rfl⟩
@@ -269,11 +269,11 @@ theorem exists_code {O : ℕ → ℕ} {f : ℕ →. ℕ} : Nat.RecursiveIn O f �
       exact rfl
   · rintro ⟨c, rfl⟩
     induction c with
-    | zero => exact Nat.RecursiveIn.zero
-    | succ => exact Nat.RecursiveIn.succ
-    | left => exact Nat.RecursiveIn.left
-    | right => exact Nat.RecursiveIn.right
-    | oracle => exact Nat.RecursiveIn.oracle
+    | zero => exact RecursiveIn.zero
+    | succ => exact RecursiveIn.succ
+    | left => exact RecursiveIn.left
+    | right => exact RecursiveIn.right
+    | oracle => exact RecursiveIn.oracle
     | pair cf cg pf pg => exact pf.pair pg
     | comp cf cg pf pg => exact pf.comp pg
     | prec cf cg pf pg => exact pf.prec pg
