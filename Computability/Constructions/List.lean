@@ -253,7 +253,6 @@ def c_list_foldl (c : Code) := left.comp (c_list_foldl_aux2 c)
     init
     (n2l lN) := by
   simp only [c_list_foldl,c_list_foldl_aux2, evp_simps]
-  -- change goal
   suffices ∀ n,
       (evalp O c.c_list_foldl_aux)^[n] ⟪init, lN⟫ =
       ⟪((n2l lN).take n).foldl (fun a b => evalp O c ⟪a,b⟫) init, l2n ((n2l lN).drop n)⟫ by
@@ -278,24 +277,21 @@ def c_list_foldl (c : Code) := left.comp (c_list_foldl_aux2 c)
       · simp? [ih, hl2] says
           simp only [Function.comp_apply, ih, c_list_foldl_aux_evp, ofNat_encode, drop_eq_nil_iff,
           hl2, ↓reduceIte, tail_drop, pair_eq_pair, and_true]
-        have lgt_1 : (n2l lN).length ≥ n+1 := by exact gt_of_not_le hl2
-        have vasd2 : (take (n + 1) (n2l lN)) = (take n (n2l lN)) ++ [(n2l lN)[n]] := by simp
-        have vasd_aux : (n2l lN)[n] = (drop n (n2l lN)).headI := by
-          have abc2 : length (drop n (n2l lN)) > 0 := by (expose_names; exact lt_length_drop lgt_1)
-          have asdasdasd := @getElem_drop ℕ (n2l lN) n 0 abc2
-          simp only [add_zero] at asdasdasd
-          -- rw [←asdasdasd]
-          have asd := exists_cons_of_length_pos abc2
-          rcases asd with ⟨k,t,hkt⟩
+        have lgt_1 : (n2l lN).length ≥ n+1 := gt_of_not_le hl2
+        have take_rw_aux : (n2l lN)[n] = (drop n (n2l lN)).headI := by
+          have ln_gt_0 : length (drop n (n2l lN)) > 0 := lt_length_drop lgt_1
+          have hdrop := @getElem_drop ℕ (n2l lN) n 0 ln_gt_0
+          simp only [add_zero] at hdrop
+          rcases exists_cons_of_length_pos ln_gt_0 with ⟨_,_,hkt⟩
           simp [hkt]
-          simp_all only [encode_list_cons, encode_nat, succ_eq_add_one, not_le, take_append_getElem,
-            getElem_cons_zero]
-          subst asdasdasd
+          simp_all only [encode_list_cons, encode_nat, succ_eq_add_one, not_le, getElem_cons_zero]
+          subst hdrop
           rfl
-        have vasd : (take (n + 1) (n2l lN)) = (take n (n2l lN)) ++ [(drop n (n2l lN)).headI] := by
-          rw [vasd2]
-          rw [vasd_aux]
-        rw [vasd]
+        have take_rw :
+            (take (n + 1) (n2l lN)) = (take n (n2l lN)) ++ [(drop n (n2l lN)).headI] := by
+          rw [show (take (n + 1) (n2l lN)) = (take n (n2l lN)) ++ [(n2l lN)[n]] from by simp]
+          rw [take_rw_aux]
+        rw [take_rw]
         simp
 end Oracle.Single.Code
 end list_foldl
@@ -471,7 +467,7 @@ theorem c_list_zipWith_evp_aux_2 {a b c : List ℕ} {f : ℕ → ℕ → ℕ} (h
   rewrite [(take_append_drop a.length b).symm]
   -- rw `take a.length b ++ drop a.length b ++ c` => `take a.length b ++ (drop a.length b ++ c)`
   rewrite [append_assoc (take a.length b) (drop a.length b) c]
-  have aux7 : (take a.length b).length = a.length := by exact length_take_of_le h
+  have aux7 : (take a.length b).length = a.length := length_take_of_le h
   have aux6 := @zipWith_append ℕ ℕ ℕ f (take a.length b) (drop a.length b ++ c) a [] aux7
   have aux8 := @zipWith_append ℕ ℕ ℕ f (take a.length b) (drop a.length b) a [] aux7
   simp at aux6 aux8
@@ -533,21 +529,18 @@ theorem c_list_zipWith_aux_evp {O c l1N l2N} :
   induction h : (n2l l1N).reverse generalizing l1N with
   | nil => simp_all
   | cons head tail ih =>
-    have asd2 : (n2l l1N) = (tail.reverse).concat head := by
-      rw [concat_eq_append]
-      rw [←reverse_reverse (n2l l1N)]
-      rw [h]
+    have a0 : (n2l l1N) = (tail.reverse).concat head := by
+      rw [concat_eq_append, ←reverse_reverse (n2l l1N), h]
       exact reverse_cons
-    rw [asd2]
+    rw [a0]
     simp only [Pi.natCast_apply, cast_id] at ih
-    have asdd : (n2l (l2n tail.reverse)).reverse = tail := by simp
-    have lolz := ih asdd
-    simp [-encode_list_cons, -encode_list_nil, -foldl_reverse]
-    simp [-encode_list_cons, -encode_list_nil, -foldl_reverse] at lolz
-    rw [lolz]
-    simp [-encode_list_cons, -encode_list_nil, -foldl_reverse]
-    clear ih lolz asdd asd2
-
+    replace ih := ih (show (n2l (l2n tail.reverse)).reverse = tail from by simp)
+    simp only [Pi.natCast_apply, cast_id, concat_eq_append, foldl_append, foldl_cons, foldl_nil,
+      length_append, length_reverse, length_cons, length_nil, zero_add]
+    simp only [ofNat_encode, length_reverse] at ih
+    rw [ih]
+    clear a0
+    simp only [pair_r, ofNat_encode, pair_l, tail_drop]
     by_cases hh : drop tail.length (n2l l2N) = ([] : List ℕ)
     · simp only [hh]
       rw [show drop (tail.length + 1) (n2l l2N) = [] from by simp at hh ⊢; omega]

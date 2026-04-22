@@ -102,14 +102,12 @@ theorem c_bdd_search_evp_0 {O c s a k l} :
     unfold c_bdd_search
     lift_lets; extract_lets; expose_names
     simp only [evp_simps]
-    simp only [Nat.unpaired, Nat.unpair_pair, Nat.pred_eq_sub_one, Nat.succ_eq_add_one, pair_l,
-      pair_r]
+    simp only [Nat.unpaired, Nat.unpair_pair, Nat.pred_eq_sub_one, Nat.succ_eq_add_one]
     -- we will simplify terms in the goal with inp
     let (eq := hinp) inp := ⟪⟪s,a,k⟫, ⟪n,evalp O (c_bdd_search c) ⟪⟪s,a,k⟫, n⟫⟫⟫
     unfold c_bdd_search at hinp; lift_lets at hinp;
     simp only [evp_simps] at hinp
-    simp only [Nat.unpaired, Nat.unpair_pair, Nat.pred_eq_sub_one, Nat.succ_eq_add_one, pair_l,
-      pair_r] at hinp
+    simp only [Nat.unpaired, Nat.unpair_pair, Nat.pred_eq_sub_one, Nat.succ_eq_add_one] at hinp
     rw [← hinp]
     have hprev_comp : evalp O prev_comp inp = evalp O (c_bdd_search c) ⟪⟪s,a,k⟫, n⟫ := by
       unfold c_bdd_search
@@ -201,13 +199,12 @@ theorem c_bdd_search_evp_1 {O c s a k l i r} :
     unfold c_bdd_search
     lift_lets; extract_lets; expose_names
     simp only [evp_simps]
-    simp only [Nat.unpaired, Nat.unpair_pair, Nat.pred_eq_sub_one, Nat.succ_eq_add_one, pair_l,
-      pair_r, Option.mem_def]
+    simp only [Nat.unpaired, Nat.unpair_pair, Nat.pred_eq_sub_one, Nat.succ_eq_add_one,
+      Option.mem_def]
     let (eq := hinp) inp := ⟪⟪s,⟪a,k⟫⟫, ⟪n,evalp O (c_bdd_search c) ⟪⟪s,a,k⟫, n⟫⟫⟫
     unfold c_bdd_search at hinp; lift_lets at hinp;
     simp only [evp_simps] at hinp
-    simp only [Nat.unpaired, Nat.unpair_pair, Nat.pred_eq_sub_one, Nat.succ_eq_add_one, pair_l,
-      pair_r] at hinp
+    simp only [Nat.unpaired, Nat.unpair_pair, Nat.pred_eq_sub_one, Nat.succ_eq_add_one] at hinp
     rw [← hinp]
     have hprev_comp : evalp O prev_comp inp = evalp O (c_bdd_search c) ⟪⟪s,a,k⟫, n⟫ := by
       unfold c_bdd_search
@@ -358,7 +355,7 @@ def c_step :=
   unfold c_step
   lift_lets; extract_lets; expose_names
   simp only [evp_simps]
-  simp only [Nat.sg', pair_l, pair_r, ite_eq_right_iff, one_ne_zero, imp_false, ite_not,
+  simp only [Nat.sg', ite_eq_right_iff, one_ne_zero, imp_false, ite_not,
     Bool.not_eq_true, Set.mem_setOf_eq, gt_iff_lt]
   let (eq := hinp) inp := ⟪s, i, prev⟫
   rw [← hinp]

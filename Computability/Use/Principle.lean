@@ -449,7 +449,7 @@ theorem usen_mono_rfind' {O cf s x j} (hh : (usen O (rfind' cf) (s + 1) x).isSom
           (h3 : a ∈ l') :=
         (usen O cf (s + 1-a) (Nat.pair x.l (a + x.r))).get (
           by
-            rcases listrevlem h2 with ⟨h4,h5,h6⟩
+            rcases rr_lemma h2 with ⟨h4,h5,h6⟩
             rw [h5] at h3
             exact dom3 a h4 h3 (Nat.le_trans h6 hjro)
         )
@@ -457,7 +457,7 @@ theorem usen_mono_rfind' {O cf s x j} (hh : (usen O (rfind' cf) (s + 1) x).isSom
         (fun a head tail m l' h3t hht ↦ rfl) ?_ (le_rfl)
       intro l' base htt
       unfold f
-      rcases listrevlem htt with ⟨h1,h2,h3⟩
+      rcases rr_lemma htt with ⟨h1,h2,h3⟩
       simp only [h2]
       replace : h1 ≤ ro := Nat.le_trans h3 hjro
       exact forInDom base this
@@ -512,13 +512,13 @@ theorem usen_mono_rfind' {O cf s x j} (hh : (usen O (rfind' cf) (s + 1) x).isSom
         rotate_left
         ·  exact dom3 a (ro - (n + 1)) (List.forIn'_congr._proof_1 (congrArg
             (fun x ↦ (List.range x).reverse) ronrw0) a (by
-            simpa using listrevlem2 h2 h3)) (sub_le ro (n + 1))
+            simpa using rr_lemma2 h2 h3)) (sub_le ro (n + 1))
         let aux12 : ∀ (l' : List ℕ) (base : ℕ)
             (htt : ∃ l'', l'' ++ l' = (List.range (ro - n - 1)).reverse),
             (forIn' l' base fun a h b ↦ some (ForInStep.yield (b.max (f a l' htt h)))).isSome := by
           intro l' base htt
           unfold f
-          rcases listrevlem htt with ⟨h1,h2,h3⟩
+          rcases rr_lemma htt with ⟨h1,h2,h3⟩
           simp only [h2]
           have : h1 ≤ ro := le_of_le_sub (le_of_le_sub h3)
           exact forInDom base this
