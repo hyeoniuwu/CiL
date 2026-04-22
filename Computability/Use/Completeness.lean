@@ -703,11 +703,11 @@ else
   apply congrArg
   have kkk : k=k-1+1 :=  nrf_aux usenindtdom
   simp only [congrFun (congrArg (usen O cf.rfind') kkk) ⟪x.l,x.r + 1⟫]
-  have auxdom1 : (evaln O k cf ⟪x.l, x.r+1⟫).isSome := by
+  have hdom : (evaln O k cf ⟪x.l, x.r+1⟫).isSome := by
     have := nrop2 1 (le_add_left 1 (roM1 - 1 + 1))
     simp at this
     rwa [add_comm]
-  have r1 : (evaln O k cf ⟪x.l, x.r+1⟫).get auxdom1 ≠ 0 := by
+  have r1 : (evaln O k cf ⟪x.l, x.r+1⟫).get hdom ≠ 0 := by
     have := nrop3 1 (one_lt_succ_succ (roM1 - 1))
     simp only [add_tsub_cancel_right] at this
     rw [add_comm] at this

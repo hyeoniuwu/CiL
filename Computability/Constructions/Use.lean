@@ -225,7 +225,6 @@ theorem c_usen_evp_aux_nMod4 {O x n s} :
       let usen_cf ← n2o (pc_ml_s left elem)
       let usen_cg ← n2o (pc_mr_s left elem)
       return Nat.max usen_cf usen_cg
-
     let opt_comp elem := o2n do
       guard (elem ≤ s);
       let usen_cg ← n2o (pc_mr_s left elem)
@@ -250,13 +249,11 @@ theorem c_usen_evp_aux_nMod4 {O x n s} :
       if evaln_base=0 then usen_base else
       let usen_indt  ← n2o <| pc_c_sM1 left (Nat.pair x.l (x.r+1))
       return Nat.max usen_base usen_indt)
-
         if n%4=0 then opt_pair x
     else if n%4=1 then opt_comp x
     else if n%4=2 then opt_prec x
     else if n%4=3 then opt_rfind' x
     else 0 := by
-
   lift_lets; extract_lets; expose_names
   unfold c_usen; unfold c_usen_aux
   lift_lets; extract_lets; expose_names
@@ -265,7 +262,6 @@ theorem c_usen_evp_aux_nMod4 {O x n s} :
   have hkP1: k+1=⟪(n+4)+1, s+1⟫ := by
     exact Nat.sub_add_cancel kP1_gt_0
   rw [←hkP1]
-
   have hinp : inp = (evalp O c_usen_aux ⟪17, k⟫) := rfl
   unfold c_usen_aux at hinp; lift_lets at hinp
   have hcri : ⟪17, k, inp⟫ = cri := rfl
@@ -382,7 +378,6 @@ theorem c_usen_evp_aux_nMod4 {O x n s} :
           simp [hcomp_evaln_cg]
           simp [hnat_2 (Option.isSome_iff_ne_none.mpr hhh)]
         rw [this]
-
         cases Classical.em (
           pc_ml_s left
           ((evaln O (s + 1) (n2c mr) elem).get
@@ -408,12 +403,12 @@ theorem c_usen_evp_aux_nMod4 {O x n s} :
       (evalp O prec_evaln_prev ⟪elem, cri⟫) =
       o2n (evaln O s (n2c (n+4+1)) (Nat.pair elem.l (elem.r - 1))) := by
     simp [prec_evaln_prev,hsM1,hcode,hprec_x,hprec_iM1]
-  have hprec_usen_indt elem asd :
+  have hprec_usen_indt elem hdom :
       (evalp O prec_usen_indt ⟪elem, cri⟫) =
       pc_mr_s left
         (Nat.pair elem.l
         (Nat.pair (elem.r - 1) ((evaln O s (n2c (n + 4 + 1))
-        (Nat.pair elem.l (elem.r - 1))).get (asd)))) := by
+        (Nat.pair elem.l (elem.r - 1))).get hdom))) := by
     simp only [prec_usen_indt,hpc_mr_s,pc_mr_s,hprec_x, hprec_iM1,hprec_evaln_prev, evp_simps]
     apply congrArg
     apply congrFun
