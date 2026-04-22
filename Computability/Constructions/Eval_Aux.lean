@@ -19,6 +19,7 @@ open Encodable
 open List
 
 section rfindOpt
+open Oracle.Single
 namespace Oracle.Single.Code
 
 theorem rfind'_eqv_rfind {O c x} :
@@ -45,6 +46,19 @@ theorem c_rfind_ev' {O c a} :
   simp only [rfind, Part.map_eq_map]
   unfold n2b'
   simp
+theorem c_rfind_ev'' {O c} :
+    eval O (c_rfind c) = fun a => (Nat.rfind (fun x => n2b' <$> eval O c (Nat.pair a x))) := by
+  funext a
+  exact c_rfind_ev'
+theorem rfind_real {O f} (h : RecursiveIn O f) :
+    RecursiveIn O (fun a =>
+        Nat.rfind fun n => (fun m => m = 0) <$> f (Nat.pair a n)) := by
+  rcases exists_code.mp h with ⟨c, hc⟩
+  rw [← hc]
+  apply exists_code.mpr
+  use c_rfind c
+  simp [c_rfind_ev'']
+  congr
 end rfind
 
 def c_ppred := c_rfind (c_if_eq'.comp₂ left (succ.comp right))
