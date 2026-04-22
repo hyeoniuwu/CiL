@@ -2,8 +2,8 @@
 todo: in kp54 spec, split on if h : ∃ a, is_fin_ext a ...} and define the finite extension as \texttt{Nat.find h}
 
 [25-07-30 15:49:42]
-theorem prim_comp₁ : Nat.PrimrecIn O (fun ex => comp ex.unpair.1 ex.unpair.2) := by
+theorem prim_comp₁ : PrimrecIn O (fun ex => comp ex.unpair.1 ex.unpair.2) := by
 
 is useless, same as PrimrecIn.nat_iff.mp (comp_prim)
 even though 
-Nat.RecursiveIn.Code.comp_prim {O : ℕ → ℕ} : PrimrecIn₂ O comp
+RecursiveIn.Code.comp_prim {O : ℕ → ℕ} : PrimrecIn₂ O comp

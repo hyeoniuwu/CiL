@@ -25,7 +25,7 @@ Constructions/Eval.lean: Construction of `eval`.
 Constructions/Basic.lean: Basic code constructions that require `eval`, or are not primitive recursive.
 
 Jump.lean: Defines the jump and basic results, such as K≡K_0.
-Rin.lean: Defines theorems in the form "Nat.RecursiveIn f", which are used in SetOracles.lean to prove e.g. K≡K_0.
+Rin.lean: Defines theorems in the form "RecursiveIn f", which are used in SetOracles.lean to prove e.g. K≡K_0.
 SetOracles.lean: Sets up sets as oracles, and several basic degree theory results.
 
 Constructions/Dovetail.lean: Construction of the dovetail operator.
