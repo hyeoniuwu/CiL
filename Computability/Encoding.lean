@@ -133,7 +133,8 @@ fun c => match c with
     let m := n.div2.div2
     have hm : m < n + 5 := by
       simp only [m, Nat.div2_val]
-      exact lt_of_le_of_lt (le_trans (Nat.div_le_self _ _) (Nat.div_le_self _ _)) (Nat.succ_le_succ (Nat.le_add_right _ _))
+      exact lt_of_le_of_lt (le_trans (Nat.div_le_self _ _) (Nat.div_le_self _ _))
+        (Nat.succ_le_succ (Nat.le_add_right _ _))
     have _m1 : m.unpair.1 < n + 5 := lt_of_le_of_lt m.unpair_left_le hm
     have _m2 : m.unpair.2 < n + 5 := lt_of_le_of_lt m.unpair_right_le hm
     have IH := c2n_n2c m
@@ -144,10 +145,12 @@ fun c => match c with
     cases n.bodd <;> cases n.div2.bodd <;> simp [m, c2n, IH, IH1, IH2, Nat.bit_val]
 instance instDenumerable : Denumerable Code := mk' ⟨c2n, n2c, n2c_c2n, c2n_n2c⟩
 
-theorem n2c_bij : Function.Bijective n2c := Function.bijective_iff_has_inverse.mpr ⟨c2n, ⟨fun x ↦ c2n_n2c x, fun x ↦ n2c_c2n x⟩⟩
+theorem n2c_bij : Function.Bijective n2c :=
+  Function.bijective_iff_has_inverse.mpr ⟨c2n, ⟨fun x ↦ c2n_n2c x, fun x ↦ n2c_c2n x⟩⟩
 theorem n2c_inj : Function.Injective n2c := Function.Bijective.injective n2c_bij
 theorem n2c_sur : Function.Surjective n2c := Function.Bijective.surjective n2c_bij
-theorem encodeCode_bij : Function.Bijective c2n := Function.bijective_iff_has_inverse.mpr ⟨n2c, ⟨fun x ↦ n2c_c2n x, fun x ↦ c2n_n2c x⟩⟩
+theorem encodeCode_bij : Function.Bijective c2n :=
+  Function.bijective_iff_has_inverse.mpr ⟨n2c, ⟨fun x ↦ n2c_c2n x, fun x ↦ c2n_n2c x⟩⟩
 theorem encodeCode_inj : Function.Injective c2n := Function.Bijective.injective encodeCode_bij
 theorem encodeCode_sur : Function.Surjective c2n := Function.Bijective.surjective encodeCode_bij
 
@@ -220,7 +223,8 @@ open Code
 
 /-- Helper lemma for the evaluation of `prec` in the base case. -/
 @[simp]
-theorem eval_prec_zero {O : ℕ → ℕ} (cf cg : Code) (a : ℕ) : eval O (prec cf cg) (Nat.pair a 0) = eval O cf a := by
+theorem eval_prec_zero {O : ℕ → ℕ} (cf cg : Code) (a : ℕ) :
+    eval O (prec cf cg) (Nat.pair a 0) = eval O cf a := by
   rw [eval, Nat.unpaired, Nat.unpair_pair]
   simp (config := { Lean.Meta.Simp.neutralConfig with proj := true }) only []
   rw [Nat.rec_zero]
@@ -241,7 +245,8 @@ theorem eval_const {O : ℕ → ℕ} : ∀ n m, eval O (Code.const n) m = Part.s
 theorem eval_id {O : ℕ → ℕ} (n) : eval O Code.id n = Part.some n := by simp! [Seq.seq, Code.id]
 
 @[simp]
-theorem eval_curry {O : ℕ → ℕ} (c n x) : eval O (curry c n) x = eval O c (Nat.pair n x) := by simp! [Seq.seq, curry]
+theorem eval_curry {O : ℕ → ℕ} (c n x) : eval O (curry c n) x = eval O c (Nat.pair n x) := by
+  simp! [Seq.seq, curry]
 
 /-- A function is partial recursive if and only if there is a code implementing it. Therefore,
 `eval` is a **universal partial recursive function**. -/
@@ -277,8 +282,7 @@ theorem exists_code {O : ℕ → ℕ} {f : ℕ →. ℕ} : RecursiveIn O f ↔ �
     | comp cf cg pf pg => exact pf.comp pg
     | prec cf cg pf pg => exact pf.prec pg
     | rfind' cf pf =>
-      simp [eval]
-      exact RecursiveIn.rfind pf
+      simpa [eval] using RecursiveIn.rfind pf
 
 /- A modified evaluation for the code which returns an `Option ℕ` instead of a `Part ℕ`. To avoid
 undecidability, `evaln` takes a parameter `k` and fails if it encounters a number ≥ k in the course
@@ -330,6 +334,7 @@ theorem evaln_bound {O : ℕ → ℕ} : ∀ {k c n x}, x ∈ evaln O k c n → n
       cases c <;> rw [evaln] at h <;> exact this h
     simpa [Option.bind_eq_some_iff] using Nat.lt_succ_of_le
 
+set_option linter.flexible false in
 theorem evaln_mono {O : ℕ → ℕ} : ∀ {k₁ k₂ c n x}, k₁ ≤ k₂ → x ∈ evaln O k₁ c n → x ∈ evaln O k₂ c n
   | 0, k₂, c, n, x, _, h => by simp [evaln] at h
   | k + 1, k₂ + 1, c, n, x, hl, h => by
@@ -338,30 +343,29 @@ theorem evaln_mono {O : ℕ → ℕ} : ∀ {k₁ k₂ c n x}, k₁ ≤ k₂ → 
       ∀ {k k₂ n x : ℕ} {o₁ o₂ : Option ℕ},
         k ≤ k₂ → (x ∈ o₁ → x ∈ o₂) →
           x ∈ do { guard (n ≤ k); o₁ } → x ∈ do { guard (n ≤ k₂); o₂ } := by
-      simp only [Option.mem_def, bind, Option.bind_eq_some_iff, Option.guard_eq_some', exists_and_left,
-        exists_const, and_imp]
+      simp only [Option.mem_def, bind, Option.bind_eq_some_iff, Option.guard_eq_some',
+        exists_and_left, exists_const, and_imp]
       introv h h₁ h₂ h₃
       exact ⟨le_trans h₂ h, h₁ h₃⟩
     simp? at h ⊢ says simp only [Option.mem_def] at h ⊢
-    induction' c with cf cg hf hg cf cg hf hg cf cg hf hg cf hf generalizing x n <;>
-      rw [evaln] at h ⊢ <;> refine this hl' (fun h => ?_) h
+    induction c generalizing x n <;> rw [evaln] at h ⊢ <;> refine this hl' (fun h => ?_) h
     iterate 5 exact h
-    · -- pair cf cg
+    case pair cf cg hf hg _ =>
       simp? [Seq.seq, Option.bind_eq_some_iff] at h ⊢ says
         simp only [Seq.seq, Option.map_eq_map, Option.mem_def, Option.bind_eq_some_iff,
           Option.map_eq_some_iff, exists_exists_and_eq_and] at h ⊢
       exact h.imp fun a => And.imp (hf _ _) <| Exists.imp fun b => And.imp_left (hg _ _)
-    · -- comp cf cg
+    case comp cf cg hf hg _ =>
       simp? [Bind.bind, Option.bind_eq_some_iff] at h ⊢ says
         simp only [bind, Option.mem_def, Option.bind_eq_some_iff] at h ⊢
       exact h.imp fun a => And.imp (hg _ _) (hf _ _)
-    · -- prec cf cg
+    case prec cf cg hf hg _ =>
       revert h
       simp only [unpaired, bind, Option.mem_def]
       induction n.unpair.2 <;> simp [Option.bind_eq_some_iff]
       · apply hf
       · exact fun y h₁ h₂ => ⟨y, evaln_mono hl' h₁, hg _ _ h₂⟩
-    · -- rfind' cf
+    case rfind' cf hf _ =>
       simp? [Bind.bind, Option.bind_eq_some_iff] at h ⊢ says
         simp only [unpaired, bind, pair_unpair, Option.pure_def, Option.mem_def,
           Option.bind_eq_some_iff] at h ⊢
@@ -369,29 +373,30 @@ theorem evaln_mono {O : ℕ → ℕ} : ∀ {k₁ k₂ c n x}, k₁ ≤ k₂ → 
       by_cases x0 : x = 0 <;> simp [x0]
       exact evaln_mono hl'
 
+set_option linter.flexible false in 
 theorem evaln_sound {O : ℕ → ℕ} : ∀ {k c n x}, x ∈ evaln O k c n → x ∈ eval O c n
   | 0, _, n, x, h => by simp [evaln] at h
   | k + 1, c, n, x, h => by
-    induction' c with cf cg hf hg cf cg hf hg cf cg hf hg cf hf generalizing x n <;>
-        simp [eval, evaln, Option.bind_eq_some_iff, Seq.seq] at h ⊢ <;>
+    induction c generalizing x n <;> simp [eval, evaln, Option.bind_eq_some_iff, Seq.seq] at h ⊢ <;>
       obtain ⟨_, h⟩ := h
     iterate 5 simpa [pure, PFun.pure, eq_comm] using h
-    · -- pair cf cg
+    case pair cf cg hf hg _ =>
       rcases h with ⟨y, ef, z, eg, rfl⟩
       exact ⟨_, hf _ _ ef, _, hg _ _ eg, rfl⟩
-    · --comp hf hg
+    case comp cf cg hf hg _ =>
       rcases h with ⟨y, eg, ef⟩
       exact ⟨_, hg _ _ eg, hf _ _ ef⟩
-    · -- prec cf cg
+    case prec cf cg hf hg _ =>
       revert h
-      induction' n.unpair.2 with m IH generalizing x <;> simp [Option.bind_eq_some_iff]
-      · apply hf
-      · refine fun y h₁ h₂ => ⟨y, IH _ ?_, ?_⟩
+      induction n.unpair.2 generalizing x with simp [Option.bind_eq_some_iff]
+      | zero => apply hf
+      | succ m IH =>
+        refine fun y h₁ h₂ => ⟨y, IH _ ?_, ?_⟩
         · have := evaln_mono k.le_succ h₁
           simp [evaln, Option.bind_eq_some_iff] at this
           exact this.2
         · exact hg _ _ h₂
-    · -- rfind' cf
+    case rfind' cf hf _ =>
       rcases h with ⟨m, h₁, h₂⟩
       by_cases m0 : m = 0 <;> simp [m0] at h₂
       · exact
@@ -407,6 +412,8 @@ theorem evaln_sound {O : ℕ → ℕ} : ∀ {k c n x}, x ∈ evaln O k c n → x
         · rcases hy₂ (Nat.lt_of_succ_lt_succ im) with ⟨z, hz, z0⟩
           exact ⟨z, by simpa [add_comm, add_left_comm] using hz, z0⟩
 
+
+set_option linter.flexible false in 
 theorem evaln_complete {O : ℕ → ℕ} {c n x} : x ∈ eval O c n ↔ ∃ k, x ∈ evaln O k c n := by
   refine ⟨fun h => ?_, fun ⟨k, h⟩ => evaln_sound h⟩
   rsuffices ⟨k, h⟩ : ∃ k, x ∈ evaln O (k + 1) c n
@@ -432,11 +439,13 @@ theorem evaln_complete {O : ℕ → ℕ} {c n x} : x ∈ eval O c n ↔ ∃ k, x
   | prec cf cg hf hg =>
     revert h
     generalize n.unpair.1 = n₁; generalize n.unpair.2 = n₂
-    induction' n₂ with m IH generalizing x n <;> simp [Option.bind_eq_some_iff]
-    · intro h
+    induction n₂ generalizing x n with simp [Option.bind_eq_some_iff]
+    | zero =>
+      intro h
       rcases hf h with ⟨k, hk⟩
       exact ⟨_, le_max_left _ _, evaln_mono (Nat.succ_le_succ <| le_max_right _ _) hk⟩
-    · intro y hy hx
+    | succ m IH =>
+      intro y hy hx
       rcases IH hy with ⟨k₁, nk₁, hk₁⟩
       rcases hg hx with ⟨k₂, hk₂⟩
       refine
@@ -448,7 +457,6 @@ theorem evaln_complete {O : ℕ → ℕ} {c n x} : x ∈ eval O c n ↔ ∃ k, x
       simp only [evaln, bind, unpaired, unpair_pair, Option.mem_def, Option.bind_eq_some_iff,
         Option.guard_eq_some', exists_and_left, exists_const]
       exact ⟨le_trans (le_max_right _ _) nk₁, hk₁⟩
-
   | rfind' cf hf =>
     rcases h with ⟨y, ⟨hy₁, hy₂⟩, rfl⟩
     suffices ∃ k, y + n.unpair.2 ∈ evaln O (k + 1) (rfind' cf) (Nat.pair n.unpair.1 n.unpair.2) by
@@ -456,11 +464,13 @@ theorem evaln_complete {O : ℕ → ℕ} {c n x} : x ∈ eval O c n ↔ ∃ k, x
     revert hy₁ hy₂
     generalize n.unpair.2 = m
     intro hy₁ hy₂
-    induction' y with y IH generalizing m <;> simp [evaln, Option.bind_eq_some_iff]
-    · simp at hy₁
+    induction y generalizing m with simp [evaln, Option.bind_eq_some_iff]
+    | zero =>
+      simp at hy₁
       rcases hf hy₁ with ⟨k, hk⟩
       exact ⟨_, Nat.le_of_lt_succ <| evaln_bound hk, _, hk, by simp⟩
-    · rcases hy₂ (Nat.succ_pos _) with ⟨a, ha, a0⟩
+    | succ y IH =>
+      rcases hy₂ (Nat.succ_pos _) with ⟨a, ha, a0⟩
       rcases hf ha with ⟨k₁, hk₁⟩
       rcases IH m.succ (by simpa [Nat.succ_eq_add_one, add_comm, add_left_comm] using hy₁)
           fun {i} hi => by
@@ -483,3 +493,4 @@ theorem eval_eq_rfindOpt {O : ℕ → ℕ} (c n) : eval O c n = Nat.rfindOpt fun
     refine evaln_complete.trans (Nat.rfindOpt_mono ?_).symm
     intro a m n hl; apply evaln_mono hl
 end
+end Oracle.Single

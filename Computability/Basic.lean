@@ -204,8 +204,8 @@ theorem evalp_eq_eval {O : ℕ → ℕ} {c} (h : code_prim c) : evalp O c = eval
         prev_input =
         Part.some (evalp O b prev_input) := congrFun (_root_.id (Eq.symm hb_ih)) prev_input
       rw [a0]
-theorem evalp_eq_eval_ext {O : ℕ → ℕ} {c : Code} {x : ℕ} (h : code_prim c) : eval O c x = evalp O c x :=
-  congrFun (_root_.id (Eq.symm (@evalp_eq_eval O c h))) x
+theorem evalp_eq_eval_ext {O : ℕ → ℕ} {c : Code} {x : ℕ} (h : code_prim c) :
+  eval O c x = evalp O c x := congrFun (_root_.id (Eq.symm (@evalp_eq_eval O c h))) x
 @[simp 1000] theorem code_prim_prop {O : ℕ → ℕ} {c} : PrimrecIn O (evalp O c) := by
   induction c with
   | zero => exact PrimrecIn.zero
