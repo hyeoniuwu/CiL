@@ -61,7 +61,7 @@ open Classical in
 /-- χ O is the characteristic function of the set O. -/
 noncomputable def χ (O : Set ℕ) : ℕ → ℕ := fun x ↦ if x ∈ O then 1 else 0
 open Classical in
-theorem χsimp {O : ℕ → ℕ} : χ O = fun x ↦ if x ∈ O then 1 else 0 := rfl
+theorem χsimp {O : Set ℕ} : χ O = fun x ↦ if x ∈ O then 1 else 0 := rfl
 @[simp] abbrev SetRecursiveIn (O : Set ℕ) (f : ℕ →. ℕ) : Prop := RecursiveIn (χ O) f
 @[simp] abbrev SetTuringReducible (A O : Set ℕ) : Prop := RecursiveIn (χ O) (χ A)
 @[simp] abbrev SetTuringReducibleStrict (A O : Set ℕ) : Prop :=
@@ -71,7 +71,7 @@ theorem χsimp {O : ℕ → ℕ} : χ O = fun x ↦ if x ∈ O then 1 else 0 := 
 noncomputable def evalnSet (O : Set ℕ) := evaln (χ O)
 @[simp] noncomputable def evalSet₁ (O : Set ℕ) : ℕ →. ℕ := eval₁ (χ O)
 @[simp] noncomputable def evalnSet₁ (O : Set ℕ) : ℕ → ℕ := evaln₁ (χ O)
-theorem prim_evalnSet₁ {O : ℕ → ℕ} : PrimrecIn (χ O) (evalnSet₁ O) := by
+theorem prim_evalnSet₁ {O : Set ℕ} : PrimrecIn (χ O) (evalnSet₁ O) := by
   simp only [evalnSet₁]; exact prim_evaln₁
 def SetK0 (A : Set ℕ) := {ex : ℕ | (evalSet A ex.l ex.r).Dom}
 def SetK (A : Set ℕ) := {x : ℕ | (evalSet A x x).Dom}
@@ -322,9 +322,9 @@ abbrev Wn (O : Set ℕ) (e : Code) (s : ℕ) := { x | (evalnSet O s e x).isSome 
 /-- `WRn O e s` := range of e^th oracle program ran for s steps -/
 abbrev WRn (O : Set ℕ) (e : Code) (s : ℕ) := { y | ∃ x, y ∈ evalnSet O s e x }
 
-theorem Wn_mono {O : ℕ → ℕ} : ∀ {k₁ k₂ c x}, k₁ ≤ k₂ → x ∈ Wn O c k₁ → x ∈ Wn O c k₂ :=
+theorem Wn_mono {O : Set ℕ} : ∀ {k₁ k₂ c x}, k₁ ≤ k₂ → x ∈ Wn O c k₁ → x ∈ Wn O c k₂ :=
   fun a b ↦ evaln_mono_dom a b
-theorem Wn_sound {O : ℕ → ℕ} : ∀ {k c x}, x ∈ Wn O c k → x ∈ W O c := by
+theorem Wn_sound {O : Set ℕ} : ∀ {k c x}, x ∈ Wn O c k → x ∈ W O c := by
   simp only [Set.mem_setOf_eq, evalnSet, PFun.mem_dom, evalSet]
   intro _ _ _ h
   rw [evaln_sound' h]
@@ -337,11 +337,11 @@ theorem evaln_complete_dom {O c x} : (eval (χ O) c x).Dom ↔ ∃ k, (evaln (χ
     exact ⟨k, Option.isSome_of_mem hk⟩
   · rintro ⟨y, hy⟩
     exact en2e hy
-theorem Wn_complete {O : ℕ → ℕ} {c x} : x ∈ W O c ↔ ∃ k, x ∈ Wn O c k := by
+theorem Wn_complete {O : Set ℕ} {c x} : x ∈ W O c ↔ ∃ k, x ∈ Wn O c k := by
   simp only [PFun.mem_dom, evalSet, Set.mem_setOf_eq, evalnSet]
   exact Iff.trans (Iff.symm Part.dom_iff_mem) (@evaln_complete_dom O c x)
 open Classical in
-theorem W_le_SetK0 {O : ℕ → ℕ} : ∀ c, W O c ≤ᵀ SetK0 O := by
+theorem W_le_SetK0 {O : Set ℕ} : ∀ c, W O c ≤ᵀ SetK0 O := by
   intro c
   apply reducible_iff_code.mpr
   use oracle.comp <| pair (c_const c) c_id
@@ -349,7 +349,7 @@ theorem W_le_SetK0 {O : ℕ → ℕ} : ∀ c, W O c ≤ᵀ SetK0 O := by
   simpa [Seq.seq, SetK0, χ, ev_simps]
     using if_ctx_congr Part.dom_iff_mem (congrFun rfl) (congrFun rfl)
 
-theorem W_le_Jump {O : ℕ → ℕ} : ∀ c, W O c ≤ᵀ O⌜ :=
+theorem W_le_Jump {O : Set ℕ} : ∀ c, W O c ≤ᵀ O⌜ :=
   fun c ↦ LE.le.trans_antisymmRel (@W_le_SetK0 O c) (SetK0_eq_Jump O)
 
 section dom_to_ran
@@ -471,9 +471,8 @@ theorem empty_le : ∀ A : Set ℕ, ∅ ≤ᵀ A := by
   unfold χ
   simpa [eval] using by rfl
 
-theorem evalnSet_mono_dom {O : ℕ → ℕ} :
-  ∀ {k₁ k₂ : ℕ} {c n},
-    k₁ ≤ k₂ →
+theorem evalnSet_mono_dom {O : Set ℕ} :
+  ∀ {k₁ k₂ : ℕ} {c n}, k₁ ≤ k₂ →
     (evalnSet O k₁ c n).isSome →
     (evalnSet O k₂ c n).isSome :=
   fun a a_1 ↦ evaln_mono_dom a a_1

@@ -136,7 +136,7 @@ open Classical in
 end ifdom
 
 section evaln₁
-def c_evaln₁ := c_evaln.comp₃ (left.comp right) (left) (right.comp right)
+def c_evaln₁ := c_evaln.comp₃ (left.comp right) left (right.comp right)
 def evaln₁ (O : ℕ → ℕ) : ℕ → ℕ :=
   fun abc => Encodable.encode (evaln O abc.r.r abc.l.n2c abc.r.l)
 theorem c_evaln₁_evp {O : ℕ → ℕ} : evalp O c_evaln₁ = evaln₁ O := by

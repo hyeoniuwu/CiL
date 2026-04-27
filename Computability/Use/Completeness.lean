@@ -1503,6 +1503,6 @@ theorem usen_complete {O : ℕ → ℕ} {c n x} : x ∈ use O c n ↔ ∃ s, x �
     simp only [usen, le_add_iff_nonneg_right, _root_.zero_le, guard_true, Option.pure_def,
       Option.bind_eq_bind, Option.bind_some, Option.some.injEq]
     exact h.symm
-#check usen_rfind_prop
+
 end usen_complete
 end Oracle.Single.Code
