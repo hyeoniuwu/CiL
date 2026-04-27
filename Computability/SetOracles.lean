@@ -61,7 +61,7 @@ open Classical in
 /-- χ O is the characteristic function of the set O. -/
 noncomputable def χ (O : Set ℕ) : ℕ → ℕ := fun x ↦ if x ∈ O then 1 else 0
 open Classical in
-theorem χsimp {O} : χ O = fun x ↦ if x ∈ O then 1 else 0 := rfl
+theorem χsimp {O : ℕ → ℕ} : χ O = fun x ↦ if x ∈ O then 1 else 0 := rfl
 @[simp] abbrev SetRecursiveIn (O : Set ℕ) (f : ℕ →. ℕ) : Prop := RecursiveIn (χ O) f
 @[simp] abbrev SetTuringReducible (A O : Set ℕ) : Prop := RecursiveIn (χ O) (χ A)
 @[simp] abbrev SetTuringReducibleStrict (A O : Set ℕ) : Prop :=
@@ -71,7 +71,7 @@ theorem χsimp {O} : χ O = fun x ↦ if x ∈ O then 1 else 0 := rfl
 noncomputable def evalnSet (O : Set ℕ) := evaln (χ O)
 @[simp] noncomputable def evalSet₁ (O : Set ℕ) : ℕ →. ℕ := eval₁ (χ O)
 @[simp] noncomputable def evalnSet₁ (O : Set ℕ) : ℕ → ℕ := evaln₁ (χ O)
-theorem prim_evalnSet₁ {O} : PrimrecIn (χ O) (evalnSet₁ O) := by
+theorem prim_evalnSet₁ {O : ℕ → ℕ} : PrimrecIn (χ O) (evalnSet₁ O) := by
   simp only [evalnSet₁]; exact prim_evaln₁
 def SetK0 (A : Set ℕ) := {ex : ℕ | (evalSet A ex.l ex.r).Dom}
 def SetK (A : Set ℕ) := {x : ℕ | (evalSet A x x).Dom}
@@ -185,7 +185,7 @@ theorem χ_le_χSetK0 {O : Set ℕ} : O ≤ᵀ (SetK0 O) := by
   exact f'_recIn_k
 
 open Classical in
-theorem χSetK0_leq_K0χ {O : Set ℕ} : Rin (K0 (χ O)) (χ (SetK0 O)) := by
+theorem χSetK0_le_K0χ {O : Set ℕ} : Rin (K0 (χ O)) (χ (SetK0 O)) := by
   -- We simply note that `χ (SetK0 O) = Nat.sg ∘ K0 (χ O)`.
   let k : ℕ → ℕ := fun ex ↦ if (eval (χ O) ex.l ex.r).Dom then 1 else 0
   have h0 : χ (SetK0 O) = k := rfl
@@ -229,7 +229,7 @@ theorem K0χ_le_χSetK0 {O : Set ℕ} : Rin (χ (SetK0 O)) (K0 (χ O)) := by
     | inr h => simpa [h, (h2 xs).mp h, f] using by apply some_comp_simp
   rewrite [h3]
   exact rin_f
-theorem K0χ_eq_χSetK0 (O : Set ℕ) : (K0 (χ O)) ≡ᵀᶠ (χ (SetK0 O)) := ⟨K0χ_le_χSetK0, χSetK0_leq_K0χ⟩
+theorem K0χ_eq_χSetK0 (O : Set ℕ) : (K0 (χ O)) ≡ᵀᶠ (χ (SetK0 O)) := ⟨K0χ_le_χSetK0, χSetK0_le_K0χ⟩
 theorem χSetK0_eq_K0χ (O : Set ℕ) : (χ (SetK0 O)) ≡ᵀᶠ (K0 (χ O)) := (K0χ_eq_χSetK0 O).symm
 -- the next two theorems are more or less equivalent to some of the above, with minor tweaks.
 open Classical in
@@ -289,8 +289,8 @@ theorem χSetK_le_χSetK0 (O : Set ℕ) : RecursiveIn (χ (SetK0 O)) (χ (SetK O
   exact Rin.totalComp Rin.oracle (Rin.of_primrecIn (PrimrecIn.pair PrimrecIn.id PrimrecIn.id))
 theorem χSetK_eq_Kχ (O : Set ℕ) : (χ (SetK O)) ≡ᵀᶠ (K (χ O)) :=
   ⟨trans (χSetK_le_χSetK0 O) <|
-    trans (χSetK0_leq_K0χ) <|
-    trans (K0_leq_K (χ O)) <| Rin.oracle,
+    trans (χSetK0_le_K0χ) <|
+    trans (K0_le_K (χ O)) <| Rin.oracle,
   Kχ_le_χSetK O⟩
 theorem Kχ_eq_χSetK (O : Set ℕ) : (K (χ O)) ≡ᵀᶠ (χ (SetK O)) := (χSetK_eq_Kχ O).symm
 theorem χSetK0_eq_χSetK (O : Set ℕ) : (χ (SetK0 O)) ≡ᵀᶠ (χ (SetK O)) :=
@@ -307,7 +307,7 @@ theorem SetK0_eq_Jump (O : Set ℕ) : SetK0 O ≡ᵀ O⌜ := SetK0_eq_SetK O
 theorem SetJump_not_le_Set (O : Set ℕ) : ¬O⌜≤ᵀO := by
   intro h
   simp only [SetJump] at h
-  apply K_nle_O
+  apply not_K_le
   exact .trans (Kχ_le_χSetK O) h
 theorem Set_lt_SetJump (O : Set ℕ) : O<ᵀO⌜ := ⟨Set_le_SetK O, SetJump_not_le_Set O⟩
 end SetJumpTheorems
@@ -322,9 +322,9 @@ abbrev Wn (O : Set ℕ) (e : Code) (s : ℕ) := { x | (evalnSet O s e x).isSome 
 /-- `WRn O e s` := range of e^th oracle program ran for s steps -/
 abbrev WRn (O : Set ℕ) (e : Code) (s : ℕ) := { y | ∃ x, y ∈ evalnSet O s e x }
 
-theorem Wn_mono {O} : ∀ {k₁ k₂ c x}, k₁ ≤ k₂ → x ∈ Wn O c k₁ → x ∈ Wn O c k₂ :=
+theorem Wn_mono {O : ℕ → ℕ} : ∀ {k₁ k₂ c x}, k₁ ≤ k₂ → x ∈ Wn O c k₁ → x ∈ Wn O c k₂ :=
   fun a b ↦ evaln_mono_dom a b
-theorem Wn_sound {O} : ∀ {k c x}, x ∈ Wn O c k → x ∈ W O c := by
+theorem Wn_sound {O : ℕ → ℕ} : ∀ {k c x}, x ∈ Wn O c k → x ∈ W O c := by
   simp only [Set.mem_setOf_eq, evalnSet, PFun.mem_dom, evalSet]
   intro _ _ _ h
   rw [evaln_sound' h]
@@ -337,11 +337,11 @@ theorem evaln_complete_dom {O c x} : (eval (χ O) c x).Dom ↔ ∃ k, (evaln (χ
     exact ⟨k, Option.isSome_of_mem hk⟩
   · rintro ⟨y, hy⟩
     exact en2e hy
-theorem Wn_complete {O} {c x} : x ∈ W O c ↔ ∃ k, x ∈ Wn O c k := by
+theorem Wn_complete {O : ℕ → ℕ} {c x} : x ∈ W O c ↔ ∃ k, x ∈ Wn O c k := by
   simp only [PFun.mem_dom, evalSet, Set.mem_setOf_eq, evalnSet]
   exact Iff.trans (Iff.symm Part.dom_iff_mem) (@evaln_complete_dom O c x)
 open Classical in
-theorem W_le_SetK0 {O} : ∀ c, W O c ≤ᵀ SetK0 O := by
+theorem W_le_SetK0 {O : ℕ → ℕ} : ∀ c, W O c ≤ᵀ SetK0 O := by
   intro c
   apply reducible_iff_code.mpr
   use oracle.comp <| pair (c_const c) c_id
@@ -349,7 +349,7 @@ theorem W_le_SetK0 {O} : ∀ c, W O c ≤ᵀ SetK0 O := by
   simpa [Seq.seq, SetK0, χ, ev_simps]
     using if_ctx_congr Part.dom_iff_mem (congrFun rfl) (congrFun rfl)
 
-theorem W_le_Jump {O} : ∀ c, W O c ≤ᵀ O⌜ :=
+theorem W_le_Jump {O : ℕ → ℕ} : ∀ c, W O c ≤ᵀ O⌜ :=
   fun c ↦ LE.le.trans_antisymmRel (@W_le_SetK0 O c) (SetK0_eq_Jump O)
 
 section dom_to_ran
@@ -397,10 +397,10 @@ def c_dom_to_ran := c_c_ifdom.comp₂
   (c_comp₂.comp₃ (c_const c_eval) (c_c_const) (c_const c_id))
   (c_const c_id)
 @[cp] theorem c_dom_to_ran_prim : code_prim c_dom_to_ran := by unfold c_dom_to_ran; apply_cp
-@[simp, evp_simps] theorem c_dom_to_ran_evp {O} :
+@[simp, evp_simps] theorem c_dom_to_ran_evp {O : ℕ → ℕ} :
     evalp O c_dom_to_ran = fun (x : ℕ) ↦ c2n (dom_to_ran x) := by
   simp [c_dom_to_ran, dom_to_ran]
-theorem PrimrecIn.dom_to_ran {O} : PrimrecIn O (fun (x : ℕ) ↦ (dom_to_ran x).c2n) := by
+theorem PrimrecIn.dom_to_ran {O : ℕ → ℕ} : PrimrecIn O (fun (x : ℕ) ↦ (dom_to_ran x).c2n) := by
   rw [← c_dom_to_ran_evp]; exact code_prim_prop
 end dom_to_ran
 
@@ -457,10 +457,10 @@ def c_ran_to_dom := c_dovetail.comp <|
   c_comp₂.comp₃ (c_const c_if_eq') c_left <|
   c_comp₂.comp₃ (c_const c_eval₁) c_c_const c_right
 @[cp] theorem c_ran_to_dom_prim : code_prim c_ran_to_dom := by unfold c_ran_to_dom; apply_cp
-@[simp, evp_simps] theorem c_ran_to_dom_evp {O} :
+@[simp, evp_simps] theorem c_ran_to_dom_evp {O : ℕ → ℕ} :
     evalp O c_ran_to_dom = fun (x : ℕ) ↦ c2n (ran_to_dom x) := by
   simp [c_ran_to_dom, ran_to_dom]
-theorem PrimrecIn.ran_to_dom {O} : PrimrecIn O (fun (x : ℕ) ↦ (ran_to_dom x).c2n) := by
+theorem PrimrecIn.ran_to_dom {O : ℕ → ℕ} : PrimrecIn O (fun (x : ℕ) ↦ (ran_to_dom x).c2n) := by
   rw [← c_ran_to_dom_evp]; exact code_prim_prop
 end ran_to_dom
 
@@ -471,7 +471,7 @@ theorem empty_le : ∀ A : Set ℕ, ∅ ≤ᵀ A := by
   unfold χ
   simpa [eval] using by rfl
 
-theorem evalnSet_mono_dom {O} :
+theorem evalnSet_mono_dom {O : ℕ → ℕ} :
   ∀ {k₁ k₂ : ℕ} {c n},
     k₁ ≤ k₂ →
     (evalnSet O k₁ c n).isSome →

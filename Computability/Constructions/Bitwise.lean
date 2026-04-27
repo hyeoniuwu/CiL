@@ -197,7 +197,7 @@ def c_lor := c_ifz.comp₃ left
 theorem c_lor_evp {O a b} : evalp O c_lor ⟪a, b⟫ = b2n (n2b a || n2b b) := by
   simp [c_lor, n2b, b2n]
   split <;> simp_all
-@[simp, evp_simps] theorem c_lor_evp' {O} :
+@[simp, evp_simps] theorem c_lor_evp' {O : ℕ → ℕ} :
     (fun a b => n2b <| evalp O c_lor ⟪b2n a, b2n b⟫) = Bool.or := by
   funext a b;
   simp [c_lor, n2b, b2n]
@@ -214,7 +214,7 @@ def c_lxor := c_ifz.comp₃ left
 theorem c_lxor_evp {O a b} : evalp O c_lxor ⟪a, b⟫ = b2n (n2b a ^^ n2b b) := by
   simp [c_lxor, n2b, b2n]
   split <;> simp_all
-@[simp, evp_simps] theorem c_lxor_evp' {O} :
+@[simp, evp_simps] theorem c_lxor_evp' {O : ℕ → ℕ} :
     (fun a b => n2b <| evalp O c_lxor ⟪b2n a, b2n b⟫) = Bool.xor := by
   funext a b;
   simp [c_lxor, n2b, b2n]
@@ -231,7 +231,7 @@ def c_land := c_ifz.comp₃ left
 theorem c_land_evp {O a b} : evalp O c_land ⟪a, b⟫ = b2n (n2b a && n2b b) := by
   simp [c_land, n2b, b2n]
   split <;> simp_all
-@[simp, evp_simps] theorem c_land_evp' {O} :
+@[simp, evp_simps] theorem c_land_evp' {O : ℕ → ℕ} :
     (fun a b => n2b <| evalp O c_land ⟪b2n a, b2n b⟫) = Bool.and := by
   funext a b;
   simp [c_land, n2b, b2n]

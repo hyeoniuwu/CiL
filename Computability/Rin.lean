@@ -19,13 +19,13 @@ alias comp  := RecursiveIn.comp
 alias prec  := RecursiveIn.prec
 alias rfind := RecursiveIn.rfind
 
-theorem of_eq {O} {f g : ℕ →. ℕ} (hf : RecursiveIn O f) (H : ∀ n, f n = g n) : RecursiveIn O g :=
+theorem of_eq {O : ℕ → ℕ} {f g : ℕ →. ℕ} (hf : RecursiveIn O f) (H : ∀ n, f n = g n) : RecursiveIn O g :=
   (funext H : f = g) ▸ hf
 
-theorem of_eq_tot {O} {f : ℕ →. ℕ} {g : ℕ → ℕ} (hf : RecursiveIn O f) (H : ∀ n, g n ∈ f n) :
+theorem of_eq_tot {O : ℕ → ℕ} {f : ℕ →. ℕ} {g : ℕ → ℕ} (hf : RecursiveIn O f) (H : ∀ n, g n ∈ f n) :
     RecursiveIn O g :=
   of_eq hf fun n => eq_some_iff.2 (H n)
-theorem of_primrecIn {O} {f : ℕ → ℕ} (hf : PrimrecIn O f) : RecursiveIn O f := by
+theorem of_primrecIn {O : ℕ → ℕ} {f : ℕ → ℕ} (hf : PrimrecIn O f) : RecursiveIn O f := by
   induction hf with
   | zero => exact zero
   | succ => exact succ
@@ -123,7 +123,7 @@ theorem of_primrecIn {O} {f : ℕ → ℕ} (hf : PrimrecIn O f) : RecursiveIn O 
 
 open Computability
 open Oracle.Single.Code
-theorem eval_K_computable {O} :
+theorem eval_K_computable {O : ℕ → ℕ} :
     RecursiveIn O (fun x ↦ Oracle.Single.eval O x x) := by
   have h :
       (fun (x : ℕ) ↦ Oracle.Single.eval O x x) =

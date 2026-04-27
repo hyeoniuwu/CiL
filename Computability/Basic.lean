@@ -110,12 +110,12 @@ namespace Oracle.Single.Code
 @[cp] theorem prec_prim {a b} (ha : code_prim a) (hb : code_prim b) : code_prim (prec a b) :=
   code_prim.prec ha hb
 def code_total (O) (c : Code) := ∀x, (eval O c x).Dom
-@[simp] theorem zero_total {O} : code_total O zero := fun _ ↦ trivial
-@[simp] theorem left_total {O} : code_total O left := fun _ ↦ trivial
-@[simp] theorem right_total {O} : code_total O right := fun _ ↦ trivial
-@[simp] theorem succ_total {O} : code_total O succ := fun _ ↦ trivial
-@[simp] theorem oracle_total {O} : code_total O oracle := fun _ ↦ trivial
-theorem prim_total {O} {c} (h : code_prim c) : code_total O c := by
+@[simp] theorem zero_total {O : ℕ → ℕ} : code_total O zero := fun _ ↦ trivial
+@[simp] theorem left_total {O : ℕ → ℕ} : code_total O left := fun _ ↦ trivial
+@[simp] theorem right_total {O : ℕ → ℕ} : code_total O right := fun _ ↦ trivial
+@[simp] theorem succ_total {O : ℕ → ℕ} : code_total O succ := fun _ ↦ trivial
+@[simp] theorem oracle_total {O : ℕ → ℕ} : code_total O oracle := fun _ ↦ trivial
+theorem prim_total {O : ℕ → ℕ} {c} (h : code_prim c) : code_total O c := by
   unfold code_total
   induction h with
   | zero                   => simp [eval];
@@ -147,7 +147,7 @@ theorem prim_total {O} {c} (h : code_prim c) : code_total O c := by
 | prec cf cg => unpaired fun z n =>
   n.rec (evalp O cf z) fun y IH => (evalp O cg) (z.pair (y.pair IH))
 | rfind' _   => fun _ ↦ 0
-theorem evalp_eq_eval {O} {c} (h : code_prim c) : evalp O c = eval O c := by
+theorem evalp_eq_eval {O : ℕ → ℕ} {c} (h : code_prim c) : evalp O c = eval O c := by
   induction h with
   | zero => exact rfl
   | succ => exact rfl
@@ -206,7 +206,7 @@ theorem evalp_eq_eval {O} {c} (h : code_prim c) : evalp O c = eval O c := by
       rw [a0]
 theorem evalp_eq_eval_ext {O c x} (h : code_prim c) : eval O c x = evalp O c x :=
   congrFun (_root_.id (Eq.symm (@evalp_eq_eval O c h))) x
-@[simp 1000] theorem code_prim_prop {O} {c} : PrimrecIn O (evalp O c) := by
+@[simp 1000] theorem code_prim_prop {O : ℕ → ℕ} {c} : PrimrecIn O (evalp O c) := by
   induction c with
   | zero => exact PrimrecIn.zero
   | succ => exact PrimrecIn.succ

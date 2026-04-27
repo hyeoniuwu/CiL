@@ -55,7 +55,7 @@ set_option linter.style.cdot false
 namespace Oracle.Single.Code
 
 section usen_mono
-theorem usen_bound {O} : ∀ {k c n x}, x ∈ usen O c k n → n < k
+theorem usen_bound {O : ℕ → ℕ} : ∀ {k c n x}, x ∈ usen O c k n → n < k
   | 0, c, n, x, h => by simp [usen] at h
   | k + 1, c, n, x, h => by
     suffices ∀ {o : Option ℕ}, x ∈ do { guard (n ≤ k); o } → n < k + 1 by
@@ -70,7 +70,7 @@ private lemma guard_imp {k₂ n a} {k : ℕ} (h : k ≤ k₂) :
   have : n ≤ k₂ := Nat.le_trans this h
   simp [this]
 -- set_option linter.flexible false in
-theorem usen_mono {O} : ∀ {k₁ k₂ c n x}, k₁ ≤ k₂ → x ∈ usen O c k₁ n → x ∈ usen O c k₂ n
+theorem usen_mono {O : ℕ → ℕ} : ∀ {k₁ k₂ c n x}, k₁ ≤ k₂ → x ∈ usen O c k₁ n → x ∈ usen O c k₂ n
 | 0, k₂, c, n, x, _, h => by simp [usen] at h
 | k + 1, k₂ + 1, c, n, x, hl, h => by
   have hl' := Nat.le_of_succ_le_succ hl
@@ -133,18 +133,18 @@ theorem usen_mono {O} : ∀ {k₁ k₂ c n x}, k₁ ≤ k₂ → x ∈ usen O c 
       simp only [Option.bind_eq_some_iff] at h7 ⊢
       rcases h7 with ⟨h8,h9,hs⟩
       exact ⟨h8,usen_mono hl' h9, hs⟩
-theorem usen_mono_contra {O} :
+theorem usen_mono_contra {O : ℕ → ℕ} :
     ∀ {k₁ k₂ c n}, k₁ ≤ k₂ → usen O c k₂ n = Option.none → usen O c k₁ n = Option.none := by
   intro k₁ k₂ c n k1k2 opt
   contrapose opt
   have := usen_mono k1k2 (Option.get_mem (Option.isSome_iff_ne_none.mpr opt))
   refine Option.ne_none_iff_exists'.mpr ?_
   exact Exists.intro ((usen O c k₁ n).get (Option.isSome_iff_ne_none.mpr opt)) this
-theorem usen_mono_dom {O} :
+theorem usen_mono_dom {O : ℕ → ℕ} :
     ∀ {k₁ k₂ c n}, k₁ ≤ k₂ → (usen O c k₁ n).isSome → (usen O c k₂ n).isSome := by
   intro k1 k2 c n k1k2 h1
   exact Option.isSome_of_mem (usen_mono k1k2 (Option.get_mem h1))
-theorem evaln_mono_dom {O} :
+theorem evaln_mono_dom {O : ℕ → ℕ} :
     ∀ {k₁ k₂ c n}, k₁ ≤ k₂ → (evaln O k₁ c n).isSome → (evaln O k₂ c n).isSome := by
   intro k1 k2 c n k1k2 h1
   exact Option.isSome_of_mem (evaln_mono k1k2 (Option.get_mem h1))
@@ -882,7 +882,7 @@ theorem usen_rfind_prop2'' {O k x cf} :
   Option.eq_of_eq_some fun _ => usen_rfind_prop2
 theorem usen_xles {O c s x} (h : (usen O c (s + 1) x).isSome) : x ≤ s :=
   le_of_lt_succ (usen_bound (Option.get_mem h))
-theorem usen_sound {O} : ∀ {c s n x}, x ∈ usen O c s n → x ∈ use O c n := by
+theorem usen_sound {O : ℕ → ℕ} : ∀ {c s n x}, x ∈ usen O c s n → x ∈ use O c n := by
   intro c k n x h
   induction k,c using CodeNatK.induction generalizing x n with
   | h0 c => simp [usen] at h
@@ -1453,7 +1453,7 @@ theorem usen_complete_rfind'
     have lemlem2 := @displace_loop_2 O cf ro hi_val lo_val s x base n use_steps hhi_val
       (fun j a ↦ rop3 j a) lo_val_dom rfl aux1 (by grind) (fun a ↦ hf a) hs
     simp_all only [Option.mem_def]
-theorem usen_complete {O} {c n x} : x ∈ use O c n ↔ ∃ s, x ∈ usen O c s n := by
+theorem usen_complete {O : ℕ → ℕ} {c n x} : x ∈ use O c n ↔ ∃ s, x ∈ usen O c s n := by
   refine ⟨fun h => ?_, fun ⟨k, h⟩ => usen_sound h⟩
   rsuffices ⟨k, h⟩ : ∃ k, x ∈ usen O  c (k + 1) n
   · exact ⟨k + 1, h⟩

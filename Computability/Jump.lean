@@ -20,7 +20,7 @@ involving the jump.
 - `jump`: the jump operator, on total functions
 
 - `K0_eq_K` : asserts that K and K0 are of the same degree
-- `jump_not_le_id` : asserts that the jump of an oracle is strictly above the oracle
+- `not_jump_le` : asserts that the jump of an oracle is strictly above the oracle
 
 -/
 
@@ -62,44 +62,35 @@ open Classical in
   funext xs
   exact c_jump_decode_ev hc
 
-theorem O_le_K0 (O : ℕ → ℕ) :  O ≤ᵀᶠ (K0 O) := by
+theorem le_K0 (O : ℕ → ℕ) :  O ≤ᵀᶠ (K0 O) := by
   apply exists_code.mpr  -- changes goal to: ∃ c, eval (K0 O) c = O
   let q := oracle.comp (pair (c_const oracle) c_id)
   use c_jump_decode q
   have compute_total : code_total (K0 O) q := by apply prim_total; apply_cp
-  simp? [compute_total, q, ev_simps, Seq.seq] says
-    simp only [compute_total, c_jump_decode_ev', eval, Seq.seq, c_const_ev, Part.coe_some,
-      Part.map_eq_map, Part.map_some, c_id_ev, Part.bind_some, Part.bind_eq_bind, PFun.coe_val, K0,
-      pair_l, n2c_c2n, pair_r, eval.eq_5, Part.some_dom, ↓reduceDIte, Part.get_some, Part.some_inj,
-      Nat.add_eq_zero_iff, one_ne_zero, and_false, ↓reduceIte, Nat.pred_eq_sub_one,
-      add_tsub_cancel_right, q]
-  exact rfl
-theorem O_le_J (O : ℕ → ℕ) : O ≤ᵀᶠ O⌜ :=  O_le_K0 O
+  simpa [compute_total, q, ev_simps, Seq.seq] using by exact rfl
+theorem le_jump (O : ℕ → ℕ) : O ≤ᵀᶠ O⌜ := le_K0 O
 
 open Classical in
-theorem K_leq_K0 (O : ℕ → ℕ) : (K O) ≤ᵀᶠ (K0 O) := by
+theorem K_le_K0 (O : ℕ → ℕ) : (K O) ≤ᵀᶠ (K0 O) := by
   apply exists_code.mpr
   use oracle.comp <| pair c_id c_id
-  simp only [ev_simps, Seq.seq]
-  simp only [Part.coe_some, Part.map_eq_map, Part.map_some, Part.bind_some, Part.bind_eq_bind,
-    PFun.coe_val, K0, pair_l, pair_r]
-  exact rfl
+  simpa [ev_simps, Seq.seq] using by exact rfl
+
 open Classical in
-theorem K0_leq_K (O : ℕ → ℕ) : (K0 O) ≤ᵀᶠ (K O) := by
+theorem K0_le_K (O : ℕ → ℕ) : (K0 O) ≤ᵀᶠ (K O) := by
   apply exists_code.mpr
   let compute := oracle.comp c_ev_const
   use compute
   have compute_total : code_total (K O) compute := by apply prim_total; apply_cp
-  unfold compute
   funext x
   rw [eval_total_comp compute_total]
   simp [eval, c_ev_const_ev']
-theorem K_eq_K0 {O} : (K O)  ≡ᵀᶠ (K0 O) := ⟨K_leq_K0 O,K0_leq_K O⟩
-theorem K0_eq_K {O} : (K0 O) ≡ᵀᶠ (K O) := K_eq_K0.symm
-theorem O_le_K (O : ℕ → ℕ) : O ≤ᵀᶠ (K O) := TuringReducible.trans (O_le_K0 O) (K0_leq_K O)
+theorem K_eq_K0 {O : ℕ → ℕ} : (K O)  ≡ᵀᶠ (K0 O) := ⟨K_le_K0 O,K0_le_K O⟩
+theorem K0_eq_K {O : ℕ → ℕ} : (K0 O) ≡ᵀᶠ (K O) := K_eq_K0.symm
+theorem le_K (O : ℕ → ℕ) : O ≤ᵀᶠ (K O) := TuringReducible.trans (le_K0 O) (K0_le_K O)
 
 open Classical in
-theorem jump_not_le_id (O : ℕ → ℕ) : ¬(O⌜ ≤ᵀᶠ O) := by
+theorem not_jump_le (O : ℕ → ℕ) : ¬(O⌜ ≤ᵀᶠ O) := by
   intro h
   rcases exists_code.mp h with ⟨c_jO,hc_jO⟩
   let g := c_ite (c_jO.comp (pair c_id c_id)) zero c_diverge
@@ -113,20 +104,12 @@ theorem jump_not_le_id (O : ℕ → ℕ) : ¬(O⌜ ≤ᵀᶠ O) := by
     have : code_total O (c_jO.comp (pair c_id c_id)) := by intro x; simp [eval,hc_jO,Seq.seq]
     simp [c_ite_ev this, eval, hc_jO, Seq.seq]
   cases Classical.em (eval O g g).Dom with
-  | inl hh =>
-    have hh2 := hh
-    rw [fg] at hh2
-    simp [hh] at hh2
-  | inr hh =>
-    have hh2 := hh
-    rw [fg] at hh2
-    simp [hh] at hh2
+  | inl hh => have hh2 := hh; rw [fg] at hh2; simp [hh] at hh2
+  | inr hh => have hh2 := hh; rw [fg] at hh2; simp [hh] at hh2
 
-theorem K_nle_O (O : ℕ → ℕ) : ¬(K O ≤ᵀᶠ O) := by
-  intro h
-  apply jump_not_le_id
-  exact TuringReducible.trans (K0_leq_K O) h
+theorem not_K_le (O : ℕ → ℕ) : ¬(K O ≤ᵀᶠ O) :=
+  fun h => not_jump_le O (TuringReducible.trans (K0_le_K O) h)
 
-theorem O_lt_K0 {O : ℕ → ℕ} : O <ᵀᶠ (K0 O) := ⟨O_le_J O,jump_not_le_id O⟩
+theorem lt_K0 {O : ℕ → ℕ} : O <ᵀᶠ (K0 O) := ⟨le_jump O,not_jump_le O⟩
 
 end Oracle.Single.Code

@@ -520,7 +520,7 @@ theorem evaln_complete' {O s c x y} (h : (evaln O s c x).isSome) :
   simp only [Option.mem_def] at ⊢ h2
   rw [← h2]
   exact evaln_sing'' h  (Option.isSome_of_eq_some h2)
-theorem evaln_complete'' {O} {c n x} : x ∈ eval O c n ↔ ∃ k, x ∈ evaln O (k+1) c n := by
+theorem evaln_complete'' {O : ℕ → ℕ} {c n x} : x ∈ eval O c n ↔ ∃ k, x ∈ evaln O (k+1) c n := by
   constructor
   rotate_left
   · intro h1

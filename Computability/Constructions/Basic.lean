@@ -27,7 +27,7 @@ def c_diverge := rfind' (c_const 1)
   simp only [c_diverge, ev_simps]
   apply Part.eq_none_iff.mpr
   simp
-theorem c_diverge_ev' {O} : eval O c_diverge = fun _ ↦ Part.none := by funext; simp
+theorem c_diverge_ev' {O : ℕ → ℕ} : eval O c_diverge = fun _ ↦ Part.none := by funext; simp
 end diverge
 
 section ifz1
@@ -139,21 +139,21 @@ section evaln₁
 def c_evaln₁ := c_evaln.comp₃ (left.comp right) (left) (right.comp right)
 def evaln₁ (O : ℕ → ℕ) : ℕ → ℕ :=
   fun abc => Encodable.encode (evaln O abc.r.r abc.l.n2c abc.r.l)
-theorem c_evaln₁_evp {O} : evalp O c_evaln₁ = evaln₁ O := by
+theorem c_evaln₁_evp {O : ℕ → ℕ} : evalp O c_evaln₁ = evaln₁ O := by
   unfold evaln₁
   simp [c_evaln₁]
-theorem prim_evaln₁ {O} : PrimrecIn O (evaln₁ O) := by
+theorem prim_evaln₁ {O : ℕ → ℕ} : PrimrecIn O (evaln₁ O) := by
   simp [← c_evaln₁_evp]
 end evaln₁
 
 section eval₁
 def eval₁ (O : ℕ → ℕ) : ℕ →. ℕ := fun ex => eval O ex.l.n2c ex.r
 def c_eval₁ := c_eval
-@[simp, ev_simps] theorem c_eval₁_ev {O} : eval O c_eval₁ = eval₁ O := by
+@[simp, ev_simps] theorem c_eval₁_ev {O : ℕ → ℕ} : eval O c_eval₁ = eval₁ O := by
   unfold eval₁
   simp [c_eval₁]
 
-theorem rec_eval₁ {O} : RecursiveIn O (eval₁ O) := RecursiveIn.Rin.eval
+theorem rec_eval₁ {O : ℕ → ℕ} : RecursiveIn O (eval₁ O) := RecursiveIn.Rin.eval
 end eval₁
 
 end Oracle.Single.Code
@@ -171,12 +171,12 @@ theorem Rin.ite {O : ℕ → ℕ} {f g : ℕ →. ℕ} {c : ℕ → ℕ}
   funext x
   simp [c_ite_ev hcct]
   simp [hcc, hca, hcb]
-theorem Rin.evalRecInO' {O} {f : ℕ →. ℕ} (h : RecursiveIn O f) :
+theorem Rin.evalRecInO' {O : ℕ → ℕ} {f : ℕ →. ℕ} (h : RecursiveIn O f) :
     RecursiveIn O (fun x => (f x) >>= (eval₁ O)) := by
   simp only [Part.bind_eq_bind]
   refine RecursiveIn.comp ?_ h
   apply rec_eval₁
-theorem Rin.none {O} : RecursiveIn O fun _ => Part.none := by
+theorem Rin.none {O : ℕ → ℕ} : RecursiveIn O fun _ => Part.none := by
   rw [← c_diverge_ev']
   exact RecursiveIn_of_eval
 end Oracle.Single.RecursiveIn

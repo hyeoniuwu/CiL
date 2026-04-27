@@ -745,7 +745,7 @@ theorem c_evaln_evp_aux_nMod4 {O x n s} :
   rw [← evalp_eq_eval c_evaln_prim];
   simp only [PFun.coe_val, c_evaln_evp, Part.coe_some]
 
-@[simp, evp_simps] theorem c_evaln_evp' {O} :
+@[simp, evp_simps] theorem c_evaln_evp' {O : ℕ → ℕ} :
     evalp O (c_evaln) = fun x => o2n <| evaln O x.r.r x.r.l.n2c x.l := by
   funext x
   have : x = (Nat.pair x.l (Nat.pair x.r.l x.r.r)) := by simp
@@ -764,14 +764,14 @@ def c_eval := (c_rfindOpt (c_evaln.comp₃ (right.comp left) (left.comp left) ri
   simp only [c_rfindOpt_ev this]
   rw [eval_eq_rfindOpt]
   simp [eval,Seq.seq]
-@[simp, ev_simps] theorem c_eval_ev' {O} : eval O c_eval = fun x => eval O (n2c x.l) x.r := by
+@[simp, ev_simps] theorem c_eval_ev' {O : ℕ → ℕ} : eval O c_eval = fun x => eval O (n2c x.l) x.r := by
   funext x
   rw (config := {occs := .pos [1]}) [show x = ⟪x.l, x.r⟫ from by simp]
   exact c_eval_ev
 end Oracle.Single.Code
 namespace Oracle.Single
 open Oracle.Single.Code
-theorem RecursiveIn.Rin.eval {O} :
+theorem RecursiveIn.Rin.eval {O : ℕ → ℕ} :
     RecursiveIn O (fun ex => eval O ex.l.n2c ex.r) := by
   apply exists_code.mpr
   use c_eval

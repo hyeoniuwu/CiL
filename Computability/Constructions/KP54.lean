@@ -60,7 +60,7 @@ def c_finite_ext :=
   )
   c_zero
 @[cp] theorem c_finite_ext_prim : code_prim c_finite_ext := by unfold c_finite_ext; apply_cp
-@[simp, evp_simps] theorem c_finite_ext_evp {O} :
+@[simp, evp_simps] theorem c_finite_ext_evp {O : ℕ → ℕ} :
     evalp O c_finite_ext = fun x : ℕ ↦ c2n (dovetail (KP54.c_kp54_aux x.l x.r)) := by
   simp [c_finite_ext, KP54.c_kp54_aux]
 end c_finite_ext

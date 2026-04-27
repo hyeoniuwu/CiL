@@ -84,7 +84,7 @@ end private_lemmas
 
 
 section use_principle
-theorem use_eq_rfindOpt {O} (c n) : use O c n = Nat.rfindOpt fun k => usen O c k n :=
+theorem use_eq_rfindOpt {O : ℕ → ℕ} (c n) : use O c n = Nat.rfindOpt fun k => usen O c k n :=
   Part.ext fun x => by
     refine usen_complete.trans (Nat.rfindOpt_mono ?_).symm
     intro a m n hl; apply usen_mono hl
