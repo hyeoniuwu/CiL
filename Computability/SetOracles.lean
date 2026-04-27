@@ -329,11 +329,12 @@ theorem Wn_sound {O : Set ℕ} : ∀ {k c x}, x ∈ Wn O c k → x ∈ W O c := 
   intro _ _ _ h
   rw [evaln_sound' h]
   exact Part.dom_iff_mem.mp trivial
-theorem evaln_complete_dom {O : ℕ → ℕ} {c : Code} {x : ℕ} : (eval (χ O) c x).Dom ↔ ∃ k, (evaln (χ O) k c x).isSome := by
+theorem evaln_complete_dom {O : Set ℕ} {c : Code} {x : ℕ} :
+    (eval (χ O) c x).Dom ↔ ∃ k, (evaln (χ O) k c x).isSome := by
   constructor
   · intro h
-    rcases Part.dom_iff_mem.mp h with ⟨y,hy⟩
-    rcases evaln_complete.mp hy with ⟨k,hk⟩
+    rcases Part.dom_iff_mem.mp h with ⟨y, hy⟩
+    rcases evaln_complete.mp hy with ⟨k, hk⟩
     exact ⟨k, Option.isSome_of_mem hk⟩
   · rintro ⟨y, hy⟩
     exact en2e hy

@@ -132,7 +132,7 @@ theorem not_jump_le (O : ℕ → ℕ) : ¬(O⌜ ≤ᵀᶠ O) := by
   intro h
   rcases exists_code.mp h with ⟨c_jump, hc_jump⟩
   let g := c_ite (c_jump.comp (pair c_id c_id)) zero c_diverge
-  have fg :
+  have hg :
       eval O g = fun (x : ℕ) =>
       if (O⌜) (Nat.pair x x) = 0 then
         Part.some 0
@@ -144,8 +144,8 @@ theorem not_jump_le (O : ℕ → ℕ) : ¬(O⌜ ≤ᵀᶠ O) := by
       intro x; simp [eval, hc_jump, Seq.seq]
     simp [c_ite_ev this, eval, hc_jump, Seq.seq]
   cases Classical.em (eval O g g).Dom with
-  | inl hh => have hh2 := hh; rw [fg] at hh2; simp [hh] at hh2
-  | inr hh => have hh2 := hh; rw [fg] at hh2; simp [hh] at hh2
+  | inl h => have h' := h; rw [hg] at h'; simp [h] at h'
+  | inr h => have h' := h; rw [hg] at h'; simp [h] at h'
 
 theorem not_K_le (O : ℕ → ℕ) : ¬(K O ≤ᵀᶠ O) :=
   fun h => not_jump_le O (.trans (K0_le_K O) h)
