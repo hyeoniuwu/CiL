@@ -17,29 +17,31 @@ open Nat Part Encodable
 section vars
 variable {α : Type*} {β : Type*} {γ : Type*} {δ : Type*} {σ : Type*}
 variable [Primcodable α] [Primcodable β] [Primcodable γ] [Primcodable δ] [Primcodable σ]
-nonrec theorem RecursiveIn.comp {O : ℕ → ℕ} {f : β →. σ} {g : α → β}
+nonrec theorem RecursiveIn.comp {O : Set (ℕ →. ℕ)} {f : β →. σ} {g : α → β}
     (hf : RecursiveIn O f) (hg : ComputableIn O g) :
     RecursiveIn O fun a => f (g a) :=
   (RecursiveIn.comp hf hg).of_eq fun n => by
     simp only [map_some, bind_eq_bind]
     rcases e : decode (α := α) n with - | a <;> simp [encodek]
-theorem RecursiveIn.nat_iff {O : ℕ → ℕ} {f : ℕ →. ℕ} : _root_.RecursiveIn O f ↔ Nat.RecursiveIn O f := by
+theorem RecursiveIn.nat_iff {O : Set (ℕ →. ℕ)} {f : ℕ →. ℕ} :
+    _root_.RecursiveIn O f ↔ Nat.RecursiveIn O f := by
   simp [_root_.RecursiveIn, map_id']
-theorem unpaired {O : ℕ → ℕ} {f : ℕ → ℕ →. α} : RecursiveIn O (Nat.unpaired f) ↔ RecursiveIn₂ O f :=
+theorem unpaired {O : Set (ℕ →. ℕ)} {f : ℕ → ℕ →. α} :
+    RecursiveIn O (Nat.unpaired f) ↔ RecursiveIn₂ O f :=
   ⟨fun h => by simpa using
     RecursiveIn.comp (g := fun p : ℕ × ℕ => (p.1, p.2)) h Primrec₂.pair.to_comp.computableIn,
     fun h => h.comp Primrec.unpair.to_comp.computableIn⟩
-theorem RecursiveIn₂.unpaired' {O : ℕ → ℕ} {f : ℕ → ℕ →. ℕ} :
+theorem RecursiveIn₂.unpaired' {O : Set (ℕ →. ℕ)} {f : ℕ → ℕ →. ℕ} :
     Nat.RecursiveIn O (Nat.unpaired f) ↔ RecursiveIn₂ O f :=
   RecursiveIn.nat_iff.symm.trans unpaired
-protected theorem Nat.RecursiveIn.some {O : ℕ → ℕ} : Nat.RecursiveIn O some :=
+protected theorem Nat.RecursiveIn.some {O : Set (ℕ →. ℕ)} : Nat.RecursiveIn O some :=
   (Nat.Partrec.of_primrec Primrec.id).recursiveIn
-protected theorem RecursiveIn.bind {O : ℕ → ℕ} {f : α →. β} {g : α → β →. σ}
+protected theorem RecursiveIn.bind {O : Set (ℕ →. ℕ)} {f : α →. β} {g : α → β →. σ}
     (hf : RecursiveIn O f) (hg : RecursiveIn₂ O g) :
     RecursiveIn O fun a => (f a).bind (g a) :=
   (Nat.RecursiveIn.comp hg (Nat.RecursiveIn.some.pair hf)).of_eq fun n => by
     rcases e : decode (α := α) n <;> simp [Seq.seq, e, encodek]
-theorem RecursiveIn.map {O : ℕ → ℕ} {f : α →. β} {g : α → β → σ}
+theorem RecursiveIn.map {O : Set (ℕ →. ℕ)} {f : α →. β} {g : α → β → σ}
     (hf : RecursiveIn O f) (hg : ComputableIn₂ O g) :
     RecursiveIn O fun a => (f a).map (g a) := by
   simpa [bind_some_eq_map] using RecursiveIn.bind (g := fun a x => some (g a x)) hf hg
