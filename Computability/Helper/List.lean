@@ -28,9 +28,6 @@ lemma rr_lemma {l' x} (h : ∃ l'' : List ℕ, l'' ++ l' = (range x).reverse) :
 lemma rr_lemma2 {l' x a} (h : ∃ l'' : List ℕ, l'' ++ l' = (range x).reverse) (h2 : a∈l') : a<x := by
   have := rr_lemma h
   grind
-theorem list_access_small {α} {i} {l1 l2 : List α} (h : i < l1.length) :
-    (l1 ++ l2)[i]? = (l1)[i]? := by
-  simp [getElem?_pos, List.getElem?_append, h]
 @[simp] theorem getI_eq_getElem {i} {l : List ℕ} {h : i < l.length} :
     l.getI i = l[i] := by
   unfold List.getI

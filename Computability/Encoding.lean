@@ -243,40 +243,6 @@ theorem eval_id {O : ℕ → ℕ} (n) : eval O Code.id n = Part.some n := by sim
 @[simp]
 theorem eval_curry {O : ℕ → ℕ} (c n x) : eval O (curry c n) x = eval O c (Nat.pair n x) := by simp! [Seq.seq, curry]
 
--- theorem add_rec {O f} (h : RecursiveIn O (f)) : RecursiveIn O (fun x => (f x.unpair.1) + x.unpair.2) := by
---   sorry
--- theorem RecursiveIn₂.unpaired' {O} {f : ℕ → ℕ →. ℕ} : RecursiveIn O (Nat.unpaired f) ↔ RecursiveIn₂ O f :=
---   RecursiveIn.nat_iff.symm.trans unpaired
--- theorem rfind'_rec {O f} (h : RecursiveIn O (f)) : RecursiveIn O
---   (unpaired fun a m ↦
---     Part.map (fun x ↦ x + m) (rfind fun n ↦ Part.map (fun x ↦ decide (x = 0)) (f (Nat.pair a (n + m))))) :=
---       -- have : RecursiveIn O (Nat.rfind fun n => (fun m => m = 0) <$> f (Nat.pair a (n + b))) := by
---       --   sorry
---       -- have a0 (m) : RecursiveIn O (fun x => f (Nat.pair x.unpair.1 x.unpair.2 + m)) := by sorry
---       -- have a1 (m) := RecursiveIn.rfind (a0 m)
---       -- -- have a2 (m) := RecursiveIn.comp (a1 m) (RecursiveIn.left)
---       -- have a2 (m) := add_rec (a1 m)
---       -- have a3 := a2 ()
---       -- simp at this
---       -- sorry
---       RecursiveIn₂.unpaired'.2 <| by
---           refine
---       RecursiveIn.map
---         ((@RecursiveIn₂.unpaired' fun a b : ℕ =>
---               Nat.rfind fun n => (fun m => m = 0) <$> f (Nat.pair a (n + b))).1
---           ?_)
---         (Primrec.nat_add.comp Primrec.snd <| Primrec.snd.comp Primrec.fst).to_comp.to₂
---     have : Nat.RecursiveIn (fun a => Nat.rfind (fun n => (fun m => decide (m = 0)) <$>
---       Nat.unpaired (fun a b => f (Nat.pair (Nat.unpair a).1 (b + (Nat.unpair a).2)))
---         (Nat.pair a n))) :=
---       rfind
---         (RecursiveIn₂.unpaired'.2
---           ((RecursiveIn.nat_iff.2 hf).comp
---               (Primrec₂.pair.comp (Primrec.fst.comp <| Primrec.unpair.comp Primrec.fst)
---                   (Primrec.nat_add.comp Primrec.snd
---                     (Primrec.snd.comp <| Primrec.unpair.comp Primrec.fst))).to_comp))
---     simpa
-
 /-- A function is partial recursive if and only if there is a code implementing it. Therefore,
 `eval` is a **universal partial recursive function**. -/
 theorem exists_code {O : ℕ → ℕ} {f : ℕ →. ℕ} : RecursiveIn O f ↔ ∃ c : Code, eval O c = f := by

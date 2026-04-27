@@ -14,16 +14,22 @@ import Mathlib.Computability.RecursiveIn
 /-!
 # Oracle.lean
 
-This file takes only the necessary definitions and theorems from Mathlib/Computability/Partrec.lean and relativises them.
+This file takes only the necessary definitions and theorems from Mathlib/Computability/Partrec.lean
+and relativises them.
 
-The two main predicates defined are `PrimrecIn` and `RecursiveIn`, from which we define the Turing degrees in Order.lean.
+The two main predicates defined are `PrimrecIn` and `RecursiveIn`, from which we define the Turing
+degrees in Order.lean.
 -/
 
 open Nat
 
 namespace Oracle.Single
 
-/-- `RecursiveIn O f` asserts that the partial function `f : ℕ →. ℕ` is partial recursive in `O : ℕ → ℕ`. -/
+/--
+`RecursiveIn O f` asserts that the partial function `f : ℕ →. ℕ` is partial recursive in `O : ℕ → ℕ`.
+
+We note that `rfind` constructor here actually corresponds to `rfind'`.
+-/
 inductive RecursiveIn (O : ℕ → ℕ) : (ℕ →. ℕ) → Prop
   | zero : RecursiveIn O fun _ => 0
   | succ : RecursiveIn O Nat.succ
@@ -44,9 +50,6 @@ inductive RecursiveIn (O : ℕ → ℕ) : (ℕ →. ℕ) → Prop
       RecursiveIn O
         <| Nat.unpaired fun a m =>
           (Nat.rfind fun n => (fun x => x = 0) <$> f (Nat.pair a (n + m))).map (· + m)
-  -- | rfind {f : ℕ →. ℕ} (hf : RecursiveIn O f) :
-  --   RecursiveIn O fun a =>
-  --     Nat.rfind fun n => (fun m => m = 0) <$> f (Nat.pair a n)
 
 /-- The primitive recursive functions, but with the oracle `O` as an additional initial function. -/
 inductive PrimrecIn (O : ℕ → ℕ) : (ℕ → ℕ) → Prop

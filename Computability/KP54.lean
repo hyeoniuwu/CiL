@@ -218,6 +218,12 @@ theorem Bs_Mono_4 {ii j k smth} (hii : ii < (Bs j).length) (asz : ii < (Bs k).le
     rw [this]
     exact Bs_Mono_3 hii asz
   rw [this]
+theorem As_Mono_5 {ii j k} (hii : ii < (As j).length) (asz : ii < (As k).length) :
+((As j)[ii]) = (As k)[ii] := by
+  rw [As_Mono_3 hii asz]
+theorem Bs_Mono_5 {ii j k} (hii : ii < (Bs j).length) (asz : ii < (Bs k).length) :
+((Bs j)[ii]) = (Bs k)[ii] := by
+  rw [Bs_Mono_3 hii asz]
 @[simp] private lemma AsBsSize_aux_0 {i} : (2 * i + 1 + 1) % 2 = 0 := by omega
 theorem AsSize_o2e {i : ℕ} : (As (2 * i + 1)).length = (As (2*i)).length + 1 := by
   rw [As, KP54]
@@ -574,9 +580,8 @@ lemma As_Uninjured_1 {i} :
       simp only [Set.mem_setOf_eq, zero_add, Denumerable.list_ofNat_succ, unpair_zero,
         Prod.fst_zero, Denumerable.ofNat_nat, Prod.snd_zero, Denumerable.list_ofNat_zero,
         List.getD_eq_getElem?_getD]
-    rw [@list_access_small _ _ _ [0] hi3]
-    rw [@As_Mono_4 i2 (2 * i + 1) (i2 + 1) whatever (hi3) (AsSize)]
-    simp only [b2n, ite_eq_ite]
+    simp [getElem?_pos, List.getElem?_append, hi3]
+    simp [b2n, ← @As_Mono_5 i2 (2 * i + 1) (i2 + 1) (hi3) (AsSize)]
   apply evalc_prop_4.mp <;> (simp only [mainrw]; assumption)
 lemma As_Uninjured_1' {i : ℕ} :
     (evalSet A i (R_wt i)).Dom  → (evals (As (2 * (i + 1))) i (R_wt i)).Dom :=
@@ -726,9 +731,8 @@ lemma Bs_Uninjured_1 {i} :
     unfold B
     simp only [Set.mem_setOf_eq, zero_add, Denumerable.list_ofNat_succ, unpair_zero, Prod.fst_zero,
       Denumerable.ofNat_nat, Prod.snd_zero, Denumerable.list_ofNat_zero, List.getD_eq_getElem?_getD]
-    rw [@list_access_small _ _ _ [0] hi3]
-    rw [@Bs_Mono_4 i2 (2*i) (i2 + 1) whatever (hi3) (BsSize)]
-    simp only [b2n, ite_eq_ite]
+    simp [getElem?_pos, List.getElem?_append, hi3]
+    simp [b2n, ← @Bs_Mono_5 i2 (2 * i) (i2 + 1) (hi3) (BsSize)]
   apply evalc_prop_4.mp <;> (simp only [mainrw]; assumption)
 lemma Bs_Uninjured_1' {i : ℕ} :
     (evalSet B i (S_wt i)).Dom  → (evals (Bs (2 * i + 1)) i (S_wt i)).Dom :=

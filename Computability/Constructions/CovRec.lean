@@ -403,10 +403,14 @@ def c_replace_oracle_aux :=
   let mr             := lookup (right.comp m)
   let mp             := lookup m
   let nMod4          := c_mod.comp₂ n (c_const 4)
-  let pair_code      := c_add.comp₂ (             c_mul2.comp <|              c_mul2.comp (pair ml mr)) (c_const 5)
-  let comp_code      := c_add.comp₂ (succ.comp <| c_mul2.comp <|              c_mul2.comp (pair ml mr)) (c_const 5)
-  let prec_code      := c_add.comp₂ (             c_mul2.comp <| succ.comp <| c_mul2.comp (pair ml mr)) (c_const 5)
-  let rfind'_code    := c_add.comp₂ (succ.comp <| c_mul2.comp <| succ.comp <| c_mul2.comp mp          ) (c_const 5)
+  let pair_code   :=
+    c_add.comp₂ (             c_mul2.comp <|              c_mul2.comp (pair ml mr)) (c_const 5)
+  let comp_code   :=
+    c_add.comp₂ (succ.comp <| c_mul2.comp <|              c_mul2.comp (pair ml mr)) (c_const 5)
+  let prec_code   :=
+    c_add.comp₂ (             c_mul2.comp <| succ.comp <| c_mul2.comp (pair ml mr)) (c_const 5)
+  let rfind'_code :=
+    c_add.comp₂ (succ.comp <| c_mul2.comp <| succ.comp <| c_mul2.comp mp          ) (c_const 5)
   c_cov_rec
   -- base case, when code = 0.
   (c_const 0) <|
