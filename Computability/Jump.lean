@@ -51,7 +51,7 @@ open Classical in
   congr
   simp only [ev_simps, Part.bind_eq_bind]
   if h : (eval O c x).Dom then
-    rw [Part.dom_imp_some h]
+    rw [Part.eq_some_of_dom h]
     simp [-Part.some_get]
   else
     simp [Part.eq_none_iff'.mpr h]

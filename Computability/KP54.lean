@@ -599,7 +599,7 @@ theorem R_aux_1 (i : ℕ) : (evalSet A i (R_wt i)) ≠ Part.some ((χ B) (R_wt i
   if h0 : (evalSet A i (R_wt i)).Dom then
     rw [R_aux_χ] -- rw the rhs
     simp only [As_Uninjured i] -- rw the lhs
-    exact Part.ne_of_get_ne' <| R_aux_0 i (As_Uninjured_1' h0)
+    exact Part.ne_some_of_get_ne <| R_aux_0 i (As_Uninjured_1' h0)
   else
     simp [Part.eq_none_iff'.mpr h0]
 
@@ -747,7 +747,7 @@ theorem S_aux_1 (i : ℕ) : (evalSet B i (S_wt i)) ≠ Part.some ((χ A) (S_wt i
   if h0 : (evalSet B i (S_wt i)).Dom then
     rw [S_aux_χ]
     simp only [Bs_Uninjured i]
-    exact Part.ne_of_get_ne' <| S_aux_0 i (Bs_Uninjured_1' h0)
+    exact Part.ne_some_of_get_ne <| S_aux_0 i (Bs_Uninjured_1' h0)
   else
     simp [Part.eq_none_iff'.mpr h0]
 theorem S (i : ℕ) : evalSet B i ≠ χ A := Function.ne_iff.mpr ⟨S_wt i, S_aux_1 i⟩

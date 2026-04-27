@@ -35,7 +35,7 @@ theorem evalnc_prop_1 {O u s c x} (h : (evalnc O u s c x).isSome) :
     (usen O c s x).get (evalnc_imp_usen h) ≤ u := by
   unfold evalnc at h
   simp at h
-  simp only [isSome.bind (evalnc_imp_usen h)] at h
+  simp only [Option.isSome.bind (evalnc_imp_usen h)] at h
   contrapose h; simp [h]
 theorem evalc_imp_use {O u c x} (h : (evalc O u c x).Dom) : (use O c x).Dom := by
   unfold evalc at h
@@ -64,7 +64,7 @@ theorem evalc_prop_3 {O u c x}
   simp [h0]
 theorem evalc_prop_4 {O u c x h} : (use O c x).get h ≤ u ↔ (evalc O u c x).Dom :=
   ⟨
-    fun h0 ↦ Part.eq_some_imp_dom <| evalc_prop_3 (u2e h) h0,
+    fun h0 ↦ by simpa [evalc_prop_3 (u2e h) h0] using use_dom_iff_eval_dom.mp h,
     fun h0 ↦ evalc_prop_1 h0
   ⟩
 

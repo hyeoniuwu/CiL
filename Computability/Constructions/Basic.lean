@@ -45,7 +45,7 @@ open Classical in
     PFun.coe_val, Nat.unpaired2, Nat.add_eq]
   split
   next h => simp [Part.get_eq_iff_eq_some.mp h]
-  next h => simp [Part.ne_of_get_ne' h]
+  next h => simp [Part.ne_some_of_get_ne h]
 theorem c_ifz1_total {O c a b} (hc : code_total O c) : code_total O (c_ifz1 c a b) := by
   intro x
   simp only [c_ifz1_ev hc]

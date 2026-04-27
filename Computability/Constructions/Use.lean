@@ -368,7 +368,7 @@ theorem c_usen_evp_aux_nMod4 {O x n s} :
         simp? says
           simp only [↓reduceIte, Encodable.encode_none, unpaired2, pair_l, pair_r, guard_true,
             Option.pure_def, Nat.n2c, Option.bind_eq_bind, Option.bind_some]
-        simp only [isSome.bind (Option.isSome_iff_ne_none.mpr hhh)]
+        simp only [Option.isSome.bind (Option.isSome_iff_ne_none.mpr hhh)]
         simp only [hcomp_usen_cf]
         have :
             pc_ml_s (c_pred.comp comp_evaln_cg) elem =
@@ -441,11 +441,11 @@ theorem c_usen_evp_aux_nMod4 {O x n s} :
         | inl hh => simp [hh]
         | inr hh =>
         simp only [hnat_1 hh, ↓reduceIte]
-        simp only [isSome.bind <| isSome_iff_not_none.mp hh]
-        simp only [hprec_usen_indt elem (isSome_iff_not_none.mp hh)]
+        simp only [Option.isSome.bind <| Option.ne_none_iff_isSome.mp hh]
+        simp only [hprec_usen_indt elem (Option.ne_none_iff_isSome.mp hh)]
         cases Classical.em ((pc_mr_s left ⟪elem.l, elem.r - 1,
             (evaln O s (n2c (n + 4 + 1)) (Nat.pair elem.l (elem.r - 1))).get
-            (isSome_iff_not_none.mp hh)⟫) =
+            (Option.ne_none_iff_isSome.mp hh)⟫) =
           o2n Option.none) with
         | inl hhh => simp [hhh]
         | inr hhh =>
@@ -487,9 +487,9 @@ theorem c_usen_evp_aux_nMod4 {O x n s} :
           simp only [↓reduceIte, Denumerable.ofNat_encode, Encodable.encode_none, unpaired2,
             Option.getD_some, pair_l, pair_r, succ_eq_add_one, guard_true, Option.pure_def, Nat.n2c,
             Option.bind_eq_bind, Option.bind_some]
-          simp only [isSome.bind <| isSome_iff_not_none.mp hhh]
-          simp only [getD_eq_get <| isSome_iff_not_none.mp hhh]
-          cases (evaln O (s + 1) (n2c m) elem).get (isSome_iff_not_none.mp hhh) with
+          simp only [Option.isSome.bind <| Option.ne_none_iff_isSome.mp hhh]
+          simp only [getD_eq_get <| Option.ne_none_iff_isSome.mp hhh]
+          cases (evaln O (s + 1) (n2c m) elem).get (Option.ne_none_iff_isSome.mp hhh) with
           | zero => simpa using ge_0_rw (not_none_imp_not_zero hh)
           | succ _ =>
             simp only [hrfind'_usen_indt]

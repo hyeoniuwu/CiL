@@ -357,7 +357,7 @@ theorem evaln_rfind_as_eval_rfind_reverse {O s c x}
     have := @h3 0 (zero_lt_succ n)
     simp only [tsub_zero, unpair1_to_l, unpair2_to_r, zero_add, pair_lr, Part.map_eq_map,
       Part.map_Dom, Part.ofOption_dom] at this
-    simp only [isSome.bind this]
+    simp only [Option.isSome.bind this]
     if h4 : (evaln O (s + 1) c x).get this = 0 then
       simp [h4]
     else
@@ -410,8 +410,8 @@ theorem nrfind'_obtain_prop {O s cf x} (h : (evaln O (s + 1) (rfind' cf) x).isSo
   · exact goal2
   constructor
   · intro j hja
-    rcases rrr hja with ⟨witness,⟨hwitness_1,hwitness_2⟩⟩
-    exact opt_ne_of_mem_imp_not_mem hwitness_1 hwitness_2
+    rcases rrr hja with ⟨witness, hwitness_1, hwitness_2⟩
+    simp_all only [Option.mem_def, Option.some.injEq, not_false_eq_true]
   · intro j hjro
     apply evaln_rfind_as_eval_rfind_reverse' ?_
     simp? says
@@ -443,6 +443,18 @@ private lemma mem_shambles {x} {o : Option ℕ} {p : Part ℕ}
   contrapose this
   rw [← this]
   exact Option.eq_some_of_isSome h1
+-- helper lemma for `nrfind'_prop`
+private lemma forall_mem_option {c} {y : Option ℕ} (h1 : y.isSome) (h2 : ∀ x ∈ y, x = c) : c∈y := by
+  contrapose h2
+  simp only [Option.mem_def, not_forall, exists_prop]
+  use y.get h1
+  constructor
+  · exact Option.eq_some_of_isSome h1
+  apply Aesop.BuiltinRules.not_intro
+  intro a
+  subst a
+  have : y.get h1 ∈ y := Option.eq_some_of_isSome h1
+  contradiction
 theorem nrfind'_prop {O s cf x y} (h : (evaln O s (rfind' cf) x).isSome) :
     y+x.r ∈ (evaln O s (rfind' cf) x) ↔
     0 ∈ (evaln O (s-y) cf ⟪x.l, y+x.r⟫) ∧
@@ -469,7 +481,9 @@ theorem nrfind'_prop {O s cf x y} (h : (evaln O s (rfind' cf) x).isSome) :
       not_exists, Decidable.not_not] at h1
   rcases h1 h2 with ⟨h4, h5, h6⟩
   use h4
-  refine ⟨h5,forall_mem_option (h3 h4 (le_of_succ_le h5)) h6⟩
+  constructor
+  · exact h5
+  exact forall_mem_option (h3 h4 (le_of_succ_le h5)) h6
 theorem nrfind'_obtain_prop_6 {O s cf x} (h : (evaln O (s + 1) (rfind' cf) x).isSome) :
     ∀ j ≤ nrfind'_obtain h,
     (nrfind'_obtain h)+x.r ∈ (evaln O (s + 1-j) (rfind' cf) ⟪x.l, j+x.r⟫) := by

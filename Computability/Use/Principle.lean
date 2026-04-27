@@ -169,7 +169,7 @@ theorem evaln_prec_dom {O s cf cg x i}
       have : s - (iM1 + 1) = s - 1 - iM1 := Simproc.sub_add_eq_comm s iM1 1
       rw [this]
       exact ih1.left
-    · simpa [isSome.bind aux0] using h'
+    · simpa [Option.isSome.bind aux0] using h'
 theorem usen_pair_dom {O cf cg s x} (h : (usen O (pair cf cg) (s + 1) x).isSome) :
     (usen O cf (s + 1) x).isSome ∧ (usen O cg (s + 1) x).isSome := by
   have := usen_xles h
@@ -217,7 +217,7 @@ theorem usen_prec_dom {O cf cg s x i}
   simp only []
   simp only [usen, usen_xles h] at h'
   simp only [guard_true, Option.pure_def, unpair_pair, Option.bind_eq_bind, Option.bind_some] at h'
-  simp only [isSome.bind (usen_prec_dom_aux h), isSome.bind (en2un <| usen_prec_dom_aux h)] at h'
+  simp only [Option.isSome.bind (usen_prec_dom_aux h), Option.isSome.bind (en2un <| usen_prec_dom_aux h)] at h'
   induction i generalizing s with
   | zero =>
     have h' := h
@@ -233,8 +233,8 @@ theorem usen_prec_dom {O cf cg s x i}
     · exact en2un this
     simp only [guard_true, Option.pure_def, zero_add, unpair_pair, Option.bind_eq_bind, rec_one,
       Option.bind_some] at h'
-    simp only [isSome.bind uprev] at h'
-    simp only [isSome.bind eprev] at h'
+    simp only [Option.isSome.bind uprev] at h'
+    simp only [Option.isSome.bind eprev] at h'
     contrapose h'
     simp at h'
     simp [h']
@@ -258,15 +258,15 @@ theorem usen_prec_dom {O cf cg s x i}
           Option.bind_some] at uprev
         have eprev2 := usen_prec_dom_aux u
         have uprev2 := en2un eprev2
-        simpa [isSome.bind uprev2, isSome.bind eprev2] using uprev
+        simpa [Option.isSome.bind uprev2, Option.isSome.bind eprev2] using uprev
       have : s - (iM1 + 1) = s - 1 - iM1 := Simproc.sub_add_eq_comm s iM1 1
       rw [this]
       exact ih1.left
     ·
       simp only [guard_true, Option.pure_def, unpair_pair, Option.bind_eq_bind,
         Option.bind_some] at h'
-      rewrite [isSome.bind uprev] at h'
-      rewrite [isSome.bind eprev] at h'
+      rewrite [Option.isSome.bind uprev] at h'
+      rewrite [Option.isSome.bind eprev] at h'
       contrapose h'; simp at h'; simp [h']
 
 theorem usen_rfind'_dom {O cf s x} (h : (usen O (rfind' cf) (s + 1) x).isSome) :
@@ -419,7 +419,7 @@ theorem usen_mono_rfind' {O cf s x j} (hh : (usen O (rfind' cf) (s + 1) x).isSom
         ((usen O cf (s + 1-i) ⟪x.l, i+x.r⟫).get (en2un <| rop2 i (rr_mem_bound h))))) :
         (i : ℕ) → i ∈ (List.range (ro + 1)).reverse → ℕ → Option (ForInStep ℕ)) := by
     funext i h r
-    simp [isSome.bind (en2un <| rop2 i (rr_mem_bound h))]
+    simp [Option.isSome.bind (en2un <| rop2 i (rr_mem_bound h))]
   simp only [this, ge_iff_le]
   simp? [rr_indt ro] says
     simp only [reversed_range_indt ro, forIn'_cons, _root_.zero_le, sup_of_le_right, Option.pure_def,
@@ -679,7 +679,7 @@ theorem usen_principle {O₁ O₂} {s c x} (hh : (evaln O₁ s c x).isSome)
       rwa [aux4] at aux
     rw [ih_cg.left]
     rw [ih_cg.right]
-    simp [isSome.bind aux0]
+    simp [Option.isSome.bind aux0]
     simp [ih_cf]
   | hprec cf cg s ih_cf ih_cg x ih_c =>
     -- start with simple unfolding of terms
@@ -724,8 +724,8 @@ theorem usen_principle {O₁ O₂} {s c x} (hh : (evaln O₁ s c x).isSome)
         fun x h ↦ hO x (le_trans h (usen_mono_prec (en2un hh)).right)
       rw [← ih_c.left]
       rw [← ih_c.right]
-      simp only [isSome.bind aux00]
-      simp only [isSome.bind <| en2un aux00]
+      simp only [Option.isSome.bind aux00]
+      simp only [Option.isSome.bind <| en2un aux00]
       simp [ih_cg]
   | hrfind' cf s x ih =>
     rcases nrfind'_obtain_prop hh with ⟨nrop1, nrop2, nrop3, _⟩
@@ -821,7 +821,7 @@ theorem usen_principle {O₁ O₂} {s c x} (hh : (evaln O₁ s c x).isSome)
     simp only [Option.pure_def, Option.bind_eq_bind, Option.bind_some, Option.bind_fun_some]
     simp only [evaln_xles hh, guard_true, Option.pure_def, Option.bind_some]
     rewrite [← main1]
-    simp only [isSome.bind hh]
+    simp only [Option.isSome.bind hh]
     have a2 := fun j hj ↦ (ih j hj).right
     rewrite [show (evaln O₁ (s - 1 + 1) cf.rfind' x).get hh - x.r = nro from hnro]
     -- we now prepare to use induction, cleaning up unncesseary assumptions
@@ -839,7 +839,7 @@ theorem usen_principle {O₁ O₂} {s c x} (hh : (evaln O₁ s c x).isSome)
         Option.bind_eq_bind, ← this]
       replace := en2un <| nrop2 (nron+1) (Nat.le_refl (nron + 1))
       simp only [reduceSubDiff] at this
-      simpa [isSome.bind this] using @ih
+      simpa [Option.isSome.bind this] using @ih
         ((b.max ((usen O₁ cf (s - 1 - nron) (Nat.pair x.l (nron + 1 + x.r))).get this)))
         (fun j hj ↦ a2 j (le_add_right_of_le hj))
         (fun j hj ↦ nrop2 j (le_add_right_of_le hj))

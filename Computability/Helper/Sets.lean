@@ -15,16 +15,16 @@ theorem nonempt_int_iff_not_subset_compl {α} (A B : Set α) : A ∩ B ≠ ∅ �
   · intro h1
     have : ∃ a : α, a ∈ A ∧ a ∈ B := by
       contrapose h1
-      simp_all
+      simp_all only [not_exists, not_and]
       ext x : 1
       simp_all
     contrapose this
-    simp at this ⊢
+    simp only [not_exists, not_and] at this ⊢
     exact fun x a ↦ this a
   · intro h1
     have : ∃ a : α, a ∈ A ∧ a ∈ B := by
       contrapose h1
-      simp_all
+      simp_all only [not_exists, not_and]
       exact h1
     exact Set.nonempty_iff_ne_empty.mp this
 theorem inf_imp_inhabited {A : Set ℕ} (h : A.Infinite) : ∃ y, y ∈ A := by
@@ -57,18 +57,16 @@ theorem big_imp_big_wit {i} {A : Set ℕ} : A.ncard > i → ∃ y ∈ A, y ≥ i
   rw [a2] at a1
   linarith
 
-theorem infinite_iff_unbounded {A : Set ℕ} : Set.Infinite A ↔ (∀ x, ∃ y∈A, y≥x) := by
+theorem infinite_iff_unbounded {A : Set ℕ} : Set.Infinite A ↔ (∀ x, ∃ y ∈ A, y ≥ x) := by
   constructor
   · intro h x
     contrapose h
-    simp at h
-    simp
+    simp only [ge_iff_le, not_exists, not_and, not_le, Set.not_infinite] at h ⊢
     exact Finite.Set.subset {i | i < x} h
-
   · intro h
     classical
     by_contra hfin
-    simp at hfin
+    simp only [Set.not_infinite] at hfin
     have hA : Finite A := hfin
     have hne : A.Nonempty := by
       obtain ⟨y, hy, _⟩ := h 0

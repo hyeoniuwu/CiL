@@ -294,7 +294,7 @@ theorem usen_dom_iff_evaln_dom {O c s x} : (∃a,a ∈ (usen O c s x)) ↔ (∃b
   simpa [Option.eq_none_iff_forall_ne_some] using this
 theorem usen_dom_iff_evaln_dom' {O c s x} : ((usen O c s x).isSome) ↔ ((evaln O s c x).isSome) := by
   have := (@usen_none_iff_evaln_none O c s x).not
-  simp only [isSome_iff_not_none, Bool.coe_iff_coe] at this
+  simp only [Option.ne_none_iff_isSome, Bool.coe_iff_coe] at this
   exact Bool.coe_iff_coe.mpr this
 abbrev en2un {O s c x} : (evaln O s c x).isSome → (usen O c s x).isSome :=
   usen_dom_iff_evaln_dom'.mpr
@@ -389,10 +389,10 @@ theorem usen_rfind_prop_aux'' {O k n} {cf : Code} :
   have nlek : n ≤ k := by contrapose h; simp at h; simp [h]
   simp only [nlek] at h ⊢
   have usen_base_dom : (usen O cf (k + 1) n).isSome := by contrapose h; simp at h; simp [h]
-  simp only [guard_true, Option.pure_def, Option.bind_eq_bind, isSome.bind usen_base_dom,
+  simp only [guard_true, Option.pure_def, Option.bind_eq_bind, Option.isSome.bind usen_base_dom,
     Option.some_get, Option.bind_some] at h
   have evaln_base_dom : (evaln O (k + 1) cf n).isSome := by contrapose h; simp at h; simp [h]
-  simp only [isSome.bind evaln_base_dom, guard_true, Option.pure_def, unpaired, unpair1_to_l,
+  simp only [Option.isSome.bind evaln_base_dom, guard_true, Option.pure_def, unpaired, unpair1_to_l,
     unpair2_to_r, pair_lr, Option.bind_eq_bind, Option.bind_some] at h ⊢
   cases hevaln_base : (evaln O (k + 1) cf n).get evaln_base_dom with
   | zero => simp
@@ -444,10 +444,10 @@ lemma nrf {O cf k x} (h : (usen O (rfind' cf) k x).isSome) :
     simp only [xlek, guard_true, Option.pure_def, Option.bind_eq_bind, Option.bind_some,
       add_tsub_cancel_right, true_and] at h ⊢
   have usen_base_dom : (usen O cf (k-1+1) x).isSome := Option.isSome_of_isSome_bind h
-  simp [isSome.bind usen_base_dom] at h
+  simp [Option.isSome.bind usen_base_dom] at h
   simp [usen_base_dom]
   have evaln_base_dom : (evaln O (k -1+1) cf x).isSome := un2en usen_base_dom
-  simp [isSome.bind evaln_base_dom] at h ⊢
+  simp [Option.isSome.bind evaln_base_dom] at h ⊢
   simp [evaln_base_dom]
 
 /--
@@ -497,10 +497,10 @@ lemma unrpeq0 {O cf k x y} :
     simp only [evaln_xles evaln_ver_dom] at h
     have usen_base_dom : (usen O cf (k + 1) x).isSome := by contrapose h; simp at h; simp [h]
     simp? [isSome.bind usen_base_dom]  at h says
-      simp only [guard_true, Option.pure_def, Option.bind_eq_bind, isSome.bind usen_base_dom,
+      simp only [guard_true, Option.pure_def, Option.bind_eq_bind, Option.isSome.bind usen_base_dom,
         Option.some_get, Option.bind_some, Option.mem_def] at h
     have evaln_base_dom : (evaln O (k + 1) cf x).isSome := evaln_rfind_base evaln_ver_dom
-    simp only [isSome.bind evaln_base_dom] at h ⊢
+    simp only [Option.isSome.bind evaln_base_dom] at h ⊢
     simp only [add_tsub_cancel_right, evaln_base_dom, exists_true_left]
     use evaln_ver_dom
     simp_all [@unrpeq2 O k cf x evaln_base_dom evaln_ver_dom]
@@ -511,8 +511,8 @@ lemma unrpeq0 {O cf k x y} :
   simp [usen]
   have xlek : x ≤ k := le_of_lt_succ (evaln_bound (Option.get_mem h1))
   simp [xlek]
-  simp [isSome.bind (en2un h1)]
-  simp [isSome.bind (h1)]
+  simp [Option.isSome.bind (en2un h1)]
+  simp [Option.isSome.bind (h1)]
   simp_all [@unrpeq2 O k cf x h1 h2]
 
 /--
@@ -542,7 +542,7 @@ lemma unrpeq1 {x k O cf y} : y ∈ (do
     simp only [xlek, guard_true, Option.pure_def, Option.bind_some] at h ⊢
     have evaln_ver_dom : (evaln O (k + 1) (rfind' cf) x).isSome := by
       contrapose h; simp at h; simp [h]
-    simp [isSome.bind evaln_ver_dom] at h
+    simp [Option.isSome.bind evaln_ver_dom] at h
     use evaln_ver_dom
   intro h
   rcases h with ⟨h1,h2⟩
@@ -551,7 +551,7 @@ lemma unrpeq1 {x k O cf y} : y ∈ (do
       Option.bind_eq_bind] at h1
     contrapose h1;
     simp [h1]
-  simpa [xlek, isSome.bind h1] using h2
+  simpa [xlek, Option.isSome.bind h1] using h2
 /--
 This is a helper lemma for `usen_rfind_prop2`.
 
@@ -591,9 +591,9 @@ lemma displace_loop_0 {O s cf x roM1 ro_dom}
   | zero =>
     simp? [isSome.bind u0] says
       simp only [zero_add, range_one, reverse_cons, reverse_nil, nil_append, forIn_cons, tsub_zero,
-        Nat.max_assoc, Option.pure_def, forIn_nil, Option.bind_eq_bind, pair_lr, isSome.bind u0,
+        Nat.max_assoc, Option.pure_def, forIn_nil, Option.bind_eq_bind, pair_lr, Option.isSome.bind u0,
         Option.bind_some]
-    simp? [isSome.bind u1] says simp only [isSome.bind u1, Option.bind_some, Option.some.injEq]
+    simp? [isSome.bind u1] says simp only [Option.isSome.bind u1, Option.bind_some, Option.some.injEq]
     ac_nf
     rw (config := {occs := .pos [2]}) [Nat.max_comm]
     apply congrArg
@@ -611,10 +611,10 @@ lemma displace_loop_0 {O s cf x roM1 ro_dom}
     simp only [reduceSubDiff] at urom
     rw [add_assoc] at urom
     rw (config := {occs := .pos [3]}) [add_comm] at urom
-    simp only [isSome.bind urom, Option.bind_some]
+    simp only [Option.isSome.bind urom, Option.bind_some]
     have urom2 := nrop2 (roM2+1) (le_add_right (roM2 + 1) 1)
     simp only [reduceSubDiff] at urom2
-    simp only [isSome.bind urom2, Option.bind_some]
+    simp only [Option.isSome.bind urom2, Option.bind_some]
     replace iihh := @iihh
       urom2
       (a.max ((usen O cf (s - roM2) (Nat.pair x.l (roM2 + 1 + (x.r + 1)))).get urom))
@@ -698,7 +698,7 @@ else
     ac_nf at this ⊢
     simp only [reduceAdd] at this ⊢
     exact usen_mono_dom (show k-1 ≤ k from sub_le k 1) (en2un this)
-  simp only [isSome.bind this, Option.some.injEq]
+  simp only [Option.isSome.bind this, Option.some.injEq]
   apply congrArg
   apply congrArg
   have kkk : k=k-1+1 :=  nrf_aux usenindtdom
@@ -763,7 +763,7 @@ theorem usen_rfind_prop2 {O k x y cf} :
     generalize base'=base
     clear base'
     induction (evaln O (k + 1) cf.rfind' x).get h2 - x.r generalizing base h2 x with
-    | zero => simp [isSome.bind <| en2un h1]
+    | zero => simp [Option.isSome.bind <| en2un h1]
     | succ roM1 ih =>
       simp? (config := { singlePass := true }) [rr_indt] says
         simp (config := { singlePass := true }) only [Nat.add_eq_zero_iff, add_tsub_cancel_right,
@@ -773,7 +773,7 @@ theorem usen_rfind_prop2 {O k x y cf} :
       intro hro h
       have usenindtdom : (usen O cf.rfind' k ⟪x.l, x.r+1⟫).isSome := by
         contrapose h; simp at h; simp [h]
-      simp only [isSome.bind usenindtdom, Option.some.injEq, add_tsub_cancel_right] at h ih
+      simp only [Option.isSome.bind usenindtdom, Option.some.injEq, add_tsub_cancel_right] at h ih
       have evalnindtdom := un2en usenindtdom
       have nrfindt := nrf usenindtdom
       rcases nrfind'_obtain_prop' h2 with ⟨nrop1, nrop2, nrop3, nrop4⟩
@@ -783,7 +783,7 @@ theorem usen_rfind_prop2 {O k x y cf} :
         fun j a ↦ en2un (nrop2 j a)
       have ro_dom : (usen O cf (k - roM1) ⟪x.l, roM1 + 1 + x.r⟫).isSome := by
         simpa using nrop2' (roM1+1) (le_rfl)
-      simp only [isSome.bind ro_dom, Option.bind_some]
+      simp only [Option.isSome.bind ro_dom, Option.bind_some]
       have aux0 : (evaln O (k + 1) cf ⟪x.l, x.r+1⟫).isSome :=
         Option.isSome_of_mem (evaln_mono (le_add_right k 1) (Option.get_mem nrfindt.right.right))
       replace ih := @ih ⟪x.l, x.r+1⟫ aux0
@@ -824,7 +824,7 @@ theorem usen_rfind_prop2 {O k x y cf} :
     generalize base' = base
     clear base'
     induction (evaln O (k + 1) cf.rfind' x).get h2 - x.r generalizing base h2 x with
-    | zero => simp [isSome.bind <| en2un h1]
+    | zero => simp [Option.isSome.bind <| en2un h1]
     | succ roM1 ih =>
       intro rwro h
       simp (config := { singlePass := true }) only [reversed_range_indt, forIn_cons] at h
@@ -837,7 +837,7 @@ theorem usen_rfind_prop2 {O k x y cf} :
       have ro_dom : (usen O cf (k - roM1) ⟪x.l,roM1 + 1 + x.r⟫).isSome := by
         have := nrop2' (roM1+1) (le_rfl)
         simpa using this
-      simp only [isSome.bind ro_dom, Option.bind_some] at h
+      simp only [Option.isSome.bind ro_dom, Option.bind_some] at h
       have usenindtdom : (usen O cf.rfind' k ⟪x.l, x.r+1⟫).isSome := by
         have := nrop4 1 (le_add_left 1 roM1)
         rw [add_comm]
@@ -862,7 +862,7 @@ theorem usen_rfind_prop2 {O k x y cf} :
       rw [← ih]
       have := usen_rfind_prop2_indt_helper2
         O k cf roM1 x (evaln_rfind_base h2) base usenindtdom nrop1 nrop2 nrop3 nrop6 aux0
-      simp [isSome.bind usenindtdom, ←this]
+      simp [Option.isSome.bind usenindtdom, ←this]
 
 theorem usen_rfind_prop2' {O cf k x} (h : (usen O (rfind' cf) (k + 1) x).isSome) :
     (usen O cf.rfind' (k + 1) x).get h = (do
