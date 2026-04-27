@@ -49,9 +49,7 @@ open Classical in
 theorem c_ifz1_total {O c a b} (hc : code_total O c) : code_total O (c_ifz1 c a b) := by
   intro x
   simp only [c_ifz1_ev hc]
-  split
-  next h => simp_all only [Part.some_dom]
-  next h => simp_all only [Part.some_dom]
+  split <;> simp_all only [Part.some_dom]
 end ifz1
 
 section ite
@@ -66,9 +64,7 @@ open Classical in
   have d := @c_ifz1_total O c a.c2n b.c2n hc x
   simp only [Part.Dom.bind d, Part.bind_some, pair_l, pair_r]
   simp only [c_ifz1_ev hc]
-  split
-  next h => simp only [Part.get_some, n2c_c2n]
-  next h => simp only [Part.get_some, n2c_c2n]
+  split <;> simp only [Part.get_some, n2c_c2n]
 theorem exists_code_nat {O : ℕ → ℕ} {f : ℕ →. ℕ} :
     RecursiveIn O f ↔ ∃ c : ℕ , eval O c.n2c = f := by
   rw [@exists_code O f]

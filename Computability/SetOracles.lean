@@ -624,8 +624,6 @@ theorem Cin_iff_CEin_CEin' {A B} : A≤ᵀB ↔ (CEin B A ∧ CEin B Aᶜ) := by
 
 end computably_enumerable
 
-
-
 section join
 
 def join (A B : Set ℕ) : Set ℕ := {2*x | x∈A} ∪ {2*x+1 | x∈B}
@@ -647,12 +645,6 @@ theorem join_upper (A B : Set ℕ) : A ≤ᵀ (A ∨ B) ∧ B ≤ᵀ (A ∨ B) :
     simp [eval, join]
     grind
 
-theorem bodd_false_mod2 {n} (h : n.bodd = false) : n % 2 = 0 := by
-  rw [← codes_aux_aux_0 h]
-  exact mul_mod_right 2 n.div2
-theorem bodd_true_mod2 {n} (h : n.bodd = true) : n % 2 = 1 := by
-  rw [← codes_aux_aux_1 h]
-  omega
 open Classical in
 theorem join_least (A B C : Set ℕ) : A ≤ᵀ C → B ≤ᵀ C → (A ∨ B) ≤ᵀ C := by
   intro h1 h2

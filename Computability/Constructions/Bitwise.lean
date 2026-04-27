@@ -56,22 +56,22 @@ def c_bitwise (c : Code) := c_list_getLastI.comp ((c_bitwise_aux c).comp₂ (c_c
   unfold c_bitwise_aux
   extract_lets;
   expose_names;
-  have cpiP1 : code_prim iP1 := by apply_cp
   have cpcomp_hist : code_prim comp_hist := by apply_cp
-  have cpn : code_prim n := by apply_cp
-  have cpm : code_prim m := by apply_cp
-  have cpn' : code_prim n' := by apply_cp
-  have cpm' : code_prim m' := by apply_cp
-  have cpb₁ : code_prim b₁ := by apply_cp
-  have cpb₂ : code_prim b₂ := by apply_cp
-  have cpr : code_prim r := by apply_cp
+  have cpiP1 : code_prim iP1 := by apply_cp
+  have cpn   : code_prim n   := by apply_cp
+  have cpm   : code_prim m   := by apply_cp
+  have cpn'  : code_prim n'  := by apply_cp
+  have cpm'  : code_prim m'  := by apply_cp
+  have cpb₁  : code_prim b₁  := by apply_cp
+  have cpb₂  : code_prim b₂  := by apply_cp
+  have cpr   : code_prim r   := by apply_cp
   apply_cp 50
-lemma lt_pair_of_lt_lt {a c b d} (ha : a < c) (hb : b < d) : ⟪a,b⟫ < ⟪c,d⟫ := by
-  have a0 : ⟪a,b⟫ < ⟪c,b⟫ := by exact Nat.pair_lt_pair_left b ha
-  have a1 : ⟪c,b⟫ < ⟪c,d⟫ := by exact Nat.pair_lt_pair_right c hb
+private lemma lt_pair_of_lt_lt {a c b d} (ha : a < c) (hb : b < d) : ⟪a,b⟫ < ⟪c,d⟫ := by
+  have a0 : ⟪a,b⟫ < ⟪c,b⟫ := Nat.pair_lt_pair_left b ha
+  have a1 : ⟪c,b⟫ < ⟪c,d⟫ := Nat.pair_lt_pair_right c hb
   exact Nat.lt_trans a0 a1
-lemma c_bitwise_evp_rec_bounds {n m : ℕ} : ⟪(n + 1) / 2,(m + 1) / 2⟫ < ⟪n + 1,m + 1⟫ := by
-  exact lt_pair_of_lt_lt (Nat.div_lt_self' n 0) (Nat.div_lt_self' m 0)
+lemma c_bitwise_evp_rec_bounds {n m : ℕ} : ⟪(n + 1) / 2,(m + 1) / 2⟫ < ⟪n + 1,m + 1⟫ :=
+  lt_pair_of_lt_lt (Nat.div_lt_self' n 0) (Nat.div_lt_self' m 0)
 theorem c_bitwise_evp_0_0 {O c} :
     evalp O (c_bitwise c) ⟪0, 0⟫ =
     Nat.bitwise (fun a b => n2b <| evalp O c ⟪b2n a, b2n b⟫) 0 0 := by
@@ -165,7 +165,7 @@ theorem c_bitwise_evp_n_m {O c n m} : evalp O (c_bitwise c) ⟪n+1,m+1⟫ = (
   induction nm using Nat.strong_induction_on with
   | h nm ih =>
   let n := nm.l; let m := nm.r
-  have nm_eq : nm = Nat.pair n m := by exact Eq.symm pair_lr
+  have nm_eq : nm = Nat.pair n m := Eq.symm pair_lr
   rw [nm_eq]
   match hn_val : n, hm_val : m with
   | 0,    0    => simp [c_bitwise_evp_0_0]
