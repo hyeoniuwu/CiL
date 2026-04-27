@@ -86,7 +86,7 @@ theorem c_bitwise_evp_0_m {O c m} :
   unfold c_bitwise; unfold c_bitwise_aux;
   lift_lets; extract_lets; expose_names
   let k := ⟪0, m+1⟫ - 1
-  have hkP1: k+1 = ⟪0, m+1⟫ := Nat.sub_add_cancel pair_nonzero_right_pos
+  have hkP1: k+1 = ⟪0, m+1⟫ := Nat.sub_add_cancel pair_pos_of_right
   rw [← hkP1]
   -- more unfolding
   let (eq := hinp) inp := evalp O (c_bitwise_aux c) ⟪17, k⟫
@@ -105,7 +105,7 @@ theorem c_bitwise_evp_n_0 {O c n} :
   unfold c_bitwise; unfold c_bitwise_aux;
   lift_lets; extract_lets; expose_names
   let k := ⟪n+1, 0⟫ - 1
-  have hkP1: k+1 = ⟪n+1, 0⟫ := Nat.sub_add_cancel pair_nonzero_left_pos
+  have hkP1: k+1 = ⟪n+1, 0⟫ := Nat.sub_add_cancel pair_pos_of_left
   rw [← hkP1]
   -- more unfolding
   let (eq := hinp) inp := evalp O (c_bitwise_aux c) ⟪17, k⟫
@@ -129,7 +129,7 @@ theorem c_bitwise_evp_n_m {O c n m} : evalp O (c_bitwise c) ⟪n+1,m+1⟫ = (
   unfold c_bitwise; unfold c_bitwise_aux;
   lift_lets; extract_lets; expose_names
   let k := ⟪n+1, m+1⟫ - 1
-  have kP1_gt_0 : ⟪n+1, m+1⟫ > 0 := pair_nonzero_right_pos
+  have kP1_gt_0 : ⟪n+1, m+1⟫ > 0 := pair_pos_of_right
   have hkP1: k+1 = ⟪n+1, m+1⟫ := by
     exact Nat.sub_add_cancel kP1_gt_0
   rw [←hkP1]
@@ -155,7 +155,7 @@ theorem c_bitwise_evp_n_m {O c n m} : evalp O (c_bitwise c) ⟪n+1,m+1⟫ = (
     have : ⟪n',m'⟫ ≤ k := by
       simp only [k]
       apply Nat.le_of_lt_succ
-      simpa [Nat.sub_add_cancel pair_nonzero_right_pos] using c_bitwise_evp_rec_bounds
+      simpa [Nat.sub_add_cancel pair_pos_of_right] using c_bitwise_evp_rec_bounds
     simp [this]
   simp [hn, hm, hb₁, hb₂, hr]
 @[simp, evp_simps] theorem c_bitwise_evp {O c} :

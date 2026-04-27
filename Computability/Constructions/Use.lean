@@ -124,11 +124,9 @@ theorem c_usen_evp_aux_0_np1 {O x n} : evalp O c_usen ⟪x, n+1, 0⟫ = o2n (use
   unfold c_usen; unfold c_usen_aux
   lift_lets; extract_lets; expose_names
   let k := ⟪n+1, 0⟫-1
-  have kP1_gt_0 : ⟪n+1, 0⟫>0 := by
-    apply pair_l_gt0
-    exact zero_lt_succ n
-  have hkP1: k+1 = ⟪n+1, 0⟫ := by exact Nat.sub_add_cancel kP1_gt_0
-  rw [←hkP1]
+  have hkP1: k+1 = ⟪n+1, 0⟫ :=
+    Nat.sub_add_cancel <| pair_pos_of_left_pos <| zero_lt_succ n
+  rw [← hkP1]
   let (eq := hinp) inp := (evalp O c_usen_aux ⟪17, k⟫)
   unfold c_usen_aux at hinp; lift_lets at hinp
   let (eq := hcri) cri := ⟪17, k, inp⟫
@@ -143,11 +141,9 @@ theorem c_usen_evp_aux {O code x s} (hcode_val : code ≤ 4) :
   unfold c_usen; unfold c_usen_aux
   lift_lets; extract_lets; expose_names
   let k := ⟪code, s+1⟫-1
-  have kP1_gt_0 : ⟪code, s+1⟫>0 := by
-    apply pair_r_gt0
-    exact zero_lt_succ s
-  have hkP1: k+1 = ⟪code, s+1⟫ := by exact Nat.sub_add_cancel kP1_gt_0
-  rw [←hkP1]
+  have hkP1: k+1 = ⟪code, s+1⟫ :=
+    Nat.sub_add_cancel <| pair_pos_of_right_pos <| zero_lt_succ s
+  rw [← hkP1]
   let (eq := hinp) inp := (evalp O c_usen_aux ⟪17, k⟫)
   unfold c_usen_aux at hinp; lift_lets at hinp
   let (eq := hcri) cri := ⟪17, k, inp⟫
@@ -259,10 +255,8 @@ theorem c_usen_evp_aux_nMod4 {O x n s} :
   unfold c_usen; unfold c_usen_aux
   lift_lets; extract_lets; expose_names
   simp only [evp_simps]
-  have kP1_gt_0 : Nat.pair ((n+4)+1) (s+1)>0 := pair_nonzero_right_pos
-  have hkP1: k+1=⟪(n+4)+1, s+1⟫ := by
-    exact Nat.sub_add_cancel kP1_gt_0
-  rw [←hkP1]
+  have hkP1: k+1=⟪(n+4)+1, s+1⟫ := Nat.sub_add_cancel pair_pos_of_right
+  rw [← hkP1]
   have hinp : inp = (evalp O c_usen_aux ⟪17, k⟫) := rfl
   unfold c_usen_aux at hinp; lift_lets at hinp
   have hcri : ⟪17, k, inp⟫ = cri := rfl

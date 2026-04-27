@@ -19,44 +19,35 @@ open Nat Oracle.Single.Code
 
 -- general helper functions
 section pair
-notation "⟪"x","y"⟫" => Nat.pair x y
-notation "⟪"x","y"⟫" => Nat.pair <$> x <*> y
-notation "⟪"x","y","z"⟫" => Nat.pair x (Nat.pair y z)
-notation "⟪"x","y","z"⟫" => Nat.pair <$> x <*> (Nat.pair <$> y <*> z)
+notation "⟪"x","y"⟫"         => Nat.pair x y
+notation "⟪"x","y"⟫"         => Nat.pair <$> x <*> y
+notation "⟪"x","y","z"⟫"     => Nat.pair x (Nat.pair y z)
+notation "⟪"x","y","z"⟫"     => Nat.pair <$> x <*> (Nat.pair <$> y <*> z)
 notation "⟪"x","y","z","w"⟫" => Nat.pair (Nat.pair x y) (Nat.pair z w)
 notation "⟪"x","y","z","w"⟫" =>
   Nat.pair <$> (Nat.pair <$> x <*> y) <*> (Nat.pair <$> z <*> w)
 def Nat.l (n : ℕ) := n.unpair.1
 def Nat.r (n : ℕ) := n.unpair.2
--- pair_l and pair_r are useful for evp_simps particularly in cov_rec proofs
+-- pair_l and pair_r are useful for evp_simps particularly in cov_rec proofs in
+-- `Computability.Constructions.CovRec.lean`
 @[simp, evp_simps] theorem pair_l {x y} : (Nat.pair x y).l = x := by simp [Nat.l]
 @[simp, evp_simps] theorem pair_r {x y} : (Nat.pair x y).r = y := by simp [Nat.r]
 @[simp] theorem pair_lr {x} : (Nat.pair x.l x.r) = x := by simp [Nat.r, Nat.l]
 @[simp] theorem unpair1_to_l {n : ℕ} : (n.unpair.1) = n.l := by simp [Nat.l]
 @[simp] theorem unpair2_to_r {n : ℕ} : (n.unpair.2) = n.r := by simp [Nat.r]
 @[simp, reducible] def Nat.unpaired2 {α} (f : ℕ → ℕ → α) (n : ℕ) : α := f n.l n.r
-@[simp] theorem pair_nonzero_right_pos {x s : ℕ} : ⟪x, s+1⟫ > 0 := by
+@[simp] theorem pair_pos_of_right {x s : ℕ} : ⟪x, s+1⟫ > 0 := by
   apply zero_lt_of_ne_zero
   rewrite [show 0 = Nat.pair 0 0 from rfl]
   simp [Nat.pair_eq_pair]
-@[simp] theorem pair_nonzero_left_pos {x s : ℕ} : ⟪s+1, x⟫ > 0 := by
+@[simp] theorem pair_pos_of_left {x s : ℕ} : ⟪s+1, x⟫ > 0 := by
   apply zero_lt_of_ne_zero
   rewrite [show 0 = Nat.pair 0 0 from rfl]
   simp [Nat.pair_eq_pair]
-theorem pair_r_gt0 {x y} : x>0→(Nat.pair y x)>0 := by
-  contrapose
-  simp only [gt_iff_lt, not_lt, nonpos_iff_eq_zero]
-  intro h
-  rw [show x=(Nat.pair y x).unpair.2 from by simp [unpair_pair]]
-  rw [h]
-  simp [unpair_zero]
-theorem pair_l_gt0 {x y} : x>0→(Nat.pair x y)>0 := by
-  contrapose
-  simp only [gt_iff_lt, not_lt, nonpos_iff_eq_zero]
-  intro h
-  rw [show x=(Nat.pair x y).unpair.1 from by simp [unpair_pair]]
-  rw [h]
-  simp [unpair_zero]
+theorem pair_pos_of_right_pos {x y} (h : x > 0) : (Nat.pair y x) > 0 := by
+  rw [(Nat.sub_eq_iff_eq_add h).mp rfl]; simp
+theorem pair_pos_of_left_pos {x y} (h : x > 0) : (Nat.pair x y) > 0 := by
+  rw [(Nat.sub_eq_iff_eq_add h).mp rfl]; simp
 end pair
 
 section list

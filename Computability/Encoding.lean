@@ -84,13 +84,10 @@ A decoder for `Oracle.Single.Code.c2n`, taking any ℕ to the `Oracle.Single.Cod
 
 Procedure for decoding:
 
-If n ≤ 4. trivial.
+If `n ≤ 4`. trivial.
 
-Otherwise if n≥5, check n%4. The 4 possible values correspond to
-pair
-comp
-prec
-rfind'
+Otherwise if `n ≥ 5`, check `n % 4`. The 4 possible values correspond to either
+`pair`, `comp`, `prec`, or `rfind'`.
 -/
 def n2c : ℕ → Code
 | 0 => zero

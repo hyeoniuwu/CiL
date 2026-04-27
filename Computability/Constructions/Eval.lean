@@ -195,9 +195,9 @@ theorem c_evaln_evp_aux_0_np1 {O x n} :
   unfold c_evaln; unfold c_evaln_aux
   lift_lets; extract_lets; expose_names
   let k := ((Nat.pair (n+1) 0))-1
-  have kP1_gt_0 : (Nat.pair (n+1) 0)>0 := pair_l_gt0 <| zero_lt_succ n
-  have hkP1: k+1=((Nat.pair (n+1) 0)) := Nat.sub_add_cancel kP1_gt_0
-  rw [←hkP1]
+  have hkP1: k+1=((Nat.pair (n+1) 0)) :=
+    Nat.sub_add_cancel <| pair_pos_of_left_pos <| zero_lt_succ n
+  rw [← hkP1]
   -- `cri` is the input that is fed into the recursive code in cov_rec.
   -- we rewrite everything into `cri` where possible to keep expressions in the
   -- goal short.
@@ -215,11 +215,9 @@ theorem c_evaln_evp_aux {O code x s} (hcode_val : code ≤ 4) :
   unfold c_evaln; unfold c_evaln_aux
   lift_lets; extract_lets; expose_names
   let k := ⟪code, s+1⟫-1
-  have kP1_gt_0 : ⟪code, s+1⟫>0 := by
-    apply pair_r_gt0
-    exact zero_lt_succ s
-  have hkP1: k+1=⟪code, s+1⟫ := by exact Nat.sub_add_cancel kP1_gt_0
-  rw [←hkP1]
+  have kP1_gt_0 : ⟪code, s+1⟫>0 := pair_pos_of_right_pos <| zero_lt_succ s
+  have hkP1: k+1=⟪code, s+1⟫ := Nat.sub_add_cancel kP1_gt_0
+  rw [← hkP1]
   -- we will simplify the input in the recursive case to `cri`.
   let (eq := hinp) inp := evalp O c_evaln_aux ⟪17, k⟫
   unfold c_evaln_aux at hinp; lift_lets at hinp
@@ -320,7 +318,7 @@ lemma c_evaln_bounds_0 {n} : n.div2.div2 < n+5 := by
   exact lt_of_le_of_lt
     (le_trans (Nat.div_le_self _ _) (Nat.div_le_self _ _))
     (Nat.succ_le_succ (Nat.le_add_right _ _))
-lemma c_evaln_bounds_aux {n s} : Nat.pair (n + 4 + 1) (s+1) ≥ 1 := by exact pair_nonzero_right_pos
+lemma c_evaln_bounds_aux {n s} : Nat.pair (n + 4 + 1) (s+1) ≥ 1 := pair_pos_of_right
 lemma c_evaln_bounds_left {n s} :
     Nat.pair n.div2.div2.l (s + 1) ≤ Nat.pair (n + 4 + 1) (s + 1) - 1 := by
   apply le_of_lt_succ
@@ -394,10 +392,8 @@ theorem c_evaln_evp_aux_nMod4 {O x n s} :
   lift_lets; extract_lets; expose_names
   unfold c_evaln; unfold c_evaln_aux
   lift_lets; extract_lets; expose_names
-  have kP1_gt_0 : ⟪(n+4)+1, s+1⟫ > 0 := pair_nonzero_right_pos
-  have hkP1: k+1 = ⟪(n+4)+1, s+1⟫ := by
-    exact Nat.sub_add_cancel kP1_gt_0
-  rw [←hkP1]
+  have hkP1: k+1 = ⟪(n+4)+1, s+1⟫ := Nat.sub_add_cancel pair_pos_of_right
+  rw [← hkP1]
   -- we will simplify the input in the recursive case to `cri`.
   let (eq := hinp) inp := evalp O c_evaln_aux ⟪17, k⟫
   unfold c_evaln_aux at hinp; lift_lets at hinp
