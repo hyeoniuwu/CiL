@@ -22,7 +22,7 @@ section rfindOpt
 open Oracle.Single
 namespace Oracle.Single.Code
 
-theorem rfind'_eqv_rfind {O c x} :
+theorem rfind'_eqv_rfind {O : ℕ → ℕ} {c : Code} {x : ℕ} :
     (Nat.unpaired fun a m =>
       (Nat.rfind fun n => (fun m => m = 0) <$>
         eval O c (Nat.pair a (n + m))).map (· + m)) (Nat.pair x 0) =
@@ -78,7 +78,7 @@ def c_ppred := c_rfind (c_if_eq'.comp₂ left (succ.comp right))
     aesop
 
 def c_ofOption (c : Code) := c_ppred.comp c
-theorem c_ofOption_ev {O c x} (hc1 : code_total O c) :
+theorem c_ofOption_ev {O : ℕ → ℕ} {c : Code} {x : ℕ} (hc1 : code_total O c) :
     eval O (c_ofOption c) x = ↑(n2o ((eval O c x).get (hc1 x))) := by
   unfold c_ofOption
   simp only [ev_simps]
@@ -88,7 +88,7 @@ theorem c_ofOption_ev {O c x} (hc1 : code_total O c) :
   | succ n => simp;
 
 def c_rfindOpt (c : Code) := (c_ofOption c).comp₂ c_id (c_rfind (c_isSome.comp (c)))
-@[simp, ev_simps] theorem c_rfindOpt_ev {O c x} (hc1 : code_total O c) :
+@[simp, ev_simps] theorem c_rfindOpt_ev {O : ℕ → ℕ} {c : Code} {x : ℕ} (hc1 : code_total O c) :
     eval O (c_rfindOpt c) x =
     Nat.rfindOpt (fun y => n2o <| (eval O c (Nat.pair x y)).get (hc1 (Nat.pair x y))) := by
   unfold c_rfindOpt

@@ -687,7 +687,7 @@ end usen
 section use
 namespace Oracle.Single.Code
 def c_use := (c_rfindOpt (c_usen.comp₃ (right.comp left) (left.comp left) right))
-@[simp, ev_simps] theorem c_use_ev {O c x} : eval O c_use (Nat.pair c x) = use O c.n2c x := by
+@[simp, ev_simps] theorem c_use_ev {O : ℕ → ℕ} {c : Code} {x : ℕ} : eval O c_use (Nat.pair c x) = use O c.n2c x := by
   simp only [c_use, comp₃, comp₂]
   have : code_total O ((c_usen.comp ((right.comp left).pair ((left.comp left).pair right)))) := by
     apply prim_total

@@ -757,14 +757,16 @@ end evaln
 section eval
 namespace Oracle.Single.Code
 def c_eval := (c_rfindOpt (c_evaln.comp₃ (right.comp left) (left.comp left) right))
-@[simp, ev_simps] theorem c_eval_ev {O c x} : eval O c_eval (Nat.pair c x) = eval O c.n2c x := by
+@[simp, ev_simps] theorem c_eval_ev {O : ℕ → ℕ} {c x : ℕ} :
+    eval O c_eval (Nat.pair c x) = eval O c.n2c x := by
   simp only [c_eval, comp₃, comp₂]
   have : code_total O ((c_evaln.comp ((right.comp left).pair ((left.comp left).pair right)))) := by
     apply prim_total; apply_cp
   simp only [c_rfindOpt_ev this]
   rw [eval_eq_rfindOpt]
   simp [eval,Seq.seq]
-@[simp, ev_simps] theorem c_eval_ev' {O : ℕ → ℕ} : eval O c_eval = fun x => eval O (n2c x.l) x.r := by
+@[simp, ev_simps] theorem c_eval_ev' {O : ℕ → ℕ} :
+    eval O c_eval = fun x => eval O (n2c x.l) x.r := by
   funext x
   rw (config := {occs := .pos [1]}) [show x = ⟪x.l, x.r⟫ from by simp]
   exact c_eval_ev

@@ -1015,12 +1015,12 @@ theorem usen_sound {O : ℕ → ℕ} : ∀ {c s n x}, x ∈ usen O c s n → x �
 end usen_sound
 
 section usen_complete
-theorem eval_dom_imp_evaln {O c x} (h : (eval O c x).Dom) : ∃ s, (evaln O s c x).isSome := by
+theorem eval_dom_imp_evaln {O : ℕ → ℕ} {c : Code} {x : ℕ} (h : (eval O c x).Dom) : ∃ s, (evaln O s c x).isSome := by
   rcases evaln_complete.mp (Part.get_mem h) with ⟨k, hk⟩
   use k
   exact Option.isSome_of_mem hk
 
-theorem use_dom_iff_eval_dom {O c x} : (use O c x).Dom ↔ (eval O c x).Dom := by
+theorem use_dom_iff_eval_dom {O : ℕ → ℕ} {c : Code} {x : ℕ} : (use O c x).Dom ↔ (eval O c x).Dom := by
   constructor
   · induction c generalizing x with
     | zero => exact id
@@ -1045,8 +1045,8 @@ theorem use_dom_iff_eval_dom {O c x} : (use O c x).Dom ↔ (eval O c x).Dom := b
   rcases eval_dom_imp_evaln h with ⟨s, hs⟩
   exact Part.mem_imp_dom <| usen_sound <| Option.get_mem <| en2un hs
 
-abbrev e2u {O c x} : (eval O c x).Dom → (use O c x).Dom := use_dom_iff_eval_dom.mpr
-abbrev u2e {O c x} : (use O c x).Dom → (eval O c x).Dom := use_dom_iff_eval_dom.mp
+abbrev e2u {O : ℕ → ℕ} {c : Code} {x : ℕ} : (eval O c x).Dom → (use O c x).Dom := use_dom_iff_eval_dom.mpr
+abbrev u2e {O : ℕ → ℕ} {c : Code} {x : ℕ} : (use O c x).Dom → (eval O c x).Dom := use_dom_iff_eval_dom.mp
 theorem use_rfind_prop {O cf n} (hu : (use O (rfind' cf) n).Dom) :
     ∀ j ≤ rfind'_obtain (u2e hu),
     (use O cf (Nat.pair n.l (n.r+j))).Dom := by

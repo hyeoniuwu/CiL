@@ -49,7 +49,7 @@ Given an input of the form ``⟪x, i, list⟫``, the code `c_efl_prec c` compute
 def c_efl_prec := fun c ↦ c_list_concat.comp (pair (c_id.comp (right.comp right)) c)
 @[cp] theorem c_efl_prec_prim {c} (h : code_prim c) : code_prim <| c_efl_prec c := by
   unfold c_efl_prec; apply_cp
-@[simp, evp_simps] theorem c_efl_prec_evp {O c x} :
+@[simp, evp_simps] theorem c_efl_prec_evp {O : ℕ → ℕ} {c : Code} {x : ℕ} :
     evalp O (c_efl_prec c) x = l2n ((n2l x.r.r).concat (evalp O c x)) := by
   simp [c_efl_prec]
 end Oracle.Single.Code

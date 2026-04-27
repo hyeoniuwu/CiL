@@ -41,9 +41,16 @@ notation : 10000 f"⌜" => jump f
 
 namespace Oracle.Single.Code
 
+section jump_decode
+/--
+The code `c_jump_decode` is intended for use where the output of a query to `K0`
+has to be "decoded".
+
+(Note that `K0` encodes Part.none with 0, and Part.some x with x+1.)
+-/
 def c_jump_decode (c : Code) := c_ite c c_diverge (c_pred.comp c)
 open Classical in
-@[simp, ev_simps] theorem c_jump_decode_ev {O c x} (hc : code_total O c) :
+@[simp, ev_simps] theorem c_jump_decode_ev {O : ℕ → ℕ} {c : Code} {x : ℕ} (hc : code_total O c) :
     eval O (c_jump_decode c) x =
     if eval O c x = Part.some 0 then Part.none else (Nat.pred <$> eval O c x) := by
   simp only [c_jump_decode, ev_simps, Part.map_eq_map]
@@ -61,7 +68,12 @@ open Classical in
     fun x => if eval O c x = Part.some 0 then Part.none else (Nat.pred <$> eval O c x) := by
   funext xs
   exact c_jump_decode_ev hc
+end jump_decode
 
+/--
+We can retrieve the value of `O x` from `(K0 O) x` by
+decoding it with `c_jump_decode`.
+-/
 theorem le_K0 (O : ℕ → ℕ) :  O ≤ᵀᶠ (K0 O) := by
   apply exists_code.mpr  -- changes goal to: ∃ c, eval (K0 O) c = O
   let q := oracle.comp (pair (c_const oracle) c_id)
@@ -71,12 +83,21 @@ theorem le_K0 (O : ℕ → ℕ) :  O ≤ᵀᶠ (K0 O) := by
 theorem le_jump (O : ℕ → ℕ) : O ≤ᵀᶠ O⌜ := le_K0 O
 
 open Classical in
+/--
+We use the fact that `K O x = K0 O ⟪x, x⟫`.
+-/
 theorem K_le_K0 (O : ℕ → ℕ) : (K O) ≤ᵀᶠ (K0 O) := by
   apply exists_code.mpr
   use oracle.comp <| pair c_id c_id
   simpa [ev_simps, Seq.seq] using by exact rfl
 
 open Classical in
+/--
+We wish to calculate `K0 O x` i.e. `[x.l : O](x.r)` with access to `K`.
+We use `c_ev_const`, which returns the code of the function that
+calculates `[x.l : O](x.r)` for all inputs.
+By querying this to `K`, we are done.
+-/
 theorem K0_le_K (O : ℕ → ℕ) : (K0 O) ≤ᵀᶠ (K O) := by
   apply exists_code.mpr
   let compute := oracle.comp c_ev_const
@@ -85,30 +106,42 @@ theorem K0_le_K (O : ℕ → ℕ) : (K0 O) ≤ᵀᶠ (K O) := by
   funext x
   rw [eval_total_comp compute_total]
   simp [eval, c_ev_const_ev']
+
 theorem K_eq_K0 {O : ℕ → ℕ} : (K O)  ≡ᵀᶠ (K0 O) := ⟨K_le_K0 O,K0_le_K O⟩
 theorem K0_eq_K {O : ℕ → ℕ} : (K0 O) ≡ᵀᶠ (K O) := K_eq_K0.symm
-theorem le_K (O : ℕ → ℕ) : O ≤ᵀᶠ (K O) := TuringReducible.trans (le_K0 O) (K0_le_K O)
+theorem le_K (O : ℕ → ℕ) : O ≤ᵀᶠ (K O) := .trans (le_K0 O) (K0_le_K O)
 
 open Classical in
+/--
+To show that the jump of `O` is not reducible to `O`,
+suppose bwoc it is.
+
+Then, we may construct a code `g` that diverges/converges if its
+input converges/diverges on itself.
+
+A contradiction arises if we ask whether `g` converges on itself.
+-/
 theorem not_jump_le (O : ℕ → ℕ) : ¬(O⌜ ≤ᵀᶠ O) := by
   intro h
-  rcases exists_code.mp h with ⟨c_jO,hc_jO⟩
-  let g := c_ite (c_jO.comp (pair c_id c_id)) zero c_diverge
+  rcases exists_code.mp h with ⟨c_jump, hc_jump⟩
+  let g := c_ite (c_jump.comp (pair c_id c_id)) zero c_diverge
   have fg :
-      eval O g =
-      fun (x : ℕ) => if (O⌜) (Nat.pair x x) = 0
-        then Part.some 0
-        else Part.none := by
+      eval O g = fun (x : ℕ) =>
+      if (O⌜) (Nat.pair x x) = 0 then
+        Part.some 0
+      else
+        Part.none := by
     unfold g
     funext x
-    have : code_total O (c_jO.comp (pair c_id c_id)) := by intro x; simp [eval,hc_jO,Seq.seq]
-    simp [c_ite_ev this, eval, hc_jO, Seq.seq]
+    have : code_total O (c_jump.comp (pair c_id c_id)) := by
+      intro x; simp [eval, hc_jump, Seq.seq]
+    simp [c_ite_ev this, eval, hc_jump, Seq.seq]
   cases Classical.em (eval O g g).Dom with
   | inl hh => have hh2 := hh; rw [fg] at hh2; simp [hh] at hh2
   | inr hh => have hh2 := hh; rw [fg] at hh2; simp [hh] at hh2
 
 theorem not_K_le (O : ℕ → ℕ) : ¬(K O ≤ᵀᶠ O) :=
-  fun h => not_jump_le O (TuringReducible.trans (K0_le_K O) h)
+  fun h => not_jump_le O (.trans (K0_le_K O) h)
 
 theorem lt_K0 {O : ℕ → ℕ} : O <ᵀᶠ (K0 O) := ⟨le_jump O,not_jump_le O⟩
 
