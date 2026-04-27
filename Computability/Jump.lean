@@ -21,17 +21,24 @@ involving the jump.
 
 - `K0_eq_K` : asserts that K and K0 are of the same degree
 - `not_jump_le` : asserts that the jump of an oracle is strictly above the oracle
-
 -/
 
 open Computability
 open Oracle.Single
 
 open Classical in
+/--
+An analogue of the K₀ operator for total-function oracles, which encodes
+computation values on top of whether or not they converge.
+-/
 @[simp] noncomputable def K0 (O : ℕ → ℕ) : ℕ → ℕ := fun n =>
   let part := eval O n.l n.r
   if h : part.Dom then (part.get h) + 1 else 0
 open Classical in
+/--
+An analogue of the K operator for total-function oracles, which encodes
+computation values on top of whether or not they converge.
+-/
 @[simp] noncomputable def K (O : ℕ → ℕ) : ℕ → ℕ := fun n =>
   let part := eval O n n
   if h : part.Dom then (part.get h) + 1 else 0
