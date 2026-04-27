@@ -196,7 +196,7 @@ lemma split_lower {j k s X} (h : ¬ fs_in X.r j) (hk : k ≤ j) :
   induction k with
   | zero => simp at hk; assumption
   | succ k ih =>
-    simp [rr_indt, -foldr_reverse]
+    simp [reversed_range_indt, -foldr_reverse]
     have kk : k ≤ j := Nat.le_of_succ_le hk
     have kk2 : k< j := hk
     have := @step_preserves_R_not_mem _ k s _ (ih kk) kk2
@@ -280,7 +280,7 @@ lemma RiA_foldr {X s} : RiA X s → ∀ j, RiA (foldr (step s) X (range j).rever
   induction j with
   | zero => simpa
   | succ j ih =>
-    simpa [rr_indt, -foldr_reverse] using RiA_step _ s ih j
+    simpa [reversed_range_indt, -foldr_reverse] using RiA_step _ s ih j
 lemma RiA_C : ∀ s, RiA (C s) s := by
   intro s
   induction s with

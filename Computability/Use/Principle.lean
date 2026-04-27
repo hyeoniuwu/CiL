@@ -54,6 +54,34 @@ open Oracle.Single.Code
 set_option linter.style.cdot false
 namespace Oracle.Single.Code
 
+-- lemmas used just for this file.
+section private_lemmas
+private lemma rr_lemma {l' x} (h : ∃ l'' : List ℕ, l'' ++ l' = (range x).reverse) :
+    ∃ y, l' = (range y).reverse ∧ y ≤ x := by
+  rcases h with ⟨h1,h2⟩
+  induction h1 generalizing x with
+  | nil =>
+    simp at h2
+    aesop
+  | cons head tail ih =>
+    simp only [cons_append] at h2
+    have : x>0 := by
+      grind only [=_ cons_append, = range_zero, reverse_nil, → eq_nil_of_append_eq_nil]
+    have : tail ++ l' = (range (x-1)).reverse := by
+      rw [show x=x-1+1 from (Nat.sub_eq_iff_eq_add this).mp rfl] at h2
+      simp [reversed_range_indt] at h2
+      simp_all only [reverse_inj, gt_iff_lt]
+    have := @ih (x-1) this
+    grind
+private lemma rr_lemma2 {l' x a} (h : ∃ l'' : List ℕ, l'' ++ l' = (range x).reverse) (h2 : a ∈ l') :
+    a < x := by
+  have := rr_lemma h
+  grind
+private lemma rr_mem_bound {ro} {i} (h : i ∈ (range (ro + 1)).reverse) : i ≤ ro := by
+  contrapose h
+  simpa using h
+end private_lemmas
+
 
 section use_principle
 theorem use_eq_rfindOpt {O} (c n) : use O c n = Nat.rfindOpt fun k => usen O c k n :=
@@ -394,7 +422,7 @@ theorem usen_mono_rfind' {O cf s x j} (hh : (usen O (rfind' cf) (s + 1) x).isSom
     simp [isSome.bind (en2un <| rop2 i (rr_mem_bound h))]
   simp only [this, ge_iff_le]
   simp? [rr_indt ro] says
-    simp only [rr_indt ro, forIn'_cons, _root_.zero_le, sup_of_le_right, Option.pure_def,
+    simp only [reversed_range_indt ro, forIn'_cons, _root_.zero_le, sup_of_le_right, Option.pure_def,
       Option.bind_eq_bind, Option.bind_some]
   -- show 3 things.     
   -- 1. that basecase ≤ forIn l ~
@@ -409,7 +437,7 @@ theorem usen_mono_rfind' {O cf s x j} (hh : (usen O (rfind' cf) (s + 1) x).isSom
     exact Nat.lt_of_lt_of_le h h0
   have dom3 (a' k m) (h0 : k ≤ ro) := en2un <|
     rop2 a' <| rr_mem_bound
-    (List.forIn'_congr._proof_1 (rr_indt ro) a' (List.mem_cons_of_mem ro (dom3 h0 m)))
+    (List.forIn'_congr._proof_1 (reversed_range_indt ro) a' (List.mem_cons_of_mem ro (dom3 h0 m)))
   have forInDom {k : ℕ} (base : ℕ) (h : k ≤ ro) : Option.isSome <|
       forIn' (List.range k).reverse base fun a' m b ↦
       some (ForInStep.yield
@@ -418,7 +446,7 @@ theorem usen_mono_rfind' {O cf s x j} (hh : (usen O (rfind' cf) (s + 1) x).isSom
     | zero => simp
     | succ n ih =>
       simp? [rr_indt, -forIn'_eq_forIn] says
-        simp only [rr_indt, forIn'_cons, Option.pure_def, Option.bind_eq_bind, Option.bind_some]
+        simp only [reversed_range_indt, forIn'_cons, Option.pure_def, Option.bind_eq_bind, Option.bind_some]
       have dom4 : (usen O cf (s + 1-n) ⟪x.l, n+x.r⟫).isSome := by
         aesop
       have := @ih (base.max ((usen O cf (s + 1-n) ⟪x.l, n+x.r⟫).get dom4)) (le_of_succ_le h)
@@ -497,7 +525,7 @@ theorem usen_mono_rfind' {O cf s x j} (hh : (usen O (rfind' cf) (s + 1) x).isSom
         simp only [ronrw0]
         have ronrw : ro-n = ro-n-1+1 := Eq.symm (Nat.sub_add_cancel hh)
         simp (config := { singlePass := true }) only [ronrw, reduceSubDiff] at ih
-        simp only [rr_indt (ro - n - 1), forIn'_cons, Option.pure_def, Option.bind_eq_bind,
+        simp only [reversed_range_indt (ro - n - 1), forIn'_cons, Option.pure_def, Option.bind_eq_bind,
           Option.bind_some] at ih
         have dom10 := dom8 n;     rewrite [ronrw]  at dom10
         have dom11 := dom8 (n+1); rewrite [ronrw0] at dom11
@@ -512,7 +540,8 @@ theorem usen_mono_rfind' {O cf s x j} (hh : (usen O (rfind' cf) (s + 1) x).isSom
         rotate_left
         ·  exact dom3 a (ro - (n + 1)) (List.forIn'_congr._proof_1 (congrArg
             (fun x ↦ (List.range x).reverse) ronrw0) a (by
-            simpa using rr_lemma2 h2 h3)) (sub_le ro (n + 1))
+            simpa using rr_lemma2 h2 h3))
+            (sub_le ro (n + 1))
         let aux12 : ∀ (l' : List ℕ) (base : ℕ)
             (htt : ∃ l'', l'' ++ l' = (List.range (ro - n - 1)).reverse),
             (forIn' l' base fun a h b ↦ some (ForInStep.yield (b.max (f a l' htt h)))).isSome := by
@@ -804,7 +833,7 @@ theorem usen_principle {O₁ O₂} {s c x} (hh : (evaln O₁ s c x).isSome)
     | zero => simp at a4; simp [← a4]
     | succ nron ih =>
       intro a2 nrop2
-      simp (config := { singlePass := true }) only [rr_indt, forIn_cons];
+      simp (config := { singlePass := true }) only [reversed_range_indt, forIn_cons];
       have := a2 (nron+1) (le_rfl)
       simp only [reduceSubDiff] at this; simp only [reduceSubDiff, Option.pure_def,
         Option.bind_eq_bind, ← this]

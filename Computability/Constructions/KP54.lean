@@ -246,7 +246,7 @@ def c_A := c_n2b.comp <| c_list_getI.comp₂ (left.comp <| c_kp54.comp succ) c_i
 @[simp, evp_simps] theorem c_A_evp : evalp (K0 (fun _↦0)) c_A = χ KP54.A := by
   funext x
   simp only [c_A, evp_simps]; congr
-  exact getI_eq_getElem
+  exact List.getI_eq_getElem _ _
 @[simp, ev_simps] theorem c_A_ev : eval (K0 (fun _↦0)) c_A = χ KP54.A := by
   simp [← evalp_eq_eval c_A_prim];
 theorem A_le_J1_aux : (χ KP54.A) ≤ᵀᶠ K0 (fun _↦0) := exists_code.mpr ⟨c_A, c_A_ev⟩
@@ -260,7 +260,7 @@ def c_B := c_n2b.comp <| c_list_getI.comp₂ (right.comp <| c_kp54.comp succ) c_
 @[simp, evp_simps] theorem c_B_evp : evalp (K0 (fun _↦0)) c_B = χ KP54.B := by
   funext x
   simp only [c_B, evp_simps]; congr
-  exact getI_eq_getElem
+  exact List.getI_eq_getElem _ _
 @[simp, ev_simps] theorem c_B_ev : eval (K0 (fun _↦0)) c_B = χ KP54.B := by
   simp [← evalp_eq_eval c_B_prim];
 theorem B_le_J1_aux : (χ KP54.B) ≤ᵀᶠ K0 (fun _↦0) := exists_code.mpr ⟨c_B, c_B_ev⟩

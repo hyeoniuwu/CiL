@@ -601,7 +601,7 @@ lemma displace_loop_0 {O s cf x roM1 ro_dom}
     apply congrArg
     apply usen_sing'
   | succ roM2 iihh =>
-    simp (config := { singlePass := true }) only [rr_indt, forIn_cons]
+    simp (config := { singlePass := true }) only [reversed_range_indt, forIn_cons]
     simp only [reduceSubDiff, Nat.max_assoc, Option.pure_def, Option.bind_eq_bind]
     have urom : (usen O cf (s +1 - (roM2+1)) (Nat.pair x.l ((roM2+1) + 1 + x.r))).isSome := by
       have := nrop2 (roM2+1+1) (Nat.le_refl (roM2 + 1 + 1))
@@ -767,7 +767,7 @@ theorem usen_rfind_prop2 {O k x y cf} :
     | succ roM1 ih =>
       simp? (config := { singlePass := true }) [rr_indt] says
         simp (config := { singlePass := true }) only [Nat.add_eq_zero_iff, add_tsub_cancel_right,
-          rr_indt, forIn_cons]
+          reversed_range_indt, forIn_cons]
       simp only [one_ne_zero, and_false, ↓reduceIte, reduceSubDiff, Option.pure_def,
         Option.bind_eq_bind]
       intro hro h
@@ -827,7 +827,7 @@ theorem usen_rfind_prop2 {O k x y cf} :
     | zero => simp [isSome.bind <| en2un h1]
     | succ roM1 ih =>
       intro rwro h
-      simp (config := { singlePass := true }) only [rr_indt, forIn_cons] at h
+      simp (config := { singlePass := true }) only [reversed_range_indt, forIn_cons] at h
       simp only [reduceSubDiff, Option.pure_def, Option.bind_eq_bind] at h
       rcases nrfind'_obtain_prop' h2 with ⟨nrop1,nrop2,nrop3,nrop4⟩
       have nrop6 := nrfind'_obtain_prop_6' h2
@@ -1001,7 +1001,7 @@ theorem usen_sound {O} : ∀ {c s n x}, x ∈ usen O c s n → x ∈ use O c n :
       · exact ⟨h1, @hfih (k + 1) (le_rfl) n h1 h2, rfl⟩
       simp_all
     | succ nn ih =>
-      simp (config := { singlePass := true }) only [guard_true, rr_indt, forIn_cons]
+      simp (config := { singlePass := true }) only [guard_true, reversed_range_indt, forIn_cons]
       simp only [Option.pure_def, reduceSubDiff, Option.bind_eq_bind, Option.bind_some,
         Part.pure_eq_some, Part.bind_eq_bind, Part.mem_bind_iff, Part.mem_some_iff]
       intro urop1
@@ -1090,7 +1090,7 @@ lemma displace_loop_1 {O cf ro hi_val lo_val} {base n : ℕ}
     ac_nf
   | succ nnn ih =>
     intro hhi_val
-    simp (config := { singlePass := true }) only [rr_indt, forIn_cons]
+    simp (config := { singlePass := true }) only [reversed_range_indt, forIn_cons]
     simp only [Nat.max_assoc, Part.pure_eq_some, Part.bind_eq_bind]
     ac_nf
     have dom1 : (use O cf (Nat.pair n.l (nnn + (n.r + 1)))).Dom := by
@@ -1157,7 +1157,7 @@ lemma displace_loop_2 {O cf ro hi_val lo_val s x} {base n use_steps : ℕ}
     ac_nf
   | succ nnn ih =>
     intro hhi_val
-    simp (config := { singlePass := true }) only [rr_indt, forIn_cons] at hs ⊢
+    simp (config := { singlePass := true }) only [reversed_range_indt, forIn_cons] at hs ⊢
     simp only [reduceSubDiff, Nat.max_assoc, Option.pure_def, Option.bind_eq_bind] at hs ⊢
     rcases hf hhi_val with ⟨g3,g4⟩
     have : ∃ z, z ∈ (usen O cf (s - nnn) (Nat.pair n.l (nnn + 1 + (1 + n.r)))) := by
@@ -1174,7 +1174,7 @@ lemma displace_loop_2 {O cf ro hi_val lo_val s x} {base n use_steps : ℕ}
       contrapose hs
       simp only [Option.mem_def, not_exists] at hs
       have := Option.eq_none_iff_forall_ne_some.mpr hs
-      simp (config := {singlePass := true}) [rr_indt]
+      simp (config := {singlePass := true}) [reversed_range_indt]
       have : (usen O cf (s + 1 - nnn) (Nat.pair n.l (nnn + (1 + n.r)))) = Option.none := by
         rw [add_assoc] at this
         have ineq1: s + 1 - nnn ≤ use_steps - nnn := by grind only [cases Or]
@@ -1353,7 +1353,7 @@ theorem usen_complete_rfind'
     simp at aux0
     simp [aux0]
   | succ ro ih =>
-    simp (config := { singlePass := true }) only [rr_indt, forIn_cons, and_imp]
+    simp (config := { singlePass := true }) only [reversed_range_indt, forIn_cons, and_imp]
     simp only [Part.pure_eq_some, Part.bind_eq_bind, Part.mem_bind_iff, Part.mem_some_iff,
       Option.pure_def, Option.bind_eq_bind, forall_exists_index, and_imp]
     intro urop1 rop1 rop2 rop4 rop6 rop3 h2 h3 hi_val hhi_val h7 h8

@@ -290,7 +290,7 @@ theorem c_evaln_evp_aux {O code x s} (hcode_val : code ≤ 4) :
   | 0 =>
     simp only [hzero_mapped]
     cases Classical.em (x<s+1) with
-    | inl h => simp [h, n2c, evaln, le_of_lt_succ h];
+    | inl h => simp [h, n2c, evaln, le_of_lt_succ h]
     | inr h => simp [h, n2c, evaln, Nat.not_le_of_lt (not_lt.mp h)]
   | 1 =>
     simp only [hsucc_mapped]
