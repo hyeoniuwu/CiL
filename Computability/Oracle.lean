@@ -26,7 +26,8 @@ open Nat
 namespace Oracle.Single
 
 /--
-`RecursiveIn O f` asserts that the partial function `f : ℕ →. ℕ` is partial recursive in `O : ℕ → ℕ`.
+`RecursiveIn O f` asserts that the partial function `f : ℕ →. ℕ` is
+partial recursive in `O : ℕ → ℕ`.
 
 We note that `rfind` constructor here actually corresponds to `rfind'`.
 -/

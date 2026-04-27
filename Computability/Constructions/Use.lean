@@ -207,7 +207,8 @@ theorem c_usen_evp_aux {O code x s} (hcode_val : code ≤ 4) :
     | inr h => simp [h, n2c, usen, Nat.not_le_of_lt (not_lt.mp h)]
   | n+5 => simp at hcode_val
 
-
+private lemma hnat_5 {a b} (h : a ≠ 0) : ((a-1).max (b-1))+1 = a.max b := by
+  grind only [= max_def]
 theorem c_usen_evp_aux_nMod4 {O x n s} :
     evalp O c_usen ⟪x, (n+4)+1, s+1⟫ =
     let m := n.div2.div2
@@ -410,12 +411,8 @@ theorem c_usen_evp_aux_nMod4 {O x n s} :
         (Nat.pair (elem.r - 1) ((evaln O s (n2c (n + 4 + 1))
         (Nat.pair elem.l (elem.r - 1))).get hdom))) := by
     simp only [prec_usen_indt,hpc_mr_s,pc_mr_s,hprec_x, hprec_iM1,hprec_evaln_prev, evp_simps]
-    apply congrArg
-    apply congrFun
-    apply congrArg
-    apply congrArg
-    apply congrArg
-    exact hnat_9.symm
+    apply congrArg; apply congrFun; apply congrArg; apply congrArg; apply congrArg
+    exact hnat_2 hdom
   have hopt_prec :
       (fun ele => evalp O opt_prec_1 ⟪ele, cri⟫) =
       opt_prec := by
@@ -490,7 +487,7 @@ theorem c_usen_evp_aux_nMod4 {O x n s} :
           simp only [Option.isSome.bind <| Option.ne_none_iff_isSome.mp hhh]
           simp only [getD_eq_get <| Option.ne_none_iff_isSome.mp hhh]
           cases (evaln O (s + 1) (n2c m) elem).get (Option.ne_none_iff_isSome.mp hhh) with
-          | zero => simpa using ge_0_rw (not_none_imp_not_zero hh)
+          | zero => simpa using (succ_pred_eq_of_ne_zero (not_none_imp_not_zero hh)).symm
           | succ _ =>
             simp only [hrfind'_usen_indt]
             cases Classical.em ( pc_c_sM1 left (Nat.pair elem.l (elem.r + 1))=o2n Option.none) with

@@ -37,6 +37,36 @@ open Oracle.Single
 open Oracle.Single.Code
 open List
 
+section fs
+/-
+We define functions to treat naturals as finite sets.
+-/
+abbrev fs_in := Nat.testBit
+/-
+Examples:
+fs_in 0b0010 0 = false
+fs_in 0b0010 1 = true
+fs_in 0b0010 2 = false
+fs_in 0b0010 3 = false
+-/
+
+/-- `fs_add a x` gives the natural representing the set with `x` added to `a` interpreted as a
+finite set. -/
+abbrev fs_add : ℕ → ℕ → ℕ := fun a x ↦ a ||| (2^x)
+
+/-- `fs_add a` gives the the size of `a` interepreted as a finite set. -/
+def fs_size := List.length.comp Nat.bitIndices
+/-
+Examples:
+fs_size 0b010 = 1
+fs_size 0b111 = 3
+fs_size 0b011000111 = 5
+-/
+
+theorem fs_in_singleton {x y} : fs_in (2^y) x ↔ x=y := by grind
+theorem fs_in_singleton' {x y} : Nat.testBit (2^y) x = false ↔ y ≠ x := by grind
+end fs
+
 /-- immuneIn O A := A is immune in O -/
 def immuneIn (O : Set ℕ) (A : Set ℕ) : Prop := (A.Infinite) ∧ (∀c, (W O c).Infinite → ¬(W O c ⊆ A))
 theorem immuneIn_not_CEIn {O A} : immuneIn O A → ¬ CEin O A := by

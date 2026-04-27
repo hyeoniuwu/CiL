@@ -126,3 +126,4 @@ match c,s with
     if evaln_base=0 then usen_base else
     let usen_indt  ← usen O (rfind' cf) s ⟪x.l, x.r+1⟫
     Nat.max usen_base usen_indt
+end Oracle.Single.Code

@@ -49,8 +49,6 @@ For the construction of the use function given here, see Constructions/Use.lean.
 
 -/
 set_option linter.style.longFile 0
-set_option linter.style.whitespace false
--- set_option linter.flexible false
 open List Nat
 open Oracle.Single.Code
 set_option linter.style.cdot false
@@ -151,7 +149,7 @@ theorem evaln_mono_dom {O} :
   intro k1 k2 c n k1k2 h1
   exact Option.isSome_of_mem (evaln_mono k1k2 (Option.get_mem h1))
 
-lemma usen_sing {O c s1 x a s2 b} (h1 : a ∈ (usen O c s1 x)) (h2 : b ∈ (usen O c s2 x)): a=b := by
+lemma usen_sing {O c s1 x a s2 b} (h1 : a ∈ (usen O c s1 x)) (h2 : b ∈ (usen O c s2 x)) : a=b := by
   cases Classical.em (s1 ≤ s2) with
   | inl h =>
     have := usen_mono h h1
@@ -402,10 +400,8 @@ theorem usen_rfind_prop_aux'' {O k n} {cf : Code} :
       contrapose h; simp at h; simp [h]
     exact ih usen_indt_dom
 theorem usen_rfind_prop_aux' {O k n} {cf : Code} :
-(usen O cf.rfind' (k + 1) n).isSome
-→
-(eval O cf.rfind' n).Dom
-:= fun h ↦en2e (usen_rfind_prop_aux'' h)
+    (usen O cf.rfind' (k + 1) n).isSome → (eval O cf.rfind' n).Dom :=
+  fun h ↦en2e (usen_rfind_prop_aux'' h)
 theorem usen_rfind_prop_aux {O k n x} {cf : Code} :
     (x ∈ usen O cf.rfind' (k + 1) n) → (eval O cf.rfind' n).Dom := by
   intro h
@@ -413,27 +409,25 @@ theorem usen_rfind_prop_aux {O k n x} {cf : Code} :
   exact usen_rfind_prop_aux' this
 
 theorem usen_rfind_prop' {O cf k n} (hu : (usen O (rfind' cf) (k + 1) n).isSome) :
-∀ j ≤ rfind'_obtain (usen_rfind_prop_aux' hu),
-  (usen O cf (k + 1 - j) (Nat.pair n.l (n.r+j))).isSome
-  -- and also the maximum of these is equal to the usen.
-:= by
+    ∀ j ≤ rfind'_obtain (usen_rfind_prop_aux' hu),
+      (usen O cf (k + 1 - j) (Nat.pair n.l (n.r+j))).isSome := by
   intro j hjro
   rw (config := {occs := .pos [2]}) [add_comm]
-  exact en2un ((nrfind'_obtain_prop' (un2en hu)).right.left j hjro)
+  exact en2un ((nrfind'_obtain_prop' (un2en hu)).2.1 j hjro)
+
 theorem usen_rfind_prop {O k n x cf} (h : x ∈ usen O cf.rfind' (k + 1) n) :
-  ∀ j ≤ rfind'_obtain (usen_rfind_prop_aux h),
-  ∃y, y∈ (usen O cf (k + 1 - j) (Nat.pair n.l (n.r+j))) := by
-  -- and also the maximum of these is equal to the usen.
+    ∀ j ≤ rfind'_obtain (usen_rfind_prop_aux h),
+    ∃y, y∈ (usen O cf (k + 1 - j) (Nat.pair n.l (n.r+j))) := by
   have := @usen_rfind_prop'
   simp only [Option.isSome_iff_mem, Option.mem_def, forall_exists_index] at this
   exact fun j a ↦ this x h j a
-lemma nrf_aux {O cf k x} (h : (usen O (rfind' cf) k x).isSome) : k = k - 1 + 1 := by
+private lemma nrf_aux {O cf k x} (h : (usen O (rfind' cf) k x).isSome) : k = k - 1 + 1 := by
   have : k ≠ 0 := by
     contrapose h; simp [h]
     simp [usen]
   exact (succ_pred_eq_of_ne_zero this).symm
 lemma nrf {O cf k x} (h : (usen O (rfind' cf) k x).isSome) :
-  x ≤ k-1 ∧ (usen O cf k x).isSome ∧ (evaln O (k) cf x).isSome := by
+    x ≤ k-1 ∧ (usen O cf k x).isSome ∧ (evaln O (k) cf x).isSome := by
   have keqkM1P1 := nrf_aux h
   simp (config := {singlePass := true}) only [keqkM1P1] at h ⊢
   simp only [usen] at h
@@ -453,7 +447,7 @@ lemma nrf {O cf k x} (h : (usen O (rfind' cf) k x).isSome) :
 /--
 asserts the precise condition for when the rfind_obtain' value is 0
 -/
-lemma unrpeq2 {O k cf x evalnbasedom evaln_ver_dom} :
+private lemma rop_eq_0_iff {O k cf x evalnbasedom evaln_ver_dom} :
     ((evaln O (k + 1) cf x).get evalnbasedom = 0) ↔
     ((evaln O (k + 1) cf.rfind' x).get evaln_ver_dom - x.r = 0) := by
   rcases nrfind'_obtain_prop' evaln_ver_dom with ⟨nrop1, _, nrop3, _⟩
@@ -503,7 +497,7 @@ lemma unrpeq0 {O cf k x y} :
     simp only [Option.isSome.bind evaln_base_dom] at h ⊢
     simp only [add_tsub_cancel_right, evaln_base_dom, exists_true_left]
     use evaln_ver_dom
-    simp_all [@unrpeq2 O k cf x evaln_base_dom evaln_ver_dom]
+    simp_all [@rop_eq_0_iff O k cf x evaln_base_dom evaln_ver_dom]
   -- mpr
   intro h
   rcases h with ⟨h1,h2,h3⟩
@@ -513,7 +507,7 @@ lemma unrpeq0 {O cf k x y} :
   simp [xlek]
   simp [Option.isSome.bind (en2un h1)]
   simp [Option.isSome.bind (h1)]
-  simp_all [@unrpeq2 O k cf x h1 h2]
+  simp_all [@rop_eq_0_iff O k cf x h1 h2]
 
 /--
 helper for usen_rfind_prop2 which simplifies the rfind case of use.
@@ -573,8 +567,8 @@ The lemma below shows that these two ways give the same number.
 lemma displace_loop_0 {O s cf x roM1 ro_dom}
     (a : ℕ) (h1 : (evaln O (s + 1) cf x).isSome)
     (u0 : (usen O cf (s + 1) x).isSome)
-    (u1 : (usen O cf (s + 1) ⟪x.l, x.r+1⟫).isSome)
-    (nrop2 : (∀ j ≤ roM1 + 1, (usen O cf (s + 1 - j) ⟪x.l, j+x.r⟫).isSome)) :
+    (u1 : (usen O cf (s + 1) ⟪x.l,x.r + 1⟫).isSome)
+    (nrop2 : (∀ j ≤ roM1 + 1, (usen O cf (s + 1 - j) ⟪x.l,j + x.r⟫).isSome)) :
     (forIn
       (List.range (roM1 + 1)).reverse
       (a.max ((usen O cf (s + 1) x).get (en2un h1)))
@@ -591,14 +585,13 @@ lemma displace_loop_0 {O s cf x roM1 ro_dom}
   | zero =>
     simp? [isSome.bind u0] says
       simp only [zero_add, range_one, reverse_cons, reverse_nil, nil_append, forIn_cons, tsub_zero,
-        Nat.max_assoc, Option.pure_def, forIn_nil, Option.bind_eq_bind, pair_lr, Option.isSome.bind u0,
-        Option.bind_some]
-    simp? [isSome.bind u1] says simp only [Option.isSome.bind u1, Option.bind_some, Option.some.injEq]
+        Nat.max_assoc, Option.pure_def, forIn_nil, Option.bind_eq_bind, pair_lr,
+        Option.isSome.bind u0, Option.bind_some]
+    simp? [isSome.bind u1] says
+      simp only [Option.isSome.bind u1, Option.bind_some, Option.some.injEq]
     ac_nf
     rw (config := {occs := .pos [2]}) [Nat.max_comm]
-    apply congrArg
-    apply congrFun
-    apply congrArg
+    congr 2
     apply usen_sing'
   | succ roM2 iihh =>
     simp (config := { singlePass := true }) only [reversed_range_indt, forIn_cons]
@@ -699,8 +692,7 @@ else
     simp only [reduceAdd] at this ⊢
     exact usen_mono_dom (show k-1 ≤ k from sub_le k 1) (en2un this)
   simp only [Option.isSome.bind this, Option.some.injEq]
-  apply congrArg
-  apply congrArg
+  congr 2
   have kkk : k=k-1+1 :=  nrf_aux usenindtdom
   simp only [congrFun (congrArg (usen O cf.rfind') kkk) ⟪x.l,x.r + 1⟫]
   have hdom : (evaln O k cf ⟪x.l, x.r+1⟫).isSome := by
@@ -1062,7 +1054,7 @@ theorem use_rfind_prop {O cf n} (hu : (use O (rfind' cf) n).Dom) :
   rw [add_comm]
   exact e2u ((rfind'_obtain_prop (u2e hu)).right.left j hjro)
 
--- similar in concept to displace_loop_0.
+-- similar in concept to `displace_loop_0`.
 lemma displace_loop_1 {O cf ro hi_val lo_val} {base n : ℕ}
     (hhi_val : hi_val ∈ use O cf (Nat.pair n.l (ro + 1 + n.r)))
     (rop3 : ∀ j ≤ ro + 1, (use O cf (Nat.pair n.l (n.r + j))).Dom)
@@ -1122,9 +1114,9 @@ lemma displace_loop_2 {O cf ro hi_val lo_val s x} {base n use_steps : ℕ}
     (hhi_val : hi_val ∈ use O cf (Nat.pair n.l (ro + 1 + n.r)))
     (rop3 : ∀ j ≤ ro + 1, (use O cf (Nat.pair n.l (n.r + j))).Dom)
     (lo_val_dom : (use O cf n).Dom)
-    (lo_valdef : lo_val=(use O cf n).get lo_val_dom)
+    (lo_valdef : lo_val = (use O cf n).get lo_val_dom)
     (i2' : usen O cf (use_steps + 1) n = some ((use O cf n).get lo_val_dom))
-    (lolineq : s + 1 ≤ use_steps )
+    (lolineq : s + 1 ≤ use_steps)
     (hf : ∀ {n x : ℕ}, x ∈ use O cf n → ∃ k, usen O cf (k + 1) n = some x)
     (hs : (forIn (List.range (ro + 1)).reverse (base.max lo_val) fun i r ↦
         (usen O cf (s + 1 - i) (Nat.pair n.l (i + (1 + n.r)))).bind fun a ↦
@@ -1511,6 +1503,6 @@ theorem usen_complete {O} {c n x} : x ∈ use O c n ↔ ∃ s, x ∈ usen O c s 
     simp only [usen, le_add_iff_nonneg_right, _root_.zero_le, guard_true, Option.pure_def,
       Option.bind_eq_bind, Option.bind_some, Option.some.injEq]
     exact h.symm
-
+#check usen_rfind_prop
 end usen_complete
 end Oracle.Single.Code

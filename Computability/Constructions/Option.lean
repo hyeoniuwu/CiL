@@ -95,7 +95,7 @@ def c_opt_bind (cf cg : Code) :=  c_ifz.comp₃ cf zero (cg.comp₂ c_id (c_opt_
   cases Classical.em (evalp O cf x = 0) with
   | inl h => simp [h]
   | inr h =>
-    simp only [ne_eq, h, not_false_eq_true, iget_evp_2, pair_l, ↓reduceIte, pair_r,
+    simp only [ne_eq, h, not_false_eq_true, iget_evp_2, ↓reduceIte,
       Option.pure_def, Option.bind_eq_bind, Option.bind_fun_some]
     simp only [Option.isSome.bind <| hnat_6 h, encode_ofNat]
     congr

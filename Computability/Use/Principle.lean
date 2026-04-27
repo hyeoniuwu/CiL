@@ -48,7 +48,7 @@ For the construction of the use function given here, see Constructions/Use.lean.
 ## References
 
 -/
-set_option linter.style.whitespace false
+-- set_option linter.style.whitespace false
 open List Nat
 open Oracle.Single.Code
 set_option linter.style.cdot false
@@ -119,7 +119,7 @@ theorem evaln_comp_dom {O s cf cg x}
     intro h1 h2
     simp_all only [Option.get_some]
 theorem evaln_prec_dom_aux {O s cf cg x i}
-    (h : (evaln O (s + 1) (prec cf cg) ⟪x, i + 1⟫).isSome) :
+    (h : (evaln O (s + 1) (prec cf cg) ⟪x,i + 1⟫).isSome) :
     (evaln O s (prec cf cg) ⟪x, i⟫).isSome := by
   have h' := h
   simp only [evaln] at h' ⊢
@@ -128,14 +128,14 @@ theorem evaln_prec_dom_aux {O s cf cg x i}
   simp at h'
   simp [h']
 theorem evaln_prec_dom' {O s cf cg x}
-    (h : (evaln O (s + 1) (prec cf cg) ⟪x, 0⟫).isSome) :
+    (h : (evaln O (s + 1) (prec cf cg) ⟪x,0⟫).isSome) :
     (evaln O (s + 1) cf x).isSome := by
   simpa [evaln, evaln_xles h] using h
 theorem evaln_prec_dom {O s cf cg x i}
-    (h : (evaln O (s + 1) (prec cf cg) ⟪x, i + 1⟫).isSome) :
+    (h : (evaln O (s + 1) (prec cf cg) ⟪x,i + 1⟫).isSome) :
     (evaln O (s-i) cf x).isSome ∧
     let evaln_prev := (evaln O s (prec cf cg) ⟪x, i⟫).get (evaln_prec_dom_aux h)
-    (evaln O (s + 1) cg ⟪x, i, evaln_prev⟫).isSome := by
+    (evaln O (s + 1) cg ⟪x,i, evaln_prev⟫).isSome := by
   induction i generalizing s with
   | zero =>
     have h' := h
@@ -199,7 +199,7 @@ theorem usen_comp_dom {O cf cg s x} (h : (usen O (comp cf cg) (s + 1) x).isSome)
   intro a b c d e
   simp_all
 theorem usen_prec_dom_aux {O cf cg s x i}
-    (h : (usen O (prec cf cg) (s + 1) ⟪x, i + 1⟫).isSome) :
+    (h : (usen O (prec cf cg) (s + 1) ⟪x,i + 1⟫).isSome) :
     (evaln O s (prec cf cg) ⟪x, i⟫).isSome := by
   simp only [usen] at h
   contrapose h
@@ -209,15 +209,16 @@ theorem usen_prec_dom' {O cf cg s x}
     (usen O cf (s + 1) x).isSome := by
   simpa [usen, usen_xles h] using h
 theorem usen_prec_dom {O cf cg s x i}
-    (h : (usen O (prec cf cg) (s + 1) ⟪x, i + 1⟫).isSome) :
+    (h : (usen O (prec cf cg) (s + 1) ⟪x,i + 1⟫).isSome) :
     (usen O cf (s-i) x).isSome ∧
     let eval_prev := (evaln O s (prec cf cg) ⟪x, i⟫).get (usen_prec_dom_aux h)
-    (usen O cg (s + 1) ⟪x, i, eval_prev⟫).isSome := by
+    (usen O cg (s + 1) ⟪x,i, eval_prev⟫).isSome := by
   have h' := h
   simp only []
   simp only [usen, usen_xles h] at h'
   simp only [guard_true, Option.pure_def, unpair_pair, Option.bind_eq_bind, Option.bind_some] at h'
-  simp only [Option.isSome.bind (usen_prec_dom_aux h), Option.isSome.bind (en2un <| usen_prec_dom_aux h)] at h'
+  simp only [Option.isSome.bind (usen_prec_dom_aux h),
+            Option.isSome.bind (en2un <| usen_prec_dom_aux h)] at h'
   induction i generalizing s with
   | zero =>
     have h' := h
@@ -289,17 +290,17 @@ theorem usen_mono_prec' {O cf cg s x} (hh : (usen O (prec cf cg) (s + 1) ⟪x,0�
     ((usen O cf (s + 1) x).get (usen_prec_dom' hh) ≤
     (usen O (prec cf cg) (s + 1) ⟪x,0⟫).get hh) := by
   simp [usen]
-theorem usen_mono_prec_1 {O cf cg s x i} (hh : (usen O (prec cf cg) (s + 1) ⟪x, i + 1⟫).isSome) :
+theorem usen_mono_prec_1 {O cf cg s x i} (hh : (usen O (prec cf cg) (s + 1) ⟪x,i + 1⟫).isSome) :
     (usen O (prec cf cg) (s) ⟪x, i⟫).get (en2un <| usen_prec_dom_aux hh) ≤
-    (usen O (prec cf cg) (s + 1) ⟪x, i + 1⟫).get hh
+    (usen O (prec cf cg) (s + 1) ⟪x,i + 1⟫).get hh
  := by simp [usen.eq_9]
 -- todo: simplify below proof
-theorem usen_mono_prec {O cf cg s x i} (hh : (usen O (prec cf cg) (s + 1) ⟪x, i + 1⟫).isSome) :
+theorem usen_mono_prec {O cf cg s x i} (hh : (usen O (prec cf cg) (s + 1) ⟪x,i + 1⟫).isSome) :
     (usen O cf (s-i) x).get ((usen_prec_dom hh).left) ≤
-      (usen O (prec cf cg) (s + 1) ⟪x, i + 1⟫).get hh ∧
+      (usen O (prec cf cg) (s + 1) ⟪x,i + 1⟫).get hh ∧
     let eval_prev := (evaln O s (prec cf cg) ⟪x, i⟫).get (usen_prec_dom_aux hh)
-    (usen O cg (s + 1) ⟪x, i, eval_prev⟫).get ((usen_prec_dom hh).right) ≤
-    (usen O (prec cf cg) (s + 1) ⟪x, i + 1⟫).get hh := by
+    (usen O cg (s + 1) ⟪x,i, eval_prev⟫).get ((usen_prec_dom hh).right) ≤
+    (usen O (prec cf cg) (s + 1) ⟪x,i + 1⟫).get hh := by
   induction i generalizing s with
   | zero =>
     simp only [tsub_zero, zero_add, usen, unpair_pair, Option.pure_def, Option.bind_eq_bind,
@@ -339,11 +340,13 @@ lemma cm_aux_1 {l'} {l} {head : ℕ} {tail : List ℕ}
   use h1 ++ [head]
   aesop
 theorem clause_mono_2_opt
-    {base1 base2 : ℕ} {l : List ℕ} {f : (a : ℕ)→(l' : List ℕ)→(∃l'',l''++l'=l)→(a∈l')→ℕ}
-    (hf : ∀ a head tail (m : a∈tail) (l' : List ℕ) (h3t : ∃l'',l''++l'=l) (hht : head :: tail=l'),
+    {base1 base2 : ℕ} {l : List ℕ}
+    {f : (a : ℕ) → (l' : List ℕ) → (∃ l'', l'' ++ l' = l) → (a ∈ l') → ℕ}
+    (hf : ∀ a head tail (m : a ∈ tail) (l' : List ℕ) (h3t : ∃ l'', l'' ++ l' = l)
+      (hht : head :: tail = l'),
       (f a (head :: tail) (cm_aux_0 h3t hht) (mem_cons_of_mem head m)) =
       f a tail (cm_aux_1 h3t hht) m)
-    {h : ∀ (l') (base : ℕ) (htt : ∃l'',l''++l'=l),
+    {h : ∀ (l') (base : ℕ) (htt : ∃ l'', l'' ++ l' = l),
       (forIn' (l') base fun a h b ↦ some (ForInStep.yield (b.max (f a l' (htt) h)))).isSome}
     {h2 : base1 ≤ base2} :
     (forIn' l base1 fun a h b ↦
@@ -394,11 +397,6 @@ theorem usen_mono_rfind' {O cf s x j} (hh : (usen O (rfind' cf) (s + 1) x).isSom
   let (eq := hro) ro := nrfind'_obtain (un2en hh)
   simp only [← hro] at rop
   rcases rop with ⟨rop1, rop2, rop3, rop4⟩
-  -- have rop1 := rop.left
-  -- have rop2 := rop.right.left
-  -- have rop3 := rop.right.right
-  -- have rop4 := nrfind'_obtain_prop_4 (un2en hh)
-  -- simp [← hro] at rop4
   have aux3 := rop2 0 (Nat.zero_le ro)
   simp only [tsub_zero, zero_add, pair_lr] at aux3
   simp only [usen_rfind_prop2', Option.pure_def, Option.bind_eq_bind, Option.bind_some,
@@ -422,8 +420,8 @@ theorem usen_mono_rfind' {O cf s x j} (hh : (usen O (rfind' cf) (s + 1) x).isSom
     simp [Option.isSome.bind (en2un <| rop2 i (rr_mem_bound h))]
   simp only [this, ge_iff_le]
   simp? [rr_indt ro] says
-    simp only [reversed_range_indt ro, forIn'_cons, _root_.zero_le, sup_of_le_right, Option.pure_def,
-      Option.bind_eq_bind, Option.bind_some]
+    simp only [reversed_range_indt ro, forIn'_cons, _root_.zero_le, sup_of_le_right,
+      Option.pure_def, Option.bind_eq_bind, Option.bind_some]
   -- show 3 things.     
   -- 1. that basecase ≤ forIn l ~
   -- 2. that use @ j ≤ forin range j ~
@@ -446,7 +444,8 @@ theorem usen_mono_rfind' {O cf s x j} (hh : (usen O (rfind' cf) (s + 1) x).isSom
     | zero => simp
     | succ n ih =>
       simp? [rr_indt, -forIn'_eq_forIn] says
-        simp only [reversed_range_indt, forIn'_cons, Option.pure_def, Option.bind_eq_bind, Option.bind_some]
+        simp only [reversed_range_indt, forIn'_cons, Option.pure_def, Option.bind_eq_bind,
+          Option.bind_some]
       have dom4 : (usen O cf (s + 1-n) ⟪x.l, n+x.r⟫).isSome := by
         aesop
       have := @ih (base.max ((usen O cf (s + 1-n) ⟪x.l, n+x.r⟫).get dom4)) (le_of_succ_le h)
@@ -525,8 +524,8 @@ theorem usen_mono_rfind' {O cf s x j} (hh : (usen O (rfind' cf) (s + 1) x).isSom
         simp only [ronrw0]
         have ronrw : ro-n = ro-n-1+1 := Eq.symm (Nat.sub_add_cancel hh)
         simp (config := { singlePass := true }) only [ronrw, reduceSubDiff] at ih
-        simp only [reversed_range_indt (ro - n - 1), forIn'_cons, Option.pure_def, Option.bind_eq_bind,
-          Option.bind_some] at ih
+        simp only [reversed_range_indt (ro - n - 1), forIn'_cons, Option.pure_def,
+          Option.bind_eq_bind, Option.bind_some] at ih
         have dom10 := dom8 n;     rewrite [ronrw]  at dom10
         have dom11 := dom8 (n+1); rewrite [ronrw0] at dom11
         let base1 := (usen O cf (s + 1-(ro - n - 1 )) (Nat.pair x.l (ro - n - 1 + x.r))).get dom11
@@ -551,7 +550,6 @@ theorem usen_mono_rfind' {O cf s x j} (hh : (usen O (rfind' cf) (s + 1) x).isSom
           simp only [h2]
           have : h1 ≤ ro := le_of_le_sub (le_of_le_sub h3)
           exact forInDom base this
-        -- let f (a : ℕ) (l : List ℕ) (h : a ∈ l) :ℕ := usen O cf (s + 1-) (Nat.pair x.l (a + x.r))
         have mainclause := @clause_mono_2_opt base1 base2
           (List.range (ro - n - 1)).reverse f
           (fun a head tail m l' h3t hht ↦ rfl)

@@ -12,8 +12,3 @@ theorem reversed_range_indt (n) : (range (n + 1)).reverse = n :: (range n).rever
   cases Classical.em (x<s+1) with
   | inl h => simp [h]
   | inr h => simp [h]
--- theorem getI_eq_getElem {i} {l : List ℕ} {h : i < l.length} :
---     l.getI i = l[i] := by
---   exact List.getI_eq_getElem l h
---   unfold List.getI
---   simp [h]

@@ -35,22 +35,14 @@ def Nat.r (n : ℕ) := n.unpair.2
 @[simp] theorem unpair1_to_l {n : ℕ} : (n.unpair.1) = n.l := by simp [Nat.l]
 @[simp] theorem unpair2_to_r {n : ℕ} : (n.unpair.2) = n.r := by simp [Nat.r]
 @[simp, reducible] def Nat.unpaired2 {α} (f : ℕ → ℕ → α) (n : ℕ) : α := f n.l n.r
-theorem pair_nonzero_right_pos_aux {x s : ℕ} : ¬ ⟪x, s+1⟫ = 0 := by
-  rw [show 0=Nat.pair 0 0 from rfl]
-  rw [pair_eq_pair]
-  intro h
-  have hr := h.right
-  contradiction
-@[simp] theorem pair_nonzero_right_pos {x s : ℕ} : ⟪x, s+1⟫ > 0 :=
-  zero_lt_of_ne_zero pair_nonzero_right_pos_aux
-theorem pair_nonzero_left_pos_aux {x s : ℕ} : ¬ (⟪s+1, x⟫ = 0) := by
-  rw [show 0=Nat.pair 0 0 from rfl]
-  rw [pair_eq_pair]
-  intro h
-  have hr := h.left
-  contradiction
-@[simp] theorem pair_nonzero_left_pos {x s : ℕ} : ⟪s+1, x⟫ > 0 :=
-  zero_lt_of_ne_zero pair_nonzero_left_pos_aux
+@[simp] theorem pair_nonzero_right_pos {x s : ℕ} : ⟪x, s+1⟫ > 0 := by
+  apply zero_lt_of_ne_zero
+  rewrite [show 0 = Nat.pair 0 0 from rfl]
+  simp [Nat.pair_eq_pair]
+@[simp] theorem pair_nonzero_left_pos {x s : ℕ} : ⟪s+1, x⟫ > 0 := by
+  apply zero_lt_of_ne_zero
+  rewrite [show 0 = Nat.pair 0 0 from rfl]
+  simp [Nat.pair_eq_pair]
 theorem pair_r_gt0 {x y} : x>0→(Nat.pair y x)>0 := by
   contrapose
   simp only [gt_iff_lt, not_lt, nonpos_iff_eq_zero]
@@ -65,18 +57,6 @@ theorem pair_l_gt0 {x y} : x>0→(Nat.pair x y)>0 := by
   rw [show x=(Nat.pair x y).unpair.1 from by simp [unpair_pair]]
   rw [h]
   simp [unpair_zero]
-theorem pair_r_ne_0 {x y} : x ≠ 0→(Nat.pair y x) ≠ 0 := by
-  contrapose
-  intro h
-  rw [show x=(Nat.pair y x).unpair.2 from by simp [unpair_pair]]
-  rw [h]
-  simp [unpair_zero]
-theorem pair_l_ne_0 {x y} : x ≠ 0→(Nat.pair x y) ≠ 0 := by
-  contrapose
-  intro h
-  rw [show x=(Nat.pair x y).unpair.1 from by simp [unpair_pair]]
-  rw [h]
-  simp [unpair_zero]
 end pair
 
 section list
@@ -85,7 +65,6 @@ abbrev Nat.l2n : List ℕ → ℕ := @Encodable.encode (List ℕ) _
 instance {lN} : OfNat (List ℕ) lN where ofNat := n2l lN
 instance : Coe ℕ (List ℕ) := ⟨n2l⟩
 instance : Coe (List ℕ) ℕ := ⟨l2n⟩
-
 end list
 
 def n2b (n : ℕ) : Bool := if n = 0 then false else true
@@ -97,36 +76,6 @@ theorem b2n_a0 {x} : b2n x = 0 ↔ x = false := by simp [b2n]
 open Denumerable Encodable
 abbrev n2o := @ofNat (Option ℕ) _
 abbrev o2n := @encode (Option ℕ) _
-
-section fs
-/-
-We define functions to treat naturals as finite sets.
--/
-abbrev fs_in := Nat.testBit
-/-
-Examples:
-fs_in 0b0010 0 = false
-fs_in 0b0010 1 = true
-fs_in 0b0010 2 = false
-fs_in 0b0010 3 = false
--/
-
-/-- `fs_add a x` gives the natural representing the set with `x` added to `a` interpreted as a
-finite set. -/
-abbrev fs_add : ℕ → ℕ → ℕ := fun a x ↦ a ||| (2^x)
-
-/-- `fs_add a` gives the the size of `a` interepreted as a finite set. -/
-def fs_size := List.length.comp Nat.bitIndices
-/-
-Examples:
-fs_size 0b010 = 1
-fs_size 0b111 = 3
-fs_size 0b011000111 = 5
--/
-
-theorem fs_in_singleton {x y} : fs_in (2^y) x ↔ x=y := by grind
-theorem fs_in_singleton' {x y} : Nat.testBit (2^y) x = false ↔ y ≠ x := by grind
-end fs
 
 namespace Oracle.Single.Code.nc_to_nn
 @[coe] protected def lift (f : ℕ → Code) : ℕ → ℕ := fun x => c2n (f x)
@@ -264,9 +213,9 @@ theorem evalp_eq_eval_ext {O c x} (h : code_prim c) : eval O c x = evalp O c x :
   | left => exact PrimrecIn.left
   | right => exact PrimrecIn.right
   | oracle => exact PrimrecIn.oracle
-  | pair ha hb ha_ih hb_ih => unfold evalp; exact PrimrecIn.pair (ha_ih) (hb_ih)
-  | comp ha hb ha_ih hb_ih => unfold evalp; exact PrimrecIn.comp (ha_ih) (hb_ih)
-  | prec ha hb ha_ih hb_ih => unfold evalp; exact PrimrecIn.prec (ha_ih) (hb_ih)
+  | pair ha hb ha_ih hb_ih => unfold evalp; exact PrimrecIn.pair ha_ih hb_ih
+  | comp ha hb ha_ih hb_ih => unfold evalp; exact PrimrecIn.comp ha_ih hb_ih
+  | prec ha hb ha_ih hb_ih => unfold evalp; exact PrimrecIn.prec ha_ih hb_ih
   | rfind' ha ha_ih => exact PrimrecIn.zero
 theorem code_prim_of_primrecIn {O f} (h : PrimrecIn O f) : ∃ c, code_prim c ∧ f=evalp O c := by
   induction h with
@@ -350,9 +299,8 @@ namespace Oracle.Single.Code
   | left => exact RecursiveIn.left
   | right => exact RecursiveIn.right
   | oracle => exact RecursiveIn.oracle
-  | pair ha hb ha_ih hb_ih => unfold eval; exact RecursiveIn.pair (ha_ih) (hb_ih)
-  | comp ha hb ha_ih hb_ih => unfold eval; exact RecursiveIn.comp (ha_ih) (hb_ih)
-  | prec ha hb ha_ih hb_ih => unfold eval; exact RecursiveIn.prec (ha_ih) (hb_ih)
-  | rfind' ha ha_ih => unfold eval; exact RecursiveIn.rfind ha_ih
-
+  | pair ha hb ha_ih hb_ih => exact RecursiveIn.pair ha_ih hb_ih
+  | comp ha hb ha_ih hb_ih => exact RecursiveIn.comp ha_ih hb_ih
+  | prec ha hb ha_ih hb_ih => exact RecursiveIn.prec ha_ih hb_ih
+  | rfind' ha ha_ih => exact RecursiveIn.rfind ha_ih
 end Oracle.Single.Code
