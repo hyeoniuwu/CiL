@@ -23,8 +23,6 @@ protected theorem Option.isSome.bind {α β} {o : Option α}
   exact h2
 theorem Part.mem_imp_dom {x} {p : Part ℕ} : x ∈ p  → p.Dom :=
   fun h => by simp [Part.eq_some_iff.mpr h]
-theorem Part.eq_some_of_dom {x : Part ℕ} (h : x.Dom) : x = Part.some (x.get h) := by
-  exact Part.get_eq_iff_eq_some.mp rfl
 theorem Option.isSome_iff_mem {β} {o : Option β} : o.isSome ↔ (∃z ,z∈o) := by
   have h1 := @Option.isSome_iff_exists β o
   simp [h1]

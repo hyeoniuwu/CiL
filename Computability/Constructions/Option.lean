@@ -25,7 +25,8 @@ def c_isSome := c_sg'
 @[simp, evp_simps] theorem c_isSome_evp {O : ℕ → ℕ} :
     evalp O c_isSome = fun o => b'2n <| (n2o o).isSome := by
   funext x; cases x <;> simp [c_isSome, b'2n, n2o]
-@[simp, ev_simps] theorem c_isSome_ev {O : ℕ → ℕ} : eval O c_isSome = fun o => b'2n <| (n2o o).isSome := by
+@[simp, ev_simps] theorem c_isSome_ev {O : ℕ → ℕ} :
+    eval O c_isSome = fun o => b'2n <| (n2o o).isSome := by
   rw [← evalp_eq_eval c_isSome_prim]; simp only [c_isSome_evp];
 end Oracle.Single.Code
 end isSome
