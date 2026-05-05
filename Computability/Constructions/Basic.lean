@@ -110,7 +110,8 @@ open Classical in
 end if_eq_te'
 
 section ifdom
-def c_ifdom (c a : Oracle.Single.Code) := c_add.comp₂ (zero.comp c) a
+/-- `c_ifdom c a` evaluates code `c`, then code `a`. -/
+def c_ifdom (c a : Code) := c_add.comp₂ (zero.comp c) a
 open Classical in
 @[simp, ev_simps] theorem c_ifdom_ev {O c a x} :
     eval O (c_ifdom c a) x = if (eval O c x).Dom then (eval O a x) else Part.none := by
@@ -120,9 +121,10 @@ open Classical in
 end ifdom
 
 section evaln₁
-def c_evaln₁ := c_evaln.comp₃ (left.comp right) left (right.comp right)
+/-- `evaln₁` is a wrapper for `evaln`, which packs the steps, code and input into one argument. -/
 def evaln₁ (O : ℕ → ℕ) : ℕ → ℕ :=
   fun abc => Encodable.encode (evaln O abc.right.right abc.left.n2c abc.right.left)
+def c_evaln₁ := c_evaln.comp₃ (left.comp right) left (right.comp right)
 theorem c_evaln₁_evp {O : ℕ → ℕ} : evalp O c_evaln₁ = evaln₁ O := by
   unfold evaln₁
   simp [c_evaln₁]
@@ -131,12 +133,12 @@ theorem prim_evaln₁ {O : ℕ → ℕ} : PrimrecIn O (evaln₁ O) := by
 end evaln₁
 
 section eval₁
+/-- `eval₁` is a wrapper for `eval`, which packs the code and input into one argument. -/
 def eval₁ (O : ℕ → ℕ) : ℕ →. ℕ := fun ex => eval O ex.left.n2c ex.right
 def c_eval₁ := c_eval
 @[simp, ev_simps] theorem c_eval₁_ev {O : ℕ → ℕ} : eval O c_eval₁ = eval₁ O := by
   unfold eval₁
   simp [c_eval₁]
-
 theorem rec_eval₁ {O : ℕ → ℕ} : RecursiveIn O (eval₁ O) := RecursiveIn.Rin.eval
 end eval₁
 
