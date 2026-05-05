@@ -62,11 +62,6 @@ theorem hnat_2 {o : Option ℕ} (ho : o.isSome) : (o2n o) - 1 = o.get ho := by
   exact rfl
 theorem hnat_6 {i} (h : i ≠ 0) : (n2o i).isSome := by
   rewrite [ge_0_rw h]; rfl
-theorem hnat_8 {o} (h : (n2o o).isSome) : o ≠ 0 := by
-  contrapose h
-  simp [h]
-theorem hnat_7 {o h} : (n2o o).get h = o-1 := by
-  simp (config := {singlePass := true}) [ge_0_rw (hnat_8 h)]
 theorem getD_eq_get {x} {o : Option ℕ} (h : o.isSome) : o.getD x = o.get h :=
   Eq.symm (Option.get_eq_getD o)
 theorem o2n_a0 {x} : o2n x = 0 ↔ x = Option.none := by
