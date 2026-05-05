@@ -309,7 +309,8 @@ section mod
 namespace Oracle.Single.Code
 def c_mod := c_sub.comp₂ left (c_mul.comp₂ right c_div)
 @[cp] theorem c_mod_prim : code_prim c_mod := by unfold c_mod; apply_cp
-@[simp, evp_simps] theorem c_mod_evp {O : ℕ → ℕ} : evalp O c_mod = unpaired2 ((· % ·) : ℕ → ℕ → ℕ) := by
+@[simp, evp_simps] theorem c_mod_evp {O : ℕ → ℕ} :
+    evalp O c_mod = unpaired2 ((· % ·) : ℕ → ℕ → ℕ) := by
   simp only [c_mod, comp₂_evp, evalp, c_mul_evp, c_sub_evp]
   funext mn
   let m := mn.left
@@ -319,7 +320,8 @@ def c_mod := c_sub.comp₂ left (c_mul.comp₂ right c_div)
   apply Nat.sub_eq_of_eq_add
   simp [add_comm (m % n), Nat.div_add_mod]
 
-@[simp, ev_simps] theorem c_mod_ev {O : ℕ → ℕ} : eval O c_mod = unpaired2 ((· % ·) : ℕ → ℕ → ℕ) := by
+@[simp, ev_simps] theorem c_mod_ev {O : ℕ → ℕ} :
+    eval O c_mod = unpaired2 ((· % ·) : ℕ → ℕ → ℕ) := by
   rw [← evalp_eq_eval c_mod_prim]; simp only [c_mod_evp]
 end Oracle.Single.Code
 end mod
@@ -339,7 +341,7 @@ section mod2
 namespace Oracle.Single.Code
 def c_mod2 := c_mod.comp₂ c_id (c_const 2)
 @[cp] theorem c_mod2_prim : code_prim c_mod2 := by unfold c_mod2; apply_cp
-@[simp, evp_simps] theorem c_mod2_evp {O : ℕ → ℕ} : evalp O c_mod2 = fun x ↦ x%2 := by simp [c_mod2];
+@[simp, evp_simps] theorem c_mod2_evp {O : ℕ → ℕ} : evalp O c_mod2 = fun x ↦ x%2 := by simp [c_mod2]
 @[simp, ev_simps] theorem c_mod2_ev {O : ℕ → ℕ} : eval O c_mod2 = (fun x : ℕ ↦ x%2) := by
   simp [← evalp_eq_eval c_mod2_prim]
 end Oracle.Single.Code
