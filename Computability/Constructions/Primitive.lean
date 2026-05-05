@@ -208,7 +208,7 @@ def c_add := (prec c_id ((succ.comp right).comp right))
   simp only [c_add, evp_simps]
   funext n;
   simp only [unpaired, unpair1_to_l, succ_eq_add_one, unpair2_to_r, unpaired2, add_eq]
-  induction n.r with
+  induction n.right with
   | zero => exact rfl
   | succ n h => exact Nat.add_left_inj.mpr h
 @[simp, ev_simps] theorem c_add_ev {O : ℕ → ℕ} : eval O c_add = unpaired2 Nat.add := by
@@ -223,7 +223,7 @@ def c_mul := prec zero (c_add.comp (pair left (right.comp right)))
   simp only [c_mul, evp_simps]
   funext n;
   simp only [unpaired, unpaired2, unpair1_to_l, pair_l, pair_r, add_eq, unpair2_to_r, mul_eq]
-  induction n.r with
+  induction n.right with
   | zero => exact rfl
   | succ n h =>
     simp only [*, mul_succ];
@@ -240,7 +240,7 @@ def c_pow := prec (c_const 1) (c_mul.comp (pair (right.comp right) left))
   simp only [c_pow, evp_simps]
   funext n;
   simp only [unpaired, unpaired2, unpair1_to_l, pair_l, pair_r, unpair2_to_r, mul_eq]
-  induction n.r with
+  induction n.right with
   | zero => exact rfl
   | succ n h => simp [*, pow_succ];
 @[simp, ev_simps] theorem c_pow_ev {O : ℕ → ℕ} : eval O c_pow = unpaired2 Nat.pow := by
@@ -292,7 +292,7 @@ def c_sub := prec c_id ((c_pred.comp right).comp right)
   funext n;
   simp? [unpaired2] says
     simp only [unpaired, unpair1_to_l, pred_eq_sub_one, unpair2_to_r, unpaired2, sub_eq]
-  induction n.r with
+  induction n.right with
   | zero => exact rfl
   | succ n h =>
     simp [*, Nat.sub_add_eq];
@@ -321,12 +321,12 @@ namespace Oracle.Single.Code
 def c_if_eq' := c_sg.comp c_dist
 @[cp] theorem c_if_eq'_prim : code_prim c_if_eq' := by unfold c_if_eq'; apply_cp
 @[simp, evp_simps] theorem c_if_eq'_evp {O : ℕ → ℕ} :
-    evalp O c_if_eq' = fun ab => if ab.l=ab.r then 0 else 1 := by
+    evalp O c_if_eq' = fun ab => if ab.left=ab.right then 0 else 1 := by
   simp [c_if_eq', evp_simps];
 @[simp, ev_simps] theorem c_if_eq'_ev {O : ℕ → ℕ} :
-    eval O c_if_eq' = fun ab => if ab.l=ab.r then Part.some 0 else Part.some 1 := by
+    eval O c_if_eq' = fun ab => if ab.left=ab.right then Part.some 0 else Part.some 1 := by
   rw [← evalp_eq_eval c_if_eq'_prim]; simp only [c_if_eq'_evp]; funext xs;
-  exact apply_ite Part.some (xs.l = xs.r) 0 1
+  exact apply_ite Part.some (xs.left = xs.right) 0 1
 end Oracle.Single.Code
 end if_eq'
 
@@ -355,16 +355,16 @@ def c_if_eq_te :=
   rw [← evalp_eq_eval c_if_eq_te_prim];
   simp [evp_simps]
 theorem c_if_eq_te_evp' {O : ℕ → ℕ} :
-    evalp O c_if_eq_te = fun x => if x.l.l=x.l.r then x.r.l else x.r.r := by
+    evalp O c_if_eq_te = fun x => if x.left.left=x.left.right then x.right.left else x.right.right := by
   simp only [c_if_eq_te, evp_simps];
   funext xs
-  cases Classical.em (xs.l.l=xs.l.r) with
+  cases Classical.em (xs.left.left=xs.left.right) with
   | inl h => simp [h]
   | inr h => simp [h]
 theorem c_if_eq_te_ev' {O : ℕ → ℕ} :
-    eval O c_if_eq_te = fun x => if x.l.l=x.l.r then x.r.l else x.r.r := by
+    eval O c_if_eq_te = fun x => if x.left.left=x.left.right then x.right.left else x.right.right := by
   rw [← evalp_eq_eval c_if_eq_te_prim]; simp only [c_if_eq_te_evp']; funext xs;
-  cases Classical.em (xs.l.l=xs.l.r) with
+  cases Classical.em (xs.left.left=xs.left.right) with
   | inl h => simp [h]
   | inr h => simp [h]
 
@@ -458,18 +458,18 @@ def c_ifz := c_add.comp <| pair
   (c_mul.comp <| pair (c_sg.comp left)  (right.comp right))
 @[cp] theorem c_ifz_prim : code_prim c_ifz := by unfold c_ifz; apply_cp
 @[simp, evp_simps] theorem c_ifz_evp {O : ℕ → ℕ} :
-    evalp O c_ifz = fun (cab : ℕ) => if cab.l=0 then cab.r.l else cab.r.r := by
+    evalp O c_ifz = fun (cab : ℕ) => if cab.left=0 then cab.right.left else cab.right.right := by
   simp only [c_ifz, evp_simps];
   funext xs
-  have hsplit : xs.l = 0 ∨ ¬ (xs.l = 0) := by exact Or.symm (ne_or_eq xs.l 0)
+  have hsplit : xs.left = 0 ∨ ¬ (xs.left = 0) := by exact Or.symm (ne_or_eq xs.left 0)
   cases hsplit with
   | inl h => simp [h]
   | inr h => simp [h]
 theorem c_ifz_ev' {O : ℕ → ℕ} :
-    eval O c_ifz = fun (cab : ℕ) => if cab.l=0 then cab.r.l else cab.r.r := by
+    eval O c_ifz = fun (cab : ℕ) => if cab.left=0 then cab.right.left else cab.right.right := by
   rw [← evalp_eq_eval c_ifz_prim]; simp only [c_ifz_evp];
 @[simp, ev_simps] theorem c_ifz_ev {O : ℕ → ℕ} {cab} :
-    eval O c_ifz cab = if cab.l=0 then cab.r.l else cab.r.r := by
+    eval O c_ifz cab = if cab.left=0 then cab.right.left else cab.right.right := by
   simp [c_ifz_ev']
 end Oracle.Single.Code
 end ifz
@@ -479,18 +479,18 @@ namespace Oracle.Single.Code
 def c_ift := c_ifz.comp₂ (c_sg'.comp <| left) right
 @[cp] theorem c_ift_prim : code_prim c_ift := by unfold c_ift; apply_cp
 @[simp, evp_simps] theorem c_ift_evp {O : ℕ → ℕ} :
-    evalp O c_ift = fun (cab : ℕ) => if (n2b cab.l) then cab.r.l else cab.r.r := by
+    evalp O c_ift = fun (cab : ℕ) => if (n2b cab.left) then cab.right.left else cab.right.right := by
   simp only [c_ift, evp_simps];
   funext xs
-  have hsplit : xs.l = 0 ∨ ¬ (xs.l = 0) := by exact Or.symm (ne_or_eq xs.l 0)
+  have hsplit : xs.left = 0 ∨ ¬ (xs.left = 0) := by exact Or.symm (ne_or_eq xs.left 0)
   cases hsplit with
   | inl h => simp [h, n2b]
   | inr h => simp [h, n2b]
 theorem c_ift_ev' {O : ℕ → ℕ} :
-    eval O c_ift = fun (cab : ℕ) => if (n2b cab.l) then cab.r.l else cab.r.r := by
+    eval O c_ift = fun (cab : ℕ) => if (n2b cab.left) then cab.right.left else cab.right.right := by
   rw [← evalp_eq_eval c_ift_prim]; simp only [c_ift_evp];
 @[simp, ev_simps] theorem c_ift_ev {O : ℕ → ℕ} {cab} :
-    eval O c_ift cab = if (n2b cab.l) then cab.r.l else cab.r.r := by
+    eval O c_ift cab = if (n2b cab.left) then cab.right.left else cab.right.right := by
   simp [c_ift_ev']
 end Oracle.Single.Code
 end ift

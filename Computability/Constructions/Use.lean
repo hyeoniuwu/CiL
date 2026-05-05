@@ -208,8 +208,8 @@ private lemma hnat_5 {a b} (h : a ≠ 0) : ((a-1).max (b-1))+1 = a.max b := by
 theorem c_usen_evp_aux_nMod4 {O x n s} :
     evalp O c_usen ⟪x, (n+4)+1, s+1⟫ =
     let m := n.div2.div2
-    let ml := m.l
-    let mr := m.r
+    let ml := m.left
+    let mr := m.right
     let k := ⟪(n+4)+1, s+1⟫-1
     let inp := (evalp O c_usen_aux ⟪17, k⟫)
     let cri := ⟪17, k, inp⟫
@@ -244,7 +244,7 @@ theorem c_usen_evp_aux_nMod4 {O x n s} :
       let usen_base  ← n2o <| pc_m_s left x
       let evaln_base ← evaln O (s+1) m.n2c x
       if evaln_base=0 then usen_base else
-      let usen_indt  ← n2o <| pc_c_sM1 left (Nat.pair x.l (x.r+1))
+      let usen_indt  ← n2o <| pc_c_sM1 left (Nat.pair x.left (x.right+1))
       return Nat.max usen_base usen_indt)
         if n%4=0 then opt_pair x
     else if n%4=1 then opt_comp x
@@ -383,27 +383,27 @@ theorem c_usen_evp_aux_nMod4 {O x n s} :
           simp [hnat_5 h4]
   have hcomp_mapped : evalp O comp_mapped cri = (map (opt_comp) (range (s+1))) := by
     simp [comp_mapped, hs,hopt_comp]
-  have hprec_x elem : evalp O prec_x ⟪elem, cri⟫ = elem.l := by simp [prec_x,ele]
-  have hprec_i elem : evalp O prec_i ⟪elem, cri⟫ = elem.r := by simp [prec_i,ele]
-  have hprec_iM1 elem : evalp O prec_iM1 ⟪elem, cri⟫ = elem.r-1 := by simp [prec_iM1,hprec_i]
+  have hprec_x elem : evalp O prec_x ⟪elem, cri⟫ = elem.left := by simp [prec_x,ele]
+  have hprec_i elem : evalp O prec_i ⟪elem, cri⟫ = elem.right := by simp [prec_i,ele]
+  have hprec_iM1 elem : evalp O prec_iM1 ⟪elem, cri⟫ = elem.right-1 := by simp [prec_iM1,hprec_i]
   have hprec_usen_base elem :
-      evalp O prec_usen_base ⟪elem, cri⟫ = ((pc_ml_s left elem.l)) := by
+      evalp O prec_usen_base ⟪elem, cri⟫ = ((pc_ml_s left elem.left)) := by
     simp [prec_usen_base, hpc_ml_s];
     simp [pc_ml_s, hprec_x]
   have hprec_usen_prev elem :
       (evalp O prec_usen_prev ⟪elem, cri⟫) =
-      (pc_c_sM1 left (Nat.pair elem.l (elem.r-1))) := by
+      (pc_c_sM1 left (Nat.pair elem.left (elem.right-1))) := by
     simp [prec_usen_prev,hpc_c_sM1,pc_c_sM1,hprec_x,hprec_iM1]
   have hprec_evaln_prev elem :
       (evalp O prec_evaln_prev ⟪elem, cri⟫) =
-      o2n (evaln O s (n2c (n+4+1)) (Nat.pair elem.l (elem.r - 1))) := by
+      o2n (evaln O s (n2c (n+4+1)) (Nat.pair elem.left (elem.right - 1))) := by
     simp [prec_evaln_prev,hsM1,hcode,hprec_x,hprec_iM1]
   have hprec_usen_indt elem hdom :
       (evalp O prec_usen_indt ⟪elem, cri⟫) =
       pc_mr_s left
-        (Nat.pair elem.l
-        (Nat.pair (elem.r - 1) ((evaln O s (n2c (n + 4 + 1))
-        (Nat.pair elem.l (elem.r - 1))).get hdom))) := by
+        (Nat.pair elem.left
+        (Nat.pair (elem.right - 1) ((evaln O s (n2c (n + 4 + 1))
+        (Nat.pair elem.left (elem.right - 1))).get hdom))) := by
     simp only [prec_usen_indt,hpc_mr_s,pc_mr_s,hprec_x, hprec_iM1,hprec_evaln_prev, evp_simps]
     apply congrArg; apply congrFun; apply congrArg; apply congrArg; apply congrArg
     exact hnat_2 hdom
@@ -421,27 +421,27 @@ theorem c_usen_evp_aux_nMod4 {O x n s} :
         simp only [↓reduceIte, evalp, pair_l, Encodable.encode_none, unpaired2, pair_r,
           succ_eq_add_one, guard_true, Option.pure_def, unpair1_to_l, Option.bind_eq_bind,
           unpair2_to_r, Option.bind_some]
-      cases helemr : elem.r with
+      cases helemr : elem.right with
       | zero => simp
       | succ elemrM1 =>
-        have rm1rw : elemrM1 = elem.r -1 := Nat.eq_sub_of_add_eq (_root_.id (Eq.symm helemr))
+        have rm1rw : elemrM1 = elem.right -1 := Nat.eq_sub_of_add_eq (_root_.id (Eq.symm helemr))
         rw [rm1rw]
         simp only [hprec_usen_prev, hprec_evaln_prev]
         simp only [Nat.add_eq_zero_iff, one_ne_zero, and_false, ↓reduceIte]
-        cases Classical.em (evaln O s (n2c (n + 4 + 1)) ⟪elem.l, elem.r - 1⟫ = Option.none) with
+        cases Classical.em (evaln O s (n2c (n + 4 + 1)) ⟪elem.left, elem.right - 1⟫ = Option.none) with
         | inl h2 => simp [h2]
         | inr h2 =>
         simp only [hnat_1 h2, ↓reduceIte]
         simp only [Option.isSome.bind <| Option.ne_none_iff_isSome.mp h2]
         simp only [hprec_usen_indt elem (Option.ne_none_iff_isSome.mp h2)]
-        cases Classical.em ((pc_mr_s left ⟪elem.l, elem.r - 1,
-            (evaln O s (n2c (n + 4 + 1)) (Nat.pair elem.l (elem.r - 1))).get
+        cases Classical.em ((pc_mr_s left ⟪elem.left, elem.right - 1,
+            (evaln O s (n2c (n + 4 + 1)) (Nat.pair elem.left (elem.right - 1))).get
             (Option.ne_none_iff_isSome.mp h2)⟫) =
           o2n Option.none) with
         | inl h3 => simp [h3]
         | inr h3 =>
           simp only [not_zero_of_not_none h3, encode_nonzero_opt h3]
-          cases Classical.em (pc_c_sM1 left (Nat.pair elem.l (elem.r - 1)) = o2n Option.none)  with
+          cases Classical.em (pc_c_sM1 left (Nat.pair elem.left (elem.right - 1)) = o2n Option.none)  with
           | inl h4 => simp [h4]
           | inr h4 => simp [not_zero_of_not_none h4, encode_nonzero_opt h4]
   have hprec_mapped : evalp O prec_mapped cri = (map (opt_prec) (range (s+1))) := by
@@ -454,7 +454,7 @@ theorem c_usen_evp_aux_nMod4 {O x n s} :
     simp [rfind'_evaln_base,hs,hm,ele]
   have hrfind'_usen_indt elem:
       evalp O rfind'_usen_indt ⟪elem, cri⟫ =
-      (pc_c_sM1 left (Nat.pair elem.l (elem.r + 1))) := by
+      (pc_c_sM1 left (Nat.pair elem.left (elem.right + 1))) := by
     simp [rfind'_usen_indt,hpc_c_sM1,ele,pc_c_sM1]
   have hopt_rfind' :
       (fun ele => evalp O opt_rfind'_1 ⟪ele, cri⟫) =
@@ -484,7 +484,7 @@ theorem c_usen_evp_aux_nMod4 {O x n s} :
           | zero => simpa using (succ_pred_eq_of_ne_zero (not_zero_of_not_none h2)).symm
           | succ _ =>
             simp only [hrfind'_usen_indt]
-            cases Classical.em ( pc_c_sM1 left (Nat.pair elem.l (elem.r + 1))=o2n Option.none) with
+            cases Classical.em ( pc_c_sM1 left (Nat.pair elem.left (elem.right + 1))=o2n Option.none) with
             | inl h4 => simp [h4]
             | inr h4 => simp [not_zero_of_not_none h4, encode_nonzero_opt h4]
   have hrfind'_mapped : evalp O rfind'_mapped cri = (map (opt_rfind') (range (s+1))) := by
@@ -508,12 +508,12 @@ theorem c_usen_evp_aux_nMod4 {O x n s} :
     o2n (usen O code.n2c s x) := by
   let code_s := Nat.pair code s
   rw [show Nat.pair code s = code_s by rfl]
-  rw [show code = code_s.l by simp [code_s]]
-  rw [show s = code_s.r by simp [code_s]]
+  rw [show code = code_s.left by simp [code_s]]
+  rw [show s = code_s.right by simp [code_s]]
   induction code_s using Nat.strong_induction_on generalizing x with
   | _ code_s ih =>
-  let code := code_s.l
-  let s := code_s.r
+  let code := code_s.left
+  let s := code_s.right
   rw [show code_s = (Nat.pair code s) from by simp [code,s]]
   simp only [pair_r, pair_l]
   match hs_val : s,hcode_val : code with
@@ -529,15 +529,15 @@ theorem c_usen_evp_aux_nMod4 {O x n s} :
   rw [succ_eq_add_one] at hs_val
   let m := n.div2.div2
   have hm : m < n + 5 := c_evaln_bounds_0
-  have _m1 : m.l < n + 5 := lt_of_le_of_lt m.unpair_left_le hm
-  have _m2 : m.r < n + 5 := lt_of_le_of_lt m.unpair_right_le hm
+  have _m1 : m.left < n + 5 := lt_of_le_of_lt m.unpair_left_le hm
+  have _m2 : m.right < n + 5 := lt_of_le_of_lt m.unpair_right_le hm
   have hcode_s : code_s=Nat.pair (n+5) (sM1+1) := by
     rw [←hs_val]
     rw [←hcode_val]
     simp only [code,s]
     simp only [pair_lr]
-  let ml_s  := ⟪m.l,   sM1+1⟫
-  let mr_s  := ⟪m.r,   sM1+1⟫
+  let ml_s  := ⟪m.left,   sM1+1⟫
+  let mr_s  := ⟪m.right,   sM1+1⟫
   let m_s   := ⟪m,     sM1+1⟫
   let c_sM1 := ⟪n+4+1, sM1⟫
   have ml_s_lt_cs  : ml_s  < code_s := by rw [hcode_s]; exact pair_lt_pair_left  (sM1+1) _m1
@@ -569,11 +569,11 @@ theorem c_usen_evp_aux_nMod4 {O x n s} :
       apply congrArg; funext _1 _2
       rw [ih c_sM1 c_sM1_lt_cs]
       simp only [Nat.n2c, Denumerable.ofNat_encode]
-      have rw3_aux : c2n (((n2c n.div2.div2.l).prec (n2c n.div2.div2.r))) = (n + 4 + 1) := by
+      have rw3_aux : c2n (((n2c n.div2.div2.left).prec (n2c n.div2.div2.right))) = (n + 4 + 1) := by
         simpa [c2n] using codes_aux_2 hno hn2o
-      have rw3 : ((n2c n.div2.div2.l).prec (n2c n.div2.div2.r)) = (n2c (n + 4 + 1)) := by
+      have rw3 : ((n2c n.div2.div2.left).prec (n2c n.div2.div2.right)) = (n2c (n + 4 + 1)) := by
         rw [←(n2c_c2n (n2c (n + 4 + 1)))]
-        rw [←(n2c_c2n (((n2c n.div2.div2.l).prec (n2c n.div2.div2.r))))]
+        rw [←(n2c_c2n (((n2c n.div2.div2.left).prec (n2c n.div2.div2.right))))]
         simp [rw3_aux]
       rw [rw3]
       unfold c_sM1

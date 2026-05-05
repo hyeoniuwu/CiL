@@ -54,7 +54,7 @@ def c_list_tail := right.comp c_pred
     evalp O c_list_tail lN = l2n (tail (n2l lN)) := by
   simp only [c_list_tail]
   by_cases hl : lN=0
-  · simp [hl,r]
+  · simp [hl, Nat.right]
   · rw [←(exists_add_one_eq.mpr (one_le_iff_ne_zero.mpr hl)).choose_spec]; simp
 @[simp, ev_simps] theorem c_list_tail_ev {O : ℕ → ℕ} {lN : ℕ} :
     eval O c_list_tail lN = l2n (tail (n2l lN)) := by
@@ -667,7 +667,7 @@ def c_list_foldr_param (c : Code) := right.comp (c_list_foldr_param_aux c)
   apply_cp
 lemma c_list_foldr_param_aux_2 {f : ℕ → ℕ} {param init lst} :
     foldr
-      (fun a b ↦ ⟪a.l, f ⟪a.l, a.r, b.r⟫⟫)
+      (fun a b ↦ ⟪a.left, f ⟪a.left, a.right, b.right⟫⟫)
       ⟪param,init⟫
       (zipWith (fun (x y : ℕ) ↦ ⟪x,y⟫) (replicate lst.length param) lst) =
     ⟪param,foldr (fun a b ↦ f ⟪param,⟪a,b⟫⟫) init lst⟫ := by

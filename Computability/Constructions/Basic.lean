@@ -138,7 +138,7 @@ end ifdom
 section evaln₁
 def c_evaln₁ := c_evaln.comp₃ (left.comp right) left (right.comp right)
 def evaln₁ (O : ℕ → ℕ) : ℕ → ℕ :=
-  fun abc => Encodable.encode (evaln O abc.r.r abc.l.n2c abc.r.l)
+  fun abc => Encodable.encode (evaln O abc.right.right abc.left.n2c abc.right.left)
 theorem c_evaln₁_evp {O : ℕ → ℕ} : evalp O c_evaln₁ = evaln₁ O := by
   unfold evaln₁
   simp [c_evaln₁]
@@ -147,7 +147,7 @@ theorem prim_evaln₁ {O : ℕ → ℕ} : PrimrecIn O (evaln₁ O) := by
 end evaln₁
 
 section eval₁
-def eval₁ (O : ℕ → ℕ) : ℕ →. ℕ := fun ex => eval O ex.l.n2c ex.r
+def eval₁ (O : ℕ → ℕ) : ℕ →. ℕ := fun ex => eval O ex.left.n2c ex.right
 def c_eval₁ := c_eval
 @[simp, ev_simps] theorem c_eval₁_ev {O : ℕ → ℕ} : eval O c_eval₁ = eval₁ O := by
   unfold eval₁

@@ -19,8 +19,8 @@ If such a `y` exists, `dovetail c` is guaranteed to find it.
 ## Construction
 
 def dovetail c x :
-  find the smallest y s.t. [c]_{y.l}(x, y.r) = 0. -- this can be done with rfind.
-  return y.r
+  find the smallest y s.t. [c]_{y.l}(x, y.right) = 0. -- this can be done with rfind.
+  return y.right
 
 Note then that this guarantees: `∃ y,[c](x,y)=0 ↔ [dovetail c](x)↓`
 
@@ -52,7 +52,7 @@ def dovetailn (c : Code) : Code :=
 set_option linter.unusedVariables false in -- why does hdvt give a warning?
 theorem dovetailn_ev_0 {O : ℕ → ℕ} {c : Code} {x : ℕ} (h : (eval O (dovetailn c) x).Dom) :
 let (eq := hdvt) dvt := (eval O (dovetailn c) x).get h
-evaln O dvt.r c ⟪x, dvt.l⟫=Option.some 0 := by
+evaln O dvt.right c ⟪x, dvt.left⟫=Option.some 0 := by
   extract_lets; expose_names
   unfold dovetailn at h hdvt
   have := Part.get_mem h
@@ -74,7 +74,7 @@ evaln O dvt.r c ⟪x, dvt.l⟫=Option.some 0 := by
   exact Encodable.encode_inj.mp this
 theorem dovetailn_ev_0' {O : ℕ → ℕ} {c : Code} {x : ℕ} (h : (eval O (dovetailn c) x).Dom) :
 let dvt := (eval O (dovetailn c) x).get h
-eval O c ⟪x, dvt.l⟫=Part.some 0 := by
+eval O c ⟪x, dvt.left⟫=Part.some 0 := by
   have := dovetailn_ev_0 h
   extract_lets
   expose_names
@@ -146,7 +146,7 @@ theorem dovetail_ev_0 {O : ℕ → ℕ} {c : Code} {x : ℕ} (h : (eval O (dovet
   extract_lets
   extract_lets at main
   expose_names
-  have : dvt = dvt_1.l := by simp [dvt_1,dvt,dovetail, eval, Part.Dom.bind this]
+  have : dvt = dvt_1.left := by simp [dvt_1,dvt,dovetail, eval, Part.Dom.bind this]
   rw [this]
   exact main
 

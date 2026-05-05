@@ -86,13 +86,13 @@ def c_pair := c_add.comp₂ (c_mul2.comp <| c_mul2) (c_const 5)
 @[simp, evp_simps] theorem c_pair_evp {O a b} :
   evalp O c_pair ⟪a, b⟫ = c2n (pair (n2c a) (n2c b)) := by simp [c2n, c_pair, Nat.mul_comm]
 @[simp, evp_simps] theorem c_pair_evp' {O : ℕ → ℕ} :
-    evalp O c_pair = fun ab : ℕ => c2n (pair (n2c ab.l) (n2c ab.r)) := by
+    evalp O c_pair = fun ab : ℕ => c2n (pair (n2c ab.left) (n2c ab.right)) := by
   simp [c2n, c_pair, Nat.mul_comm]
 @[simp, ev_simps] theorem c_pair_ev {O a b} :
     eval O c_pair ⟪a, b⟫ = c2n (pair (n2c a) (n2c b)) := by
   rw [← evalp_eq_eval c_pair_prim]; simp
 @[simp] theorem PrimrecIn.c_pair {O : ℕ → ℕ} :
-    PrimrecIn O (fun ab : ℕ => c2n (pair (n2c ab.l) (n2c ab.r))) := by
+    PrimrecIn O (fun ab : ℕ => c2n (pair (n2c ab.left) (n2c ab.right))) := by
   rw [←c_pair_evp']; exact code_prim_prop
 
 def c_comp := c_add.comp₂ (c_mul2.comp <| c_mul2) (c_const 6)
@@ -100,13 +100,13 @@ def c_comp := c_add.comp₂ (c_mul2.comp <| c_mul2) (c_const 6)
 @[simp, evp_simps] theorem c_comp_evp {O a b} :
   evalp O c_comp ⟪a, b⟫ = c2n (comp (n2c a) (n2c b)) := by simp [c2n, c_comp, Nat.mul_comm]
 @[simp, evp_simps] theorem c_comp_evp' {O : ℕ → ℕ} :
-    evalp O c_comp = fun ab : ℕ => c2n (comp (n2c ab.l) (n2c ab.r)) := by
+    evalp O c_comp = fun ab : ℕ => c2n (comp (n2c ab.left) (n2c ab.right)) := by
   simp [c2n, c_comp, Nat.mul_comm]
 @[simp, ev_simps] theorem c_comp_ev {O a b} :
     eval O c_comp ⟪a, b⟫ = c2n (comp (n2c a) (n2c b)) := by
   rw [← evalp_eq_eval c_comp_prim]; simp
 @[simp] theorem PrimrecIn.c_comp {O : ℕ → ℕ} :
-    PrimrecIn O (fun ab : ℕ => c2n (comp (n2c ab.l) (n2c ab.r))) := by
+    PrimrecIn O (fun ab : ℕ => c2n (comp (n2c ab.left) (n2c ab.right))) := by
   rw [←c_comp_evp']; exact code_prim_prop
 
 def c_prec := c_add.comp₂ (c_mul2.comp <| c_mul2) (c_const 7)
@@ -115,10 +115,10 @@ def c_prec := c_add.comp₂ (c_mul2.comp <| c_mul2) (c_const 7)
     evalp O c_prec ⟪a, b⟫ = c2n (prec (n2c a) (n2c b)) := by
   simpa [c2n, c_prec, evp_simps, Nat.mul_comm] using (by rfl)
 @[simp, evp_simps] theorem c_prec_evp' {O : ℕ → ℕ} :
-    evalp O c_prec = fun ab : ℕ => c2n (prec (n2c ab.l) (n2c ab.r)) := by
+    evalp O c_prec = fun ab : ℕ => c2n (prec (n2c ab.left) (n2c ab.right)) := by
   simpa [c2n, c_prec, evp_simps, Nat.mul_comm] using (by rfl)
 @[simp] theorem PrimrecIn.c_prec {O : ℕ → ℕ} :
-    PrimrecIn O (fun ab : ℕ => c2n (prec (n2c ab.l) (n2c ab.r))) := by
+    PrimrecIn O (fun ab : ℕ => c2n (prec (n2c ab.left) (n2c ab.right))) := by
   rw [← c_prec_evp']; exact code_prim_prop
 @[simp, ev_simps] theorem c_prec_ev {O a b} :
     eval O c_prec ⟪a, b⟫ = c2n (prec (n2c a) (n2c b)) := by
@@ -155,11 +155,11 @@ theorem c_c_const_evp' {O : ℕ → ℕ} : evalp O c_c_const = c_const := by
 
 def c_ev_const := c_comp.comp₂ left (c_c_const.comp right)
 @[cp] theorem c_ev_const_prim : code_prim c_ev_const := by unfold c_ev_const; apply_cp
-theorem c_ev_const_evp' {O x} : evalp O c_ev_const x = c2n (comp (n2c x.l) (c_const x.r)) := by
+theorem c_ev_const_evp' {O x} : evalp O c_ev_const x = c2n (comp (n2c x.left) (c_const x.right)) := by
   simp [c_ev_const]
 @[simp, evp_simps] theorem c_ev_const_evp {O e x} :
   evalp O c_ev_const ⟪e, x⟫ = c2n (comp (n2c e) (c_const x)) := by simp [c_ev_const_evp']
-theorem c_ev_const_ev' {O x} : eval O c_ev_const x = c2n (comp (n2c x.l) (c_const x.r)) := by
+theorem c_ev_const_ev' {O x} : eval O c_ev_const x = c2n (comp (n2c x.left) (c_const x.right)) := by
   rw [← evalp_eq_eval c_ev_const_prim]; simp [c_ev_const_evp']
 @[simp, ev_simps] theorem c_ev_const_ev {O x e} :
     eval O c_ev_const ⟪e, x⟫ = c2n (comp (n2c e) (c_const x)) := by
@@ -228,6 +228,6 @@ def c_dovetail := c_comp.comp₂ c_left c_dovetailn
 def c_c_ifdom := c_comp₂.comp₃ (c_const c_add) (c_comp.comp₂ c_zero left) right
 @[cp] theorem c_c_ifdom_prim : code_prim c_c_ifdom := by unfold c_c_ifdom; apply_cp
 @[simp, evp_simps] theorem c_c_ifdom_evp {O : ℕ → ℕ} :
-    evalp O c_c_ifdom = fun x ↦ c2n (c_ifdom x.l x.r) := by
+    evalp O c_c_ifdom = fun x ↦ c2n (c_ifdom x.left x.right) := by
   simp [c_c_ifdom, c_ifdom]
 end Oracle.Single.Code

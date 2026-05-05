@@ -73,7 +73,7 @@ noncomputable def evalnSet (O : Set ℕ) := evaln (χ O)
 @[simp] noncomputable def evalnSet₁ (O : Set ℕ) : ℕ → ℕ := evaln₁ (χ O)
 theorem prim_evalnSet₁ {O : Set ℕ} : PrimrecIn (χ O) (evalnSet₁ O) := by
   simp only [evalnSet₁]; exact prim_evaln₁
-def SetK0 (A : Set ℕ) := {ex : ℕ | (evalSet A ex.l ex.r).Dom}
+def SetK0 (A : Set ℕ) := {ex : ℕ | (evalSet A ex.left ex.right).Dom}
 def SetK (A : Set ℕ) := {x : ℕ | (evalSet A x x).Dom}
 abbrev SetJump := SetK
 def jumpn : ℕ → Set ℕ → Set ℕ
@@ -159,7 +159,7 @@ theorem χ_le_χSetK0 {O : Set ℕ} : O ≤ᵀ (SetK0 O) := by
 
   Then, note that `χ O` = `fun x ↦ k(c_g, x)`.
   -/
-  let k : ℕ → ℕ := fun ex ↦ if (eval (χ O) ex.l ex.r).Dom then 1 else 0
+  let k : ℕ → ℕ := fun ex ↦ if (eval (χ O) ex.left ex.right).Dom then 1 else 0
   let g := fun x ↦ if (χ O) x = 0 then Part.none else Part.some 0
   have hg : Rin (χ O) g := Rin.ite Rin.oracle Rin.none Rin.zero
   rcases exists_code_nat.mp hg with ⟨cg, hcg⟩
@@ -187,7 +187,7 @@ theorem χ_le_χSetK0 {O : Set ℕ} : O ≤ᵀ (SetK0 O) := by
 open Classical in
 theorem χSetK0_le_K0χ {O : Set ℕ} : Rin (K0 (χ O)) (χ (SetK0 O)) := by
   -- We simply note that `χ (SetK0 O) = Nat.sg ∘ K0 (χ O)`.
-  let k : ℕ → ℕ := fun ex ↦ if (eval (χ O) ex.l ex.r).Dom then 1 else 0
+  let k : ℕ → ℕ := fun ex ↦ if (eval (χ O) ex.left ex.right).Dom then 1 else 0
   have h0 : χ (SetK0 O) = k := rfl
   let f := sg ∘ K0 (χ O)
   have k_eq_f : k = f := by
@@ -212,14 +212,14 @@ theorem K0χ_le_χSetK0 {O : Set ℕ} : Rin (χ (SetK0 O)) (K0 (χ O)) := by
       else return [e : O](x) + 1
   -/
   -- k = χ (SetK0 O).
-  let k : ℕ → ℕ := fun ex ↦ if (eval (χ O) ex.l ex.r).Dom then 1 else 0
-  have h1 (ex : ℕ) : k ex = 0 ↔ ¬(eval (χ O) ex.l ex.r).Dom := by simp [k]
-  have h2 (ex : ℕ) : k ex ≠ 0 ↔ (eval (χ O) ex.l ex.r).Dom := by simp [k]
+  let k : ℕ → ℕ := fun ex ↦ if (eval (χ O) ex.left ex.right).Dom then 1 else 0
+  have h1 (ex : ℕ) : k ex = 0 ↔ ¬(eval (χ O) ex.left ex.right).Dom := by simp [k]
+  have h2 (ex : ℕ) : k ex ≠ 0 ↔ (eval (χ O) ex.left ex.right).Dom := by simp [k]
   -- we now define f.
   let f := fun ex =>
     if (k ex = 0)
       then Part.some 0
-      else (eval (χ O) ex.l ex.r) >>= (Nat.succ : ℕ →. ℕ)
+      else (eval (χ O) ex.left ex.right) >>= (Nat.succ : ℕ →. ℕ)
   have rin_f : Rin k f := Rin.ite Rin.oracle Rin.zero <|
     Rin.comp Rin.succ (TuringReducible.trans' Rin.eval χ_le_χSetK0)
   have h3 : (K0 (χ O) : ℕ →. ℕ) = f := by

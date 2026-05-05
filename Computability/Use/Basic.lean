@@ -30,9 +30,9 @@ For the construction of the use function given here, see Constructions/Use.lean.
 
 - `usen`: use function for computations with bounded steps.
 - `use`: use function.
-- `usen_mono`: theorem asserting monotonicity of `usen` w.r.t steps.
-- `usen_sound`: theorem asserting soundness of `usen` w.r.t `use`.
-- `usen_complete`: theorem asserting completeness of `usen` w.r.t `use`.
+- `usen_mono`: theorem asserting monotonicity of `usen` w.right.t steps.
+- `usen_sound`: theorem asserting soundness of `usen` w.right.t `use`.
+- `usen_complete`: theorem asserting completeness of `usen` w.right.t `use`.
 - `usen_princple`: the use principle, for computations with bounded steps.
 - `use_principle`: the use principle.
 
@@ -77,10 +77,10 @@ match c with
 | Code.rfind' cf =>
   do
     let guard ← eval O (rfind' cf) x;
-    let ro := guard - x.r
+    let ro := guard - x.right
     let mut max := 0
     for i in List.reverse (List.range (ro+1)) do
-      let use_i ← (use O cf ⟪x.l, i+x.r⟫)
+      let use_i ← (use O cf ⟪x.left, i+x.right⟫)
       max := Nat.max max use_i
     max
 /-- `usen; the use of [c : O]ₛ(x)` -/
@@ -122,6 +122,6 @@ match c,s with
     let usen_base  ← usen O cf (s + 1) x
     let evaln_base ← evaln O (s + 1) cf x
     if evaln_base=0 then usen_base else
-    let usen_indt  ← usen O (rfind' cf) s ⟪x.l, x.r+1⟫
+    let usen_indt  ← usen O (rfind' cf) s ⟪x.left, x.right+1⟫
     Nat.max usen_base usen_indt
 end Oracle.Single.Code

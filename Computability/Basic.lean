@@ -26,16 +26,16 @@ notation "⟪"x","y","z"⟫"     => Nat.pair <$> x <*> (Nat.pair <$> y <*> z)
 notation "⟪"x","y","z","w"⟫" => Nat.pair (Nat.pair x y) (Nat.pair z w)
 notation "⟪"x","y","z","w"⟫" =>
   Nat.pair <$> (Nat.pair <$> x <*> y) <*> (Nat.pair <$> z <*> w)
-def Nat.l (n : ℕ) := n.unpair.1
-def Nat.r (n : ℕ) := n.unpair.2
+def Nat.left (n : ℕ) := n.unpair.1
+def Nat.right (n : ℕ) := n.unpair.2
 -- pair_l and pair_r are useful for evp_simps particularly in cov_rec proofs in
 -- `Computability.Constructions.CovRec.lean`
-@[simp, evp_simps] theorem pair_l {x y} : (Nat.pair x y).l = x := by simp [Nat.l]
-@[simp, evp_simps] theorem pair_r {x y} : (Nat.pair x y).r = y := by simp [Nat.r]
-@[simp] theorem pair_lr {x} : (Nat.pair x.l x.r) = x := by simp [Nat.r, Nat.l]
-@[simp] theorem unpair1_to_l {n : ℕ} : (n.unpair.1) = n.l := by simp [Nat.l]
-@[simp] theorem unpair2_to_r {n : ℕ} : (n.unpair.2) = n.r := by simp [Nat.r]
-@[simp, reducible] def Nat.unpaired2 {α} (f : ℕ → ℕ → α) (n : ℕ) : α := f n.l n.r
+@[simp, evp_simps] theorem pair_l {x y} : (Nat.pair x y).left = x := by simp [Nat.left]
+@[simp, evp_simps] theorem pair_r {x y} : (Nat.pair x y).right = y := by simp [Nat.right]
+@[simp] theorem pair_lr {x} : (Nat.pair x.left x.right) = x := by simp [Nat.right, Nat.left]
+@[simp] theorem unpair1_to_l {n : ℕ} : (n.unpair.1) = n.left := by simp [Nat.left]
+@[simp] theorem unpair2_to_r {n : ℕ} : (n.unpair.2) = n.right := by simp [Nat.right]
+@[simp, reducible] def Nat.unpaired2 {α} (f : ℕ → ℕ → α) (n : ℕ) : α := f n.left n.right
 @[simp] theorem pair_pos_of_right {x s : ℕ} : ⟪x, s+1⟫ > 0 := by
   apply zero_lt_of_ne_zero
   rewrite [show 0 = Nat.pair 0 0 from rfl]
@@ -126,14 +126,14 @@ theorem prim_total {O : ℕ → ℕ} {c} (h : code_prim c) : code_total O c := b
     expose_names
     simp only [eval, unpaired, unpair1_to_l, Part.bind_eq_bind, unpair2_to_r]
     intro x
-    induction x.r with
-    | zero => exact ha_ih x.l
+    induction x.right with
+    | zero => exact ha_ih x.left
     | succ y' IH' => use IH'; apply hb_ih
 @[simp, evp_simps] def evalp (O : ℕ → ℕ) : Code → ℕ → ℕ
 | zero       => fun _ ↦ 0
 | succ       => Nat.succ
-| left       => Nat.l
-| right      => Nat.r
+| left       => Nat.left
+| right      => Nat.right
 | oracle     => O
 | pair cf cg => fun x ↦ Nat.pair (evalp O cf x) (evalp O cg x)
 | comp cf cg => fun x ↦ evalp O cf (evalp O cg x)
@@ -171,27 +171,27 @@ theorem evalp_eq_eval {O : ℕ → ℕ} {c} (h : code_prim c) : evalp O c = eval
     funext xs
     simp only [PFun.coe_val, unpaired, unpair1_to_l, unpair2_to_r]
     expose_names
-    induction xs.r with
+    induction xs.right with
     | zero =>
-      have a0 : eval O a xs.l = Part.some (evalp O a xs.l) :=
-        congrFun (_root_.id (Eq.symm ha_ih)) xs.l
+      have a0 : eval O a xs.left = Part.some (evalp O a xs.left) :=
+        congrFun (_root_.id (Eq.symm ha_ih)) xs.left
       simp [a0]
     | succ y' IH' =>
       have h0 : @Nat.rec
         (fun x ↦ Part ℕ)
-        (eval O a xs.l)
-        (fun y IH ↦ IH.bind fun i ↦ eval O b (Nat.pair xs.l (Nat.pair y i)))
-        (y'+1) = ((@Nat.rec (fun x ↦ Part ℕ) (eval O a xs.l)
-        (fun y IH ↦ IH.bind fun i ↦ eval O b (Nat.pair xs.l (Nat.pair y i))) y').bind
-        fun i ↦ eval O b (Nat.pair xs.l (Nat.pair y' i))) := rfl
+        (eval O a xs.left)
+        (fun y IH ↦ IH.bind fun i ↦ eval O b (Nat.pair xs.left (Nat.pair y i)))
+        (y'+1) = ((@Nat.rec (fun x ↦ Part ℕ) (eval O a xs.left)
+        (fun y IH ↦ IH.bind fun i ↦ eval O b (Nat.pair xs.left (Nat.pair y i))) y').bind
+        fun i ↦ eval O b (Nat.pair xs.left (Nat.pair y' i))) := rfl
       rewrite [h0]
       rewrite [←IH']
       rewrite [Part.bind_some]
       simp only
       let prev_input :=
-        Nat.pair xs.l <|
+        Nat.pair xs.left <|
         Nat.pair y'
-        (Nat.rec (evalp O a xs.l) (fun y IH ↦ evalp O b (Nat.pair xs.l (Nat.pair y IH))) y')
+        (Nat.rec (evalp O a xs.left) (fun y IH ↦ evalp O b (Nat.pair xs.left (Nat.pair y IH))) y')
       have a0 :
         eval O b
         prev_input =

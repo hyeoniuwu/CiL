@@ -61,7 +61,7 @@ def c_finite_ext :=
   c_zero
 @[cp] theorem c_finite_ext_prim : code_prim c_finite_ext := by unfold c_finite_ext; apply_cp
 @[simp, evp_simps] theorem c_finite_ext_evp {O : ℕ → ℕ} :
-    evalp O c_finite_ext = fun x : ℕ ↦ c2n (dovetail (KP54.c_kp54_aux x.l x.r)) := by
+    evalp O c_finite_ext = fun x : ℕ ↦ c2n (dovetail (KP54.c_kp54_aux x.left x.right)) := by
   simp [c_finite_ext, KP54.c_kp54_aux]
 end c_finite_ext
 
@@ -289,5 +289,5 @@ theorem ex_incomparable_sets_below_j1 : ∃ A B : Set ℕ, A≤ᵀ∅⌜ ∧ B�
     unfold SetTuringReducible at h
     apply exists_code_nat.mp at h
     rcases h with ⟨c,hc⟩
-    exact KP54.R c hc
+    exact KP54.right c hc
 end Oracle.Single

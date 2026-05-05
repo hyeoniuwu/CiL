@@ -164,7 +164,7 @@ theorem c_bitwise_evp_n_m {O c n m} : evalp O (c_bitwise c) ⟪n+1,m+1⟫ = (
   funext nm
   induction nm using Nat.strong_induction_on with
   | h nm ih =>
-  let n := nm.l; let m := nm.r
+  let n := nm.left; let m := nm.right
   have nm_eq : nm = Nat.pair n m := Eq.symm pair_lr
   rw [nm_eq]
   match hn_val : n, hm_val : m with

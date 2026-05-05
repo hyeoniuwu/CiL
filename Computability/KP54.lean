@@ -92,7 +92,7 @@ Later simp calls blow up without `@[irreducible]`. Why?
 open Classical in
 theorem c_kp54_aux_evp {O : ℕ → ℕ} {i n x : ℕ} :
     eval O (c_kp54_aux i n) x =
-    if (evals (x.l.n2l ++ (x.r+1).n2l) i n).Dom then Part.some 0 else Part.none := by
+    if (evals (x.left.n2l ++ (x.right+1).n2l) i n).Dom then Part.some 0 else Part.none := by
   simp [c_kp54_aux, Oracle.Single.eval, Seq.seq, -Denumerable.list_ofNat_succ]
 
 /--
@@ -136,8 +136,8 @@ match s with
 | 0 => ⟪0, 0⟫
 | s+1 =>
   let i := s.div2
-  let αₚ := (KP54 s).l
-  let βₚ := (KP54 s).r
+  let αₚ := (KP54 s).left
+  let βₚ := (KP54 s).right
   let lb := βₚ.n2l.length
   let la := αₚ.n2l.length
   if (s+1)%2=0 then -- then s+1=2i+2, and we will work on Rᵢ.
@@ -158,11 +158,11 @@ match s with
       Nat.pair (αₚ.n2l.concat (Nat.sg' B_result)) βₛ
     else
       Nat.pair (αₚ.n2l.concat 0) (βₚ.n2l.concat 0)
-@[simp] theorem KP54_0_r : n2l (KP54 0).r = [] := by simp [KP54]
-@[simp] theorem KP54_0_l : n2l (KP54 0).l = [] := by simp [KP54]
+@[simp] theorem KP54_0_r : n2l (KP54 0).right = [] := by simp [KP54]
+@[simp] theorem KP54_0_l : n2l (KP54 0).left = [] := by simp [KP54]
 
-noncomputable def As (s : ℕ) := n2l (KP54 s).l
-noncomputable def Bs (s : ℕ) := n2l (KP54 s).r
+noncomputable def As (s : ℕ) := n2l (KP54 s).left
+noncomputable def Bs (s : ℕ) := n2l (KP54 s).right
 
 section AsBs_Mono
 -- We prove a bunch of theorems about the monotonicity of growth of the strings `As` and `Bs`, and

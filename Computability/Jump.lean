@@ -32,7 +32,7 @@ An analogue of the K₀ operator for total-function oracles, which encodes
 computation values on top of whether or not they converge.
 -/
 @[simp] noncomputable def K0 (O : ℕ → ℕ) : ℕ → ℕ := fun n =>
-  let part := eval O n.l n.r
+  let part := eval O n.left n.right
   if h : part.Dom then (part.get h) + 1 else 0
 open Classical in
 /--
@@ -100,9 +100,9 @@ theorem K_le_K0 (O : ℕ → ℕ) : (K O) ≤ᵀᶠ (K0 O) := by
 
 open Classical in
 /--
-We wish to calculate `K0 O x` i.e. `eval O x.l x.r` with access to `K`.
+We wish to calculate `K0 O x` i.e. `eval O x.left x.r` with access to `K`.
 We use `c_ev_const`, which returns the code of the function that
-calculates `eval O x.l x.r` for all inputs.
+calculates `eval O x.left x.r` for all inputs.
 By querying this to `K`, we are done.
 -/
 theorem K0_le_K (O : ℕ → ℕ) : (K0 O) ≤ᵀᶠ (K O) := by

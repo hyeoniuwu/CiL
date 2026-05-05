@@ -50,7 +50,7 @@ def c_efl_prec := fun c ↦ c_list_concat.comp (pair (c_id.comp (right.comp righ
 @[cp] theorem c_efl_prec_prim {c} (h : code_prim c) : code_prim <| c_efl_prec c := by
   unfold c_efl_prec; apply_cp
 @[simp, evp_simps] theorem c_efl_prec_evp {O : ℕ → ℕ} {c : Code} {x : ℕ} :
-    evalp O (c_efl_prec c) x = l2n ((n2l x.r.r).concat (evalp O c x)) := by
+    evalp O (c_efl_prec c) x = l2n ((n2l x.right.right).concat (evalp O c x)) := by
   simp [c_efl_prec]
 end Oracle.Single.Code
 end efl_prec
@@ -265,8 +265,8 @@ theorem c_div_flip_evp_aux_aux {O d n} :
 
 theorem c_div_flip_evp_aux {O : ℕ → ℕ} : evalp O c_div_flip = unpaired2 div_flip_aux := by
   funext dn
-  let d := dn.l
-  let n := dn.r
+  let d := dn.left
+  let n := dn.right
   have dn_eq : dn = Nat.pair d n := Eq.symm (pair_unpair dn)
   rw [dn_eq]
   induction n using Nat.strong_induction_on with
@@ -312,8 +312,8 @@ def c_mod := c_sub.comp₂ left (c_mul.comp₂ right c_div)
 @[simp, evp_simps] theorem c_mod_evp {O : ℕ → ℕ} : evalp O c_mod = unpaired2 ((· % ·) : ℕ → ℕ → ℕ) := by
   simp only [c_mod, comp₂_evp, evalp, c_mul_evp, c_sub_evp]
   funext mn
-  let m := mn.l
-  let n := mn.r
+  let m := mn.left
+  let n := mn.right
   have mn_eq : mn = ⟪m, n⟫ := Eq.symm (pair_unpair mn)
   rw [mn_eq]
   apply Nat.sub_eq_of_eq_add
@@ -467,10 +467,10 @@ theorem c_replace_oracle_evp_aux {O o x} (hx : x ≤ 4) :
   | 4 => simp [hinput_to_decode, ho]; simp only [replace_oracle, replace_oracle, n2c, c2n_n2c]
   | n+5 => simp at hx
 
-private lemma bounds1 {n} : (n/2/2).l ≤ n+4 :=
+private lemma bounds1 {n} : (n/2/2).left ≤ n+4 :=
   le_add_right_of_le
     (Nat.le_trans (unpair_left_le (n/2/2)) (le_trans (Nat.div_le_self _ _) (Nat.div_le_self _ _)))
-private lemma bounds2 {n} : (n/2/2).r ≤ n+4 :=
+private lemma bounds2 {n} : (n/2/2).right ≤ n+4 :=
   le_add_right_of_le
     (Nat.le_trans (unpair_right_le (n/2/2)) (le_trans (Nat.div_le_self _ _) (Nat.div_le_self _ _)))
 private lemma bounds3 {n} : (n/2/2) ≤ n+4 :=
@@ -497,8 +497,8 @@ The theorem then follows from using these equivalence results in simplification.
 theorem c_replace_oracle_evp_aux_nMod4 {O o n} :
     evalp O (c_replace_oracle) ⟪o, ((n+4)+1)⟫ =
     let m := n.div2.div2
-    let ml := evalp O (c_replace_oracle) ⟪o, m.l⟫
-    let mr := evalp O (c_replace_oracle) ⟪o, m.r⟫
+    let ml := evalp O (c_replace_oracle) ⟪o, m.left⟫
+    let mr := evalp O (c_replace_oracle) ⟪o, m.right⟫
     let mp := evalp O (c_replace_oracle) ⟪o, m  ⟫
         if n%4=0 then 2*(2*⟪ml, mr⟫  )     + 5
     else if n%4=1 then 2*(2*⟪ml, mr⟫  ) +1  + 5
@@ -593,10 +593,10 @@ theorem nMod4_eq_3 {n} (hno : n.bodd = true) (hn2o : n.div2.bodd = true) : n%4=3
   rw [←codes_aux_3 hno hn2o]; omega
 
 @[simp, evp_simps] theorem c_replace_oracle_evp {O : ℕ → ℕ} :
-    evalp O (c_replace_oracle) = fun x ↦c2n (replace_oracle (n2c x.l) (n2c x.r)) := by
+    evalp O (c_replace_oracle) = fun x ↦c2n (replace_oracle (n2c x.left) (n2c x.right)) := by
   funext oc
-  let o := oc.l
-  let c := oc.r
+  let o := oc.left
+  let c := oc.right
   have oc_eq : oc = Nat.pair o c := Eq.symm (pair_unpair oc)
   rw [oc_eq]
   simp only [pair_l, pair_r] -- simplify the rhs
@@ -630,8 +630,8 @@ theorem nMod4_eq_3 {n} (hno : n.bodd = true) (hn2o : n.div2.bodd = true) : n%4=3
             simp only [h0, ↓reduceIte, unpair1_to_l, unpair2_to_r, Nat.add_right_cancel_iff,
               mul_eq_mul_left_iff, pair_eq_pair, OfNat.ofNat_ne_zero, or_false]
           constructor
-          · rw [ih m.l _m1];
-          · rw [ih m.r _m2];
+          · rw [ih m.left _m1];
+          · rw [ih m.right _m2];
         -- prec
         | true =>
           have h0: n%4=2 := nMod4_eq_2 hno hn2o
@@ -641,8 +641,8 @@ theorem nMod4_eq_3 {n} (hno : n.bodd = true) (hn2o : n.div2.bodd = true) : n%4=3
             simp only [h0, OfNat.ofNat_ne_zero, ↓reduceIte, OfNat.ofNat_ne_one, unpair1_to_l,
               unpair2_to_r, Nat.add_right_cancel_iff, mul_eq_mul_left_iff, pair_eq_pair, or_false]
           constructor
-          · rw [ih m.l _m1];
-          · rw [ih m.r _m2];
+          · rw [ih m.left _m1];
+          · rw [ih m.right _m2];
       | true => cases hn2o : n.div2.bodd with
         -- comp
         | false =>
@@ -654,8 +654,8 @@ theorem nMod4_eq_3 {n} (hno : n.bodd = true) (hn2o : n.div2.bodd = true) : n%4=3
               Nat.add_right_cancel_iff, mul_eq_mul_left_iff, pair_eq_pair, OfNat.ofNat_ne_zero,
               or_false]
           constructor
-          · rw [ih m.l _m1];
-          · rw [ih m.r _m2];
+          · rw [ih m.left _m1];
+          · rw [ih m.right _m2];
         -- rfind
         | true =>
           have h0: n%4=3 := nMod4_eq_3 hno hn2o
@@ -667,7 +667,7 @@ theorem nMod4_eq_3 {n} (hno : n.bodd = true) (hn2o : n.div2.bodd = true) : n%4=3
           rw [ih m hm];
 
 @[simp, ev_simps] theorem c_replace_oracle_ev {O : ℕ → ℕ} :
-    eval O (c_replace_oracle) = fun x : ℕ ↦ c2n (replace_oracle (n2c x.l) (n2c x.r)) := by
+    eval O (c_replace_oracle) = fun x : ℕ ↦ c2n (replace_oracle (n2c x.left) (n2c x.right)) := by
   rw [← evalp_eq_eval c_replace_oracle_prim]; simp only [c_replace_oracle_evp];
 
 @[simp] theorem plift_eq {O o} (ho : code_total O o) :
