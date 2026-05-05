@@ -27,7 +27,7 @@ theorem Option.isSome_iff_mem {β} {o : Option β} : o.isSome ↔ (∃z ,z∈o) 
   simp [h1]
 lemma Part.eq_none_iff_forall_ne_some {α} {o : Part α} : o = Part.none ↔ ∀ a, o ≠ Part.some a := by
   simpa using (@Part.ne_none_iff _ o).not
-lemma Part.not_none_iff_dom {α} {o : Part α} : (¬o=Part.none) ↔ (o.Dom) := by
+lemma Part.not_none_iff_dom {α} {o : Part α} : (o ≠ Part.none) ↔ (o.Dom) := by
   apply Iff.intro
   · intro a
     simp only [eq_none_iff_forall_ne_some, ne_eq, not_forall, not_not] at a

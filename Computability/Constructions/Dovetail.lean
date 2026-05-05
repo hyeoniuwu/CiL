@@ -137,7 +137,7 @@ theorem dovetail_dom_iff_dovetailn_dom {O : ℕ → ℕ} {c : Code} {x : ℕ} :
 theorem dovetail_none_iff_dovetailn_none {O : ℕ → ℕ} {c : Code} {x : ℕ} :
     (eval O (dovetail c) x) = Part.none ↔ (eval O (dovetailn c) x) = Part.none := by
   apply not_iff_not.mp
-  simpa [not_none_iff_dom] using dovetail_dom_iff_dovetailn_dom
+  simpa [Part.not_none_iff_dom] using dovetail_dom_iff_dovetailn_dom
 theorem dovetail_ev_0 {O : ℕ → ℕ} {c : Code} {x : ℕ} (h : (eval O (dovetail c) x).Dom) :
     let dvt := (eval O (dovetail c) x).get h
     eval O c ⟪x, dvt⟫ = Part.some 0 := by

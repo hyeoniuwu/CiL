@@ -79,7 +79,7 @@ theorem c_bitwise_evp_0_0 {O c} :
   lift_lets; extract_lets; expose_names
   rw [show Nat.pair 0 0 = 0 from rfl]
   simp [Nat.bitwise]
-  
+
 theorem c_bitwise_evp_0_m {O c m} :
     evalp O (c_bitwise c) ⟪0, m+1⟫ =
     Nat.bitwise (fun a b => n2b <| evalp O c ⟪b2n a, b2n b⟫) 0 (m+1) := by

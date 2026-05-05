@@ -192,7 +192,7 @@ theorem evaln_rfind_as_eval_rfind {O s c x}
           have hh := evaln_rfind_base h
           let base := (evaln O (s + 1) c x).get hh
           have rwbase : (evaln O (s + 1) c x).get hh =base := rfl
-        · 
+        ·
           simp only [pair_l, pair_r, reduceSubDiff] at this ⊢
           cases s with
           | zero => simp_all [evaln]
@@ -380,7 +380,7 @@ private lemma mpp_leq {j ro} {x : ℕ} (hjro : j ≤ ro) : (ro - j + (j + x)) = 
 theorem nrfind'_obtain_prop {O s cf x} (h : (evaln O (s + 1) (rfind' cf) x).isSome) :
     0 ∈ (evaln O (s + 1-(nrfind'_obtain h)) cf (Nat.pair x.left (nrfind'_obtain h+x.right))) ∧
     (∀ j ≤ nrfind'_obtain h, (evaln O (s + 1-j) cf  ⟪x.left, j+x.right⟫).isSome) ∧
-    (∀ j < nrfind'_obtain h, ¬0 ∈ (evaln O (s + 1-j) cf ⟪x.left, j+x.right⟫)) ∧ 
+    (∀ j < nrfind'_obtain h, ¬0 ∈ (evaln O (s + 1-j) cf ⟪x.left, j+x.right⟫)) ∧
     (∀ j ≤ nrfind'_obtain h, (evaln O (s + 1-j) (rfind' cf) ⟪x.left, j+x.right⟫).isSome) := by
   let (eq := hrf) rf := (evaln O (s + 1) cf.rfind' x).get h
   have aux0 : rf ∈ evaln O (s + 1) cf.rfind' x := Option.get_mem h

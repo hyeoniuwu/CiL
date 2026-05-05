@@ -14,9 +14,9 @@ open Oracle.Single
 @[simp] abbrev TuringReducibleStrict (f g : ℕ → ℕ) : Prop := RecursiveIn g f ∧ ¬ RecursiveIn f g
 @[simp] abbrev TuringEquivalent (f g : ℕ → ℕ) : Prop := AntisymmRel TuringReducible f g
 
-@[reducible,simp,inherit_doc] scoped[Computability] infix : 50 " ≤ᵀᶠ " => TuringReducible
-@[reducible,simp,inherit_doc] scoped[Computability] infix : 50 " ≡ᵀᶠ " => TuringEquivalent
-@[reducible,simp,inherit_doc] scoped[Computability] infix : 50 " <ᵀᶠ " => TuringReducibleStrict
+@[reducible,simp] scoped[Computability] infix : 50 " ≤ᵀᶠ " => TuringReducible
+@[reducible,simp] scoped[Computability] infix : 50 " ≡ᵀᶠ " => TuringEquivalent
+@[reducible,simp] scoped[Computability] infix : 50 " <ᵀᶠ " => TuringReducibleStrict
 
 open scoped Computability
 
@@ -55,10 +55,14 @@ theorem TuringReducible.trans' {f g h} (hg : RecursiveIn g f) (hh : g ≤ᵀᶠ 
 
 instance : IsTrans (ℕ → ℕ) TuringReducible := ⟨@TuringReducible.trans⟩
 instance : IsPreorder (ℕ → ℕ) TuringReducible where refl := .refl
-theorem TuringEquivalent.equivalence : Equivalence TuringEquivalent := (AntisymmRel.setoid _ _).iseqv
-@[refl] protected theorem TuringEquivalent.refl (f : ℕ → ℕ) : f ≡ᵀᶠ f := Equivalence.refl equivalence f
-@[symm] theorem TuringEquivalent.symm {f g : ℕ → ℕ} (h : f ≡ᵀᶠ g) : g ≡ᵀᶠ f := Equivalence.symm equivalence h
-@[trans] theorem TuringEquivalent.trans {f g h : ℕ → ℕ} (h₁ : f ≡ᵀᶠ g) (h₂ : g ≡ᵀᶠ h) : f ≡ᵀᶠ h := Equivalence.trans equivalence h₁ h₂
+theorem TuringEquivalent.equivalence : Equivalence TuringEquivalent :=
+  (AntisymmRel.setoid _ _).iseqv
+@[refl] protected theorem TuringEquivalent.refl (f : ℕ → ℕ) : f ≡ᵀᶠ f :=
+  Equivalence.refl equivalence f
+@[symm] theorem TuringEquivalent.symm {f g : ℕ → ℕ} (h : f ≡ᵀᶠ g) : g ≡ᵀᶠ f :=
+  Equivalence.symm equivalence h
+@[trans] theorem TuringEquivalent.trans {f g h : ℕ → ℕ} (h₁ : f ≡ᵀᶠ g) (h₂ : g ≡ᵀᶠ h) : f ≡ᵀᶠ h :=
+  Equivalence.trans equivalence h₁ h₂
 
 /--
 Instance declaring that `RecursiveIn` is a preorder.
