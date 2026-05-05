@@ -141,10 +141,8 @@ def c_c_const := (c_nat_iterate (c_comp.comp₂ (c_const <| c2n succ) (c_id))).c
   | zero => simp [c2n]
   | succ n ih =>
     simp only [Function.iterate_succ', Function.comp_apply]
-    rw [ih]
-    apply Eq.symm
-    rw [c_const.eq_def] -- bug? cant rw without the eq.symm, even with occs
-    simp only [n2c_c2n]
+    rewrite [ih, c_const.eq_def, n2c_c2n]
+    simp only
 theorem c_c_const_evp' {O : ℕ → ℕ} : evalp O c_c_const = c_const := by
   funext x
   simpa only [c_c_const_evp] using (by rfl)
