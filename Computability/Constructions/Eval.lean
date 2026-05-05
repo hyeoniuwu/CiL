@@ -352,6 +352,7 @@ lemma c_evaln_bounds_4 {n s} : Nat.pair (n + 4 + 1) s ≤ Nat.pair (n + 4 + 1) (
   apply pair_lt_pair_right
   exact lt_add_one s
 
+lemma not_zero_of_not_none {x} (h : ¬ x = o2n Option.none) : ¬ x = 0 := Ne.intro h
 /-
 The overall structure of the proof is the same as in `c_replace_oracle_evp_aux_nMod4` from
 Computability/Constructions/CovRec.lean, but some equivalence proofs are more involved, requiring

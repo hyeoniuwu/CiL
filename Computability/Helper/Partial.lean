@@ -46,7 +46,6 @@ lemma Part.ne_some_of_get_ne {x : ℕ} {p1 : Part ℕ} {h1 : p1.Dom} (h : p1.get
 -- option
 open Nat Denumerable Encodable List
 private lemma ge_0_rw {x} (h2 : ¬x=0) : x=x-1+1 := (succ_pred_eq_of_ne_zero h2).symm
-theorem not_zero_of_not_none {x} (h : ¬ x = o2n Option.none) : ¬ x = 0 := Ne.intro h
 theorem hnat_0 {o : Option ℕ} (ho : o.isSome) : ¬ o2n o = 0 := by
   rw [Option.eq_some_of_isSome ho]
   exact add_one_ne_zero (Encodable.encode (o.get ho))
