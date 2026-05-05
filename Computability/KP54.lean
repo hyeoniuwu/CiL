@@ -354,8 +354,8 @@ section R
 We wish to prove
 `theorem R (i : ℕ) : eval A i ≠ χ B`.
 
-We shall prove this with two auxiliary lemmas. The first, `R_aux_0`, states that for any <|i\in\N$,
-<|n=\sz{B_s(2i+1)}$ witnesses:
+We shall prove this with two auxiliary lemmas. The first, `R_aux_0`, states that for any $i\in\N$,
+$n=\sz{B_s(2i+1)}$ witnesses:
 
 \begin{align}
 	[i : A_{2i+2}](n)\ne \lss{n\in B_{2i+2}}.
@@ -363,7 +363,7 @@ We shall prove this with two auxiliary lemmas. The first, `R_aux_0`, states that
 
 We will define that witness as `R_wt`.
 
-The second, `As_Uninjured`, states that the computation <|[i : A_{2i+2}](x)$ will have its value
+The second, `As_Uninjured`, states that the computation $[i : A_{2i+2}](x)$ will have its value
 unchanged through subsequent stages.
 
 We split the proof into two cases, `As_Uninjured_0` and `As_Uninjured_1`, depending on whether the
@@ -459,7 +459,7 @@ If `[i : As](k)` diverges, then it will always diverge in subsequent steps.
 This is proven by contraposition; if the final computation converges, we must have found some
 finite extension.
 
-If the final computation converges, it must have some finite use <|u$.
+If the final computation converges, it must have some finite use $u$.
 
 To show \mono{(evals (As (2 * (i + 1))) i (R\_wt i)).Dom}, it suffices to show that the
 corresponding finite extension was found in the KP54 construction procedure.

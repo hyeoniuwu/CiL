@@ -36,42 +36,42 @@ section evaln
 /-!
 ## Construction of evaln
 In building `evaln` from course-of-values recursion, we note that it is insufficient to recurse just
-on the code and steps; for example when calculating <|[c_f\c c_g]_s(x)$, we need to look up both
-<|[c_g]_s(x)$ and <|[c_f]_s([c_g]_s(x))$. That is, we need to recurse on the input values too.
+on the code and steps; for example when calculating $[c_f\c c_g]_s(x)$, we need to look up both
+$[c_g]_s(x)$ and $[c_f]_s([c_g]_s(x))$. That is, we need to recurse on the input values too.
 
-This raises an immediate issue; when calculating <|f(g(x))$, we will need to look up <|g(x)$, but
-<|g(x)$ may be bigger than <|x$. However, course-of-values recursion only allows looking up
+This raises an immediate issue; when calculating $f(g(x))$, we will need to look up $g(x)$, but
+$g(x)$ may be bigger than $x$. However, course-of-values recursion only allows looking up
 \emph{previous} computations. That is, values which are less than the current value being
 considered.
 
 We solve the problem by first defining an auxiliary function, which computes
-<|[c]_s(x)$ \emph{for all} <|x\leq s$. This auxiliary function can be defined via course-of-values
-recursion; consider the example of calculating <|[c_f\c c_g]_s(x)$., so this is something we can
+$[c]_s(x)$ \emph{for all} $x\leq s$. This auxiliary function can be defined via course-of-values
+recursion; consider the example of calculating $[c_f\c c_g]_s(x)$., so this is something we can
 directly ask
 
-1. Check <|x\leq s$. If this fails, diverge.
+1. Check $x\leq s$. If this fails, diverge.
 
-2. Calculate <|[c_g]_s(x)$. A lookup for code <|c_g$ and step <|s$ in the previous computations
+2. Calculate $[c_g]_s(x)$. A lookup for code $c_g$ and step $s$ in the previous computations
    will return the list
 \begin{align}
 	\Bigl\llbracket [c_g]_{s}(0),[c_g]_{s}(1),\cdots,[c_g]_{s}(s) \Bigr\rrbracket.
 \end{align}
-Looking up <|x$ in this list gives our result.
+Looking up $x$ in this list gives our result.
 
-3. Calculate <|[c_f]_s([c_g]_s(x))$. A lookup for code <|c_f$ and step <|s$ in the previous
+3. Calculate $[c_f]_s([c_g]_s(x))$. A lookup for code $c_f$ and step $s$ in the previous
    computations will return the list
 \begin{align}
 	\Bigl\llbracket [c_f]_{s}(0),[c_f]_{s}(1),\cdots,[c_f]_{s}(s) \Bigr\rrbracket.
 \end{align}
-Now, we try looking up the <|[c_g]_s(x)\th$ entry in this list. If one is found, then we simply
+Now, we try looking up the $[c_g]_s(x)\th$ entry in this list. If one is found, then we simply
 return the found value.
 
-If the lookup fails, this means that <|[c_g]_s(x)$ is larger than the length of the list, i.e.
-larger than <|s$. In particular, this means that <|[c_f]_s([c_g]_s(x))$ diverges, as `evaln`
+If the lookup fails, this means that $[c_g]_s(x)$ is larger than the length of the list, i.e.
+larger than $s$. In particular, this means that $[c_f]_s([c_g]_s(x))$ diverges, as `evaln`
 diverges if the input is larger than the number of steps.
 
-This is the key insight; inputs that are larger than <|s$ diverge, so computations of inputs up to
-<|s$ give us all the information we need.
+This is the key insight; inputs that are larger than $s$ diverge, so computations of inputs up to
+$s$ give us all the information we need.
 
 ## Outline of section
   · `c_evaln_aux` : main body of construction, using c_cov_rec
@@ -208,6 +208,13 @@ theorem c_evaln_evp_aux_0_np1 {O x n} :
   -- show that the code let-bindings correspond to our let-bindings
   have hs : evalp O s cri = 0 := by simp [s,code_s,cri,hkP1]
   simp [hs, getI, evaln]
+
+@[simp] private lemma map_getI {f s x} :
+    (List.map f (List.range (s + 1))).getI x = if x < s+1 then f x else 0 := by
+  unfold List.getI
+  cases Classical.em (x<s+1) with
+  | inl h => simp [h]
+  | inr h => simp [h]
 
 theorem c_evaln_evp_aux {O code x s} (hcode_val : code ≤ 4) :
     evalp O (c_evaln) (Nat.pair x (Nat.pair code (s+1))) =

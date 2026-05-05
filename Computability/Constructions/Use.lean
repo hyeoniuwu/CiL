@@ -10,7 +10,7 @@ import Computability.Use.Principle
 # Use.lean
 
 This file constructs codes for `usen` and `use`, almost identically in structure to
-Computability/Constructions/Eval.lean, which we refer readers to for more documentation.
+`Computability/Constructions/Eval.lean`, which we refer readers to for more documentation.
 
 ## Main declarations
 - `c_usen`: code for `usen`.
