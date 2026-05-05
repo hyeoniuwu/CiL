@@ -26,6 +26,10 @@ notation "⟪"x","y","z"⟫"     => Nat.pair <$> x <*> (Nat.pair <$> y <*> z)
 notation "⟪"x","y","z","w"⟫" => Nat.pair (Nat.pair x y) (Nat.pair z w)
 notation "⟪"x","y","z","w"⟫" =>
   Nat.pair <$> (Nat.pair <$> x <*> y) <*> (Nat.pair <$> z <*> w)
+/-
+as the left and right projection functions are commonly used,
+we define shorter aliases for them:
+-/
 def Nat.left (n : ℕ) := n.unpair.1
 def Nat.right (n : ℕ) := n.unpair.2
 -- pair_l and pair_r are useful for evp_simps particularly in cov_rec proofs in

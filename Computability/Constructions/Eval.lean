@@ -512,12 +512,11 @@ theorem c_evaln_evp_aux_nMod4 {O x n s} :
       cases helemr : elem.right with
       | zero => simp [pc_ml_s, hprec_x,hprec_i,helemr]
       | succ nn =>
-        simp only [hprec_i,helemr]
-        simp only [hpc_c_sM1]
-        simp only [pc_c_sM1]
+        simp only [hprec_i,helemr, hpc_c_sM1, pc_c_sM1]
         have rw_elemr : nn = elem.right-1 := by simp [helemr]
         rw [rw_elemr]
-        cases Classical.em (evalp O c_evaln ⟪elem.left, (elem.right - 1), (n + 4 + 1), s⟫ = o2n none) with
+        cases Classical.em
+          (evalp O c_evaln ⟪elem.left, (elem.right - 1), (n + 4 + 1), s⟫ = o2n none) with
         | inl h2 => simp [h2, hprec_x,hprec_iM1]
         | inr h2 =>
           simp [not_zero_of_not_none h2, encode_nonzero_opt h2,
@@ -642,8 +641,9 @@ theorem c_evaln_evp_aux_nMod4 {O x n s} :
         simp only [h, ml_s, mr_s, c_sM1, m]
         cases x.right with
         | zero => simp
-        | succ xxx =>
-          have rw3_aux : c2n (((n2c n.div2.div2.left).prec (n2c n.div2.div2.right))) = (n + 4 + 1) := by
+        | succ _ =>
+          have rw3_aux :
+              c2n (((n2c n.div2.div2.left).prec (n2c n.div2.div2.right))) = (n + 4 + 1) := by
             simpa [c2n] using codes_aux_2 hno hn2o
           have rw3 : ((n2c n.div2.div2.left).prec (n2c n.div2.div2.right)) = (n2c (n + 4 + 1)) := by
             rw [←(n2c_c2n (n2c (n + 4 + 1)))]

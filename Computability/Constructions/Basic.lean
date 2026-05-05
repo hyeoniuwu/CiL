@@ -22,6 +22,7 @@ This file defines codes for basic functions which are not primitive recursive.
 namespace Oracle.Single.Code
 
 section diverge
+/-- `c_diverge` is a code which diverges on all inputs. -/
 def c_diverge := rfind' (c_const 1)
 @[simp, ev_simps] theorem c_diverge_ev {O x} : eval O c_diverge x = Part.none := by
   simp only [c_diverge, ev_simps]
