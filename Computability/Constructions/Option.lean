@@ -13,11 +13,7 @@ This file defines basic primitive recursive codes for basic functions on option 
 
 -/
 
-open Nat
-open Denumerable
-open Encodable
-open List
-
+open Nat Denumerable Encodable List
 section isSome
 namespace Oracle.Single.Code
 def c_isSome := c_sg'
