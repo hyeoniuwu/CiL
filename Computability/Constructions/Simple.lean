@@ -168,13 +168,13 @@ theorem c_bdd_search_evp_1 {O c s a k l i r} :
     · intro a_1
       apply And.intro
       · split at a_1
-        next h => simp_all only [hnat_to_opt_0, reduceCtorEq]
-        next h => simp_all only [hnat_to_opt_0', Option.some.injEq, Nat.pair_eq_pair]
+        next h => simp_all only [encode_zero_opt, reduceCtorEq]
+        next h => simp_all only [encode_succ_opt, Option.some.injEq, Nat.pair_eq_pair]
       · apply And.intro
         · split at a_1
-          next h => simp_all only [hnat_to_opt_0, reduceCtorEq]
+          next h => simp_all only [encode_zero_opt, reduceCtorEq]
           next h =>
-            simp_all only [hnat_to_opt_0', Option.some.injEq, Nat.pair_eq_pair]
+            simp_all only [encode_succ_opt, Option.some.injEq, Nat.pair_eq_pair]
             obtain ⟨left, right⟩ := a_1
             subst right left
             simp_all only [add_zero]
@@ -183,9 +183,9 @@ theorem c_bdd_search_evp_1 {O c s a k l i r} :
             exact hnat_11 this
         · intro j a_2
           split at a_1
-          next h => simp_all only [hnat_to_opt_0, reduceCtorEq]
+          next h => simp_all only [encode_zero_opt, reduceCtorEq]
           next h =>
-            simp_all only [hnat_to_opt_0', Option.some.injEq, Nat.pair_eq_pair]
+            simp_all only [encode_succ_opt, Option.some.injEq, Nat.pair_eq_pair]
             obtain ⟨left, right⟩ := a_1
             subst left right
             simp_all only [not_lt_zero']
@@ -223,7 +223,7 @@ theorem c_bdd_search_evp_1 {O c s a k l i r} :
     next h =>
       split
       next h2 =>
-        simp only [hnat_to_opt_0, reduceCtorEq, false_iff, not_and, not_forall]
+        simp only [encode_zero_opt, reduceCtorEq, false_iff, not_and, not_forall]
         intro hi h3
         cases Nat.eq_or_lt_of_le hi with
         | inl h4 =>
@@ -231,7 +231,7 @@ theorem c_bdd_search_evp_1 {O c s a k l i r} :
           simp [h3] at h2
         | inr h4 => simp [c_bdd_search_evp_0.mp h i (Nat.le_of_lt_succ h4)] at h3
       next h2 =>
-        simp only [hnat_to_opt_0', Option.some.injEq, Nat.pair_eq_pair]
+        simp only [encode_succ_opt, Option.some.injEq, Nat.pair_eq_pair]
         constructor
         · rintro ⟨h3,h4⟩
           rw [h3] at h2 h4 ⊢
