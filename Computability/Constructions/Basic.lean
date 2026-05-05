@@ -160,8 +160,8 @@ theorem exists_code_total {O : ℕ → ℕ} {f : ℕ → ℕ} :
     rw [hc]
     exact trivial
   intro h
-  rcases h with ⟨c,hc,_⟩
-  apply exists_code.mpr ⟨c,hc⟩
+  rcases h with ⟨c, hc, _⟩
+  apply exists_code.mpr ⟨c, hc⟩
 theorem Rin.ite {O : ℕ → ℕ} {f g : ℕ →. ℕ} {c : ℕ → ℕ}
     (hc : RecursiveIn O c) (hf : RecursiveIn O f) (hg : RecursiveIn O g) :
     RecursiveIn O fun a => if (c a=0) then (f a) else (g a) := by
