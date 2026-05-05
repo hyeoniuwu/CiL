@@ -30,7 +30,7 @@ theorem rfind'_eqv_rfind {O : ℕ → ℕ} {c : Code} {x : ℕ} :
   simpa using by rfl
 
 section rfind
-/-- `[code_rfind c](x)=smallest n s.t. [c](x,n)=0.` -/
+/-- `[c_rfind c](x)=smallest n s.t. [c](x,n)=0.` -/
 def c_rfind : Oracle.Single.Code→Oracle.Single.Code := fun c ↦ (rfind' c).comp (pair c_id zero)
 /-- Given a code `c` -/
 abbrev rfind (O : ℕ → ℕ) : Code → ℕ →. ℕ :=
@@ -110,12 +110,12 @@ def c_rfindOpt (c : Code) := (c_ofOption c).comp₂ c_id (c_rfind (c_isSome.comp
     | some val => simp
   rw [this]
   if hh: (Nat.rfind fun n ↦ Part.some (n2o ((eval O c ⟪x, n⟫).get (hc1 ⟪x, n⟫))).isSome).Dom then
-  simp [Part.Dom.bind hh]
-  simp [Seq.seq]
-  simp [c_ofOption_ev hc1]
-  simp [Part.Dom.bind hh]
+    simp [Part.Dom.bind hh]
+    simp [Seq.seq]
+    simp [c_ofOption_ev hc1]
+    simp [Part.Dom.bind hh]
   else
-  simp [Part.eq_none_iff'.mpr hh]
-  simp [Seq.seq]
+    simp [Part.eq_none_iff'.mpr hh]
+    simp [Seq.seq]
 end Oracle.Single.Code
 end rfindOpt

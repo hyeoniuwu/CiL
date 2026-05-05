@@ -4,7 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Edwin Park
 -/
 import Computability.Jump
-import Computability.Rin
+import Computability.RecursiveIn
 import Computability.Constructions.Eval
 import Computability.Constructions.Dovetail
 import Computability.Use.Basic

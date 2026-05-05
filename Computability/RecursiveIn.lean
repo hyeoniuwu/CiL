@@ -5,6 +5,13 @@ Authors: Edwin Park
 -/
 import Computability.Jump
 
+/-!
+# Reducibility theorems
+
+This file formalises basic reducibility results.
+
+-/
+
 namespace Oracle.Single.RecursiveIn.Rin
 open Oracle.Single
 open Part Nat
@@ -19,7 +26,8 @@ alias comp  := RecursiveIn.comp
 alias prec  := RecursiveIn.prec
 alias rfind := RecursiveIn.rfind
 
-theorem of_eq {O : ℕ → ℕ} {f g : ℕ →. ℕ} (hf : RecursiveIn O f) (H : ∀ n, f n = g n) : RecursiveIn O g :=
+theorem of_eq {O : ℕ → ℕ} {f g : ℕ →. ℕ} (hf : RecursiveIn O f) (H : ∀ n, f n = g n) :
+    RecursiveIn O g :=
   (funext H : f = g) ▸ hf
 
 theorem of_eq_tot {O : ℕ → ℕ} {f : ℕ →. ℕ} {g : ℕ → ℕ} (hf : RecursiveIn O f) (H : ∀ n, g n ∈ f n) :

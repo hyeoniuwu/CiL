@@ -8,9 +8,12 @@ import Computability.Constructions.Eval_Aux
 import Mathlib.Computability.RecursiveIn
 
 /-!
-# Notations, helper functions
+# Reducibilities
 
-In this file we define helper functions which will be used in later computability arguments.
+In this file we relate Turing reducibility to other notions of reducibilities defined in Mathlib.
+
+## Main declarations
+- `SingleReducibleIff` : relates Turing reducibility to `Nat.RecursiveIn`.
 -/
 
 open Nat Part Encodable
