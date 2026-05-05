@@ -12,15 +12,14 @@ import Mathlib.Data.Part
 protected theorem Option.isSome.bind {α β} {o : Option α}
     (h : o.isSome) (f : α → Option β) :
     o.bind f = f (o.get h) := by
-  simp (config:={singlePass:=true}) only [Option.eq_some_of_isSome h]
+  simp (config := {singlePass := true}) only [Option.eq_some_of_isSome h]
   ext b
   constructor
   · intro h2
     simp only [Option.bind_some] at h2
     exact h2
-  intro h2
-  simp only [Option.bind_some]
-  exact h2
+  intro _
+  simpa only [Option.bind_some]
 theorem Part.mem_imp_dom {x} {p : Part ℕ} : x ∈ p  → p.Dom :=
   fun h => by simp [Part.eq_some_iff.mpr h]
 theorem Option.isSome_iff_mem {β} {o : Option β} : o.isSome ↔ (∃z ,z∈o) := by
