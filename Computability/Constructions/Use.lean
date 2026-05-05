@@ -323,12 +323,12 @@ theorem c_usen_evp_aux_nMod4 {O x n s} :
     | inl h =>
       simp only [h, Nat.not_lt_of_le h]
       cases Classical.em (pc_ml_s left elem=o2n Option.none) with
-      | inl hh => simp [hh, hnat_to_opt_0]
-      | inr hh =>
-        simp only [not_none_imp_not_zero hh, hnat_to_opt_2 hh]
+      | inl h2 => simp [h2]
+      | inr h2 =>
+        simp only [not_zero_of_not_none h2, encode_nonzero_opt h2]
         cases Classical.em (pc_mr_s left elem=o2n Option.none) with
-        | inl hhh => simp [hhh, hnat_to_opt_0]
-        | inr hhh => simp [not_none_imp_not_zero hhh, hnat_to_opt_2 hhh]
+        | inl h3 => simp [h3]
+        | inr h3 => simp [not_zero_of_not_none h3, encode_nonzero_opt h3]
   have hpair_mapped :
       evalp O pair_mapped cri = (map (opt_pair) (range (s+1))) := by
     simp [pair_mapped, hs,hopt_pair]
@@ -352,35 +352,35 @@ theorem c_usen_evp_aux_nMod4 {O x n s} :
       simp only [h, Nat.not_lt_of_le h]
       simp only [hcomp_usen_cg]
       cases Classical.em (pc_mr_s left elem=o2n Option.none) with
-      | inl hh => simp [hh, hnat_to_opt_0]
-      | inr hh =>
-        simp only [not_none_imp_not_zero hh, hnat_to_opt_2 hh]
+      | inl h2 => simp [h2]
+      | inr h2 =>
+        simp only [not_zero_of_not_none h2, encode_nonzero_opt h2]
         simp only [hcomp_evaln_cg]
         cases Classical.em ((evaln O (s + 1) (n2c mr) elem)=Option.none) with
-        | inl hhh => simp [hhh]
-        | inr hhh =>
-        simp only [hnat_1 hhh]
+        | inl h3 => simp [h3]
+        | inr h3 =>
+        simp only [hnat_1 h3]
         simp? says
           simp only [↓reduceIte, Encodable.encode_none, unpaired2, pair_l, pair_r, guard_true,
             Option.pure_def, Nat.n2c, Option.bind_eq_bind, Option.bind_some]
-        simp only [Option.isSome.bind (Option.isSome_iff_ne_none.mpr hhh)]
+        simp only [Option.isSome.bind (Option.isSome_iff_ne_none.mpr h3)]
         simp only [hcomp_usen_cf]
         have :
             pc_ml_s (c_pred.comp comp_evaln_cg) elem =
             (pc_ml_s left ((evaln O (s + 1) (n2c mr) elem).get
-            (Option.isSome_iff_ne_none.mpr hhh))) := by
+            (Option.isSome_iff_ne_none.mpr h3))) := by
           unfold pc_ml_s
           simp [hcomp_evaln_cg]
-          simp [hnat_2 (Option.isSome_iff_ne_none.mpr hhh)]
+          simp [hnat_2 (Option.isSome_iff_ne_none.mpr h3)]
         rw [this]
         cases Classical.em (
           pc_ml_s left
           ((evaln O (s + 1) (n2c mr) elem).get
-            (Option.isSome_iff_ne_none.mpr hhh)) = 0) with
-        | inl hhhh => simp [hhhh]
-        | inr hhhh =>
-          simp [not_none_imp_not_zero hhhh, hnat_to_opt_2 hhhh]
-          simp [hnat_5 hhhh]
+            (Option.isSome_iff_ne_none.mpr h3)) = 0) with
+        | inl h4 => simp [h4]
+        | inr h4 =>
+          simp [not_zero_of_not_none h4, encode_nonzero_opt h4]
+          simp [hnat_5 h4]
   have hcomp_mapped : evalp O comp_mapped cri = (map (opt_comp) (range (s+1))) := by
     simp [comp_mapped, hs,hopt_comp]
   have hprec_x elem : evalp O prec_x ⟪elem, cri⟫ = elem.l := by simp [prec_x,ele]
@@ -429,21 +429,21 @@ theorem c_usen_evp_aux_nMod4 {O x n s} :
         simp only [hprec_usen_prev, hprec_evaln_prev]
         simp only [Nat.add_eq_zero_iff, one_ne_zero, and_false, ↓reduceIte]
         cases Classical.em (evaln O s (n2c (n + 4 + 1)) ⟪elem.l, elem.r - 1⟫ = Option.none) with
-        | inl hh => simp [hh]
-        | inr hh =>
-        simp only [hnat_1 hh, ↓reduceIte]
-        simp only [Option.isSome.bind <| Option.ne_none_iff_isSome.mp hh]
-        simp only [hprec_usen_indt elem (Option.ne_none_iff_isSome.mp hh)]
+        | inl h2 => simp [h2]
+        | inr h2 =>
+        simp only [hnat_1 h2, ↓reduceIte]
+        simp only [Option.isSome.bind <| Option.ne_none_iff_isSome.mp h2]
+        simp only [hprec_usen_indt elem (Option.ne_none_iff_isSome.mp h2)]
         cases Classical.em ((pc_mr_s left ⟪elem.l, elem.r - 1,
             (evaln O s (n2c (n + 4 + 1)) (Nat.pair elem.l (elem.r - 1))).get
-            (Option.ne_none_iff_isSome.mp hh)⟫) =
+            (Option.ne_none_iff_isSome.mp h2)⟫) =
           o2n Option.none) with
-        | inl hhh => simp [hhh]
-        | inr hhh =>
-          simp only [not_none_imp_not_zero hhh, hnat_to_opt_2 hhh]
+        | inl h3 => simp [h3]
+        | inr h3 =>
+          simp only [not_zero_of_not_none h3, encode_nonzero_opt h3]
           cases Classical.em (pc_c_sM1 left (Nat.pair elem.l (elem.r - 1)) = o2n Option.none)  with
-          | inl hhhh => simp [hhhh]
-          | inr hhhh => simp [not_none_imp_not_zero hhhh, hnat_to_opt_2 hhhh]
+          | inl h4 => simp [h4]
+          | inr h4 => simp [not_zero_of_not_none h4, encode_nonzero_opt h4]
   have hprec_mapped : evalp O prec_mapped cri = (map (opt_prec) (range (s+1))) := by
     simp [prec_mapped, hs,hopt_prec]
   have hrfind'_use_base elem:
@@ -467,34 +467,34 @@ theorem c_usen_evp_aux_nMod4 {O x n s} :
       simp only [h, Nat.not_lt_of_le h]
       simp only [hrfind'_use_base]
       cases Classical.em ( pc_m_s left elem=o2n Option.none) with
-      | inl hh => simp [hh,hnat_to_opt_0]
-      | inr hh =>
-        simp only [not_none_imp_not_zero hh, hnat_to_opt_2 hh]
+      | inl h2 => simp [h2]
+      | inr h2 =>
+        simp only [not_zero_of_not_none h2, encode_nonzero_opt h2]
         simp only [hrfind'_evaln_base]
         cases Classical.em ((evaln O (s + 1) (n2c m) elem) = Option.none) with
-        | inl hhh => simp [hhh]
-        | inr hhh =>
-          simp only [hnat_1 hhh]
+        | inl h3 => simp [h3]
+        | inr h3 =>
+          simp only [hnat_1 h3]
           simp only [↓reduceIte, Denumerable.ofNat_encode, Encodable.encode_none, unpaired2,
             Option.getD_some, pair_l, pair_r, succ_eq_add_one, guard_true, Option.pure_def, Nat.n2c,
             Option.bind_eq_bind, Option.bind_some]
-          simp only [Option.isSome.bind <| Option.ne_none_iff_isSome.mp hhh]
-          simp only [getD_eq_get <| Option.ne_none_iff_isSome.mp hhh]
-          cases (evaln O (s + 1) (n2c m) elem).get (Option.ne_none_iff_isSome.mp hhh) with
-          | zero => simpa using (succ_pred_eq_of_ne_zero (not_none_imp_not_zero hh)).symm
+          simp only [Option.isSome.bind <| Option.ne_none_iff_isSome.mp h3]
+          simp only [getD_eq_get <| Option.ne_none_iff_isSome.mp h3]
+          cases (evaln O (s + 1) (n2c m) elem).get (Option.ne_none_iff_isSome.mp h3) with
+          | zero => simpa using (succ_pred_eq_of_ne_zero (not_zero_of_not_none h2)).symm
           | succ _ =>
             simp only [hrfind'_usen_indt]
             cases Classical.em ( pc_c_sM1 left (Nat.pair elem.l (elem.r + 1))=o2n Option.none) with
-            | inl hhhh => simp [hhhh,hnat_to_opt_0]
-            | inr hhhh => simp [not_none_imp_not_zero hhhh, hnat_to_opt_2 hhhh]
+            | inl h4 => simp [h4]
+            | inr h4 => simp [not_zero_of_not_none h4, encode_nonzero_opt h4]
   have hrfind'_mapped : evalp O rfind'_mapped cri = (map (opt_rfind') (range (s+1))) := by
     simp [rfind'_mapped, hs,hopt_rfind']
   simp only [hs,hcode,hnMod4]
   match h : n%4 with
-  | 0 => simpa [hpair_mapped, opt_pair] using fun hh => by simp [Nat.not_le_of_lt hh]
-  | 1 => simpa [hcomp_mapped, opt_comp] using fun hh => by simp [Nat.not_le_of_lt hh]
-  | 2 => simpa [hprec_mapped, opt_prec] using fun hh => by simp [Nat.not_le_of_lt hh]
-  | 3 => simpa [hrfind'_mapped, opt_rfind'] using fun hh => by simp [Nat.not_le_of_lt hh]
+  | 0 => simpa [hpair_mapped, opt_pair]     using fun h2 => by simp [Nat.not_le_of_lt h2]
+  | 1 => simpa [hcomp_mapped, opt_comp]     using fun h2 => by simp [Nat.not_le_of_lt h2]
+  | 2 => simpa [hprec_mapped, opt_prec]     using fun h2 => by simp [Nat.not_le_of_lt h2]
+  | 3 => simpa [hrfind'_mapped, opt_rfind'] using fun h2 => by simp [Nat.not_le_of_lt h2]
   | x+4 =>
     have contrad : n%4<4 := by
       apply Nat.mod_lt

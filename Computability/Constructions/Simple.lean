@@ -151,7 +151,7 @@ theorem c_bdd_search_evp_0 {O c s a k l} :
         exact fun i hi ↦ h i (Nat.le_add_right_of_le hi)
 theorem c_bdd_aux {x} (h : x ≠ 0) : ∃ y z, ⟪y, z⟫ ∈ n2o x := by
   use (x-1).l; use (x-1).r
-  simp [hnat_to_opt_2 h]
+  simp [encode_nonzero_opt h]
 theorem c_bdd_search_evp_1 {O c s a k l i r} :
     ⟪i, r⟫ ∈ (n2o (evalp O (c_bdd_search c) ⟪⟪s,a,k⟫, l⟫))
     ↔

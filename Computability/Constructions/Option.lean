@@ -98,7 +98,7 @@ def c_opt_bind (cf cg : Code) :=  c_ifz.comp₃ cf zero (cg.comp₂ c_id (c_opt_
   | inr h =>
     simp only [ne_eq, h, not_false_eq_true, iget_evp_2, ↓reduceIte,
       Option.pure_def, Option.bind_eq_bind, Option.bind_fun_some]
-    simp only [Option.isSome.bind <| hnat_6 h, encode_ofNat]
+    simp only [Option.isSome.bind <| isSome_of_n2o h, encode_ofNat]
     congr
     have goal {o h} : o - 1 = (n2o o).get h := by
       have (h : (n2o o).isSome) : o ≠ 0 := by
@@ -125,7 +125,7 @@ def c_opt_bind' (cf cg : Code) :=  c_ifz.comp₃ cf zero cg
   | inl h => simp [h]
   | inr h =>
     simp [h]
-    simp [Option.isSome.bind <| hnat_6 h]
+    simp [Option.isSome.bind <| isSome_of_n2o h]
 end Oracle.Single.Code
 end opt_bind'
 

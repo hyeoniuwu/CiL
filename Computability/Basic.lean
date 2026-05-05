@@ -67,6 +67,8 @@ theorem b2n_a0 {x} : b2n x = 0 ↔ x = false := by simp [b2n]
 open Denumerable Encodable
 abbrev n2o := @ofNat (Option ℕ) _
 abbrev o2n := @encode (Option ℕ) _
+@[simp] theorem encode_zero_opt : (Denumerable.ofNat (Option ℕ) 0) = Option.none := rfl
+@[simp] theorem encode_succ_opt {x} : (Denumerable.ofNat (Option ℕ) (x+1)) = Option.some (x) := rfl
 
 namespace Oracle.Single.Code.nc_to_nn
 @[coe] protected def lift (f : ℕ → Code) : ℕ → ℕ := fun x => c2n (f x)

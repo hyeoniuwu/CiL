@@ -45,13 +45,8 @@ lemma Part.ne_some_of_get_ne {x : ℕ} {p1 : Part ℕ} {h1 : p1.Dom} (h : p1.get
 
 -- option
 open Nat Denumerable Encodable List
-@[simp] theorem hnat_to_opt_0 : (Denumerable.ofNat (Option ℕ) 0) = Option.none := rfl
-@[simp] theorem hnat_to_opt_0' {x} : (Denumerable.ofNat (Option ℕ) (x+1)) = Option.some (x) := rfl
 private lemma ge_0_rw {x} (h2 : ¬x=0) : x=x-1+1 := (succ_pred_eq_of_ne_zero h2).symm
-theorem hnat_to_opt_2 {x} (h3 : ¬x=o2n Option.none) : n2o x = (Option.some (x-1)) := by
-  rw (config := {occs := .pos [1]}) [ge_0_rw h3]
-  exact rfl
-theorem not_none_imp_not_zero {x} (h : ¬ x = o2n Option.none) : ¬ x = 0 := Ne.intro h
+theorem not_zero_of_not_none {x} (h : ¬ x = o2n Option.none) : ¬ x = 0 := Ne.intro h
 theorem hnat_0 {o : Option ℕ} (ho : o.isSome) : ¬ o2n o = 0 := by
   rw [Option.eq_some_of_isSome ho]
   exact add_one_ne_zero (Encodable.encode (o.get ho))
@@ -60,8 +55,8 @@ theorem hnat_1 {o : Option ℕ} (ho : ¬ o = Option.none) : ¬ o2n o = 0 := by
 theorem hnat_2 {o : Option ℕ} (ho : o.isSome) : (o2n o) - 1 = o.get ho := by
   simp (config := {singlePass := true}) [Option.eq_some_of_isSome ho]
   exact rfl
-theorem hnat_6 {i} (h : i ≠ 0) : (n2o i).isSome := by
-  rewrite [ge_0_rw h]; rfl
+theorem isSome_of_n2o {i} (h : i ≠ 0) : (n2o i).isSome := by
+  rewrite [(succ_pred_eq_of_ne_zero h).symm]; rfl
 theorem getD_eq_get {x} {o : Option ℕ} (h : o.isSome) : o.getD x = o.get h :=
   Eq.symm (Option.get_eq_getD o)
 theorem o2n_a0 {x} : o2n x = 0 ↔ x = Option.none := by
@@ -72,7 +67,7 @@ theorem o2n_a0 {x} : o2n x = 0 ↔ x = Option.none := by
   · intro h
     simp [h]
 theorem hnat_10 {x} (h : o2n x ≠ 0) : x.isSome := by
-  simpa using hnat_6 h
+  simpa using isSome_of_n2o h
 theorem hnat_11 {x : Option ℕ} (h : x.isSome) : x = some (o2n x - 1) := by
   rw [hnat_2 h];
   exact Option.eq_some_of_isSome h
