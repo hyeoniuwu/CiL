@@ -54,13 +54,13 @@ theorem pair_pos_of_left_pos {x y} (h : x > 0) : (Nat.pair x y) > 0 := by
   rw [(Nat.sub_eq_iff_eq_add h).mp rfl]; simp
 end pair
 
-section list
+-- we define several conveniences to encode/decode from naturals to various types.
+section conversions
 abbrev Nat.n2l : ℕ → List ℕ := @Denumerable.ofNat (List ℕ) _
 abbrev Nat.l2n : List ℕ → ℕ := @Encodable.encode (List ℕ) _
 instance {lN} : OfNat (List ℕ) lN where ofNat := n2l lN
 instance : Coe ℕ (List ℕ) := ⟨n2l⟩
 instance : Coe (List ℕ) ℕ := ⟨l2n⟩
-end list
 
 def n2b (n : ℕ) : Bool := if n = 0 then false else true
 def b2n (b : Bool) : ℕ := if b then 1 else 0
@@ -82,6 +82,7 @@ namespace Oracle.Single.Code.cc_to_nn
 @[coe] protected def lift (f : Code → Code) : ℕ → ℕ := c2n ∘ f ∘ n2c
 instance : Coe (Code → Code) (ℕ → ℕ) := ⟨Oracle.Single.Code.cc_to_nn.lift⟩
 end Oracle.Single.Code.cc_to_nn
+end conversions
 
 section primrec
 -- templates for primrec constructions as codes
@@ -247,6 +248,7 @@ end primrec
 
 section total
 namespace Oracle.Single.Code
+/-- A total evaluation function, requiring proof that the given code is total. -/
 def evalt (O : ℕ → ℕ) (c : Code) (h : code_total O c) : ℕ → ℕ := fun x ↦ (eval O c x).get (h x)
 theorem total_pair_iff {O cf cg} :
     (code_total O cf) ∧ (code_total O cg) ↔ (code_total O (pair cf cg)) :=
