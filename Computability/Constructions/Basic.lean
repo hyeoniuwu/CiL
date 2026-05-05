@@ -32,7 +32,8 @@ theorem c_diverge_ev' {O : ℕ → ℕ} : eval O c_diverge = fun _ ↦ Part.none
 end diverge
 
 section ifz1
-def c_ifz1 (c) (a b : ℕ) :=
+/-- `c_ifz1 c a b` evalutes code `c`; if it is zero, it returns `a`, otherwise `b`. -/
+def c_ifz1 (c : Code) (a b : ℕ) :=
   c_add.comp₂ (c_mul.comp₂ (c_const b) (c_sg.comp c)) (c_mul.comp₂ (c_const a) (c_sg'.comp c))
 open Classical in
 @[simp, ev_simps] theorem c_ifz1_ev {O c a b x} (hc : code_total O c) :
@@ -66,24 +67,6 @@ open Classical in
   simp only [Part.Dom.bind d, Part.bind_some, pair_l, pair_r]
   simp only [c_ifz1_ev hc]
   split <;> simp only [Part.get_some, n2c_c2n]
-theorem exists_code_nat {O : ℕ → ℕ} {f : ℕ →. ℕ} :
-    RecursiveIn O f ↔ ∃ c : ℕ , eval O c.n2c = f := by
-  rw [@exists_code O f]
-  exact Function.Surjective.exists n2c_sur
-theorem exists_code_total {O : ℕ → ℕ} {f : ℕ → ℕ} :
-    RecursiveIn O f ↔ ∃ c , eval O c = f ∧ code_total O c := by
-  constructor
-  · intro h
-    rcases exists_code.mp h with ⟨c,hc⟩
-    use c
-    constructor
-    · exact hc
-    intro x
-    rw [hc]
-    exact trivial
-  intro h
-  rcases h with ⟨c,hc,_⟩
-  apply exists_code.mpr ⟨c,hc⟩
 end ite
 
 section if_le_te'
@@ -161,6 +144,24 @@ end Oracle.Single.Code
 
 open Oracle.Single.Code
 namespace Oracle.Single.RecursiveIn
+theorem exists_code_nat {O : ℕ → ℕ} {f : ℕ →. ℕ} :
+    RecursiveIn O f ↔ ∃ c : ℕ , eval O c.n2c = f := by
+  rw [@exists_code O f]
+  exact Function.Surjective.exists n2c_sur
+theorem exists_code_total {O : ℕ → ℕ} {f : ℕ → ℕ} :
+    RecursiveIn O f ↔ ∃ c , eval O c = f ∧ code_total O c := by
+  constructor
+  · intro h
+    rcases exists_code.mp h with ⟨c,hc⟩
+    use c
+    constructor
+    · exact hc
+    intro x
+    rw [hc]
+    exact trivial
+  intro h
+  rcases h with ⟨c,hc,_⟩
+  apply exists_code.mpr ⟨c,hc⟩
 theorem Rin.ite {O : ℕ → ℕ} {f g : ℕ →. ℕ} {c : ℕ → ℕ}
     (hc : RecursiveIn O c) (hf : RecursiveIn O f) (hg : RecursiveIn O g) :
     RecursiveIn O fun a => if (c a=0) then (f a) else (g a) := by
