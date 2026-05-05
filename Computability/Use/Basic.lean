@@ -48,10 +48,8 @@ For the construction of the use function given here, see Constructions/Use.lean.
 ## References
 
 -/
-set_option linter.style.longFile 0
 open List Nat
 open Oracle.Single.Code
-set_option linter.style.cdot false
 namespace Oracle.Single.Code
 
 
