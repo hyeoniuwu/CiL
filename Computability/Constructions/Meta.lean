@@ -3,10 +3,12 @@ Copyright (c) 2026 Edwin Park. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Edwin Park
 -/
-import Computability.Constructions.Primitive
-import Computability.Constructions.Eval_Aux
-import Computability.Constructions.Dovetail
-import Computability.Constructions.Basic
+module
+
+public import Computability.Constructions.Primitive
+public import Computability.Constructions.Eval_Aux
+public import Computability.Constructions.Dovetail
+public import Computability.Constructions.Basic
 
 /-!
 # Meta.lean
@@ -29,6 +31,8 @@ Then the meta-code, named `c_c`, will be: `c_c = c_comp.comp₂ c_succ c_left`.
  - The meta-code for a code has `c_` attached as a prefix.
 
 -/
+
+@[expose] public section
 
 open Oracle.Single.Code
 
@@ -74,7 +78,8 @@ def c_oracle := c_const (c2n oracle)
 @[cp] theorem c_oracle_prim : code_prim c_oracle := by unfold c_oracle; apply_cp
 @[simp, evp_simps] theorem c_oracle_evp {O x} : evalp O c_oracle x = c2n oracle := by
   simp [c_oracle]
-@[simp, evp_simps] theorem c_oracle_evp' {O : ℕ → ℕ} : evalp O c_oracle = fun _ : ℕ => c2n oracle := by
+@[simp, evp_simps] theorem c_oracle_evp' {O : ℕ → ℕ} :
+    evalp O c_oracle = fun _ : ℕ => c2n oracle := by
   funext x; simp
 @[simp, ev_simps] theorem c_oracle_ev {O x} : eval O c_oracle x = c2n oracle := by
   rw [← evalp_eq_eval c_oracle_prim]; simp
@@ -153,7 +158,8 @@ theorem c_c_const_evp' {O : ℕ → ℕ} : evalp O c_c_const = c_const := by
 
 def c_ev_const := c_comp.comp₂ left (c_c_const.comp right)
 @[cp] theorem c_ev_const_prim : code_prim c_ev_const := by unfold c_ev_const; apply_cp
-theorem c_ev_const_evp' {O x} : evalp O c_ev_const x = c2n (comp (n2c x.left) (c_const x.right)) := by
+theorem c_ev_const_evp' {O x} :
+    evalp O c_ev_const x = c2n (comp (n2c x.left) (c_const x.right)) := by
   simp [c_ev_const]
 @[simp, evp_simps] theorem c_ev_const_evp {O e x} :
   evalp O c_ev_const ⟪e, x⟫ = c2n (comp (n2c e) (c_const x)) := by simp [c_ev_const_evp']

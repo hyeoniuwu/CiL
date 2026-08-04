@@ -3,7 +3,9 @@ Copyright (c) 2026 Edwin Park. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Edwin Park
 -/
-import Computability.Jump
+module
+
+public import Computability.Jump
 
 /-!
 # Reducibility theorems
@@ -11,6 +13,8 @@ import Computability.Jump
 This file formalises basic reducibility results.
 
 -/
+
+@[expose] public section
 
 namespace Oracle.Single.RecursiveIn.Rin
 open Oracle.Single
@@ -33,6 +37,7 @@ theorem of_eq {O : ℕ → ℕ} {f g : ℕ →. ℕ} (hf : RecursiveIn O f) (H :
 theorem of_eq_tot {O : ℕ → ℕ} {f : ℕ →. ℕ} {g : ℕ → ℕ} (hf : RecursiveIn O f) (H : ∀ n, g n ∈ f n) :
     RecursiveIn O g :=
   of_eq hf fun n => eq_some_iff.2 (H n)
+set_option backward.isDefEq.respectTransparency false in
 theorem of_primrecIn {O : ℕ → ℕ} {f : ℕ → ℕ} (hf : PrimrecIn O f) : RecursiveIn O f := by
   induction hf with
   | zero => exact zero
@@ -54,6 +59,7 @@ theorem of_primrecIn {O : ℕ → ℕ} {f : ℕ → ℕ} (hf : PrimrecIn O f) : 
       simp only [mem_bind_iff, mem_some_iff]
       exact ⟨_, IH, rfl⟩
 
+set_option backward.isDefEq.respectTransparency false in
 @[simp] lemma partCompTotal {O : ℕ → ℕ} {f : ℕ →. ℕ} {g : ℕ → ℕ}
     (h1 : RecursiveIn O f) (h2 : RecursiveIn O g) :
     (RecursiveIn O ↑(f∘g)) := by
@@ -62,6 +68,7 @@ theorem of_primrecIn {O : ℕ → ℕ} {f : ℕ → ℕ} (hf : PrimrecIn O f) : 
     simp only [Function.comp_apply, Part.coe_some, Part.bind_eq_bind, Part.bind_some]
   rw [h3]
   exact comp h1 h2
+set_option backward.isDefEq.respectTransparency false in
 @[simp] lemma totalComp {O : ℕ → ℕ} {f g : ℕ → ℕ}
   (h1 : RecursiveIn O f) (h2 : RecursiveIn O g) : (RecursiveIn O ↑(f∘g)) := by
   have h3 : (↑(f∘g) : ℕ →. ℕ) = fun x => g x >>= (↑f : ℕ →. ℕ) := by

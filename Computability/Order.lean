@@ -6,8 +6,13 @@ Authors: Tanner Duve, Elan Roth
 Modifications:
 Copyright (c) 2026 Edwin Park.
 -/
-import Computability.Oracle
+module
+
+public import Computability.Oracle
 import Mathlib.Order.Antisymmetrization
+
+@[expose] public section
+
 open Oracle.Single
 
 @[simp] abbrev TuringReducible (f g : ℕ → ℕ) : Prop := RecursiveIn g f

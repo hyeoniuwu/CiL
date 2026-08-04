@@ -3,8 +3,10 @@ Copyright (c) 2026 Edwin Park. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Edwin Park
 -/
-import Computability.Constructions.CovRec
-import Computability.Constructions.Eval_Aux
+module
+
+public import Computability.Constructions.Eval_Aux
+public import Computability.Constructions.CovRec
 
 /-!
 # Eval.lean
@@ -28,6 +30,8 @@ form theorem.
 
  - Where `x`, `y` are naturals, `⟪x, y⟫ = Nat.pair x y`.
 -/
+
+@[expose] public section
 
 open List Nat
 
@@ -180,6 +184,7 @@ def c_evaln_aux :=
 /-- api: `Nat.pair x (Nat.pair code s)` -/
 def c_evaln :=
   c_list_getI.comp₂ (c_list_getLastI.comp <| c_evaln_aux.comp (pair (c_const 17) right)) left
+set_option backward.isDefEq.respectTransparency false in
 theorem c_evaln_evp_aux_x_0_0 {O x} :
     evalp O (c_evaln) (Nat.pair x (Nat.pair 0 0)) =
     o2n (evaln O 0 0 x) := by
@@ -384,7 +389,6 @@ theorem c_evaln_evp_aux_nMod4 {O x n s} :
           let i ← n2o (pc_c_sM1 (left) (Nat.pair elem.left (elem.right-1)))
           n2o (pc_mr_s (left) (Nat.pair elem.left (Nat.pair (elem.right-1) i)))
       elem.right : Option ℕ)
-
     let opt_rfind' elem := o2n (do
       guard (elem ≤ s)
       (unpaired fun a m => do
@@ -762,6 +766,7 @@ end evaln
 section eval
 namespace Oracle.Single.Code
 def c_eval := (c_rfindOpt (c_evaln.comp₃ (right.comp left) (left.comp left) right))
+set_option backward.isDefEq.respectTransparency false in
 @[simp, ev_simps] theorem c_eval_ev {O : ℕ → ℕ} {c x : ℕ} :
     eval O c_eval (Nat.pair c x) = eval O c.n2c x := by
   simp only [c_eval, comp₃, comp₂]

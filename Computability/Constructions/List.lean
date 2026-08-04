@@ -3,7 +3,9 @@ Copyright (c) 2026 Edwin Park. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Edwin Park
 -/
-import Computability.Constructions.Option
+module
+
+public import Computability.Constructions.Option
 
 /-!
 # Construction of basic primitive recursive functions on lists
@@ -19,6 +21,8 @@ The major constructions in this file are `c_list_foldl` and `c_list_zipWith`.
 requires a nontrivial proof.
 
 -/
+
+@[expose] public section
 
 open Nat Denumerable Encodable List
 
@@ -285,8 +289,6 @@ def c_list_foldl (c : Code) := left.comp (c_list_foldl_aux2 c)
           rcases exists_cons_of_length_pos ln_gt_0 with ⟨_,_,hkt⟩
           simp [hkt]
           simp_all only [encode_list_cons, encode_nat, succ_eq_add_one, not_le, getElem_cons_zero]
-          subst hdrop
-          rfl
         have take_rw :
             (take (n + 1) (n2l lN)) = (take n (n2l lN)) ++ [(drop n (n2l lN)).headI] := by
           rw [show (take (n + 1) (n2l lN)) = (take n (n2l lN)) ++ [(n2l lN)[n]] from by simp]

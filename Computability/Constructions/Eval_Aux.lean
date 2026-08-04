@@ -3,7 +3,9 @@ Copyright (c) 2026 Edwin Park. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Edwin Park
 -/
-import Computability.Constructions.Option
+module
+
+public import Computability.Constructions.Option
 import Mathlib.Data.Nat.PSub
 
 /-!
@@ -13,10 +15,9 @@ Auxiliary constructs for use in `Oracle.Single.Constructions.Eval`.
 
 -/
 
-open Nat
-open Denumerable
-open Encodable
-open List
+@[expose] public section
+
+open Nat Denumerable Encodable List
 
 section rfindOpt
 open Oracle.Single
@@ -62,6 +63,7 @@ theorem rfind_real {O f} (h : RecursiveIn O f) :
 end rfind
 
 def c_ppred := c_rfind (c_if_eq'.comp₂ left (succ.comp right))
+set_option backward.isDefEq.respectTransparency false in
 @[simp, ev_simps] theorem c_ppred_ev {O y} : eval O c_ppred y = Nat.ppred y := by
   unfold c_ppred
   simp only [c_rfind_ev', ev_simps]
@@ -78,6 +80,7 @@ def c_ppred := c_rfind (c_if_eq'.comp₂ left (succ.comp right))
     aesop
 
 def c_ofOption (c : Code) := c_ppred.comp c
+set_option backward.isDefEq.respectTransparency false in
 theorem c_ofOption_ev {O : ℕ → ℕ} {c : Code} {x : ℕ} (hc1 : code_total O c) :
     eval O (c_ofOption c) x = ↑(n2o ((eval O c x).get (hc1 x))) := by
   unfold c_ofOption
@@ -88,6 +91,7 @@ theorem c_ofOption_ev {O : ℕ → ℕ} {c : Code} {x : ℕ} (hc1 : code_total O
   | succ n => simp;
 
 def c_rfindOpt (c : Code) := (c_ofOption c).comp₂ c_id (c_rfind (c_isSome.comp (c)))
+set_option backward.isDefEq.respectTransparency false in
 @[simp, ev_simps] theorem c_rfindOpt_ev {O : ℕ → ℕ} {c : Code} {x : ℕ} (hc1 : code_total O c) :
     eval O (c_rfindOpt c) x =
     Nat.rfindOpt (fun y => n2o <| (eval O c (Nat.pair x y)).get (hc1 (Nat.pair x y))) := by

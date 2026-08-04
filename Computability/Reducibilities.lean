@@ -3,9 +3,11 @@ Copyright (c) 2026 Edwin Park. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Edwin Park
 -/
-import Computability.Oracle
-import Computability.Constructions.Eval_Aux
-import Mathlib.Computability.RecursiveIn
+module
+
+public import Computability.Oracle
+public import Computability.Constructions.Eval_Aux
+public import Mathlib.Computability.RecursiveIn
 
 /-!
 # Reducibilities
@@ -15,6 +17,8 @@ In this file we relate Turing reducibility to other notions of reducibilities de
 ## Main declarations
 - `SingleReducibleIff` : relates Turing reducibility to `Nat.RecursiveIn`.
 -/
+
+@[expose] public section
 
 open Nat Part Encodable
 section vars
@@ -31,14 +35,14 @@ theorem RecursiveIn.nat_iff {O : Set (ℕ →. ℕ)} {f : ℕ →. ℕ} :
   simp [_root_.RecursiveIn, map_id']
 theorem unpaired {O : Set (ℕ →. ℕ)} {f : ℕ → ℕ →. α} :
     RecursiveIn O (Nat.unpaired f) ↔ RecursiveIn₂ O f :=
-  ⟨fun h => by simpa using
-    RecursiveIn.comp (g := fun p : ℕ × ℕ => (p.1, p.2)) h Primrec₂.pair.to_comp.computableIn,
+  ⟨fun h => h,
     fun h => h.comp Primrec.unpair.to_comp.computableIn⟩
 theorem RecursiveIn₂.unpaired' {O : Set (ℕ →. ℕ)} {f : ℕ → ℕ →. ℕ} :
     Nat.RecursiveIn O (Nat.unpaired f) ↔ RecursiveIn₂ O f :=
   RecursiveIn.nat_iff.symm.trans unpaired
 protected theorem Nat.RecursiveIn.some {O : Set (ℕ →. ℕ)} : Nat.RecursiveIn O some :=
   (Nat.Partrec.of_primrec Primrec.id).recursiveIn
+set_option backward.isDefEq.respectTransparency false in
 protected theorem RecursiveIn.bind {O : Set (ℕ →. ℕ)} {f : α →. β} {g : α → β →. σ}
     (hf : RecursiveIn O f) (hg : RecursiveIn₂ O g) :
     RecursiveIn O fun a => (f a).bind (g a) :=

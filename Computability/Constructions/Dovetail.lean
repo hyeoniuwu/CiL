@@ -3,7 +3,9 @@ Copyright (c) 2026 Edwin Park. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Edwin Park
 -/
-import Computability.Constructions.Eval
+module
+
+public import Computability.Constructions.Eval
 
 /-!
 # Dovetail.lean
@@ -36,6 +38,8 @@ Note then that this guarantees: `∃ y,[c](x,y)=0 ↔ [dovetail c](x)↓`
 
 -/
 
+@[expose] public section
+
 open Nat Part
 
 namespace Oracle.Single.Code
@@ -50,6 +54,7 @@ def dovetailn (c : Code) : Code :=
   (c_const 1)
 
 set_option linter.unusedVariables false in -- why does hdvt give a warning?
+set_option backward.isDefEq.respectTransparency false in
 theorem dovetailn_ev_0 {O : ℕ → ℕ} {c : Code} {x : ℕ} (h : (eval O (dovetailn c) x).Dom) :
 let (eq := hdvt) dvt := (eval O (dovetailn c) x).get h
 evaln O dvt.right c ⟪x, dvt.left⟫=Option.some 0 := by
@@ -81,6 +86,7 @@ eval O c ⟪x, dvt.left⟫=Part.some 0 := by
   extract_lets at this
   exact Part.eq_some_iff.mpr (evaln_sound this)
 
+set_option backward.isDefEq.respectTransparency false in
 theorem dovetailn_ev_1' {O : ℕ → ℕ} {c : Code} {x : ℕ} :
     eval O (dovetailn c) x=Part.none ↔ ∀ s y, evaln O s c ⟪x, y⟫ ≠ Option.some 0 := by
   constructor

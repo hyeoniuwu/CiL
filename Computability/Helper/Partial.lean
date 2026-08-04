@@ -3,10 +3,14 @@ Copyright (c) 2026 Edwin Park. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Edwin Park
 -/
-import Computability.Basic
+module
 
-import Mathlib.Data.Option.Basic
-import Mathlib.Data.Part
+public import Computability.Basic
+
+public import Mathlib.Data.Option.Basic
+public import Mathlib.Data.Part
+
+@[expose] public section
 
 -- helper functions for Part/Option
 protected theorem Option.isSome.bind {α β} {o : Option α}
@@ -51,7 +55,8 @@ theorem hnat_0 {o : Option ℕ} (ho : o.isSome) : ¬ o2n o = 0 := by
 theorem hnat_1 {o : Option ℕ} (ho : ¬ o = Option.none) : ¬ o2n o = 0 := by
   exact hnat_0 (Option.isSome_iff_ne_none.mpr ho)
 theorem hnat_2 {o : Option ℕ} (ho : o.isSome) : (o2n o) - 1 = o.get ho := by
-  simp (config := {singlePass := true}) [Option.eq_some_of_isSome ho]
+  simp (singlePass := true) only [Option.eq_some_of_isSome ho, encode_some, Nat.add_one_sub_one,
+    Option.get_some]
   exact rfl
 theorem isSome_of_n2o {i} (h : i ≠ 0) : (n2o i).isSome := by
   rewrite [(succ_pred_eq_of_ne_zero h).symm]; rfl

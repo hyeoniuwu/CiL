@@ -6,8 +6,10 @@ Authors: Mario Carneiro
 Modifications:
 Copyright (c) 2026 Edwin Park.
 -/
-import Computability.Label
-import Computability.Oracle
+module
+
+public import Computability.Oracle
+public import Computability.Label
 import Mathlib.Data.Option.Basic
 import Mathlib.Logic.Encodable.Pi
 import Mathlib.Algebra.Order.Ring.Nat
@@ -25,6 +27,8 @@ include:
 - `Oracle.Single.eval` : A relativisation of `Nat.Partrec.Code.eval`
 
 -/
+
+@[expose] public section
 
 open Nat Encodable Denumerable
 
@@ -241,6 +245,7 @@ theorem eval_const {O : ℕ → ℕ} : ∀ n m, eval O (Code.const n) m = Part.s
 @[simp]
 theorem eval_id {O : ℕ → ℕ} (n) : eval O Code.id n = Part.some n := by simp! [Seq.seq, Code.id]
 
+set_option backward.isDefEq.respectTransparency false in
 @[simp]
 theorem eval_curry {O : ℕ → ℕ} (c n x) : eval O (curry c n) x = eval O c (Nat.pair n x) := by
   simp! [Seq.seq, curry]
@@ -370,6 +375,7 @@ theorem evaln_mono {O : ℕ → ℕ} : ∀ {k₁ k₂ c n x}, k₁ ≤ k₂ → 
       by_cases x0 : x = 0 <;> simp [x0]
       exact evaln_mono hl'
 
+set_option backward.isDefEq.respectTransparency false in
 set_option linter.flexible false in
 theorem evaln_sound {O : ℕ → ℕ} : ∀ {k c n x}, x ∈ evaln O k c n → x ∈ eval O c n
   | 0, _, n, x, h => by simp [evaln] at h
@@ -410,6 +416,7 @@ theorem evaln_sound {O : ℕ → ℕ} : ∀ {k c n x}, x ∈ evaln O k c n → x
           exact ⟨z, by simpa [add_comm, add_left_comm] using hz, z0⟩
 
 
+set_option backward.isDefEq.respectTransparency false in
 set_option linter.flexible false in
 theorem evaln_complete {O : ℕ → ℕ} {c n x} : x ∈ eval O c n ↔ ∃ k, x ∈ evaln O k c n := by
   refine ⟨fun h => ?_, fun ⟨k, h⟩ => evaln_sound h⟩
@@ -484,7 +491,7 @@ theorem evaln_complete {O : ℕ → ℕ} {c n x} : x ∈ eval O c n ↔ ∃ k, x
   | _ => exact ⟨⟨_, le_rfl⟩, h.symm⟩
 
 section
-open RecursiveIn
+open Oracle.Single.RecursiveIn
 theorem eval_eq_rfindOpt {O : ℕ → ℕ} (c n) : eval O c n = Nat.rfindOpt fun k => evaln O k c n :=
   Part.ext fun x => by
     refine evaln_complete.trans (Nat.rfindOpt_mono ?_).symm
