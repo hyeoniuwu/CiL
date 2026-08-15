@@ -358,7 +358,7 @@ We shall prove this with two auxiliary lemmas. The first, `R_aux_0`, states that
 $n=\sz{B_s(2i+1)}$ witnesses:
 
 \begin{align}
-	[i : A_{2i+2}](n)\ne \lss{n\in B_{2i+2}}.
+  [i : A_{2i+2}](n)\ne \lss{n\in B_{2i+2}}.
 \end{align}
 
 We will define that witness as `R_wt`.
