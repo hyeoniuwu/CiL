@@ -20,7 +20,7 @@ Constructions/Primitive.lean: Constructs a plethora of primitive recursive funct
 Constructions/Option.lean: Constructs primitive recursive functions that deal with option types.
 Constructions/List.lean: Constructs primitive recursive functions that deal with list types.
 Constructions/CovRec.lean: Defines framework for primitive recursive constructions that involve course-of-values recursion.
-Constructions/Eval_Aux.lean: Auxiliary constructions for `eval`, mostly to do with rfind.
+Constructions/EvalAux.lean: Auxiliary constructions for `eval`, mostly to do with rfind.
 Constructions/Eval.lean: Construction of `eval`.
 Constructions/Basic.lean: Basic code constructions that require `eval`, or are not primitive recursive.
 

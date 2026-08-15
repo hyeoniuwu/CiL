@@ -9,7 +9,7 @@ public import Computability.Constructions.Option
 import Mathlib.Data.Nat.PSub
 
 /-!
-# Eval_Aux.lean
+# EvalAux.lean
 
 Auxiliary constructs for use in `Oracle.Single.Constructions.Eval`.
 

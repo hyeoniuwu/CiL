@@ -5,7 +5,7 @@ Authors: Edwin Park
 -/
 module
 
-public import Computability.Constructions.Eval_Aux
+public import Computability.Constructions.EvalAux
 public import Computability.Constructions.CovRec
 
 /-!

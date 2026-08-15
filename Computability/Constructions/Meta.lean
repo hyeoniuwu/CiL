@@ -6,7 +6,7 @@ Authors: Edwin Park
 module
 
 public import Computability.Constructions.Primitive
-public import Computability.Constructions.Eval_Aux
+public import Computability.Constructions.EvalAux
 public import Computability.Constructions.Dovetail
 public import Computability.Constructions.Basic
 

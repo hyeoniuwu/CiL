@@ -6,7 +6,7 @@ Authors: Edwin Park
 module
 
 public import Computability.Oracle
-public import Computability.Constructions.Eval_Aux
+public import Computability.Constructions.EvalAux
 public import Mathlib.Computability.RecursiveIn
 
 /-!
