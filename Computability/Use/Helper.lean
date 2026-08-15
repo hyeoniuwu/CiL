@@ -94,6 +94,7 @@ abbrev en2e {O s c x} : (evaln O s c x).isSome → (eval O c x).Dom := by
   have := evaln_sound (Option.get_mem h)
   exact Part.dom_iff_mem.mpr (⟨(evaln O s c x).get h,this⟩)
 
+set_option backward.isDefEq.respectTransparency false in
 lemma rfind'_geq_xr {O cf x} (h : (eval O (rfind' cf) x).Dom) : (eval O cf.rfind' x).get h ≥ x.right :=
   by simp [eval]
 
@@ -148,6 +149,7 @@ theorem evaln_rfind_indt {O s cf x}
       Option.bind_eq_none_iff, Option.guard_eq_some', forall_const]
   intro h4 h5 h6
   simp_all only [Option.get_some, ne_eq, ↓reduceIte]
+set_option backward.isDefEq.respectTransparency false in
 theorem evaln_rfind_as_eval_rfind {O s c x}
     (h : (evaln O (s + 1) (rfind' c) x).isSome) :
     ((evaln O (s + 1) (rfind' c) x).get h) ∈
@@ -364,6 +366,7 @@ theorem evaln_rfind_as_eval_rfind_reverse {O s c x}
       simp only [h4, ↓reduceIte]
       rw [sss]
       exact ih1
+set_option backward.isDefEq.respectTransparency false in
 theorem evaln_rfind_as_eval_rfind_reverse' {O s c x}
     (h : ((Nat.unpaired fun a m => (Nat.rfind fun n => (fun x => x = 0) <$> evaln O (s - n) c
     (Nat.pair a (n + m))).map (· + m)) x).Dom) :
@@ -377,6 +380,7 @@ theorem evaln_rfind_as_eval_rfind_reverse' {O s c x}
   exact evaln_rfind_as_eval_rfind_reverse h
 private lemma mpp_leq {j ro} {x : ℕ} (hjro : j ≤ ro) : (ro - j + (j + x)) = ro + x := by
   simp only [hjro, ← add_assoc,Nat.sub_add_cancel]
+set_option backward.isDefEq.respectTransparency false in
 theorem nrfind'_obtain_prop {O s cf x} (h : (evaln O (s + 1) (rfind' cf) x).isSome) :
     0 ∈ (evaln O (s + 1-(nrfind'_obtain h)) cf (Nat.pair x.left (nrfind'_obtain h+x.right))) ∧
     (∀ j ≤ nrfind'_obtain h, (evaln O (s + 1-j) cf  ⟪x.left, j+x.right⟫).isSome) ∧
@@ -455,6 +459,7 @@ private lemma forall_mem_option {c} {y : Option ℕ} (h1 : y.isSome) (h2 : ∀ x
   subst a
   have : y.get h1 ∈ y := Option.eq_some_of_isSome h1
   contradiction
+set_option backward.isDefEq.respectTransparency false in
 theorem nrfind'_prop {O s cf x y} (h : (evaln O s (rfind' cf) x).isSome) :
     y+x.right ∈ (evaln O s (rfind' cf) x) ↔
     0 ∈ (evaln O (s-y) cf ⟪x.left, y+x.right⟫) ∧

@@ -13,7 +13,8 @@ import Computability.EvalString
 
 This file constructs `evalc` and `evals` from Computability/EvalString.lean from codes.
 
-To be able to define `evals`, where the oracle of a computation is changed, we define the code `c_evalo`, with the following behaviour (where `o` is the code of a total function):
+To be able to define `evals`, where the oracle of a computation is changed, we define the code
+`c_evalo`, with the following behaviour (where `o` is the code of a total function):
 
 `eval O c_evalo ⟪o, c, x⟫ = eval (fun t ↦ (eval O o t).get (ho t)) c x`.
 
@@ -37,18 +38,19 @@ def c_evalnc :=
   let s1 := s0.comp bind_prev
   let c1 := c0.comp bind_prev
   let x1 := x0.comp bind_prev
-
   c_opt_bind
   (c_usen.comp₃ x0 c0 s0) <|
   c_if_le_te.comp₄ right u1 (c_evaln.comp₃ x1 c1 s1) zero
 @[cp] theorem c_evalnc_prim : code_prim c_evalnc := by unfold c_evalnc; apply_cp 90
-@[simp, evp_simps] theorem c_evalnc_evp {O u s c x} : evalp O c_evalnc ⟪u,s,c,x⟫ = o2n (evalnc O u s c x) := by
-  simp [c_evalnc,evalp];
+@[simp, evp_simps] theorem c_evalnc_evp {O u s c x} :
+    evalp O c_evalnc ⟪u,s,c,x⟫ = o2n (evalnc O u s c x) := by
+  simp [c_evalnc, evalp];
   simp [evalnc]
   congr; funext a_0
   simp only [apply_ite]
   aesop
-@[simp, ev_simps] theorem c_evalnc_ev {O u s c x} : eval O c_evalnc ⟪u,s,c,x⟫ = o2n (evalnc O u s c x) := by simp [← evalp_eq_eval c_evalnc_prim]
+@[simp, ev_simps] theorem c_evalnc_ev {O u s c x} :
+    eval O c_evalnc ⟪u,s,c,x⟫ = o2n (evalnc O u s c x) := by simp [← evalp_eq_eval c_evalnc_prim]
 end Oracle.Single.Code
 end evalnc
 
@@ -62,11 +64,11 @@ def c_evalc :=
   let u1 := u0.comp bind_prev
   let c1 := c0.comp bind_prev
   let x1 := x0.comp bind_prev
-
   c_part_bind
   (c_use.comp₂ c0 x0) <|
   c_if_le_te' right u1 (c_eval.comp₂ c1 x1) c_diverge
 
+set_option backward.isDefEq.respectTransparency false in
 @[simp, ev_simps] theorem c_evalc_ev {O u c x}: eval O c_evalc ⟪u, c, x⟫ = (evalc O u c x) := by
   unfold c_evalc
   simp [eval, Seq.seq, evalc]
@@ -96,6 +98,7 @@ def c_evalo :=
   let c := left.comp right
   let x := right.comp right
   c_eval.comp₂ (c_replace_oracle.comp₂ o c) x
+set_option backward.isDefEq.respectTransparency false in
 theorem c_evalo_ev {O o c x} (ho : code_total O o) : eval O c_evalo ⟪o, c, x⟫ = eval (evalt O o ho) c x := by
   unfold evalt
   simp [c_evalo]
@@ -137,6 +140,7 @@ end c_c_evals_oracle
 
 section c_evals
 def c_evals_code := c_evalc.comp₂ (c_list_length.comp left) right
+set_option backward.isDefEq.respectTransparency false in
 theorem c_evals_code_ev {O o c x} : eval O c_evals_code ⟪o,c,x⟫ = evalc O (n2l o).length c x := by
   simp [c_evals_code]
   simp [eval, Seq.seq]
@@ -144,6 +148,7 @@ def c_evals := c_evalo.comp₃
   c_c_evals_oracle
   (c_const c_evals_code)
   c_id
+set_option backward.isDefEq.respectTransparency false in
 @[simp, ev_simps] theorem c_evals_ev {O o c x} : eval O c_evals ⟪o,c,x⟫ = (evals (n2l o) c x) := by
   unfold evals
   unfold c_evals

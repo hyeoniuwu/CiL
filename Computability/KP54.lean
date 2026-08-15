@@ -90,6 +90,7 @@ Later simp calls blow up without `@[irreducible]`. Why?
   (c_evals.comp₃ (c_list_append.comp₂ left (succ.comp right)) (c_const i) (c_const n))
   Code.zero
 open Classical in
+set_option backward.isDefEq.respectTransparency false in
 theorem c_kp54_aux_evp {O : ℕ → ℕ} {i n x : ℕ} :
     eval O (c_kp54_aux i n) x =
     if (evals (x.left.n2l ++ (x.right+1).n2l) i n).Dom then Part.some 0 else Part.none := by
@@ -109,7 +110,8 @@ theorem finite_ext_prop {S i n : ℕ} (halts : (finite_ext S i n).Dom) :
     expose_names
     simp only [c_kp54_aux_evp] at this
     contrapose this
-    simpa [-Denumerable.list_ofNat_succ] using this
+    simp only [pair_l, pair_r, ite_eq_left_iff, Part.none_ne_some, imp_false, not_not]
+    exact Not.imp this fun a ↦ a
 open Classical in
 theorem finite_ext_prop_div {S i n : ℕ} (h : ¬ (finite_ext S i n).Dom) :
   ∀ y, ¬ (evals ((n2l S) ++ (n2l (y+1))) i n).Dom := by
@@ -228,7 +230,7 @@ theorem Bs_Mono_5 {ii j k} (hii : ii < (Bs j).length) (asz : ii < (Bs k).length)
 theorem AsSize_o2e {i : ℕ} : (As (2 * i + 1)).length = (As (2*i)).length + 1 := by
   rw [As, KP54]
   simp (config := { zeta := false }) only [mul_add_mod_self_left, mod_succ, one_ne_zero, ↓reduceIte,
-    sg'.eq_1, Lean.Elab.WF.paramLet]
+ Lean.Elab.WF.paramLet]
   extract_lets; expose_names
   if h0 : dvt.Dom then simp [h0]; rfl
   else simp [h0]; rfl
@@ -237,14 +239,14 @@ theorem AsSize_e2o {i : ℕ} : (As (2 * i + 1)).length < (As (2*i+2)).length := 
   unfold KP54
   simp (config := { zeta := false }) only [div2_succ, bodd_mul, bodd_succ, bodd_zero,
     Bool.not_false, Bool.not_true, Bool.false_and, div2_bit0, succ_eq_add_one, cond_false,
-    AsBsSize_aux_0, ↓reduceIte, sg'.eq_1, Lean.Elab.WF.paramLet]
+    AsBsSize_aux_0, ↓reduceIte, Lean.Elab.WF.paramLet]
   extract_lets; expose_names
   rw [show As (2 * i + 1) = n2l αₚ from rfl]
   if h0 : dvt.Dom then simp [h0]
   else simp [h0]
 theorem BsSize_o2e {i : ℕ} : (Bs (2*i+2)).length = (Bs (2 * i + 1)).length + 1 := by
   rw [Bs, KP54]
-  simp (config := { zeta := false }) only [AsBsSize_aux_0, ↓reduceIte, sg'.eq_1,
+  simp (config := { zeta := false }) only [AsBsSize_aux_0, ↓reduceIte,
     Lean.Elab.WF.paramLet]
   extract_lets; expose_names
   if h0 : dvt.Dom then simp [h0]; rfl
@@ -313,12 +315,13 @@ theorem Bs_ex_ext {i j : ℕ} (hij : i < j) : ∃ lM1, (Bs i)++(n2l (lM1+1))=Bs 
   have a4 : (l2n h1)-1+1=l2n h1 := Nat.succ_pred_eq_of_ne_zero (nonempt_l2n h1 a2)
   use (l2n h1)-1
   simpa [a4]
+
 theorem AsBsSize {i : ℕ} : i ≤ (As i).length ∧ i ≤ (Bs i).length := by
   induction i with
   | zero => exact ⟨Nat.zero_le (As 0).length, Nat.zero_le (Bs 0).length⟩
   | succ i ih =>
     unfold As Bs KP54
-    simp (config := { zeta := false }) only [sg'.eq_1, Lean.Elab.WF.paramLet]
+    -- simp (config := { zeta := false }) only [sg'.eq_1, Lean.Elab.WF.paramLet]
     lift_lets; extract_lets; expose_names
     if h0 : (i + 1) % 2 = 0 then
       simp? [h0, -Nat.rfind_dom] says
@@ -335,7 +338,10 @@ theorem AsBsSize {i : ℕ} : i ≤ (As i).length ∧ i ≤ (Bs i).length := by
       if h1 : (dvt_1).Dom  then
         simpa [h1, -Nat.rfind_dom] using ⟨ih.left, Nat.add_le_add ih.right (Nat.le_add_left 1 _)⟩
       else
-        simpa [h1,-Nat.rfind_dom] using ih
+        simp? [h1, -Nat.rfind_dom] says
+          simp only [h1, ↓reduceDIte, pair_l, Denumerable.ofNat_encode, List.length_append,
+            List.length_cons, List.length_nil, zero_add, add_le_add_iff_right, pair_r]
+        exact Prod.mk_le_mk.mp ih
 
 @[simp] theorem AsSize {i : ℕ} : i < (As (i+1)).length := (@AsBsSize (i+1)).left
 @[simp] theorem BsSize {i : ℕ} : i < (Bs (i+1)).length := (@AsBsSize (i+1)).right
@@ -435,7 +441,7 @@ theorem As_Uninjured_0 {i k} (hh : (evals (As (2 * (i + 1))) i k).Dom) :
     evals (As (2 * (i + 1))) i k = evalSet A i k := by
   -- unfold defns
   simp only [evalSet, A]; unfold χ;
-  simp only [evals, List.getD_eq_getElem?_getD, Set.mem_setOf_eq]
+  simp only [evals, List.getD_eq_getElem?_getD, Set.mem_ofPred_eq]
   have h1 := evalc_prop_0 hh
   simp only [List.getD_eq_getElem?_getD] at h1
   rw [h1]
@@ -452,6 +458,7 @@ theorem As_Uninjured_0' {k} {i : ℕ} :
   contrapose
   intro h
   rwa [← As_Uninjured_0 h]
+set_option backward.isDefEq.respectTransparency false in
 open Classical in
 /--
 If `[i : As](k)` diverges, then it will always diverge in subsequent steps.
@@ -546,7 +553,7 @@ lemma As_Uninjured_1 {i} :
       apply Eq.symm
       refine use_principle_use final_comp_halts ?_
       intro i2 hi2
-      simp only [χ, A, Set.mem_setOf_eq, List.getD_eq_getElem?_getD]
+      simp only [χ, A, Set.mem_ofPred_eq, List.getD_eq_getElem?_getD]
       have hi3 : i2 < (As (use_compl + 1)).length := calc
         i2 < use_compl := hi2
         use_compl <  (As (use_compl + 1)).length := AsSize
@@ -577,7 +584,7 @@ lemma As_Uninjured_1 {i} :
     have hi3 := lt_trans hi2 a6
     unfold χ A
     simp? says
-      simp only [Set.mem_setOf_eq, zero_add, Denumerable.list_ofNat_succ, unpair_zero,
+      simp only [Set.mem_ofPred_eq, zero_add, Denumerable.list_ofNat_succ, unpair_zero,
         Prod.fst_zero, Denumerable.ofNat_nat, Prod.snd_zero, Denumerable.list_ofNat_zero,
         List.getD_eq_getElem?_getD]
     simp [getElem?_pos, List.getElem?_append, hi3]
@@ -649,7 +656,7 @@ theorem Bs_Uninjured_0 {i k} (hh : (evals (Bs (2 * i + 1)) i k).Dom) :
   have h1 := evalc_prop_0 hh
   simp at h1
   have hh2 := hh
-  simp only [evals, List.getD_eq_getElem?_getD, h1, Set.mem_setOf_eq] at hh2 ⊢
+  simp only [evals, List.getD_eq_getElem?_getD, h1, Set.mem_ofPred_eq] at hh2 ⊢
   apply use_principle_eval hh2
   intro ii hii
   rw [Bs_Mono_4 (Nat.lt_of_lt_of_le hii (evalc_prop_1 hh)) BsSize]
@@ -659,6 +666,7 @@ theorem Bs_Uninjured_0' {k} {i : ℕ} :
   contrapose
   intro h
   rwa [← Bs_Uninjured_0 h]
+set_option backward.isDefEq.respectTransparency false in
 open Classical in
 lemma Bs_Uninjured_1 {i} :
     ¬(evals (Bs (2 * i + 1)) i (S_wt i)).Dom → ¬(evalSet B i (S_wt i)).Dom := by
@@ -701,7 +709,7 @@ lemma Bs_Uninjured_1 {i} :
       apply Eq.symm
       refine use_principle_use final_comp_halts ?_
       intro i2 hi2
-      simp only [χ, B, Set.mem_setOf_eq, List.getD_eq_getElem?_getD]
+      simp only [χ, B, Set.mem_ofPred_eq, List.getD_eq_getElem?_getD]
       have hi3 : i2 < (Bs (use_compl + 1)).length := calc
         i2 < use_compl := hi2
         use_compl <  (Bs (use_compl + 1)).length := BsSize
@@ -729,7 +737,7 @@ lemma Bs_Uninjured_1 {i} :
     have hi3 := Nat.lt_trans hi2 a6
     unfold χ
     unfold B
-    simp only [Set.mem_setOf_eq, zero_add, Denumerable.list_ofNat_succ, unpair_zero, Prod.fst_zero,
+    simp only [Set.mem_ofPred_eq, zero_add, Denumerable.list_ofNat_succ, unpair_zero, Prod.fst_zero,
       Denumerable.ofNat_nat, Prod.snd_zero, Denumerable.list_ofNat_zero, List.getD_eq_getElem?_getD]
     simp [getElem?_pos, List.getElem?_append, hi3]
     simp [b2n, ← @Bs_Mono_5 i2 (2 * i) (i2 + 1) (hi3) (BsSize)]
@@ -760,14 +768,14 @@ theorem ex_incomparable_sets : ∃ A B : Set ℕ, A|ᵀB := by
   · change ¬SetTuringReducible A B
     intro h
     unfold SetTuringReducible at h
-    apply exists_code_nat.mp at h
+    apply Oracle.Single.RecursiveIn.exists_code_nat.mp at h
     rcases h with ⟨c,hc⟩
     have contrad := S c
     exact contrad hc
   · change ¬SetTuringReducible B A
     intro h
     unfold SetTuringReducible at h
-    apply exists_code_nat.mp at h
+    apply Oracle.Single.RecursiveIn.exists_code_nat.mp at h
     rcases h with ⟨c,hc⟩
     have contrad := R c
     exact contrad hc

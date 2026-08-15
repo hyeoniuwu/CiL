@@ -28,7 +28,7 @@ theorem nonempt_int_iff_not_subset_compl {α} (A B : Set α) : A ∩ B ≠ ∅ �
       exact h1
     exact Set.nonempty_iff_ne_empty.mp this
 theorem inf_imp_inhabited {A : Set ℕ} (h : A.Infinite) : ∃ y, y ∈ A := by
-  simpa using h.nonempty
+  exact h.nonempty
 theorem setrange_card (i : ℕ) : {x | x ≤ i}.ncard = i + 1 := by
   have h_interval : {x | x ≤ i} = Set.Iio (i + 1) := by
     ext x
@@ -50,7 +50,7 @@ theorem big_imp_big_wit {i} {A : Set ℕ} : A.ncard > i → ∃ y ∈ A, y ≥ i
     | succ i =>
       have : {x | x < i + 1} = {x | x ≤ i} := by
         ext x
-        simp only [Set.mem_setOf_eq]
+        simp only [Set.mem_ofPred_eq]
         exact Nat.lt_add_one_iff
       rw [this]
       exact setrange_card i

@@ -146,6 +146,9 @@ def c_kp54 := c_prec1 0 c_kp54_indt
     unfold KP54.KP54
     rewrite [ih]; clear ih
     lift_lets; extract_lets; expose_names
+    have hdvt : dvt = KP54.finite_ext αₚ_1 i_1 lb_1 := rfl
+    have hdvt_1 : dvt_1 = KP54.finite_ext βₚ_1 i_1 la_1 := rfl
+    rw [KP54.finite_ext] at hdvt hdvt_1;
     -- we will simplify terms in the goal with inp
     let (eq := hinp) inp := (Nat.pair s_1 (KP54.KP54 s_1))
     -- show that the code let-bindings correspond to our let-bindings
@@ -163,10 +166,10 @@ def c_kp54 := c_prec1 0 c_kp54_indt
       split
       next h1 =>
         have : ¬ dvt.Dom := by
-          simpa [q0, hi, hlb, hαₚ] using h1;
+          simpa [q0, hi, hlb, hαₚ, ←hdvt] using h1;
         simp (config := {zeta := false}) [this, hαₚ, hβₚ]
       next h1 =>
-        have : dvt.Dom := by simpa [q0, hi, hlb, hαₚ] using h1
+        have : dvt.Dom := by simpa [q0, hi, hlb, hαₚ, ←hdvt] using h1
         simp (config := { zeta := false }) only [this, ↓reduceDIte, Lean.Elab.WF.paramLet]
         lift_lets; extract_lets; expose_names
         have hrf : evalp (K0 (fun _↦0)) rf inp = rf_2 := by
@@ -192,19 +195,18 @@ def c_kp54 := c_prec1 0 c_kp54_indt
             -- this case is a contradiction, as we know the evals must halt from "this".
             simp only [dvt] at this
             simp [hαₛ, hi, hlb] at h2
-            have contra : (evals αₛ_1 (n2c i_1) lb_1).Dom := by
-              have a0 := dovetail_ev_0 this
-              simpa [KP54.c_kp54_aux_evp, -Denumerable.list_ofNat_succ] using a0
+            have contra : (evals αₛ_1 (n2c i_1) lb_1).Dom :=
+              KP54.finite_ext_prop (of_eq_true (eq_true this))
             simp [contra] at h2
         simp [hαₛ, hβₚ, hA_result]
     -- proof practically idential to above.
     next h0 =>
       split
       next h1 =>
-        have : ¬ dvt_1.Dom := by simpa [q0_1, hi, hla, hβₚ] using h1
+        have : ¬ dvt_1.Dom := by simpa [q0_1, hi, hla, hβₚ, hdvt_1] using h1
         simp (config := {zeta := false}) [this, hαₚ, hβₚ]
       next h1 =>
-        have : dvt_1.Dom := by simpa [q0_1, hi, hla, hβₚ] using h1
+        have : dvt_1.Dom := by simpa [q0_1, hi, hla, hβₚ, hdvt_1] using h1
         simp (config := { zeta := false }) only [this, ↓reduceDIte, Lean.Elab.WF.paramLet]
         lift_lets; extract_lets; expose_names
         have hrf : evalp (K0 (fun _↦0)) rf_1 inp = rf_2 := by
@@ -228,9 +230,8 @@ def c_kp54 := c_prec1 0 c_kp54_indt
             -- this case is a contradiction, as we know the evals must halt from "this".
             simp only [dvt_1] at this
             simp [hβₛ, hi, hla] at h2
-            have contra : (evals βₛ_1 (n2c i_1) la_1).Dom := by
-              have a0 := dovetail_ev_0 this
-              simpa [KP54.c_kp54_aux_evp, -Denumerable.list_ofNat_succ] using a0
+            have contra : (evals βₛ_1 (n2c i_1) la_1).Dom :=
+              KP54.finite_ext_prop (of_eq_true (eq_true this))
             simp [contra] at h2
         simp [hβₛ, hαₚ, hB_result]
 end kp54
@@ -281,13 +282,13 @@ theorem ex_incomparable_sets_below_j1 : ∃ A B : Set ℕ, A≤ᵀ∅⌜ ∧ B�
   · change ¬SetTuringReducible KP54.A KP54.B
     intro h
     unfold SetTuringReducible at h
-    apply exists_code_nat.mp at h
+    apply Oracle.Single.RecursiveIn.exists_code_nat.mp at h
     rcases h with ⟨c,hc⟩
     exact KP54.S c hc
   · change ¬SetTuringReducible KP54.B KP54.A
     intro h
     unfold SetTuringReducible at h
-    apply exists_code_nat.mp at h
+    apply Oracle.Single.RecursiveIn.exists_code_nat.mp at h
     rcases h with ⟨c,hc⟩
-    exact KP54.right c hc
+    exact KP54.R c hc
 end Oracle.Single

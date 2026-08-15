@@ -133,6 +133,7 @@ end basic_definitions
 
 -- lemmas
 lemma χ_eq_0or1 {O x} : (χ O x = 0) ∨ (χ O x = 1) := by by_cases h : x ∈ O <;> simp [h, χsimp]
+set_option backward.isDefEq.respectTransparency false in
 lemma some_comp_simp (a : Part ℕ) {f : ℕ → ℕ} {h : a.Dom} :
     Part.some (f (a.get h)) = a >>= (f : ℕ →. ℕ) := by
   simp only [bind]
@@ -233,6 +234,7 @@ theorem K0χ_eq_χSetK0 (O : Set ℕ) : (K0 (χ O)) ≡ᵀᶠ (χ (SetK0 O)) := 
 theorem χSetK0_eq_K0χ (O : Set ℕ) : (χ (SetK0 O)) ≡ᵀᶠ (K0 (χ O)) := (K0χ_eq_χSetK0 O).symm
 -- the next two theorems are more or less equivalent to some of the above, with minor tweaks.
 open Classical in
+set_option backward.isDefEq.respectTransparency false in
 theorem χ_le_χSetK (O : Set ℕ) : O ≤ᵀ (SetK O) := by
   let χK : ℕ → ℕ := fun x ↦ if (eval (χ O) x x).Dom then 1 else 0
   let g := fun x => if (χ O) x = 0 then Part.none else Part.some 0
@@ -280,6 +282,7 @@ theorem Kχ_le_χSetK (O : Set ℕ) : RecursiveIn (χ (SetK O)) (K (χ O)) := by
   rw [h0]
   rw [h3]
   exact rin_f
+set_option backward.isDefEq.respectTransparency false in
 open Classical in
 theorem χSetK_le_χSetK0 (O : Set ℕ) : RecursiveIn (χ (SetK0 O)) (χ (SetK O)) := by
   have main : (χ (SetK O)) = (χ (SetK0 O)) ∘ fun x => Nat.pair x x := by
@@ -325,7 +328,7 @@ abbrev WRn (O : Set ℕ) (e : Code) (s : ℕ) := { y | ∃ x, y ∈ evalnSet O s
 theorem Wn_mono {O : Set ℕ} : ∀ {k₁ k₂ c x}, k₁ ≤ k₂ → x ∈ Wn O c k₁ → x ∈ Wn O c k₂ :=
   fun a b ↦ evaln_mono_dom a b
 theorem Wn_sound {O : Set ℕ} : ∀ {k c x}, x ∈ Wn O c k → x ∈ W O c := by
-  simp only [Set.mem_setOf_eq, evalnSet, PFun.mem_dom, evalSet]
+  simp only [Set.mem_ofPred_eq, evalnSet, PFun.mem_dom, evalSet]
   intro _ _ _ h
   rw [evaln_sound' h]
   exact Part.dom_iff_mem.mp trivial
@@ -339,8 +342,9 @@ theorem evaln_complete_dom {O : Set ℕ} {c : Code} {x : ℕ} :
   · rintro ⟨y, hy⟩
     exact en2e hy
 theorem Wn_complete {O : Set ℕ} {c x} : x ∈ W O c ↔ ∃ k, x ∈ Wn O c k := by
-  simp only [PFun.mem_dom, evalSet, Set.mem_setOf_eq, evalnSet]
+  simp only [PFun.mem_dom, evalSet, Set.mem_ofPred_eq, evalnSet]
   exact Iff.trans (Iff.symm Part.dom_iff_mem) (@evaln_complete_dom O c x)
+set_option backward.isDefEq.respectTransparency false in
 open Classical in
 theorem W_le_SetK0 {O : Set ℕ} : ∀ c, W O c ≤ᵀ SetK0 O := by
   intro c
@@ -378,7 +382,7 @@ theorem dom_to_ran_prop {O e} : W O e = WR O (dom_to_ran e) := by
     use xs
     simp [evalSet, Seq.seq, Part.mem_imp_dom hy]
   · intro h
-    simp only [PFun.ran, Set.mem_setOf_eq] at h
+    simp only [PFun.ran, Set.mem_ofPred_eq] at h
     rcases h with ⟨h0,h1⟩
     simp only [ev_simps] at h1
     simp? [Seq.seq]  at h1 says
@@ -420,6 +424,7 @@ def [f(e)](x):
 -/
 noncomputable def ran_to_dom :=
   fun c : Code ↦ dovetail (c_if_eq'.comp₂ left ((c_eval₁).comp₂ (c_const c) right))
+set_option backward.isDefEq.respectTransparency false in
 theorem ran_to_dom_ev {O c y} : (eval O (ran_to_dom c) y).Dom ↔ ∃ x, y ∈ eval O c x := by
   constructor
   · intro h
@@ -512,7 +517,7 @@ theorem reducible_imp_W {A B} : A≤ᵀB → ∃ c, W B c = A := by
   use c_ite c c_diverge zero
   have c_total : code_total (χ B) c := by simp_all [code_total]
   simpa [W, PFun.Dom, c_ite_ev c_total, h, ev_simps] using (by unfold χ; aesop)
-
+set_option backward.isDefEq.respectTransparency false in
 theorem Cin_iff_Cin' {A B} : A≤ᵀB ↔ Aᶜ≤ᵀB := by
   /-
   proof sketch; if A≤ᵀB via c, then Aᶜ≤ᵀB via Nat.sg' c.
@@ -526,7 +531,7 @@ theorem Cin_iff_Cin' {A B} : A≤ᵀB ↔ Aᶜ≤ᵀB := by
   constructor
   · exact fun a ↦ main A B a
   simpa only [compl_compl] using (fun a ↦ main Aᶜ B a)
-
+set_option backward.isDefEq.respectTransparency false in
 theorem Cin_iff_CEin_CEin' {A B} : A≤ᵀB ↔ (CEin B A ∧ CEin B Aᶜ) := by
   constructor
   -- first, the trivial direction.
@@ -585,7 +590,7 @@ theorem Cin_iff_CEin_CEin' {A B} : A≤ᵀB ↔ (CEin B A ∧ CEin B Aᶜ) := by
       have tc2 : (eval (χ B) c2 x) = Part.none := by
         have : ¬x∈Aᶜ := fun a ↦ a hx
         simp [W, evalSet, PFun.Dom] at hc2
-        simp only [hc2, Set.mem_setOf_eq] at this
+        simp only [hc2, Set.mem_ofPred_eq] at this
         exact Part.eq_none_iff'.mpr this
     · extract_lets at dvtthm;
       expose_names
@@ -607,7 +612,7 @@ theorem Cin_iff_CEin_CEin' {A B} : A≤ᵀB ↔ (CEin B A ∧ CEin B Aᶜ) := by
         simpa [hc2] using hx'
       have tc2 : (eval (χ B) c1 x) = Part.none := by
         simp [W, evalSet, PFun.Dom] at hc1
-        simp only [hc1, Set.mem_setOf_eq] at hx
+        simp only [hc1, Set.mem_ofPred_eq] at hx
         exact Part.eq_none_iff'.mpr hx
     · extract_lets at dvtthm; expose_names
       simp? [d, c_if_eq_te'_ev aux0 aux1, eval, Part.Dom.bind <| tc1, tc2]  at dvtthm says
@@ -628,7 +633,7 @@ section join
 
 def join (A B : Set ℕ) : Set ℕ := {2*x | x∈A} ∪ {2*x+1 | x∈B}
 scoped[Computability] infix : 50 "∨" => join
-
+set_option backward.isDefEq.respectTransparency false in
 open Classical in
 theorem join_upper (A B : Set ℕ) : A ≤ᵀ (A ∨ B) ∧ B ≤ᵀ (A ∨ B) := by
   constructor
@@ -644,7 +649,7 @@ theorem join_upper (A B : Set ℕ) : A ≤ᵀ (A ∨ B) ∧ B ≤ᵀ (A ∨ B) :
     funext x
     simp [eval, join]
     grind
-
+set_option backward.isDefEq.respectTransparency false in
 open Classical in
 theorem join_least (A B C : Set ℕ) : A ≤ᵀ C → B ≤ᵀ C → (A ∨ B) ≤ᵀ C := by
   intro h1 h2
@@ -657,7 +662,7 @@ theorem join_least (A B C : Set ℕ) : A ≤ᵀ C → B ≤ᵀ C → (A ∨ B) �
   funext x;
   simp? [join] says
     simp only [Part.coe_some, Part.map_eq_map, Part.map_some, Part.bind_some, Part.bind_eq_bind,
-      PFun.coe_val, unpaired2, pair_l, pair_r, c_ifz_ev, join, Set.mem_union, Set.mem_setOf_eq,
+      PFun.coe_val, unpaired2, pair_l, pair_r, c_ifz_ev, join, Set.mem_union, Set.mem_ofPred_eq,
       Part.some_inj]
   cases hx : x.bodd
   · rw [← codes_aux_aux_0 hx]; grind

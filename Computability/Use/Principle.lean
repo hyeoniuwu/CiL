@@ -79,7 +79,8 @@ private lemma rr_lemma2 {l' x a} (h : ∃ l'' : List ℕ, l'' ++ l' = (range x).
   grind
 private lemma rr_mem_bound {ro} {i} (h : i ∈ (range (ro + 1)).reverse) : i ≤ ro := by
   contrapose h
-  simpa using h
+  simp_all only [not_le, mem_reverse, mem_range, not_lt]
+  exact h
 end private_lemmas
 
 
@@ -602,6 +603,7 @@ def usen_principle.induction
         hprec cf cg s (ihcf s) (ihcg s) x' (fun s' hle x'' hx'' => ih_x' x'' hx'' s'))
     | rfind' cf ihcf => exact fun s x ↦ hrfind' cf s x fun x' s' ↦ ihcf s' x'
 
+set_option backward.isDefEq.respectTransparency false in
 /--
 At a high level, this is an induction proof; we use the inductive hypothesis on subterms obtained
 from unfolding evaln and usen to show that those subterms are equal, and thus, that the original

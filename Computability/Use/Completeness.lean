@@ -706,7 +706,6 @@ else
     contrapose this
     rw [← this]
     simp
-  simp only at this
   rw [add_comm] at this
   simp only [usen, pair_l, pair_r, Option.bind_eq_bind, Option.get_bind, Option.some_get]
   simpa [← kkk, r1] using congr (congr rfl usen_sing') usen_sing'
@@ -882,6 +881,7 @@ theorem usen_rfind_prop2'' {O k x cf} :
   Option.eq_of_eq_some fun _ => usen_rfind_prop2
 theorem usen_xles {O c s x} (h : (usen O c (s + 1) x).isSome) : x ≤ s :=
   le_of_lt_succ (usen_bound (Option.get_mem h))
+
 theorem usen_sound {O : ℕ → ℕ} : ∀ {c s n x}, x ∈ usen O c s n → x ∈ use O c n := by
   intro c k n x h
   induction k,c using CodeNatK.induction generalizing x n with
@@ -958,7 +958,8 @@ theorem usen_sound {O : ℕ → ℕ} : ∀ {c s n x}, x ∈ usen O c s n → x �
       · use hh
         constructor
         · have main := ih h3
-          simpa [use] using main
+          simp only [use, unpair_pair, Part.map_eq_map, Part.bind_eq_bind] at main
+          exact main
         · exact ⟨h7, @hg (Nat.pair n.left (Nat.pair m h4)) h7 h8,h9⟩
   | hrfind k cf hfih =>
     have := usen_rfind_prop2.mp h
@@ -967,11 +968,11 @@ theorem usen_sound {O : ℕ → ℕ} : ∀ {c s n x}, x ∈ usen O c s n → x �
     rcases usen_dom_iff_evaln_dom.mp ⟨x,h⟩ with ⟨h7,h8⟩
     have h145: rfind'_obtain (usen_rfind_prop_aux h) = h7 - n.right := by
       simp [rfind'_obtain, Part.eq_some_iff.mpr (evaln_sound h8)]
-    simp only [Option.mem_def, Option.pure_def, Option.bind_eq_bind, Option.bind_some,
+    simp only [Option.mem_def, Option.pure_def, Option.bind_eq_bind,
       Option.bind_fun_some, h145, tsub_zero, add_zero, pair_lr] at *
     simp_all only [Option.mem_def, Option.bind_some]
     simp only [usen_xles (Option.isSome_of_mem h)] at this
-    simp only [use, Part.pure_eq_some, Part.bind_eq_bind, Part.bind_some, Part.coe_some,
+    simp only [use, Part.pure_eq_some, Part.bind_eq_bind, Part.coe_some,
       Part.bind_some_right, Part.mem_bind_iff]
     use h7
     constructor
@@ -1015,11 +1016,12 @@ theorem usen_sound {O : ℕ → ℕ} : ∀ {c s n x}, x ∈ usen O c s n → x �
 end usen_sound
 
 section usen_complete
-theorem eval_dom_imp_evaln {O : ℕ → ℕ} {c : Code} {x : ℕ} (h : (eval O c x).Dom) : ∃ s, (evaln O s c x).isSome := by
+theorem eval_dom_imp_evaln {O : ℕ → ℕ} {c : Code} {x : ℕ} (h : (eval O c x).Dom) :
+    ∃ s, (evaln O s c x).isSome := by
   rcases evaln_complete.mp (Part.get_mem h) with ⟨k, hk⟩
   use k
   exact Option.isSome_of_mem hk
-
+set_option backward.isDefEq.respectTransparency false in
 theorem use_dom_iff_eval_dom {O : ℕ → ℕ} {c : Code} {x : ℕ} : (use O c x).Dom ↔ (eval O c x).Dom := by
   constructor
   · induction c generalizing x with
@@ -1266,7 +1268,7 @@ theorem usen_complete_rfind'
     {h : x ∈ use O cf.rfind' n} :
     ∃ k, x ∈ usen O cf.rfind' (k + 1) n := by
   simp? [use] at h says
-    simp only [use, Part.pure_eq_some, Part.bind_eq_bind, Part.bind_some, Part.coe_some,
+    simp only [use, Part.pure_eq_some, Part.bind_eq_bind, Part.coe_some,
       Part.bind_some_right, Part.mem_bind_iff] at h
   -- we use `usen_rfind_prop2` to characterise usen rfind' as a for loop, akin to
   -- the rfind definition in `use`.
@@ -1314,13 +1316,13 @@ theorem usen_complete_rfind'
   have hrop : rfind'_obtain (u2e hdom) = h1 - n.right := by
     simp [rfind'_obtain, Part.eq_some_iff.mpr h2]
   simp? [hrop]  at * says
-    simp only [Option.mem_def, hrop, Option.pure_def, Option.bind_eq_bind, Option.bind_some,
+    simp only [Option.mem_def, hrop, Option.pure_def, Option.bind_eq_bind,
       Option.bind_fun_some] at *
   clear hrop
   revert h3; revert h2; revert urop1; revert rop6; revert rop
   induction h1 - n.right generalizing base n with
   | zero =>
-    simp_all only [zero_add, pair_lr, nonpos_iff_eq_zero, forall_eq, not_lt_zero',
+    simp_all only [zero_add, pair_lr, nonpos_iff_eq_zero, forall_eq, not_lt_zero,
       IsEmpty.forall_iff, implies_true, and_true, add_zero, range_one, reverse_cons, reverse_nil,
       nil_append, forIn_cons, Part.pure_eq_some, forIn_nil, Part.bind_eq_bind, Part.mem_bind_iff,
       Part.mem_some_iff, forall_exists_index, and_imp, forall_const]

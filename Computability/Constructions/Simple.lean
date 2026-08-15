@@ -356,7 +356,7 @@ def c_step :=
   lift_lets; extract_lets; expose_names
   simp only [evp_simps]
   simp only [Nat.sg', ite_eq_right_iff, one_ne_zero, imp_false, ite_not,
-    Bool.not_eq_true, Set.mem_setOf_eq, gt_iff_lt]
+    Bool.not_eq_true, Set.mem_ofPred_eq, gt_iff_lt]
   let (eq := hinp) inp := ⟪s, i, prev⟫
   rw [← hinp]
     -- show that the code let-bindings correspond to our let-bindings
@@ -429,7 +429,6 @@ def c_step :=
         have a0 : h2 ≤ s := evaln_dom_imp_x_le_s h3
         have a2 : h2-2*i-1 ≤ s := by omega
         have a1 := this (h2-2*i-1) a2
-        simp only at a1
         have a3 : (2 * i + 1 + (h2 - 2 * i - 1)) = h2 := by omega
         simp [a3] at a1
         simp [a1] at h3
@@ -471,7 +470,7 @@ theorem W_eq_iff_mem {O c A} : W O c = A ↔ (∀ x, x∈A ↔ (evalSet O c x).D
 
 theorem c_simple_ev : W ∅ c_simple = Simple.A := by
   apply W_eq_iff_mem.mpr
-  simp only [Simple.A, Set.mem_setOf_eq, c_simple]
+  simp only [Simple.A, Set.mem_ofPred_eq, c_simple]
   intro x
   have : code_prim (c_sg'.comp (c_fs_in.comp₂ (left.comp (c_C.comp right)) left)) := by apply_cp
   simp only [evalSet]
