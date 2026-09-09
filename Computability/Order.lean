@@ -8,6 +8,10 @@ module
 public import Computability.Oracle
 import Mathlib.Order.Antisymmetrization
 
+/-!
+This file defines Turing reducibility between total functions as oracles.
+-/
+
 @[expose] public section
 
 open Oracle.Single
