@@ -240,8 +240,8 @@ theorem AsSize_e2o {i : ℕ} : (As (2 * i + 1)).length < (As (2*i+2)).length := 
   rw (config := {occs := .pos [2]}) [As]
   unfold KP54
   simp (config := { zeta := false }) only [div2_succ, bodd_mul, bodd_succ, bodd_zero,
-    Bool.not_false, Bool.not_true, Bool.false_and, div2_bit0, succ_eq_add_one, cond_false,
-    AsBsSize_aux_0, ↓reduceIte, Lean.Elab.WF.paramLet]
+    Bool.not_false, Bool.not_true, Bool.false_and, div2_bit0, succ_eq_add_one,
+    Bool.cond_false, AsBsSize_aux_0, ↓reduceIte, Lean.Elab.WF.paramLet]
   extract_lets; expose_names
   rw [show As (2 * i + 1) = n2l αₚ from rfl]
   if h0 : dvt.Dom then simp [h0]
@@ -257,7 +257,7 @@ theorem BsSize_e2o {i : ℕ} : (Bs (2*i)).length < (Bs (2 * i + 1)).length :=  b
   rw (config := {occs := .pos [2]}) [Bs]
   unfold KP54
   simp (config := { zeta := false }) only [div2_bit0, mul_add_mod_self_left, mod_succ, one_ne_zero,
-    ↓reduceIte, sg'.eq_1, Lean.Elab.WF.paramLet]
+    ↓reduceIte, Lean.Elab.WF.paramLet]
   extract_lets; expose_names
   rw [show Bs (2*i) = n2l βₚ from rfl]
   if h0 : dvt.Dom then simp [h0]
@@ -401,8 +401,8 @@ private theorem R_aux_0 (i : ℕ) (h : (evals (As (2 * i + 1 + 1)) i (R_wt i)).D
   unfold Bs As KP54
   simp? (config := { zeta := false }) says
     simp (config := { zeta := false }) only [div2_succ, bodd_mul, bodd_succ, bodd_zero,
-      Bool.not_false, Bool.not_true, Bool.false_and, div2_bit0, succ_eq_add_one, cond_false,
-      AsBsSize_aux_0, ↓reduceIte, sg'.eq_1, Lean.Elab.WF.paramLet, ne_eq]
+      Bool.not_false, Bool.not_true, Bool.false_and, div2_bit0, succ_eq_add_one,
+      Bool.cond_false, AsBsSize_aux_0, ↓reduceIte, Lean.Elab.WF.paramLet, ne_eq]
   simp (config := {zetaHave := false}) only []
   -- memory blows up if i lift the non-have lets. why?
   lift_lets; extract_lets; expose_names
@@ -480,8 +480,8 @@ lemma As_Uninjured_1 {i} :
   unfold As KP54
   simp? (config := { zeta := false }) says
     simp (config := { zeta := false }) only [div2_succ, bodd_mul, bodd_succ, bodd_zero,
-      Bool.not_false, Bool.not_true, Bool.false_and, div2_bit0, succ_eq_add_one, cond_false,
-      AsBsSize_aux_0, ↓reduceIte, sg'.eq_1, Lean.Elab.WF.paramLet]
+      Bool.not_false, Bool.not_true, Bool.false_and, div2_bit0, succ_eq_add_one,
+      Bool.cond_false, AsBsSize_aux_0, ↓reduceIte, Lean.Elab.WF.paramLet]
   lift_lets; extract_lets; expose_names
   have i_1_simp: i_1 = i := rfl
   have keqlb : R_wt i=lb := rfl
@@ -627,7 +627,7 @@ private theorem S_aux_0 (i : ℕ) (h : (evals (Bs (2 * i + 1)) i (S_wt i)).Dom) 
     b2n (n2b <| (As (2 * i + 1))[S_wt i]'(@AsSize_o2e_wt i)) := by
   unfold Bs As KP54
   simp (config := { zeta := false }) only [div2_bit0, mul_add_mod_self_left, mod_succ, one_ne_zero,
-    ↓reduceIte, sg'.eq_1, Lean.Elab.WF.paramLet, ne_eq]
+    ↓reduceIte, Lean.Elab.WF.paramLet, ne_eq]
   simp (config := {zetaHave := false}) only []
   lift_lets; extract_lets; expose_names
   have i_1_simp: i_1 = i := rfl
@@ -674,7 +674,7 @@ lemma Bs_Uninjured_1 {i} :
     ¬(evals (Bs (2 * i + 1)) i (S_wt i)).Dom → ¬(evalSet B i (S_wt i)).Dom := by
   unfold Bs KP54
   simp (config := { zeta := false }) only [div2_bit0, mul_add_mod_self_left, mod_succ, one_ne_zero,
-    ↓reduceIte, sg'.eq_1, Lean.Elab.WF.paramLet]
+    ↓reduceIte, Lean.Elab.WF.paramLet]
   lift_lets; extract_lets; expose_names
   have i_1_simp: i_1 = i := rfl
   have keqlb : S_wt i = la := rfl

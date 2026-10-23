@@ -194,11 +194,13 @@ lemma step_preserves_R_not_mem {j k s X} (h : ¬fs_in X.right j) (hk : k < j) :
       exact Nat.testBit_two_pow_of_ne (Nat.ne_of_lt hk)
     next h_2 => exact h
   next h_1 => exact h
-lemma fold_preserves_R_mem {j s X l} (h : fs_in X.right j) : fs_in (foldr (step s) X l).right j := by
+lemma fold_preserves_R_mem {j s X l} (h : fs_in X.right j) :
+    fs_in (foldr (step s) X l).right j := by
   induction l with
   | nil => simpa
   | cons head tail ih => exact step_preserves_R_mem ih
-lemma fold_preserves_R_mem2 {s ywit} (h : fs_in (C s).right ywit) : ∀ i, fs_in (C (s+i)).right ywit := by
+lemma fold_preserves_R_mem2 {s ywit} (h : fs_in (C s).right ywit) :
+    ∀ i, fs_in (C (s+i)).right ywit := by
   intro i
   induction i with
   | zero => simpa
@@ -206,7 +208,8 @@ lemma fold_preserves_R_mem2 {s ywit} (h : fs_in (C s).right ywit) : ∀ i, fs_in
     simp [C, -foldr_reverse]
     have := @fold_preserves_R_mem _ (s+i) (C (s + i)) (range (s + i)).reverse ih
     simpa using this
-lemma fold_preserves_R_mem3 {s ywit} (h : fs_in (C s).right ywit) : ∀ s2≥s, fs_in (C (s2)).right ywit := by
+lemma fold_preserves_R_mem3 {s ywit} (h : fs_in (C s).right ywit) :
+    ∀ s2≥s, fs_in (C (s2)).right ywit := by
   intro s2 hs2
   have a0 : s2 = s+(s2-s) := by grind
   have := fold_preserves_R_mem2 h (s2-s)
@@ -349,7 +352,7 @@ lemma P_aux (i : ℕ) :
   have : ∃ x ∈ W ∅ i, x > 2*i := by
     have : ((W ∅ i) \ {x | x ≤ 2*i}).Infinite := by
       have : {x | x ≤ 2*i}.Finite := by exact Set.finite_le_nat (2 * i)
-      exact Set.Infinite.diff h this
+      exact Set.Infinite.sdiff h this
     rcases inf_imp_inhabited this with ⟨y,hy1,hy2⟩
     exact ⟨y, hy1, Nat.gt_of_not_le hy2⟩
   rcases this with ⟨x, hx0, hx1⟩
@@ -475,7 +478,7 @@ theorem mem_A_iff_enumerated {x} :
           Nat.mod_two_not_eq_one, Set.mem_ofPred_eq, mul_zero, gt_iff_lt] at a7
       have r0 : (C sM1).right % 2 = 0 := by
         contrapose a7
-        simpa [a7] using eq_false_of_ne_true hx
+        simpa [a7] using Bool.eq_false_of_ne_true hx
       simp only [r0, ↓reduceIte] at a7
       constructor
       · simpa
@@ -673,7 +676,7 @@ theorem N (i : ℕ) :  Set.ncard (A ∩ {x | x ≤ 2*i}) ≤ i+1 := by
   have a0 :=
     @Set.ncard_le_ncard_of_injOn _ _ _ {x | x ≤ i} (@f i) ?_ (@hf_SetInj i) (Set.finite_le_nat i)
   · let s : Set {x // x ∈ A ∧ x ≤ 2*i} :=
-      (@setOf { x // x ∈ A ∧ x ≤ 2 * i } fun x ↦ ↑x ∈ A ∧ ↑x ≤ 2 * i)
+      (@Set.ofPred { x // x ∈ A ∧ x ≤ 2 * i } fun x ↦ ↑x ∈ A ∧ ↑x ≤ 2 * i)
     let t : Set ℕ := A ∩ {x | x ≤ 2*i}
     let f : (a : {x // x ∈ A ∧ x ≤ 2*i}) → a ∈ s → ℕ := fun  a _ => a
     have : s.ncard = t.ncard := Set.ncard_congr f ?_ ?_ ?_
@@ -687,8 +690,8 @@ theorem N (i : ℕ) :  Set.ncard (A ∩ {x | x ≤ 2*i}) ≤ i+1 := by
 -- a more useful rephrasing of the theorem `N` above.
 lemma N_alternate (i : ℕ) : Set.ncard (Aᶜ ∩ {x | x ≤ 2*i}) ≥ i := by
   have a1 := N i
-  have a0 := Set.le_ncard_diff (A ∩ {x | x ≤ 2 * i}) {x | x ≤ 2*i}
-  simp? at a0 says simp only [Set.diff_inter_self_eq_diff, tsub_le_iff_right] at a0
+  have a0 := Set.le_ncard_sdiff (A ∩ {x | x ≤ 2 * i}) {x | x ≤ 2*i}
+  simp? at a0 says simp only [Set.sdiff_inter_self_eq_sdiff, tsub_le_iff_right] at a0
   have a2 : (Aᶜ ∩ {x | x ≤ 2 * i}) = ({x | x ≤ 2 * i} \ A) := by aesop
   simp only [a2, ge_iff_le]; clear a2
   have a3 := setrange_card (2 * i)
