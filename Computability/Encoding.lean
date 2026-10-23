@@ -7,9 +7,10 @@ module
 
 public import Computability.Oracle
 public import Computability.Label
+
+import Mathlib.Algebra.Order.Ring.Nat
 import Mathlib.Data.Option.Basic
 import Mathlib.Logic.Encodable.Pi
-import Mathlib.Algebra.Order.Ring.Nat
 import Mathlib.Tactic.Cases -- for induction'
 
 /-!

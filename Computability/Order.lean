@@ -6,6 +6,7 @@ Authors: Tanner Duve, Elan Roth
 module
 
 public import Computability.Oracle
+
 import Mathlib.Order.Antisymmetrization
 
 /-!

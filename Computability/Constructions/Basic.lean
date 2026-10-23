@@ -5,8 +5,8 @@ Authors: Edwin Park
 -/
 module
 
-public import Computability.Constructions.Primitive
 public import Computability.Constructions.Eval
+public import Computability.Constructions.Primitive
 
 /-!
 # Construction of codes of basic non-primrec functions

@@ -5,9 +5,9 @@ Authors: Edwin Park
 -/
 module
 
-public import Computability.Oracle
-public import Computability.Constructions.EvalAux
 public import Mathlib.Computability.RecursiveIn
+public import Computability.Constructions.EvalAux
+public import Computability.Oracle
 
 /-!
 # Reducibilities

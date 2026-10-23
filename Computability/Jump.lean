@@ -6,8 +6,8 @@ Authors: Edwin Park
 module
 
 public import Computability.Constructions.Basic
-public import Computability.Constructions.Primitive
 public import Computability.Constructions.Meta
+public import Computability.Constructions.Primitive
 public import Computability.Order
 
 /-!

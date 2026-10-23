@@ -6,9 +6,10 @@ Authors: Edwin Park
 module
 
 public import Computability.Encoding
-import Computability.Label
-import Mathlib.Data.PFun
+
 import Mathlib.Data.Nat.BitIndices
+import Mathlib.Data.PFun
+import Computability.Label
 
 /-!
 # Notations, helper functions

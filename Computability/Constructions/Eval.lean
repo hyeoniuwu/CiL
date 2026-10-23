@@ -5,8 +5,8 @@ Authors: Edwin Park
 -/
 module
 
-public import Computability.Constructions.EvalAux
 public import Computability.Constructions.CovRec
+public import Computability.Constructions.EvalAux
 
 /-!
 # Eval.lean
