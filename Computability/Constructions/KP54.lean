@@ -49,17 +49,17 @@ section c_finite_ext
 This is a meta-code. Thus, the construction is directly based on `KP54.c_kp54_aux`.
 -/
 def c_finite_ext :=
-  c_dovetail.comp <|
-  c_c_ifdom.comp₂
+  cDovetail.comp <|
+  cCIfdom.comp₂
   (
-    c_comp₃.comp₄
+    cComp₃.comp₄
     c_c_evals
-    (c_comp₂.comp₃ (c_const c_list_append) (c_left) (c_comp.comp₂ c_succ c_right))
-    (c_c_const.comp left)
-    (c_c_const.comp right)
+    (cComp₂.comp₃ (cConst cListAppend) (cLeft) (cComp.comp₂ cSucc cRight))
+    (cCConst.comp left)
+    (cCConst.comp right)
   )
-  c_zero
-@[cp] theorem c_finite_ext_prim : code_prim c_finite_ext := by unfold c_finite_ext; apply_cp
+  cZero
+@[cp] theorem c_finite_ext_prim : IsPrim c_finite_ext := by unfold c_finite_ext; apply_cp
 @[simp, evp_simps] theorem c_finite_ext_evp {O : ℕ → ℕ} :
     evalp O c_finite_ext = fun x : ℕ ↦ c2n (dovetail (KP54.c_kp54_aux x.left x.right)) := by
   simp [c_finite_ext, KP54.c_kp54_aux]
@@ -69,63 +69,63 @@ section kp54
 /--
 The function `KP54.KP54` is written recursively, where `KP54.KP54 (s+1)` makes use of `KP54.KP54 s`.
 
-`c_prec1` has exactly the recursive structure we need to implement this.
+`cPrec1` has exactly the recursive structure we need to implement this.
 
-We definte `def c_kp54 := c_prec1 0 c_kp54_indt`: we define the recursive case separately, as it
+We definte `def c_kp54 := cPrec1 0 c_kp54_indt`: we define the recursive case separately, as it
 helps with performance in proofs.
 -/
 def c_kp54_indt :=
   let s := left
   let KP54s := right
-  let i := c_div2.comp s
+  let i := cDiv2.comp s
   let αₚ := left.comp (KP54s)
   let βₚ := right.comp (KP54s)
-  let lb := c_list_length.comp βₚ
-  let la := c_list_length.comp αₚ
-  c_ifz.comp₃ (c_mod.comp₂ (succ.comp s) (c_const 2))
+  let lb := cListLength.comp βₚ
+  let la := cListLength.comp αₚ
+  cIfz.comp₃ (cMod.comp₂ (succ.comp s) (cConst 2))
   (
     let q0 := oracle.comp₂ (c_finite_ext.comp₂ i lb) αₚ
-    c_ifz.comp₃ q0
-    (pair (c_list_concat.comp₂ αₚ zero) (c_list_concat.comp₂ βₚ zero))
+    cIfz.comp₃ q0
+    (pair (cListConcat.comp₂ αₚ zero) (cListConcat.comp₂ βₚ zero))
     (
-      let rf := c_pred.comp q0
-      let αₛ := c_list_append.comp₂ αₚ (succ.comp rf)
-      let A_result := c_pred.comp <| oracle.comp₂ c_c_evals (pair αₛ (pair i lb))
-      pair αₛ (c_list_concat.comp₂ βₚ (c_sg'.comp A_result))
+      let rf := cPred.comp q0
+      let αₛ := cListAppend.comp₂ αₚ (succ.comp rf)
+      let A_result := cPred.comp <| oracle.comp₂ c_c_evals (pair αₛ (pair i lb))
+      pair αₛ (cListConcat.comp₂ βₚ (cSg'.comp A_result))
     )
   )
   (
     let q0 := oracle.comp₂ (c_finite_ext.comp₂ i la) βₚ
-    c_ifz.comp₃ q0
-    (pair (c_list_concat.comp₂ αₚ zero) (c_list_concat.comp₂ βₚ zero))
+    cIfz.comp₃ q0
+    (pair (cListConcat.comp₂ αₚ zero) (cListConcat.comp₂ βₚ zero))
     (
-      let rf := c_pred.comp q0
-      let βₛ := c_list_append.comp₂ βₚ (succ.comp rf)
-      let B_result := c_pred.comp <| oracle.comp₂ c_c_evals (pair βₛ (pair i la))
-      pair (c_list_concat.comp₂ αₚ (c_sg'.comp B_result)) βₛ
+      let rf := cPred.comp q0
+      let βₛ := cListAppend.comp₂ βₚ (succ.comp rf)
+      let B_result := cPred.comp <| oracle.comp₂ c_c_evals (pair βₛ (pair i la))
+      pair (cListConcat.comp₂ αₚ (cSg'.comp B_result)) βₛ
     )
   )
-def c_kp54 := c_prec1 0 c_kp54_indt
+def c_kp54 := cPrec1 0 c_kp54_indt
 
-@[cp] theorem c_kp54_prim : code_prim c_kp54 := by
+@[cp] theorem c_kp54_prim : IsPrim c_kp54 := by
   unfold c_kp54
   unfold c_kp54_indt
   extract_lets; expose_names
-  have cp_s : code_prim s := by apply_cp
-  have cp_KP54s : code_prim KP54s := by apply_cp
-  have cp_i : code_prim i := by apply_cp
-  have cp_αₚ : code_prim αₚ := by apply_cp
-  have cp_βₚ : code_prim βₚ := by apply_cp
-  have cp_lb : code_prim lb := by apply_cp
-  have cp_la : code_prim la := by apply_cp
-  have cp_q0 : code_prim q0 := by apply_cp
-  have cp_rf : code_prim rf := by apply_cp
-  have cp_αₛ : code_prim αₛ := by apply_cp
-  have cp_A_result : code_prim A_result := by apply_cp
-  have cp_q0_1 : code_prim q0_1 := by apply_cp
-  have cp_rf_1 : code_prim rf_1 := by apply_cp
-  have cp_βₛ : code_prim βₛ := by apply_cp
-  have cp_B_result : code_prim B_result := by apply_cp
+  have cp_s : IsPrim s := by apply_cp
+  have cp_KP54s : IsPrim KP54s := by apply_cp
+  have cp_i : IsPrim i := by apply_cp
+  have cp_αₚ : IsPrim αₚ := by apply_cp
+  have cp_βₚ : IsPrim βₚ := by apply_cp
+  have cp_lb : IsPrim lb := by apply_cp
+  have cp_la : IsPrim la := by apply_cp
+  have cp_q0 : IsPrim q0 := by apply_cp
+  have cp_rf : IsPrim rf := by apply_cp
+  have cp_αₛ : IsPrim αₛ := by apply_cp
+  have cp_A_result : IsPrim A_result := by apply_cp
+  have cp_q0_1 : IsPrim q0_1 := by apply_cp
+  have cp_rf_1 : IsPrim rf_1 := by apply_cp
+  have cp_βₛ : IsPrim βₛ := by apply_cp
+  have cp_B_result : IsPrim B_result := by apply_cp
   apply_cp 60
 
 @[simp, evp_simps] theorem c_kp54_evp {x} : evalp (K0 (fun _↦0)) c_kp54 x = KP54.KP54 x := by
@@ -133,7 +133,7 @@ def c_kp54 := c_prec1 0 c_kp54_indt
   | zero => rfl
   | succ s_1 ih =>
     unfold c_kp54
-    simp only [c_prec1_evp]
+    simp only [cPrec1_evp]
     have :
         (Nat.rec 0 (fun y IH ↦ evalp (K0 (fun _↦0)) c_kp54_indt (Nat.pair y IH)) s_1) =
         evalp (K0 (fun _↦0)) c_kp54 s_1 := by
@@ -242,8 +242,8 @@ theorem fzero_eq_χempty : (fun _↦0) = χ ∅ := by unfold χ; simp
 Now that we have defined KP54.KP54, we can easily define (characeristic functions for) KP54.A and
 KP54.B. (Refer to their definitions in KP54.lean)
 -/
-def c_A := c_n2b.comp <| c_list_getI.comp₂ (left.comp <| c_kp54.comp succ) c_id
-@[cp] theorem c_A_prim : code_prim c_A := by unfold c_A; apply_cp 10
+def c_A := cN2b.comp <| cListGetI.comp₂ (left.comp <| c_kp54.comp succ) cId
+@[cp] theorem c_A_prim : IsPrim c_A := by unfold c_A; apply_cp 10
 @[simp, evp_simps] theorem c_A_evp : evalp (K0 (fun _↦0)) c_A = χ KP54.A := by
   funext x
   simp only [c_A, evp_simps]; congr
@@ -256,8 +256,8 @@ theorem A_le_J1 : KP54.A ≤ᵀ ∅⌜ := by
   apply _root_.trans (A_le_J1_aux)
   rw [fzero_eq_χempty]
   exact (K0χ_eq_χSetK ∅).1
-def c_B := c_n2b.comp <| c_list_getI.comp₂ (right.comp <| c_kp54.comp succ) c_id
-@[cp] theorem c_B_prim : code_prim c_B := by unfold c_B; apply_cp 10
+def c_B := cN2b.comp <| cListGetI.comp₂ (right.comp <| c_kp54.comp succ) cId
+@[cp] theorem c_B_prim : IsPrim c_B := by unfold c_B; apply_cp 10
 @[simp, evp_simps] theorem c_B_evp : evalp (K0 (fun _↦0)) c_B = χ KP54.B := by
   funext x
   simp only [c_B, evp_simps]; congr

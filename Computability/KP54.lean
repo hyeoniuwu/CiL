@@ -86,8 +86,8 @@ That is,
 Later simp calls blow up without `@[irreducible]`. Why?
 -/
 @[irreducible] def c_kp54_aux (i n : ℕ) :=
-  c_ifdom
-  (c_evals.comp₃ (c_list_append.comp₂ left (succ.comp right)) (c_const i) (c_const n))
+  cIfdom
+  (c_evals.comp₃ (cListAppend.comp₂ left (succ.comp right)) (cConst i) (cConst n))
   Code.zero
 open Classical in
 set_option backward.isDefEq.respectTransparency false in

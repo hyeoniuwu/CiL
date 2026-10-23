@@ -240,7 +240,7 @@ theorem χ_le_χSetK (O : Set ℕ) : O ≤ᵀ (SetK O) := by
   let g := fun x => if (χ O) x = 0 then Part.none else Part.some 0
   have hg : Rin (χ O) g :=  Rin.ite Rin.oracle Rin.none Rin.zero
   rcases exists_code_nat.mp hg with ⟨cg, hcg⟩
-  let f': ℕ →. ℕ := fun x => χK (cg.n2c.comp (c_const x))
+  let f': ℕ →. ℕ := fun x => χK (cg.n2c.comp (cConst x))
   have f_eq_f': (χ O) = f' := by
     funext xs
     simp only [f']
@@ -256,10 +256,10 @@ theorem χ_le_χSetK (O : Set ℕ) : O ≤ᵀ (SetK O) := by
       | inr h2 => simpa [h] using h2
   have f'_recIn_χK : RecursiveIn (χK) f' := by
     simp only [f']
-    refine Rin.someTotal χK (fun x ↦ χK (cg.n2c.comp (c_const x)).c2n) ?_
+    refine Rin.someTotal χK (fun x ↦ χK (cg.n2c.comp (cConst x)).c2n) ?_
     refine Rin.totalComp' Rin.oracle ?_
     · apply exists_code.mpr
-      use (c_ev_const.comp₂ (c_const cg) c_id)
+      use (cEvConst.comp₂ (cConst cg) cId)
       simpa [Seq.seq] using (by rfl)
   refine TR_Set_iff_Fn'.mpr ?_
   rw [f_eq_f']
@@ -349,7 +349,7 @@ open Classical in
 theorem W_le_SetK0 {O : Set ℕ} : ∀ c, W O c ≤ᵀ SetK0 O := by
   intro c
   apply reducible_iff_code.mpr
-  use oracle.comp <| pair (c_const c) c_id
+  use oracle.comp <| pair (cConst c) cId
   funext x
   simpa [Seq.seq, SetK0, χ, ev_simps]
     using if_ctx_congr Part.dom_iff_mem (congrFun rfl) (congrFun rfl)
@@ -370,7 +370,7 @@ def [f(e)](y):
   run [e](y)
   return y
 -/
-def dom_to_ran (e : Code) := c_ifdom (c_eval.comp₂ (c_const e) c_id) c_id
+def dom_to_ran (e : Code) := cIfdom (cEval.comp₂ (cConst e) cId) cId
 open Classical in
 theorem dom_to_ran_prop {O e} : W O e = WR O (dom_to_ran e) := by
   ext xs
@@ -398,15 +398,15 @@ theorem dom_to_ran_prop {O e} : W O e = WR O (dom_to_ran e) := by
     next h => exact Part.dom_iff_mem.mp h
     · simp_all only [Part.notMem_none]
 
-def c_dom_to_ran := c_c_ifdom.comp₂
-  (c_comp₂.comp₃ (c_const c_eval) (c_c_const) (c_const c_id))
-  (c_const c_id)
-@[cp] theorem c_dom_to_ran_prim : code_prim c_dom_to_ran := by unfold c_dom_to_ran; apply_cp
+def c_dom_to_ran := cCIfdom.comp₂
+  (cComp₂.comp₃ (cConst cEval) (cCConst) (cConst cId))
+  (cConst cId)
+@[cp] theorem c_dom_to_ran_prim : IsPrim c_dom_to_ran := by unfold c_dom_to_ran; apply_cp
 @[simp, evp_simps] theorem c_dom_to_ran_evp {O : ℕ → ℕ} :
     evalp O c_dom_to_ran = fun (x : ℕ) ↦ c2n (dom_to_ran x) := by
   simp [c_dom_to_ran, dom_to_ran]
 theorem PrimrecIn.dom_to_ran {O : ℕ → ℕ} : PrimrecIn O (fun (x : ℕ) ↦ (dom_to_ran x).c2n) := by
-  rw [← c_dom_to_ran_evp]; exact code_prim_prop
+  rw [← c_dom_to_ran_evp]; exact isPrim_prop
 end dom_to_ran
 
 section ran_to_dom
@@ -423,14 +423,14 @@ def [f(e)](x):
   return anything.
 -/
 noncomputable def ran_to_dom :=
-  fun c : Code ↦ dovetail (c_if_eq'.comp₂ left ((c_eval₁).comp₂ (c_const c) right))
+  fun c : Code ↦ dovetail (cIfEq'.comp₂ left ((cEval₁).comp₂ (cConst c) right))
 set_option backward.isDefEq.respectTransparency false in
 theorem ran_to_dom_ev {O c y} : (eval O (ran_to_dom c) y).Dom ↔ ∃ x, y ∈ eval O c x := by
   constructor
   · intro h
     have := dovetail_ev_0 h
     let (eq:=hdvt) dvt :=
-      (eval O (c_if_eq'.comp₂ left ((c_eval₁).comp₂ (c_const c) right)).dovetail y).get h
+      (eval O (cIfEq'.comp₂ left ((cEval₁).comp₂ (cConst c) right)).dovetail y).get h
     rw [← hdvt] at this
     simp only [ev_simps] at this
     -- simp [eval] at this
@@ -459,15 +459,15 @@ theorem ran_to_dom_prop {O e} : WR O e = W O (ran_to_dom e) := by
     rcases h with ⟨y,hy⟩
     exact ran_to_dom_ev.mp (Part.mem_imp_dom hy)
 
-def c_ran_to_dom := c_dovetail.comp <|
-  c_comp₂.comp₃ (c_const c_if_eq') c_left <|
-  c_comp₂.comp₃ (c_const c_eval₁) c_c_const c_right
-@[cp] theorem c_ran_to_dom_prim : code_prim c_ran_to_dom := by unfold c_ran_to_dom; apply_cp
+def c_ran_to_dom := cDovetail.comp <|
+  cComp₂.comp₃ (cConst cIfEq') cLeft <|
+  cComp₂.comp₃ (cConst cEval₁) cCConst cRight
+@[cp] theorem c_ran_to_dom_prim : IsPrim c_ran_to_dom := by unfold c_ran_to_dom; apply_cp
 @[simp, evp_simps] theorem c_ran_to_dom_evp {O : ℕ → ℕ} :
     evalp O c_ran_to_dom = fun (x : ℕ) ↦ c2n (ran_to_dom x) := by
   simp [c_ran_to_dom, ran_to_dom]
 theorem PrimrecIn.ran_to_dom {O : ℕ → ℕ} : PrimrecIn O (fun (x : ℕ) ↦ (ran_to_dom x).c2n) := by
-  rw [← c_ran_to_dom_evp]; exact code_prim_prop
+  rw [← c_ran_to_dom_evp]; exact isPrim_prop
 end ran_to_dom
 
 theorem empty_le : ∀ A : Set ℕ, ∅ ≤ᵀ A := by
@@ -514,9 +514,9 @@ fun x ↦ 0 if (c B x)↓ else ↑ has domain A.
 theorem reducible_imp_W {A B} : A≤ᵀB → ∃ c, W B c = A := by
   intro h
   rcases reducible_iff_code.mp h with ⟨c,h⟩
-  use c_ite c c_diverge zero
-  have c_total : code_total (χ B) c := by simp_all [code_total]
-  simpa [W, PFun.Dom, c_ite_ev c_total, h, ev_simps] using (by unfold χ; aesop)
+  use cIte c cDiverge zero
+  have c_total : IsTotal (χ B) c := by simp_all [IsTotal]
+  simpa [W, PFun.Dom, cIte_ev c_total, h, ev_simps] using (by unfold χ; aesop)
 set_option backward.isDefEq.respectTransparency false in
 theorem Cin_iff_Cin' {A B} : A≤ᵀB ↔ Aᶜ≤ᵀB := by
   /-
@@ -526,7 +526,7 @@ theorem Cin_iff_Cin' {A B} : A≤ᵀB ↔ Aᶜ≤ᵀB := by
     intro h
     simp only [reducible_iff_code] at *
     rcases h with ⟨c,hc⟩
-    use c_sg'.comp c
+    use cSg'.comp c
     simpa [eval, hc] using by (unfold χ; aesop)
   constructor
   · exact fun a ↦ main A B a
@@ -571,16 +571,16 @@ theorem Cin_iff_CEin_CEin' {A B} : A≤ᵀB ↔ (CEin B A ∧ CEin B Aᶜ) := by
   -/
   intro ⟨⟨c1,hc1⟩, ⟨c2,hc2⟩⟩
   apply reducible_iff_code.mpr
-  let d := c_ite right
+  let d := cIte right
     (zero.comp <| c2.comp left) <|
-    c_if_eq_te' right (c_const 1)
+    cIfEqTe' right (cConst 1)
     (zero.comp <| c1.comp left)
-    c_diverge
+    cDiverge
   use dovetail d
   funext x
-  -- aux0, aux1: trivial helpers needed as arguments later for c_if_eq_te'_ev
-  have aux0 : code_total (χ B) (right) := fun x ↦ trivial
-  have aux1 : code_total (χ B) (c_const 1) := by simp [code_total]
+  -- aux0, aux1: trivial helpers needed as arguments later for cIfEqTe'_ev
+  have aux0 : IsTotal (χ B) (right) := fun x ↦ trivial
+  have aux1 : IsTotal (χ B) (cConst 1) := by simp [IsTotal]
   by_cases hx : x∈A
   · have dvtthm := @dovetail_ev_0 (χ B) d x ?_
     all_goals
@@ -594,15 +594,15 @@ theorem Cin_iff_CEin_CEin' {A B} : A≤ᵀB ↔ (CEin B A ∧ CEin B Aᶜ) := by
         exact Part.eq_none_iff'.mpr this
     · extract_lets at dvtthm;
       expose_names
-      simp? [d, c_if_eq_te'_ev aux0 aux1, ev_simps, Part.Dom.bind tc1, tc2]  at dvtthm says
-        simp only [right_total, c_ite_ev, eval, unpair_pair, Part.coe_some, Part.some_inj,
-          Part.bind_eq_bind, Part.bind_some, tc2, Part.bind_none, c_if_eq_te'_ev aux0 aux1,
-          Part.get_some, c_const_ev, Part.Dom.bind tc1, c_diverge_ev, d] at dvtthm
+      simp? [d, cIfEqTe'_ev aux0 aux1, ev_simps, Part.Dom.bind tc1, tc2]  at dvtthm says
+        simp only [right_total, cIte_ev, eval, unpair_pair, Part.coe_some, Part.some_inj,
+          Part.bind_eq_bind, Part.bind_some, tc2, Part.bind_none, cIfEqTe'_ev aux0 aux1,
+          Part.get_some, cConst_ev, Part.Dom.bind tc1, cDiverge_ev, d] at dvtthm
       have : dvt = 1 := by contrapose dvtthm; simp [dvtthm]
       simp [dvt] at this
       simpa [χ, hx] using Part.get_eq_iff_eq_some.mp this
     · apply dovetail_ev_2.mpr
-      simpa [d, c_if_eq_te'_ev aux0 aux1, eval, Part.Dom.bind <| tc1] using ⟨1, rfl⟩
+      simpa [d, cIfEqTe'_ev aux0 aux1, eval, Part.Dom.bind <| tc1] using ⟨1, rfl⟩
   · -- essentialy the same as the x∈A case.
     have hx' : x∈Aᶜ := hx
     have dvtthm := @dovetail_ev_0 (χ B) d x ?_
@@ -615,16 +615,16 @@ theorem Cin_iff_CEin_CEin' {A B} : A≤ᵀB ↔ (CEin B A ∧ CEin B Aᶜ) := by
         simp only [hc1, Set.mem_ofPred_eq] at hx
         exact Part.eq_none_iff'.mpr hx
     · extract_lets at dvtthm; expose_names
-      simp? [d, c_if_eq_te'_ev aux0 aux1, eval, Part.Dom.bind <| tc1, tc2]  at dvtthm says
-        simp only [right_total, c_ite_ev, eval, unpair_pair, Part.coe_some, Part.some_inj,
-          Part.bind_eq_bind, Part.bind_some, Part.Dom.bind <| tc1, c_if_eq_te'_ev aux0 aux1,
-          Part.get_some, c_const_ev, tc2, Part.bind_none, c_diverge_ev, ite_self, ite_eq_left_iff,
+      simp? [d, cIfEqTe'_ev aux0 aux1, eval, Part.Dom.bind <| tc1, tc2]  at dvtthm says
+        simp only [right_total, cIte_ev, eval, unpair_pair, Part.coe_some, Part.some_inj,
+          Part.bind_eq_bind, Part.bind_some, Part.Dom.bind <| tc1, cIfEqTe'_ev aux0 aux1,
+          Part.get_some, cConst_ev, tc2, Part.bind_none, cDiverge_ev, ite_self, ite_eq_left_iff,
           Part.none_ne_some, imp_false, Decidable.not_not, d] at dvtthm
       have : dvt = 0 := by contrapose dvtthm; simp [dvtthm]
       simp [dvt] at this
       simpa [χ, hx] using Part.get_eq_iff_eq_some.mp this
     · apply dovetail_ev_2.mpr
-      simpa [d, c_if_eq_te'_ev aux0 aux1, eval, Part.Dom.bind <| tc1]
+      simpa [d, cIfEqTe'_ev aux0 aux1, eval, Part.Dom.bind <| tc1]
         using ⟨0, fun a ↦ False.elim (a rfl)⟩
 
 end computably_enumerable
@@ -638,13 +638,13 @@ open Classical in
 theorem join_upper (A B : Set ℕ) : A ≤ᵀ (A ∨ B) ∧ B ≤ᵀ (A ∨ B) := by
   constructor
   · apply reducible_iff_code.mpr
-    use oracle.comp c_mul2
+    use oracle.comp cMul2
     unfold χ
     funext x
     simp [eval, join]
     grind
   · apply reducible_iff_code.mpr
-    use oracle.comp (succ.comp c_mul2)
+    use oracle.comp (succ.comp cMul2)
     unfold χ
     funext x
     simp [eval, join]
@@ -656,13 +656,13 @@ theorem join_least (A B C : Set ℕ) : A ≤ᵀ C → B ≤ᵀ C → (A ∨ B) �
   rcases reducible_iff_code.mp h1 with ⟨c1,hc1⟩
   rcases reducible_iff_code.mp h2 with ⟨c2,hc2⟩
   apply reducible_iff_code.mpr
-  use c_ifz.comp₃ (c_mod.comp₂ c_id (c_const 2)) (c1.comp c_div2) (c2.comp c_div2)
+  use cIfz.comp₃ (cMod.comp₂ cId (cConst 2)) (c1.comp cDiv2) (c2.comp cDiv2)
   simp only [Seq.seq, ev_simps, hc1, hc2]
   unfold χ;
   funext x;
   simp? [join] says
     simp only [Part.coe_some, Part.map_eq_map, Part.map_some, Part.bind_some, Part.bind_eq_bind,
-      PFun.coe_val, unpaired2, pair_l, pair_r, c_ifz_ev, join, Set.mem_union, Set.mem_ofPred_eq,
+      PFun.coe_val, unpaired2, pair_l, pair_r, cIfz_ev, join, Set.mem_union, Set.mem_ofPred_eq,
       Part.some_inj]
   cases hx : x.bodd
   · rw [← codes_aux_aux_0 hx]; grind

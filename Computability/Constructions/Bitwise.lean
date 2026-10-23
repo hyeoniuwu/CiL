@@ -33,38 +33,38 @@ c.f. the definition of `bitwise` in Init\Data\Nat\Bitwise\Basic.lean.
 def c_bitwise_aux (c : Code) :=
   let iP1 := succ.comp (left.comp right)
   let comp_hist         := right.comp right
-  let lookup (n'' m'')  := c_list_getI.comp₂ comp_hist (pair n'' m'')
+  let lookup (n'' m'')  := cListGetI.comp₂ comp_hist (pair n'' m'')
   let n := left.comp iP1
   let m := right.comp iP1
-  let n' := c_div.comp₂ n (c_const 2)
-  let m' := c_div.comp₂ m (c_const 2)
-  let b₁ := c_mod.comp₂ n (c_const 2)
-  let b₂ := c_mod.comp₂ m (c_const 2)
+  let n' := cDiv.comp₂ n (cConst 2)
+  let m' := cDiv.comp₂ m (cConst 2)
+  let b₁ := cMod.comp₂ n (cConst 2)
+  let b₂ := cMod.comp₂ m (cConst 2)
   let r := lookup n' m'
-  c_cov_rec
-    (c_const 0) <|
-    c_ifz.comp₃ n
-      (c_ift.comp₃ (c.comp₂ zero (c_const 1)) m zero) <|
-    c_ifz.comp₃ m
-      (c_ift.comp₃ (c.comp₂ (c_const 1) zero) n zero) <|
-    c_ift.comp₃ (c.comp₂ b₁ b₂)
-    (succ.comp (c_add.comp₂ r r))
-    (c_add.comp₂ r r)
-def c_bitwise (c : Code) := c_list_getLastI.comp ((c_bitwise_aux c).comp₂ (c_const 17) c_id)
-@[cp] theorem c_bitwise_prim {c} (hc : code_prim c) : code_prim (c_bitwise c) := by
+  cCovRec
+    (cConst 0) <|
+    cIfz.comp₃ n
+      (cIft.comp₃ (c.comp₂ zero (cConst 1)) m zero) <|
+    cIfz.comp₃ m
+      (cIft.comp₃ (c.comp₂ (cConst 1) zero) n zero) <|
+    cIft.comp₃ (c.comp₂ b₁ b₂)
+    (succ.comp (cAdd.comp₂ r r))
+    (cAdd.comp₂ r r)
+def c_bitwise (c : Code) := cListGetLastI.comp ((c_bitwise_aux c).comp₂ (cConst 17) cId)
+@[cp] theorem c_bitwise_prim {c} (hc : IsPrim c) : IsPrim (c_bitwise c) := by
   unfold c_bitwise;
   unfold c_bitwise_aux
   extract_lets;
   expose_names;
-  have cpcomp_hist : code_prim comp_hist := by apply_cp
-  have cpiP1 : code_prim iP1 := by apply_cp
-  have cpn   : code_prim n   := by apply_cp
-  have cpm   : code_prim m   := by apply_cp
-  have cpn'  : code_prim n'  := by apply_cp
-  have cpm'  : code_prim m'  := by apply_cp
-  have cpb₁  : code_prim b₁  := by apply_cp
-  have cpb₂  : code_prim b₂  := by apply_cp
-  have cpr   : code_prim r   := by apply_cp
+  have cpcomp_hist : IsPrim comp_hist := by apply_cp
+  have cpiP1 : IsPrim iP1 := by apply_cp
+  have cpn   : IsPrim n   := by apply_cp
+  have cpm   : IsPrim m   := by apply_cp
+  have cpn'  : IsPrim n'  := by apply_cp
+  have cpm'  : IsPrim m'  := by apply_cp
+  have cpb₁  : IsPrim b₁  := by apply_cp
+  have cpb₂  : IsPrim b₂  := by apply_cp
+  have cpr   : IsPrim r   := by apply_cp
   apply_cp 50
 private lemma lt_pair_of_lt_lt {a c b d} (ha : a < c) (hb : b < d) : ⟪a,b⟫ < ⟪c,d⟫ := by
   have a0 : ⟪a,b⟫ < ⟪c,b⟫ := Nat.pair_lt_pair_left b ha
@@ -147,7 +147,7 @@ theorem c_bitwise_evp_n_m {O c n m} : evalp O (c_bitwise c) ⟪n+1,m+1⟫ = (
   have hb₁ : evalp O b₁_1 cri = b₁ := by simp [b₁_1, hn, b₁]
   have hb₂ : evalp O b₂_1 cri = b₂ := by simp [b₂_1, hm, b₂]
   have hr : evalp O r_1 cri = r := by
-    simp only [comp₂_evp, evalp, pair_r, hn', hm', c_list_getI_evp, r_1, lookup, comp_hist, cri,
+    simp only [comp₂_evp, evalp, pair_r, hn', hm', cListGetI_evp, r_1, lookup, comp_hist, cri,
       inp]
     simp only [r]
     unfold c_bitwise c_bitwise_aux
@@ -190,10 +190,10 @@ end bitwise
 
 section lor
 namespace Oracle.Single.Code
-def c_lor := c_ifz.comp₃ left
-  (c_ifz.comp₃ right zero (c_const 1))
-  (c_const 1)
-@[cp] theorem c_lor_prim : code_prim c_lor := by unfold c_lor; apply_cp
+def c_lor := cIfz.comp₃ left
+  (cIfz.comp₃ right zero (cConst 1))
+  (cConst 1)
+@[cp] theorem c_lor_prim : IsPrim c_lor := by unfold c_lor; apply_cp
 theorem c_lor_evp {O a b} : evalp O c_lor ⟪a, b⟫ = b2n (n2b a || n2b b) := by
   simp [c_lor, n2b, b2n]
   split <;> simp_all
@@ -207,10 +207,10 @@ end lor
 
 section lxor
 namespace Oracle.Single.Code
-def c_lxor := c_ifz.comp₃ left
-  (c_ifz.comp₃ right zero (c_const 1))
-  (c_ifz.comp₃ right (c_const 1) zero)
-@[cp] theorem c_lxor_prim : code_prim c_lxor := by unfold c_lxor; apply_cp
+def c_lxor := cIfz.comp₃ left
+  (cIfz.comp₃ right zero (cConst 1))
+  (cIfz.comp₃ right (cConst 1) zero)
+@[cp] theorem c_lxor_prim : IsPrim c_lxor := by unfold c_lxor; apply_cp
 theorem c_lxor_evp {O a b} : evalp O c_lxor ⟪a, b⟫ = b2n (n2b a ^^ n2b b) := by
   simp [c_lxor, n2b, b2n]
   split <;> simp_all
@@ -224,10 +224,10 @@ end lxor
 
 section land
 namespace Oracle.Single.Code
-def c_land := c_ifz.comp₃ left
+def c_land := cIfz.comp₃ left
   zero
-  (c_ifz.comp₃ right zero (c_const 1))
-@[cp] theorem c_land_prim : code_prim c_land := by unfold c_land; apply_cp
+  (cIfz.comp₃ right zero (cConst 1))
+@[cp] theorem c_land_prim : IsPrim c_land := by unfold c_land; apply_cp
 theorem c_land_evp {O a b} : evalp O c_land ⟪a, b⟫ = b2n (n2b a && n2b b) := by
   simp [c_land, n2b, b2n]
   split <;> simp_all
@@ -241,7 +241,7 @@ end land
 section or
 namespace Oracle.Single.Code
 def c_or := c_bitwise (c_lor)
-@[cp] theorem c_or_prim : code_prim c_or := by unfold c_or; apply_cp
+@[cp] theorem c_or_prim : IsPrim c_or := by unfold c_or; apply_cp
 @[simp, evp_simps] theorem c_or_evp {O x y} : evalp O c_or ⟪x,y⟫ = (x ||| y) := by simp [c_or]; rfl
 end Oracle.Single.Code
 end or
@@ -249,7 +249,7 @@ end or
 section and
 namespace Oracle.Single.Code
 def c_and := c_bitwise (c_land)
-@[cp] theorem c_and_prim : code_prim c_and := by unfold c_and; apply_cp
+@[cp] theorem c_and_prim : IsPrim c_and := by unfold c_and; apply_cp
 @[simp, evp_simps] theorem c_and_evp {O x y} : evalp O c_and ⟪x,y⟫ = x &&& y := by simp [c_and]; rfl
 end Oracle.Single.Code
 end and
@@ -257,7 +257,7 @@ end and
 section xor
 namespace Oracle.Single.Code
 def c_xor := c_bitwise (c_lxor)
-@[cp] theorem c_xor_prim : code_prim c_xor := by unfold c_xor; apply_cp
+@[cp] theorem c_xor_prim : IsPrim c_xor := by unfold c_xor; apply_cp
 @[simp, evp_simps] theorem c_xor_evp {O x y} : evalp O c_xor ⟪x,y⟫ = x ^^^ y := by simp [c_xor]; rfl
 end Oracle.Single.Code
 end xor

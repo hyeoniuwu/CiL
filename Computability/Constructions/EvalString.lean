@@ -38,10 +38,10 @@ def c_evalnc :=
   let s1 := s0.comp bind_prev
   let c1 := c0.comp bind_prev
   let x1 := x0.comp bind_prev
-  c_opt_bind
+  cOptBind
   (c_usen.comp₃ x0 c0 s0) <|
-  c_if_le_te.comp₄ right u1 (c_evaln.comp₃ x1 c1 s1) zero
-@[cp] theorem c_evalnc_prim : code_prim c_evalnc := by unfold c_evalnc; apply_cp 90
+  cIfLeTe.comp₄ right u1 (cEvaln.comp₃ x1 c1 s1) zero
+@[cp] theorem c_evalnc_prim : IsPrim c_evalnc := by unfold c_evalnc; apply_cp 90
 @[simp, evp_simps] theorem c_evalnc_evp {O u s c x} :
     evalp O c_evalnc ⟪u,s,c,x⟫ = o2n (evalnc O u s c x) := by
   simp [c_evalnc, evalp];
@@ -64,9 +64,9 @@ def c_evalc :=
   let u1 := u0.comp bind_prev
   let c1 := c0.comp bind_prev
   let x1 := x0.comp bind_prev
-  c_part_bind
+  cPartBind
   (c_use.comp₂ c0 x0) <|
-  c_if_le_te' right u1 (c_eval.comp₂ c1 x1) c_diverge
+  cIfLeTe' right u1 (cEval.comp₂ c1 x1) cDiverge
 
 set_option backward.isDefEq.respectTransparency false in
 @[simp, ev_simps] theorem c_evalc_ev {O u c x}: eval O c_evalc ⟪u, c, x⟫ = (evalc O u c x) := by
@@ -74,9 +74,9 @@ set_option backward.isDefEq.respectTransparency false in
   simp [eval, Seq.seq, evalc]
   if h : (use O (n2c c) x).Dom then
     simp [Part.Dom.bind h]
-    have hc1 : code_total O right := by exact right_total
-    have hc2 : code_total O (left.comp left) := by exact total_comp_of hc1 hc1
-    simp [c_if_le_te'_ev hc1 hc2]
+    have hc1 : IsTotal O right := by exact right_total
+    have hc2 : IsTotal O (left.comp left) := by exact total_comp_of hc1 hc1
+    simp [cIfLeTe'_ev hc1 hc2]
     simp [eval, Seq.seq]
   else
     simp [Part.eq_none_iff'.mpr h]
@@ -90,16 +90,16 @@ Rather than building a custom evaluation function which parametrises the oracle,
 
 This greatly simplifies the proof, as one only needs to induct on the codes, rather than some convoluted combination of the code, input and steps.
 
-(The function that modifies the code, `c_replace_oracle`, is already defined in Computability/Constructions/CovRec.lean.)
+(The function that modifies the code, `cReplaceOracle`, is already defined in Computability/Constructions/CovRec.lean.)
 -/
 namespace Oracle.Single.Code
 def c_evalo :=
   let o := left
   let c := left.comp right
   let x := right.comp right
-  c_eval.comp₂ (c_replace_oracle.comp₂ o c) x
+  cEval.comp₂ (cReplaceOracle.comp₂ o c) x
 set_option backward.isDefEq.respectTransparency false in
-theorem c_evalo_ev {O o c x} (ho : code_total O o) : eval O c_evalo ⟪o, c, x⟫ = eval (evalt O o ho) c x := by
+theorem c_evalo_ev {O o c x} (ho : IsTotal O o) : eval O c_evalo ⟪o, c, x⟫ = eval (evalt O o ho) c x := by
   unfold evalt
   simp [c_evalo]
   simp [eval,Seq.seq]
@@ -110,8 +110,8 @@ end c_evalo
 section evals
 namespace Oracle.Single.Code
 section c_evals_oracle
-def c_evals_oracle (o : Code) :=  c_sg.comp <| c_list_getD.comp₃ (c_const o) c_id (c_const whatever)
-@[cp] theorem c_evals_oracle_prim {o} : code_prim (c_evals_oracle o) := by
+def c_evals_oracle (o : Code) :=  cSg.comp <| cListGetD.comp₃ (cConst o) cId (cConst whatever)
+@[cp] theorem c_evals_oracle_prim {o} : IsPrim (c_evals_oracle o) := by
   unfold c_evals_oracle; apply_cp
 theorem c_evals_oracle_evp {O o} :
     evalp O (c_evals_oracle o) =
@@ -131,30 +131,30 @@ theorem c_evals_oracle_ev {O o} :
 end c_evals_oracle
 
 section c_c_evals_oracle
-def c_c_evals_oracle := c_comp.comp₂ (c_const c_sg) (c_comp₃.comp₄ (c_const c_list_getD) (c_c_const.comp left) (c_const c_id) (c_const <| c_const whatever))
-@[cp] def c_c_evals_oracle_prim : code_prim c_c_evals_oracle := by unfold c_c_evals_oracle; apply_cp
+def c_c_evals_oracle := cComp.comp₂ (cConst cSg) (cComp₃.comp₄ (cConst cListGetD) (cCConst.comp left) (cConst cId) (cConst <| cConst whatever))
+@[cp] def c_c_evals_oracle_prim : IsPrim c_c_evals_oracle := by unfold c_c_evals_oracle; apply_cp
 @[simp, evp_simps] theorem c_c_evals_oracle_evp {O o c x} : evalp O c_c_evals_oracle ⟪o,c,x⟫ =
 c2n (c_evals_oracle o) := by simp [c_c_evals_oracle, c_evals_oracle]
 theorem c_c_evals_oracle_ev {O o c x} : eval O c_c_evals_oracle ⟪o,c,x⟫ = c2n (c_evals_oracle o) := by simp [← evalp_eq_eval c_c_evals_oracle_prim]
 end c_c_evals_oracle
 
 section c_evals
-def c_evals_code := c_evalc.comp₂ (c_list_length.comp left) right
+def c_evals_code := c_evalc.comp₂ (cListLength.comp left) right
 set_option backward.isDefEq.respectTransparency false in
 theorem c_evals_code_ev {O o c x} : eval O c_evals_code ⟪o,c,x⟫ = evalc O (n2l o).length c x := by
   simp [c_evals_code]
   simp [eval, Seq.seq]
 def c_evals := c_evalo.comp₃
   c_c_evals_oracle
-  (c_const c_evals_code)
-  c_id
+  (cConst c_evals_code)
+  cId
 set_option backward.isDefEq.respectTransparency false in
 @[simp, ev_simps] theorem c_evals_ev {O o c x} : eval O c_evals ⟪o,c,x⟫ = (evals (n2l o) c x) := by
   unfold evals
   unfold c_evals
   simp [Seq.seq]
-  have t1 : code_total O c_c_evals_oracle := prim_total c_c_evals_oracle_prim
-  have : code_total O ((eval O c_c_evals_oracle ⟪o,c,x⟫).get (t1 ⟪o,c,x⟫)) := by
+  have t1 : IsTotal O c_c_evals_oracle := prim_total c_c_evals_oracle_prim
+  have : IsTotal O ((eval O c_c_evals_oracle ⟪o,c,x⟫).get (t1 ⟪o,c,x⟫)) := by
     simp [c_c_evals_oracle_ev]
     apply prim_total
     exact c_evals_oracle_prim
@@ -170,12 +170,12 @@ end c_evals
 
 section c_c_evals
 def c_c_evals :=
-  c_comp₃.comp₄
-  (c_const c_evalo)
-  (c_const c_c_evals_oracle)
-  (c_const <| c_const c_evals_code)
-  (c_const c_id)
-@[cp] theorem c_c_evals_prim : code_prim c_c_evals := by unfold c_c_evals; apply_cp
+  cComp₃.comp₄
+  (cConst c_evalo)
+  (cConst c_c_evals_oracle)
+  (cConst <| cConst c_evals_code)
+  (cConst cId)
+@[cp] theorem c_c_evals_prim : IsPrim c_c_evals := by unfold c_c_evals; apply_cp
 @[simp, evp_simps] theorem c_c_evals_evp {O x} : evalp O c_c_evals x = c_evals := by simp [c_c_evals, c_evals]
 end c_c_evals
 

@@ -38,81 +38,81 @@ def c_usen_aux :=
   let code_s   := succ.comp (left.comp right)
   let code     := left.comp code_s
   let s        := right.comp code_s
-  let sM1      := c_pred.comp s
+  let sM1      := cPred.comp s
   let comp_hist := right.comp right
-  let n        := c_sub.comp₂ code (c_const 5)
-  let m        := c_div2.comp <| c_div2.comp n
+  let n        := cSub.comp₂ code (cConst 5)
+  let m        := cDiv2.comp <| cDiv2.comp n
   let ml       := left.comp m
   let mr       := right.comp m
-  let nMod4    := c_mod.comp₂ n (c_const 4)
+  let nMod4    := cMod.comp₂ n (cConst 4)
   let ele := left
--- the opt_* functions will be used with c_list_map'.
+-- the opt_* functions will be used with cListMap'.
 -- so, it will take inputs of the form (number in list, criut).
-  let opt_zero  := c_if_gt_te.comp₄ ele (sM1.comp right) (c_const 0) <| succ.comp (zero.comp   ele)
-  let opt_oracle := c_if_gt_te.comp₄ ele (sM1.comp right) (c_const 0) <| succ.comp (succ.comp   ele)
-  let zero_mapped := (c_list_map' opt_zero).comp₂ (c_list_range.comp s) c_id
-  let oracle_mapped := (c_list_map' opt_oracle).comp₂ (c_list_range.comp s) c_id
+  let opt_zero  := cIfGtTe.comp₄ ele (sM1.comp right) (cConst 0) <| succ.comp (zero.comp   ele)
+  let opt_oracle := cIfGtTe.comp₄ ele (sM1.comp right) (cConst 0) <| succ.comp (succ.comp   ele)
+  let zero_mapped := (cListMap' opt_zero).comp₂ (cListRange.comp s) cId
+  let oracle_mapped := (cListMap' opt_oracle).comp₂ (cListRange.comp s) cId
   -- lookup returns `[c]ₛ(x)`
   let lookup (x' c' s') :=
-    c_list_getI.comp₂ (c_list_getI.comp₂ (comp_hist.comp right) (pair c' s')) x'
+    cListGetI.comp₂ (cListGetI.comp₂ (comp_hist.comp right) (pair c' s')) x'
   let pc_ml_s c' := lookup c' (ml.comp right)   (s.comp right)   -- `[ml]ₛ(x)`
   let pc_mr_s c' := lookup c' (mr.comp right)   (s.comp right)   -- `[mr]ₛ(x)`
   let pc_m_s  c' := lookup c' (m.comp  right)   (s.comp right)   -- `[mr]ₛ(x)`
   let pc_c_sM1 c' := lookup c' (code.comp right) (sM1.comp right) -- `[code]_{s-1}(x)`
-  let opt_pair := c_if_gt_te.comp₄ ele (sM1.comp right) c_opt_none <|
-    c_ifz.comp₃ (pc_ml_s ele) c_opt_none <|
-    c_ifz.comp₃ (pc_mr_s ele) c_opt_none <|
-    succ.comp (c_max.comp₂ (c_opt_iget.comp (pc_ml_s ele)) (c_opt_iget.comp (pc_mr_s ele)))
+  let opt_pair := cIfGtTe.comp₄ ele (sM1.comp right) cOptNone <|
+    cIfz.comp₃ (pc_ml_s ele) cOptNone <|
+    cIfz.comp₃ (pc_mr_s ele) cOptNone <|
+    succ.comp (cMax.comp₂ (cOptIget.comp (pc_ml_s ele)) (cOptIget.comp (pc_mr_s ele)))
   let comp_usen_cg := pc_mr_s ele
-  let comp_evaln_cg := c_evaln.comp₃ ele (mr.comp right) (s.comp right)
-  let comp_usen_cf := pc_ml_s <| c_pred.comp comp_evaln_cg
-  let opt_comp := c_if_gt_te.comp₄ ele (sM1.comp right) c_opt_none <|
-    c_ifz.comp₃ comp_usen_cg  c_opt_none <|
-    c_ifz.comp₃ comp_evaln_cg c_opt_none <|
-    c_ifz.comp₃ comp_usen_cf  c_opt_none <|
-    c_max.comp₂ comp_usen_cf comp_usen_cg
+  let comp_evaln_cg := cEvaln.comp₃ ele (mr.comp right) (s.comp right)
+  let comp_usen_cf := pc_ml_s <| cPred.comp comp_evaln_cg
+  let opt_comp := cIfGtTe.comp₄ ele (sM1.comp right) cOptNone <|
+    cIfz.comp₃ comp_usen_cg  cOptNone <|
+    cIfz.comp₃ comp_evaln_cg cOptNone <|
+    cIfz.comp₃ comp_usen_cf  cOptNone <|
+    cMax.comp₂ comp_usen_cf comp_usen_cg
   let prec_x         := left.comp ele
   let prec_i         := right.comp ele
-  let prec_iM1       := c_pred.comp prec_i
+  let prec_iM1       := cPred.comp prec_i
   let prec_usen_base := pc_ml_s prec_x
   let prec_usen_prev := pc_c_sM1 (pair prec_x (prec_iM1))
-  let prec_evaln_prev := c_evaln.comp₃ (pair prec_x (prec_iM1)) (code.comp right) (sM1.comp right)
-  let prec_usen_indt := pc_mr_s (pair prec_x (pair prec_iM1 (c_pred.comp prec_evaln_prev)))
-  let opt_prec := c_if_gt_te.comp₄ ele (sM1.comp right) c_opt_none <|
-    c_ifz.comp₃ prec_i          prec_usen_base <|
-    c_ifz.comp₃ prec_usen_prev  c_opt_none <|
-    c_ifz.comp₃ prec_evaln_prev c_opt_none <|
-    c_ifz.comp₃ prec_usen_indt  c_opt_none <|
-    succ.comp <| c_max.comp₂ (c_opt_iget.comp prec_usen_prev) (c_opt_iget.comp prec_usen_indt)
+  let prec_evaln_prev := cEvaln.comp₃ (pair prec_x (prec_iM1)) (code.comp right) (sM1.comp right)
+  let prec_usen_indt := pc_mr_s (pair prec_x (pair prec_iM1 (cPred.comp prec_evaln_prev)))
+  let opt_prec := cIfGtTe.comp₄ ele (sM1.comp right) cOptNone <|
+    cIfz.comp₃ prec_i          prec_usen_base <|
+    cIfz.comp₃ prec_usen_prev  cOptNone <|
+    cIfz.comp₃ prec_evaln_prev cOptNone <|
+    cIfz.comp₃ prec_usen_indt  cOptNone <|
+    succ.comp <| cMax.comp₂ (cOptIget.comp prec_usen_prev) (cOptIget.comp prec_usen_indt)
   let rfind'_usen_base := pc_m_s ele
-  let rfind'_evaln_base := c_evaln.comp₃ ele (m.comp right) (s.comp right)
+  let rfind'_evaln_base := cEvaln.comp₃ ele (m.comp right) (s.comp right)
   let rfind'_usen_indt := pc_c_sM1 (pair (left.comp ele) (succ.comp (right.comp ele)))
-  let opt_rfind' := c_if_gt_te.comp₄ ele (sM1.comp right) c_opt_none <|
-    c_ifz.comp₃ rfind'_usen_base c_opt_none <|
-    c_ifz.comp₃ rfind'_evaln_base c_opt_none <|
-    c_ifz.comp₃ (c_opt_iget.comp rfind'_evaln_base) rfind'_usen_base <|
-    c_ifz.comp₃ rfind'_usen_indt c_opt_none <|
-    succ.comp <| c_max.comp₂ (c_opt_iget.comp rfind'_usen_base) (c_opt_iget.comp rfind'_usen_indt)
-  let comp_mapped  := (c_list_map' opt_comp).comp₂   (c_list_range.comp s) c_id
-  let pair_mapped  := (c_list_map' opt_pair).comp₂   (c_list_range.comp s) c_id
-  let prec_mapped  := (c_list_map' opt_prec).comp₂   (c_list_range.comp s) c_id
-  let rfind'_mapped := (c_list_map' opt_rfind').comp₂ (c_list_range.comp s) c_id
-  c_cov_rec
-  (c_list_singleton zero) <|
-  c_if_eq_te.comp₄ s     (c_const 0) (c_list_singleton zero) <| -- if s=0, then diverge
-  c_if_eq_te.comp₄ code  (c_const 0) zero_mapped   <|
-  c_if_eq_te.comp₄ code  (c_const 1) zero_mapped   <|
-  c_if_eq_te.comp₄ code  (c_const 2) zero_mapped   <|
-  c_if_eq_te.comp₄ code  (c_const 3) zero_mapped   <|
-  c_if_eq_te.comp₄ code  (c_const 4) oracle_mapped <|
-  c_if_eq_te.comp₄ nMod4 (c_const 0) pair_mapped   <|
-  c_if_eq_te.comp₄ nMod4 (c_const 1) comp_mapped   <|
-  c_if_eq_te.comp₄ nMod4 (c_const 2) prec_mapped   <|
+  let opt_rfind' := cIfGtTe.comp₄ ele (sM1.comp right) cOptNone <|
+    cIfz.comp₃ rfind'_usen_base cOptNone <|
+    cIfz.comp₃ rfind'_evaln_base cOptNone <|
+    cIfz.comp₃ (cOptIget.comp rfind'_evaln_base) rfind'_usen_base <|
+    cIfz.comp₃ rfind'_usen_indt cOptNone <|
+    succ.comp <| cMax.comp₂ (cOptIget.comp rfind'_usen_base) (cOptIget.comp rfind'_usen_indt)
+  let comp_mapped  := (cListMap' opt_comp).comp₂   (cListRange.comp s) cId
+  let pair_mapped  := (cListMap' opt_pair).comp₂   (cListRange.comp s) cId
+  let prec_mapped  := (cListMap' opt_prec).comp₂   (cListRange.comp s) cId
+  let rfind'_mapped := (cListMap' opt_rfind').comp₂ (cListRange.comp s) cId
+  cCovRec
+  (cListSingleton zero) <|
+  cIfEqTe.comp₄ s     (cConst 0) (cListSingleton zero) <| -- if s=0, then diverge
+  cIfEqTe.comp₄ code  (cConst 0) zero_mapped   <|
+  cIfEqTe.comp₄ code  (cConst 1) zero_mapped   <|
+  cIfEqTe.comp₄ code  (cConst 2) zero_mapped   <|
+  cIfEqTe.comp₄ code  (cConst 3) zero_mapped   <|
+  cIfEqTe.comp₄ code  (cConst 4) oracle_mapped <|
+  cIfEqTe.comp₄ nMod4 (cConst 0) pair_mapped   <|
+  cIfEqTe.comp₄ nMod4 (cConst 1) comp_mapped   <|
+  cIfEqTe.comp₄ nMod4 (cConst 2) prec_mapped   <|
                                      rfind'_mapped
 
 /-- api: `Nat.pair x (Nat.pair code s)` -/
 def c_usen :=
-  c_list_getI.comp₂ (c_list_getLastI.comp <| c_usen_aux.comp (pair (c_const 17) right)) left
+  cListGetI.comp₂ (cListGetLastI.comp <| c_usen_aux.comp (pair (cConst 17) right)) left
 
 theorem c_usen_evp_aux_x_0_0 {O x} : evalp O c_usen ⟪x, 0, 0⟫ = o2n (usen O 0 0 x) := by
   unfold c_usen; unfold c_usen_aux
@@ -289,22 +289,22 @@ theorem c_usen_evp_aux_nMod4 {O x n s} :
       Nat.pair
         (evalp O (ml_1.comp right) ⟪elem, cri⟫)
         (evalp O (s_1.comp right) ⟪elem, cri⟫) ≤ k := by
-    simpa [hml,hs] using c_evaln_bounds_left
+    simpa [hml,hs] using cEvaln_bounds_left
   have bounds_right {elem : ℕ} :
       Nat.pair
         (evalp O (mr_1.comp right) ⟪elem, cri⟫)
         (evalp O (s_1.comp right) ⟪elem, cri⟫) ≤ k := by
-    simpa [hmr,hs] using c_evaln_bounds_right
+    simpa [hmr,hs] using cEvaln_bounds_right
   have bounds_m {elem : ℕ} :
       Nat.pair
         (evalp O (m_1.comp right) ⟪elem, cri⟫)
         (evalp O (s_1.comp right) ⟪elem, cri⟫) ≤ k := by
-    simpa [hm,hs] using c_evaln_bounds_3
+    simpa [hm,hs] using cEvaln_bounds_3
   have bounds_pc_c_sM1 {elem : ℕ} :
       Nat.pair
         (evalp O (code.comp right) ⟪elem, cri⟫)
         (evalp O (sM1.comp right) ⟪elem, cri⟫) ≤ k := by
-    simpa [hcode,hsM1] using c_evaln_bounds_4
+    simpa [hcode,hsM1] using cEvaln_bounds_4
   have hpc_ml_s c' (elem : ℕ): (evalp O (pc_ml_s_1 c') ⟪elem, cri⟫) = pc_ml_s c' elem := by
     simp [pc_ml_s_1, hlookup elem bounds_left, pc_ml_s, hs,hml,cri]
   have hpc_mr_s c' (elem : ℕ): evalp O (pc_mr_s_1 c') ⟪elem, cri⟫ = pc_mr_s c' elem := by
@@ -339,7 +339,7 @@ theorem c_usen_evp_aux_nMod4 {O x n s} :
       evalp O comp_evaln_cg ⟪elem, cri⟫ = o2n (evaln O (s+1) (n2c mr) elem) := by
     simp [comp_evaln_cg, hs,hmr,ele]
   have hcomp_usen_cf elem :
-      evalp O comp_usen_cf ⟪elem, cri⟫ = pc_ml_s (c_pred.comp comp_evaln_cg) elem := by
+      evalp O comp_usen_cf ⟪elem, cri⟫ = pc_ml_s (cPred.comp comp_evaln_cg) elem := by
     simp [comp_usen_cf, hpc_ml_s]
   have hopt_comp :
       (fun ele => evalp O opt_comp_1 ⟪ele, cri⟫) =
@@ -366,7 +366,7 @@ theorem c_usen_evp_aux_nMod4 {O x n s} :
         simp only [Option.isSome.bind (Option.isSome_iff_ne_none.mpr h3)]
         simp only [hcomp_usen_cf]
         have :
-            pc_ml_s (c_pred.comp comp_evaln_cg) elem =
+            pc_ml_s (cPred.comp comp_evaln_cg) elem =
             (pc_ml_s left ((evaln O (s + 1) (n2c mr) elem).get
             (Option.isSome_iff_ne_none.mpr h3))) := by
           unfold pc_ml_s
@@ -528,7 +528,7 @@ theorem c_usen_evp_aux_nMod4 {O x n s} :
   rw [show n.succ.succ.succ.succ.succ=n+5 by rfl] at hcode_val
   rw [succ_eq_add_one] at hs_val
   let m := n.div2.div2
-  have hm : m < n + 5 := c_evaln_bounds_0
+  have hm : m < n + 5 := cEvaln_bounds_0
   have _m1 : m.left < n + 5 := lt_of_le_of_lt m.unpair_left_le hm
   have _m2 : m.right < n + 5 := lt_of_le_of_lt m.unpair_right_le hm
   have hcode_s : code_s=Nat.pair (n+5) (sM1+1) := by
@@ -622,53 +622,53 @@ theorem c_usen_evp_aux_nMod4 {O x n s} :
         simp [h, m_s, m, c_sM1, rw0]
       | inr h => simp [h]
 
-@[cp] theorem c_usen_prim : code_prim c_usen := by
+@[cp] theorem c_usen_prim : IsPrim c_usen := by
   unfold c_usen
   unfold c_usen_aux
   extract_lets; expose_names
   -- show each let-binding is primrec
-  have cp_code_s : code_prim code_s := by apply_cp
-  have cp_code : code_prim code := by apply_cp
-  have cp_s : code_prim s := by apply_cp
-  have cp_sM1 : code_prim sM1 := by apply_cp
-  have cp_comp_hist : code_prim comp_hist := by apply_cp
-  have cp_n : code_prim n := by apply_cp
-  have cp_m : code_prim m := by apply_cp
-  have cp_ml : code_prim ml := by apply_cp
-  have cp_mr : code_prim mr := by apply_cp
-  have cp_nMod4 : code_prim nMod4 := by apply_cp
-  have cp_ele : code_prim ele := by apply_cp
-  have cp_opt_zero : code_prim opt_zero := by apply_cp
-  have cp_opt_oracle : code_prim opt_oracle := by apply_cp
-  have cp_zero_mapped : code_prim zero_mapped := by apply_cp
-  have cp_oracle_mapped : code_prim oracle_mapped := by apply_cp
-  have cp_lookup {x' c' s'} (hx' : code_prim x') (hc' : code_prim c') (hs' : code_prim s') :
-    code_prim (lookup x' c' s') := by apply_cp
-  have cp_pc_ml_s {c'} (hc' : code_prim c') : code_prim (pc_ml_s c') := by apply_cp
-  have cp_pc_mr_s {c'} (hc' : code_prim c') : code_prim (pc_mr_s c') := by apply_cp
-  have cp_pc_m_s  {c'} (hc' : code_prim c') : code_prim (pc_m_s c') := by apply_cp
-  have cp_pc_c_sM1 {c'} (hc' : code_prim c') : code_prim (pc_c_sM1 c') := by apply_cp
-  have cp_opt_pair : code_prim opt_pair := by apply_cp 60
-  have cp_comp_usen_cg : code_prim comp_usen_cg := by apply_cp
-  have cp_comp_evaln_cg : code_prim comp_evaln_cg := by apply_cp
-  have cp_comp_usen_cf : code_prim comp_usen_cf := by apply_cp
-  have cp_opt_comp : code_prim opt_comp := by apply_cp 60
-  have cp_prec_x : code_prim prec_x := by apply_cp
-  have cp_prec_i : code_prim prec_i := by apply_cp
-  have cp_prec_iM1 : code_prim prec_iM1 := by apply_cp
-  have cp_prec_usen_base : code_prim prec_usen_base := by apply_cp
-  have cp_prec_usen_prev : code_prim prec_usen_prev := by apply_cp
-  have cp_prec_evaln_prev : code_prim prec_evaln_prev := by apply_cp
-  have cp_prec_usen_indt : code_prim prec_usen_indt := by apply_cp
-  have cp_opt_prec : code_prim opt_prec := by apply_cp 90
-  have cp_rfind'_usen_base : code_prim rfind'_usen_base := by apply_cp
-  have cp_rfind'_evaln_base : code_prim rfind'_evaln_base := by apply_cp
-  have cp_rfind'_usen_indt : code_prim rfind'_usen_indt := by apply_cp
-  have cp_opt_rfind' : code_prim opt_rfind' := by apply_cp 90
-  have cp_comp_mapped : code_prim comp_mapped := by apply_cp
-  have cp_pair_mapped : code_prim pair_mapped := by apply_cp
-  have cp_prec_mapped : code_prim prec_mapped := by apply_cp
-  have cp_rfind'_mapped : code_prim rfind'_mapped := by apply_cp
+  have cp_code_s : IsPrim code_s := by apply_cp
+  have cp_code : IsPrim code := by apply_cp
+  have cp_s : IsPrim s := by apply_cp
+  have cp_sM1 : IsPrim sM1 := by apply_cp
+  have cp_comp_hist : IsPrim comp_hist := by apply_cp
+  have cp_n : IsPrim n := by apply_cp
+  have cp_m : IsPrim m := by apply_cp
+  have cp_ml : IsPrim ml := by apply_cp
+  have cp_mr : IsPrim mr := by apply_cp
+  have cp_nMod4 : IsPrim nMod4 := by apply_cp
+  have cp_ele : IsPrim ele := by apply_cp
+  have cp_opt_zero : IsPrim opt_zero := by apply_cp
+  have cp_opt_oracle : IsPrim opt_oracle := by apply_cp
+  have cp_zero_mapped : IsPrim zero_mapped := by apply_cp
+  have cp_oracle_mapped : IsPrim oracle_mapped := by apply_cp
+  have cp_lookup {x' c' s'} (hx' : IsPrim x') (hc' : IsPrim c') (hs' : IsPrim s') :
+    IsPrim (lookup x' c' s') := by apply_cp
+  have cp_pc_ml_s {c'} (hc' : IsPrim c') : IsPrim (pc_ml_s c') := by apply_cp
+  have cp_pc_mr_s {c'} (hc' : IsPrim c') : IsPrim (pc_mr_s c') := by apply_cp
+  have cp_pc_m_s  {c'} (hc' : IsPrim c') : IsPrim (pc_m_s c') := by apply_cp
+  have cp_pc_c_sM1 {c'} (hc' : IsPrim c') : IsPrim (pc_c_sM1 c') := by apply_cp
+  have cp_opt_pair : IsPrim opt_pair := by apply_cp 60
+  have cp_comp_usen_cg : IsPrim comp_usen_cg := by apply_cp
+  have cp_comp_evaln_cg : IsPrim comp_evaln_cg := by apply_cp
+  have cp_comp_usen_cf : IsPrim comp_usen_cf := by apply_cp
+  have cp_opt_comp : IsPrim opt_comp := by apply_cp 60
+  have cp_prec_x : IsPrim prec_x := by apply_cp
+  have cp_prec_i : IsPrim prec_i := by apply_cp
+  have cp_prec_iM1 : IsPrim prec_iM1 := by apply_cp
+  have cp_prec_usen_base : IsPrim prec_usen_base := by apply_cp
+  have cp_prec_usen_prev : IsPrim prec_usen_prev := by apply_cp
+  have cp_prec_evaln_prev : IsPrim prec_evaln_prev := by apply_cp
+  have cp_prec_usen_indt : IsPrim prec_usen_indt := by apply_cp
+  have cp_opt_prec : IsPrim opt_prec := by apply_cp 90
+  have cp_rfind'_usen_base : IsPrim rfind'_usen_base := by apply_cp
+  have cp_rfind'_evaln_base : IsPrim rfind'_evaln_base := by apply_cp
+  have cp_rfind'_usen_indt : IsPrim rfind'_usen_indt := by apply_cp
+  have cp_opt_rfind' : IsPrim opt_rfind' := by apply_cp 90
+  have cp_comp_mapped : IsPrim comp_mapped := by apply_cp
+  have cp_pair_mapped : IsPrim pair_mapped := by apply_cp
+  have cp_prec_mapped : IsPrim prec_mapped := by apply_cp
+  have cp_rfind'_mapped : IsPrim rfind'_mapped := by apply_cp
   apply_cp 60
 
 @[simp, ev_simps] theorem c_usen_ev {O x code s} :
@@ -680,15 +680,15 @@ end usen
 
 section use
 namespace Oracle.Single.Code
-def c_use := (c_rfindOpt (c_usen.comp₃ (right.comp left) (left.comp left) right))
+def c_use := (cRfindOpt (c_usen.comp₃ (right.comp left) (left.comp left) right))
 set_option backward.isDefEq.respectTransparency false in
 @[simp, ev_simps] theorem c_use_ev {O : ℕ → ℕ} {c x : ℕ} :
     eval O c_use (Nat.pair c x) = use O c.n2c x := by
   simp only [c_use, comp₃, comp₂]
-  have : code_total O ((c_usen.comp ((right.comp left).pair ((left.comp left).pair right)))) := by
+  have : IsTotal O ((c_usen.comp ((right.comp left).pair ((left.comp left).pair right)))) := by
     apply prim_total
     apply_cp
-  simp only [c_rfindOpt_ev this]
+  simp only [cRfindOpt_ev this]
   rw [use_eq_rfindOpt]
   simp [eval,Seq.seq]
 end Oracle.Single.Code
