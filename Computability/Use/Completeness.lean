@@ -526,8 +526,7 @@ lemma unrpeq1 {x k O cf y} : y ∈ (do
     fun i r ↦ (usen O cf (k + 1 - i) (⟪x.left, i+x.right⟫)).bind fun usen_i ↦
     some (ForInStep.yield (r.max usen_i))) =
   some y := by
-  simp only [Option.pure_def, Option.bind_eq_bind, Option.bind_some, Option.bind_fun_some,
-    Option.mem_def]
+  simp only [Option.pure_def, Option.bind_eq_bind, Option.bind_fun_some, Option.mem_def]
   constructor
   · intro h
     have xlek : x ≤ k := by

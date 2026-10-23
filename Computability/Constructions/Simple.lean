@@ -188,7 +188,7 @@ theorem c_bdd_search_evp_1 {O c s a k l i r} :
             simp_all only [encode_succ_opt, Option.some.injEq, Nat.pair_eq_pair]
             obtain ⟨left, right⟩ := a_1
             subst left right
-            simp_all only [not_lt_zero']
+            simp_all only [not_lt_zero]
     · intro a_1
       simp_all only
       obtain ⟨left, right⟩ := a_1
