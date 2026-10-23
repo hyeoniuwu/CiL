@@ -40,9 +40,13 @@ def Nat.right (n : ℕ) := n.unpair.2
 -- `Computability.Constructions.CovRec.lean`
 @[simp, evp_simps] theorem pair_l {x y} : (Nat.pair x y).left = x := by simp [Nat.left]
 @[simp, evp_simps] theorem pair_r {x y} : (Nat.pair x y).right = y := by simp [Nat.right]
-@[simp] theorem pair_lr {x} : (Nat.pair x.left x.right) = x := by simp [Nat.right, Nat.left]
-@[simp] theorem unpair1_to_l {n : ℕ} : (n.unpair.1) = n.left := by simp [Nat.left]
-@[simp] theorem unpair2_to_r {n : ℕ} : (n.unpair.2) = n.right := by simp [Nat.right]
+theorem pair_lr {x} : (Nat.pair x.left x.right) = x := by simp [Nat.right, Nat.left]
+theorem unpair1_to_l {n : ℕ} : (n.unpair.1) = n.left := by simp [Nat.left]
+theorem unpair2_to_r {n : ℕ} : (n.unpair.2) = n.right := by simp [Nat.right]
+-- scoped, so that they don't change the simp normal form of `Nat.unpair` outside this library
+namespace Oracle.Single
+attribute [scoped simp] pair_lr unpair1_to_l unpair2_to_r
+end Oracle.Single
 @[simp, reducible] def Nat.unpaired2 {α} (f : ℕ → ℕ → α) (n : ℕ) : α := f n.left n.right
 @[simp] theorem pair_pos_of_right {x s : ℕ} : ⟪x, s+1⟫ > 0 := by
   apply zero_lt_of_ne_zero
