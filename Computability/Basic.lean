@@ -66,9 +66,11 @@ end pair
 section conversions
 abbrev Nat.n2l : ℕ → List ℕ := @Denumerable.ofNat (List ℕ) _
 abbrev Nat.l2n : List ℕ → ℕ := @Encodable.encode (List ℕ) _
-instance instOfNatListNat {lN} : OfNat (List ℕ) lN where ofNat := n2l lN
-instance instCoeNatList : Coe ℕ (List ℕ) := ⟨n2l⟩
-instance instCoeListNat : Coe (List ℕ) ℕ := ⟨l2n⟩
+namespace Oracle.Single
+scoped instance instOfNatListNat {lN} : OfNat (List ℕ) lN where ofNat := n2l lN
+scoped instance instCoeNatList : Coe ℕ (List ℕ) := ⟨n2l⟩
+scoped instance instCoeListNat : Coe (List ℕ) ℕ := ⟨l2n⟩
+end Oracle.Single
 
 def n2b (n : ℕ) : Bool := if n = 0 then false else true
 def b2n (b : Bool) : ℕ := if b then 1 else 0
