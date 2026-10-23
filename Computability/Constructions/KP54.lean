@@ -148,7 +148,7 @@ def c_kp54 := cPrec1 0 c_kp54_indt
     lift_lets; extract_lets; expose_names
     have hdvt : dvt = KP54.finite_ext αₚ_1 i_1 lb_1 := rfl
     have hdvt_1 : dvt_1 = KP54.finite_ext βₚ_1 i_1 la_1 := rfl
-    rw [KP54.finite_ext] at hdvt hdvt_1;
+    rw [KP54.finite_ext_def] at hdvt hdvt_1;
     -- we will simplify terms in the goal with inp
     let (eq := hinp) inp := (Nat.pair s_1 (KP54.KP54 s_1))
     -- show that the code let-bindings correspond to our let-bindings
@@ -178,10 +178,10 @@ def c_kp54 := cPrec1 0 c_kp54_indt
           simp only [evp_simps]
           simp only [K0, pair_l, pair_r, n2c_c2n, Nat.pred_eq_sub_one]
           split
-          next h2 => simp [hi, hlb, hαₚ]; congr
+          next h2 => simpa [hi, hlb, hαₚ] using Part.get_eq_get_of_eq _ _ hdvt.symm
           next h2 =>
             simp [hi, hlb, hαₚ] at h2
-            simp [dvt, KP54.finite_ext, h2] at this
+            simp [dvt, KP54.finite_ext_def, h2] at this
         have hαₛ : evalp (K0 (fun _↦0)) αₛ inp = αₛ_1 := by
           simp [αₛ, αₛ_1, hαₚ, hrf, -Denumerable.list_ofNat_succ]
         have hA_result : evalp (K0 (fun _↦0)) A_result inp = A_result_1 := by
@@ -214,10 +214,10 @@ def c_kp54 := cPrec1 0 c_kp54_indt
           simp only [evp_simps]
           simp only [K0, pair_l, pair_r, n2c_c2n, Nat.pred_eq_sub_one]
           split
-          next h2 => simp [hi]; congr
+          next h2 => simpa [hi, hla, hβₚ] using Part.get_eq_get_of_eq _ _ hdvt_1.symm
           next h2 =>
             simp [hi, hla, hβₚ] at h2
-            simp [dvt_1, KP54.finite_ext, h2] at this
+            simp [dvt_1, KP54.finite_ext_def, h2] at this
         have hβₛ : evalp (K0 (fun _↦0)) βₛ inp = βₛ_1 := by
           simp [βₛ, βₛ_1, hβₚ, hrf, -Denumerable.list_ofNat_succ]
         have hB_result : evalp (K0 (fun _↦0)) B_result inp = B_result_1 := by

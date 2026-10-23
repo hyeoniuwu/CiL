@@ -58,8 +58,13 @@ theorem rfind_real {O f} (h : RecursiveIn O f) :
   rw [← hc]
   apply exists_code.mpr
   use cRfind c
-  simp [cRfind_ev'']
+  simp only [cRfind_ev'', Part.map_eq_map]
+  funext a
   congr
+  funext x
+  congr
+  funext m
+  simp [n2b']
 end rfind
 
 def cPpred := cRfind (cIfEq'.comp₂ left (succ.comp right))

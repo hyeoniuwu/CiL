@@ -317,9 +317,9 @@ end SetJumpTheorems
 
 section computably_enumerable
 /-- `W O e` := domain of e^th oracle program -/
-abbrev W (O : Set ℕ) (e : Code) := (evalSet O e).Dom
+noncomputable abbrev W (O : Set ℕ) (e : Code) := (evalSet O e).Dom
 /-- `WR O e` := range of e^th oracle program -/
-abbrev WR (O : Set ℕ) (e : Code) := (evalSet O e).ran
+noncomputable abbrev WR (O : Set ℕ) (e : Code) := (evalSet O e).ran
 /-- `Wn O e s` := domain of e^th oracle program ran for s steps -/
 abbrev Wn (O : Set ℕ) (e : Code) (s : ℕ) := { x | (evalnSet O s e x).isSome }
 /-- `WRn O e s` := range of e^th oracle program ran for s steps -/

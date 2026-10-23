@@ -101,10 +101,11 @@ theorem c_kp54_aux_evp {O : ℕ → ℕ} {i n x : ℕ} :
 
 If no such `x` exists, returns `Part.none`.
 -/
-def finite_ext (S i n : ℕ) := eval (fun _↦0) (dovetail (c_kp54_aux i n)) S
+irreducible_def finite_ext (S i n : ℕ) : Part ℕ := eval (fun _↦0) (dovetail (c_kp54_aux i n)) S
 theorem finite_ext_prop {S i n : ℕ} (halts : (finite_ext S i n).Dom) :
   have dvt := (finite_ext S i n).get halts
   (evals ((n2l S) ++ (n2l (dvt+1))) i n).Dom := by
+    revert halts; rw [finite_ext_def]; intro halts
     have := dovetail_ev_0 halts
     extract_lets at this ⊢
     expose_names
@@ -115,6 +116,7 @@ theorem finite_ext_prop {S i n : ℕ} (halts : (finite_ext S i n).Dom) :
 open Classical in
 theorem finite_ext_prop_div {S i n : ℕ} (h : ¬ (finite_ext S i n).Dom) :
   ∀ y, ¬ (evals ((n2l S) ++ (n2l (y+1))) i n).Dom := by
+    rw [finite_ext_def] at h
     have := dovetail_ev_1.mp (Part.eq_none_iff'.mpr h)
     simp? [c_kp54_aux_evp, -Denumerable.list_ofNat_succ]  at this says
       simp only [c_kp54_aux_evp, pair_l, pair_r, ne_eq, ite_eq_left_iff, Part.none_ne_some,

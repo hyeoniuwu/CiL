@@ -392,8 +392,7 @@ def cIfLtTe :=
   cAdd.comp₂
   (cMul.comp₂ lt (right.comp right))
   (cMul.comp₂ (cNot.comp lt) (left.comp right))
-@[cp] theorem cIfLtTe_prim : IsPrim cIfLtTe := by
-  repeat (first|assumption|apply_rules using cp|simp|constructor)
+@[cp] theorem cIfLtTe_prim : IsPrim cIfLtTe := by unfold cIfLtTe; apply_cp 60
 @[simp, evp_simps] theorem cIfLtTe_evp {O : ℕ → ℕ} {a b c d} :
     evalp O cIfLtTe ⟪a,b,c,d⟫ = if a<b then c else d := by
   simp only [cIfLtTe, evp_simps];
