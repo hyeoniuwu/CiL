@@ -12,6 +12,8 @@ public import Mathlib.Init
 
 public meta section
 
+/-- The `cp` attribute labels the lemmas used by `apply_cp`, mainly those showing that codes satisfy
+`IsPrim`. -/
 register_label_attr cp
 
 register_simp_attr evp_simps
@@ -19,6 +21,8 @@ register_simp_attr ev_simps
 
 open Lean
 
+/-- `apply_cp` proves goals such as `IsPrim c` by repeatedly applying the hypotheses and the lemmas
+tagged `@[cp]`, up to depth 30. `apply_cp n` uses maximum depth `n` instead. -/
 macro (name := applyCp) "apply_cp" : tactic =>
   `(tactic|
     apply_rules
@@ -26,6 +30,7 @@ macro (name := applyCp) "apply_cp" : tactic =>
       only [*] using $(mkIdent `cp)
   )
 
+/-- `apply_cp n` is `apply_cp` with maximum search depth `n`. -/
 @[tactic_alt applyCp]
 macro (name := applyCpDepth) "apply_cp" n:num : tactic =>
   `(tactic|

@@ -52,6 +52,8 @@ open Nat
 
 section comp₂
 namespace Oracle.Single.Code
+/-- `comp₂ c1 c2 c3` composes `c1` with the pair of `c2` and `c3`: it is the code for
+`fun x ↦ [c1](⟪[c2](x), [c3](x)⟫)`. -/
 def comp₂ := fun c1 c2 c3 : Code => c1.comp (pair c2 c3)
 @[cp] theorem comp₂_prim {c1 c2 c3} (hc1 : IsPrim c1) (hc2 : IsPrim c2) (hc3 : IsPrim c3) :
   IsPrim (comp₂ c1 c2 c3) := by unfold comp₂; apply_cp
@@ -67,6 +69,7 @@ end comp₂
 
 section comp₄
 namespace Oracle.Single.Code
+/-- `comp₄ c1 c2 c3 c4 c5` is the code for `fun x ↦ [c1](⟪[c2](x), [c3](x), [c4](x), [c5](x)⟫)`. -/
 def comp₄ := fun c1 c2 c3 c4 c5 : Code => c1.comp₂ (pair c2 c3) (pair c4 c5)
 @[cp] theorem comp₄_prim {c1 c2 c3 c4 c5}
   (hc1 : IsPrim c1) (hc2 : IsPrim c2)
@@ -85,6 +88,7 @@ end comp₄
 
 section comp₃
 namespace Oracle.Single.Code
+/-- `comp₃ c1 c2 c3 c4` is the code for `fun x ↦ [c1](⟪[c2](x), [c3](x), [c4](x)⟫)`. -/
 def comp₃ := fun c1 c2 c3 c4 : Code => c1.comp₂ c2 (pair c3 c4)
 @[cp] theorem comp₃_prim {c1 c2 c3 c4}
   (hc1 : IsPrim c1) (hc2 : IsPrim c2) (hc3 : IsPrim c3) (hc4 : IsPrim c4) :
