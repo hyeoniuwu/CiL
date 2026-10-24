@@ -14,6 +14,8 @@ import Mathlib.Data.Nat.PSub
 
 Auxiliary constructs for use in `Oracle.Single.Constructions.Eval`.
 
+In docstrings, `[c]` denotes the function computed by the code `c`, and `[c](x)` its value at `x`.
+
 -/
 
 @[expose] public section

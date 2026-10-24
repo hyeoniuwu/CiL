@@ -13,6 +13,8 @@ public import Computability.Helper.Partial
 
 This file defines basic primitive recursive codes for basic functions on option types.
 
+In docstrings, `[c]` denotes the function computed by the code `c`, and `[c](x)` its value at `x`.
+
 -/
 
 @[expose] public section

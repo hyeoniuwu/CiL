@@ -40,6 +40,8 @@ Suppose we want to construct a primitive recursive function `f : ℕ → ℕ`.
   · theorem asserting that the function `f` is primitive recursive. This again follows
     immediately from `c_f_evp`.
 
+In docstrings, `[c]` denotes the function computed by the code `c`, and `[c](x)` its value at `x`.
+
 -/
 
 @[expose] public section

@@ -19,6 +19,8 @@ This file defines codes for basic functions which are not primitive recursive.
 - `cIte`: A code which implements if-then-else, where the entire computation
   does not necessarily diverge even if one the branches does.
 
+In docstrings, `[c]` denotes the function computed by the code `c`, and `[c](x)` its value at `x`.
+
 -/
 
 @[expose] public section

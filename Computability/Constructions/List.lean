@@ -20,6 +20,8 @@ The major constructions in this file are `cListFoldl` and `cListZipWith`.
 `cListFoldl` allows easy definitions of subsequent constructs, although `cListZipWith` still
 requires a nontrivial proof.
 
+In docstrings, `[c]` denotes the function computed by the code `c`, and `[c](x)` its value at `x`.
+
 -/
 
 @[expose] public section
