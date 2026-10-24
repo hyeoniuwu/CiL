@@ -68,6 +68,7 @@ theorem rfind_real {O f} (h : RecursiveIn O f) :
   simp [n2b']
 end rfind
 
+/-- This code defines the function `Nat.ppred`. -/
 def cPpred := cRfind (cIfEq'.comp₂ left (succ.comp right))
 set_option backward.isDefEq.respectTransparency false in
 @[simp, ev_simps] theorem cPpred_ev {O y} : eval O cPpred y = Nat.ppred y := by
@@ -85,6 +86,7 @@ set_option backward.isDefEq.respectTransparency false in
     unfold n2b'
     aesop
 
+/-- Given a code `c`, this code defines the function `fun x ↦ ↑(n2o [c](x))` (for total `c`). -/
 def cOfOption (c : Code) := cPpred.comp c
 set_option backward.isDefEq.respectTransparency false in
 theorem cOfOption_ev {O : ℕ → ℕ} {c : Code} {x : ℕ} (hc1 : IsTotal O c) :
@@ -96,6 +98,8 @@ theorem cOfOption_ev {O : ℕ → ℕ} {c : Code} {x : ℕ} (hc1 : IsTotal O c) 
   | zero => simp;
   | succ n => simp;
 
+/-- Given a code `c`, this code defines the function
+`fun x ↦ Nat.rfindOpt (fun y ↦ n2o [c](⟪x, y⟫))` (for total `c`). -/
 def cRfindOpt (c : Code) := (cOfOption c).comp₂ cId (cRfind (cIsSome.comp (c)))
 set_option backward.isDefEq.respectTransparency false in
 @[simp, ev_simps] theorem cRfindOpt_ev {O : ℕ → ℕ} {c : Code} {x : ℕ} (hc1 : IsTotal O c) :
